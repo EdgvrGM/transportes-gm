@@ -93,7 +93,7 @@ export default function FuelRegistrarViaje() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["viajes"] });
-      navigate(createPageUrl("FuelDashboard"));
+      navigate(createPageUrl("ControlCombustible"));
     },
     onError: (err) => {
       setError("Error al registrar el viaje. Por favor intenta de nuevo.");
