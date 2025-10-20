@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { supabase } from "@/supabaseClient"; // Importar supabase
+import { supabase } from "@/supabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -64,6 +64,7 @@ export default function FuelRegistrarViaje() {
     placas: "",
   });
 
+  // *** CAMBIO: Usar supabase para obtener conductores ***
   const { data: conductores = [] } = useQuery({
     queryKey: ["conductores"],
     queryFn: async () => {
@@ -73,6 +74,7 @@ export default function FuelRegistrarViaje() {
     },
   });
 
+  // *** CAMBIO: Usar supabase para obtener camiones ***
   const { data: camiones = [] } = useQuery({
     queryKey: ["camiones"],
     queryFn: async () => {
@@ -82,6 +84,7 @@ export default function FuelRegistrarViaje() {
     },
   });
 
+  // *** CAMBIO: Usar supabase para crear viajes ***
   const crearViajeMutation = useMutation({
     mutationFn: async (data) => {
       const { data: result, error } = await supabase
@@ -93,13 +96,17 @@ export default function FuelRegistrarViaje() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["viajes"] });
+      // *** CAMBIO: Redirige al dashboard principal después de crear ***
+      // Asegúrate que "ControlCombustible" es la ruta correcta
       navigate(createPageUrl("ControlCombustible"));
     },
     onError: (err) => {
       setError("Error al registrar el viaje. Por favor intenta de nuevo.");
+      console.error("Error creating trip:", err); // Log para depuración
     },
   });
 
+  // *** CAMBIO: Usar supabase para crear conductores ***
   const crearConductorMutation = useMutation({
     mutationFn: async (data) => {
       const { data: result, error } = await supabase
@@ -107,20 +114,27 @@ export default function FuelRegistrarViaje() {
         .insert([data])
         .select();
       if (error) throw new Error(error.message);
+      // Supabase devuelve un array, tomamos el primer elemento
       return result[0];
     },
     onSuccess: (conductor) => {
       queryClient.invalidateQueries({ queryKey: ["conductores"] });
       setViaje((prev) => ({
         ...prev,
-        conductor_id: conductor.id,
+        // Usar String(id) para el Select
+        conductor_id: String(conductor.id),
         conductor_nombre: conductor.nombre,
       }));
       setMostrarNuevoConductor(false);
       setNuevoConductor({ nombre: "", licencia: "", telefono: "" });
     },
+    onError: (err) => {
+      setError("Error al crear el conductor.");
+      console.error("Error creating driver:", err); // Log para depuración
+    },
   });
 
+  // *** CAMBIO: Usar supabase para crear camiones ***
   const crearCamionMutation = useMutation({
     mutationFn: async (data) => {
       const { data: result, error } = await supabase
@@ -128,21 +142,28 @@ export default function FuelRegistrarViaje() {
         .insert([data])
         .select();
       if (error) throw new Error(error.message);
+      // Supabase devuelve un array, tomamos el primer elemento
       return result[0];
     },
     onSuccess: (camion) => {
       queryClient.invalidateQueries({ queryKey: ["camiones"] });
       setViaje((prev) => ({
         ...prev,
-        camion_id: camion.id,
+        // Usar String(id) para el Select
+        camion_id: String(camion.id),
         camion_nombre: camion.nombre,
         camion_placas: camion.placas,
       }));
       setMostrarNuevoCamion(false);
       setNuevoCamion({ nombre: "", placas: "" });
     },
+    onError: (err) => {
+      setError("Error al crear el camión.");
+      console.error("Error creating truck:", err); // Log para depuración
+    },
   });
 
+  // --- Lógica de rutas adicionales (sin cambios) ---
   const agregarRutaAdicional = () => {
     setRutasAdicionales([...rutasAdicionales, { ruta: "", kilometros: "" }]);
   };
@@ -157,6 +178,7 @@ export default function FuelRegistrarViaje() {
     setRutasAdicionales(nuevasRutas);
   };
 
+  // --- Lógica de envío del formulario (incluye validación) ---
   const handleSubmit = (e) => {
     e.preventDefault();
     setError(null);
@@ -165,22 +187,43 @@ export default function FuelRegistrarViaje() {
     const kmRegreso = parseFloat(viaje.kilometros_regreso);
     const litros = parseFloat(viaje.litros_combustible);
 
+    // *** VALIDACIÓN DE CAMPOS OBLIGATORIOS ***
     if (
       !viaje.fecha ||
+      !viaje.conductor_id ||
+      !viaje.camion_id ||
       !viaje.ruta_ida ||
       !kmIda ||
+      isNaN(kmIda) ||
       !viaje.ruta_regreso ||
       !kmRegreso ||
-      !litros
+      isNaN(kmRegreso) ||
+      !litros ||
+      isNaN(litros)
     ) {
-      setError("Por favor completa todos los campos obligatorios.");
+      setError(
+        "Por favor completa todos los campos obligatorios marcados con *."
+      );
+      return;
+    }
+    if (litros <= 0) {
+      setError("Los litros consumidos deben ser mayores a cero.");
       return;
     }
 
+    // Validar rutas adicionales si existen
     for (let i = 0; i < rutasAdicionales.length; i++) {
-      if (!rutasAdicionales[i].ruta || !rutasAdicionales[i].kilometros) {
+      const kmAdicional = parseFloat(rutasAdicionales[i].kilometros);
+      if (
+        !rutasAdicionales[i].ruta ||
+        !kmAdicional ||
+        isNaN(kmAdicional) ||
+        kmAdicional < 0
+      ) {
         setError(
-          `Por favor completa todos los datos de la ruta adicional ${i + 1}`
+          `Por favor completa correctamente los datos (ruta y km > 0) de la ruta adicional ${
+            i + 1
+          }.`
         );
         return;
       }
@@ -194,22 +237,23 @@ export default function FuelRegistrarViaje() {
 
     const datosViaje = {
       fecha: viaje.fecha,
-      conductor_id: viaje.conductor_id,
+      // Convertir IDs a número si es necesario para Supabase (ajustar según tu esquema)
+      conductor_id: viaje.conductor_id ? viaje.conductor_id : null, // O usar parseInt si son numéricos
       conductor_nombre: viaje.conductor_nombre,
-      camion_id: viaje.camion_id,
+      camion_id: viaje.camion_id ? viaje.camion_id : null, // O usar parseInt si son numéricos
       camion_nombre: viaje.camion_nombre,
       camion_placas: viaje.camion_placas,
       ruta_ida: viaje.ruta_ida,
       kilometros_ida: kmIda,
       rutas_adicionales: rutasAdicionales.map((r) => ({
         ruta: r.ruta,
-        kilometros: parseFloat(r.kilometros),
+        kilometros: parseFloat(r.kilometros || 0), // Asegurar que sea número
       })),
       ruta_regreso: viaje.ruta_regreso,
       kilometros_regreso: kmRegreso,
       kilometros_total: kmTotal,
       litros_combustible: litros,
-      km_por_litro: kmTotal / litros,
+      km_por_litro: kmTotal / litros, // Ya validado que litros > 0
       costo_combustible: viaje.costo_combustible
         ? parseFloat(viaje.costo_combustible)
         : null,
@@ -219,8 +263,10 @@ export default function FuelRegistrarViaje() {
     crearViajeMutation.mutate(datosViaje);
   };
 
+  // --- Handlers para Selects (sin cambios significativos) ---
   const handleConductorChange = (conductorId) => {
-    const conductor = conductores.find((c) => c.id === conductorId);
+    // conductorId ya es string por el Select
+    const conductor = conductores.find((c) => String(c.id) === conductorId);
     setViaje((prev) => ({
       ...prev,
       conductor_id: conductorId,
@@ -229,7 +275,8 @@ export default function FuelRegistrarViaje() {
   };
 
   const handleCamionChange = (camionId) => {
-    const camion = camiones.find((c) => c.id === camionId);
+    // camionId ya es string por el Select
+    const camion = camiones.find((c) => String(c.id) === camionId);
     setViaje((prev) => ({
       ...prev,
       camion_id: camionId,
@@ -238,6 +285,7 @@ export default function FuelRegistrarViaje() {
     }));
   };
 
+  // --- Lógica de cálculo (sin cambios) ---
   const calcularEficiencia = () => {
     const kmIda = parseFloat(viaje.kilometros_ida) || 0;
     const kmRegreso = parseFloat(viaje.kilometros_regreso) || 0;
@@ -246,7 +294,7 @@ export default function FuelRegistrarViaje() {
     }, 0);
     const litros = parseFloat(viaje.litros_combustible);
 
-    if (litros === 0 || isNaN(litros)) return "-";
+    if (litros <= 0 || isNaN(litros)) return "-";
 
     const kmTotal = kmIda + kmAdicionales + kmRegreso;
     return (kmTotal / litros).toFixed(2);
@@ -264,14 +312,17 @@ export default function FuelRegistrarViaje() {
   const eficiencia = calcularEficiencia();
   const kmTotales = calcularKmTotales();
 
+  // --- JSX (interfaz de usuario) ---
   return (
     <div className="p-4 md:p-8 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
       <div className="max-w-4xl mx-auto">
+        {/* Encabezado */}
         <div className="flex items-center gap-4 mb-8">
           <Button
             variant="outline"
             size="icon"
-            onClick={() => navigate(createPageUrl("FuelDashboard"))}
+            // *** CAMBIO: Redirige al dashboard principal ***
+            onClick={() => navigate(createPageUrl("ControlCombustible"))}
             className="shadow-md"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -281,17 +332,19 @@ export default function FuelRegistrarViaje() {
               Registrar Nuevo Viaje
             </h1>
             <p className="text-slate-600 mt-1">
-              Ingresa los detalles del viaje y consumo de combustible
+              Ingresa los detalles del viaje y consumo
             </p>
           </div>
         </div>
 
+        {/* Alerta de error */}
         {error && (
           <Alert variant="destructive" className="mb-6">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
+        {/* Formulario */}
         <Card className="border-none shadow-xl">
           <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-blue-50 to-slate-50">
             <CardTitle className="text-xl font-bold text-slate-900">
@@ -300,13 +353,15 @@ export default function FuelRegistrarViaje() {
           </CardHeader>
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Fila: Fecha, Conductor, Camión */}
               <div className="grid md:grid-cols-3 gap-6">
+                {/* Fecha */}
                 <div className="space-y-2">
                   <Label
                     htmlFor="fecha"
                     className="text-slate-700 font-semibold"
                   >
-                    Fecha del Viaje <span className="text-red-500">*</span>
+                    Fecha <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="fecha"
@@ -319,14 +374,15 @@ export default function FuelRegistrarViaje() {
                     className="border-slate-200"
                   />
                 </div>
-
+                {/* Conductor */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <Label
                       htmlFor="conductor"
                       className="text-slate-700 font-semibold"
                     >
-                      Conductor
+                      {" "}
+                      Conductor <span className="text-red-500">*</span>{" "}
                     </Label>
                     <Button
                       type="button"
@@ -335,22 +391,25 @@ export default function FuelRegistrarViaje() {
                       onClick={() =>
                         setMostrarNuevoConductor(!mostrarNuevoConductor)
                       }
-                      className="text-blue-600 hover:text-blue-700 gap-1"
+                      className="text-blue-600 hover:text-blue-700 gap-1 h-auto p-1"
                     >
-                      <Plus className="w-4 h-4" />
-                      Nuevo
+                      {" "}
+                      <Plus className="w-4 h-4" /> Nuevo{" "}
                     </Button>
                   </div>
                   {!mostrarNuevoConductor ? (
                     <Select
                       value={viaje.conductor_id}
                       onValueChange={handleConductorChange}
+                      required
                     >
                       <SelectTrigger className="border-slate-200">
-                        <SelectValue placeholder="Seleccionar conductor" />
+                        {" "}
+                        <SelectValue placeholder="Seleccionar conductor" />{" "}
                       </SelectTrigger>
                       <SelectContent>
                         {conductores.map((conductor) => (
+                          // Usar String(id) como value
                           <SelectItem
                             key={conductor.id}
                             value={String(conductor.id)}
@@ -361,6 +420,7 @@ export default function FuelRegistrarViaje() {
                       </SelectContent>
                     </Select>
                   ) : (
+                    /* Formulario nuevo conductor */
                     <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
                       <Input
                         placeholder="Nombre completo"
@@ -372,9 +432,10 @@ export default function FuelRegistrarViaje() {
                           })
                         }
                         className="bg-white"
+                        required
                       />
                       <Input
-                        placeholder="Número de licencia"
+                        placeholder="Licencia"
                         value={nuevoConductor.licencia}
                         onChange={(e) =>
                           setNuevoConductor({
@@ -408,7 +469,7 @@ export default function FuelRegistrarViaje() {
                       >
                         {crearConductorMutation.isPending ? (
                           <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />{" "}
                             Guardando...
                           </>
                         ) : (
@@ -418,36 +479,40 @@ export default function FuelRegistrarViaje() {
                     </div>
                   )}
                 </div>
-
+                {/* Camión */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <Label
                       htmlFor="camion"
                       className="text-slate-700 font-semibold"
                     >
-                      Camión
+                      {" "}
+                      Camión <span className="text-red-500">*</span>{" "}
                     </Label>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
                       onClick={() => setMostrarNuevoCamion(!mostrarNuevoCamion)}
-                      className="text-green-600 hover:text-green-700 gap-1"
+                      className="text-green-600 hover:text-green-700 gap-1 h-auto p-1"
                     >
-                      <Plus className="w-4 h-4" />
-                      Nuevo
+                      {" "}
+                      <Plus className="w-4 h-4" /> Nuevo{" "}
                     </Button>
                   </div>
                   {!mostrarNuevoCamion ? (
                     <Select
                       value={viaje.camion_id}
                       onValueChange={handleCamionChange}
+                      required
                     >
                       <SelectTrigger className="border-slate-200">
-                        <SelectValue placeholder="Seleccionar camión" />
+                        {" "}
+                        <SelectValue placeholder="Seleccionar camión" />{" "}
                       </SelectTrigger>
                       <SelectContent>
                         {camiones.map((camion) => (
+                          // Usar String(id) como value
                           <SelectItem key={camion.id} value={String(camion.id)}>
                             {camion.nombre} - {camion.placas}
                           </SelectItem>
@@ -455,6 +520,7 @@ export default function FuelRegistrarViaje() {
                       </SelectContent>
                     </Select>
                   ) : (
+                    /* Formulario nuevo camión */
                     <div className="space-y-3 p-4 bg-green-50 rounded-lg border border-green-200">
                       <Input
                         placeholder="Nombre del camión"
@@ -466,9 +532,10 @@ export default function FuelRegistrarViaje() {
                           })
                         }
                         className="bg-white"
+                        required
                       />
                       <Input
-                        placeholder="Número de placas"
+                        placeholder="Placas"
                         value={nuevoCamion.placas}
                         onChange={(e) =>
                           setNuevoCamion({
@@ -477,6 +544,7 @@ export default function FuelRegistrarViaje() {
                           })
                         }
                         className="bg-white"
+                        required
                       />
                       <Button
                         type="button"
@@ -490,7 +558,7 @@ export default function FuelRegistrarViaje() {
                       >
                         {crearCamionMutation.isPending ? (
                           <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />{" "}
                             Guardando...
                           </>
                         ) : (
@@ -502,20 +570,21 @@ export default function FuelRegistrarViaje() {
                 </div>
               </div>
 
-              {/* Sección Ruta de Ida */}
+              {/* Ruta Ida */}
               <div className="space-y-4 p-4 bg-blue-50/50 rounded-lg border border-blue-100">
                 <div className="flex items-center gap-2 mb-2">
-                  <ArrowRight className="w-5 h-5 text-blue-600" />
-                  <h3 className="font-bold text-slate-900">Ruta de Ida</h3>
+                  {" "}
+                  <ArrowRight className="w-5 h-5 text-blue-600" />{" "}
+                  <h3 className="font-bold text-slate-900">Ruta de Ida</h3>{" "}
                 </div>
-
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label
                       htmlFor="ruta_ida"
                       className="text-slate-700 font-semibold"
                     >
-                      Ruta <span className="text-red-500">*</span>
+                      {" "}
+                      Ruta <span className="text-red-500">*</span>{" "}
                     </Label>
                     <Input
                       id="ruta_ida"
@@ -528,13 +597,13 @@ export default function FuelRegistrarViaje() {
                       className="border-slate-200 bg-white"
                     />
                   </div>
-
                   <div className="space-y-2">
                     <Label
                       htmlFor="kilometros_ida"
                       className="text-slate-700 font-semibold"
                     >
-                      Kilómetros <span className="text-red-500">*</span>
+                      {" "}
+                      Kilómetros <span className="text-red-500">*</span>{" "}
                     </Label>
                     <Input
                       id="kilometros_ida"
@@ -547,20 +616,22 @@ export default function FuelRegistrarViaje() {
                       }
                       required
                       className="border-slate-200 bg-white"
+                      min="0"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Sección Rutas Adicionales */}
+              {/* Rutas Adicionales */}
               <div className="space-y-4 p-4 bg-purple-50/50 rounded-lg border border-purple-100">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <Route className="w-5 h-5 text-purple-600" />
+                    {" "}
+                    <Route className="w-5 h-5 text-purple-600" />{" "}
                     <h3 className="font-bold text-slate-900">
                       Rutas Adicionales
-                    </h3>
-                    <span className="text-xs text-slate-500">(Opcional)</span>
+                    </h3>{" "}
+                    <span className="text-xs text-slate-500">(Opcional)</span>{" "}
                   </div>
                   <Button
                     type="button"
@@ -569,15 +640,14 @@ export default function FuelRegistrarViaje() {
                     onClick={agregarRutaAdicional}
                     className="gap-2 hover:bg-purple-50"
                   >
-                    <Plus className="w-4 h-4" />
-                    Agregar Ruta
+                    {" "}
+                    <Plus className="w-4 h-4" /> Agregar Ruta{" "}
                   </Button>
                 </div>
-
                 {rutasAdicionales.length === 0 ? (
                   <p className="text-sm text-slate-500 text-center py-4">
-                    No hay rutas adicionales. Haz clic en "Agregar Ruta" para
-                    incluir paradas intermedias.
+                    {" "}
+                    No hay rutas adicionales.
                   </p>
                 ) : (
                   <div className="space-y-3">
@@ -587,7 +657,7 @@ export default function FuelRegistrarViaje() {
                         className="grid md:grid-cols-[1fr_auto_auto] gap-3 p-3 bg-white rounded-lg border border-purple-200"
                       >
                         <Input
-                          placeholder="Ej: Ciudad B - Ciudad C"
+                          placeholder="Ruta adicional"
                           value={ruta.ruta}
                           onChange={(e) =>
                             actualizarRutaAdicional(
@@ -611,6 +681,7 @@ export default function FuelRegistrarViaje() {
                             )
                           }
                           className="border-slate-200 w-32"
+                          min="0"
                         />
                         <Button
                           type="button"
@@ -619,7 +690,8 @@ export default function FuelRegistrarViaje() {
                           onClick={() => eliminarRutaAdicional(index)}
                           className="hover:bg-red-50 hover:text-red-700"
                         >
-                          <X className="w-4 h-4" />
+                          {" "}
+                          <X className="w-4 h-4" />{" "}
                         </Button>
                       </div>
                     ))}
@@ -627,20 +699,21 @@ export default function FuelRegistrarViaje() {
                 )}
               </div>
 
-              {/* Sección Ruta de Regreso */}
+              {/* Ruta Regreso */}
               <div className="space-y-4 p-4 bg-orange-50/50 rounded-lg border border-orange-100">
                 <div className="flex items-center gap-2 mb-2">
-                  <ArrowLeft className="w-5 h-5 text-orange-600" />
-                  <h3 className="font-bold text-slate-900">Ruta de Regreso</h3>
+                  {" "}
+                  <ArrowLeft className="w-5 h-5 text-orange-600" />{" "}
+                  <h3 className="font-bold text-slate-900">Ruta de Regreso</h3>{" "}
                 </div>
-
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label
                       htmlFor="ruta_regreso"
                       className="text-slate-700 font-semibold"
                     >
-                      Ruta <span className="text-red-500">*</span>
+                      {" "}
+                      Ruta <span className="text-red-500">*</span>{" "}
                     </Label>
                     <Input
                       id="ruta_regreso"
@@ -653,13 +726,13 @@ export default function FuelRegistrarViaje() {
                       className="border-slate-200 bg-white"
                     />
                   </div>
-
                   <div className="space-y-2">
                     <Label
                       htmlFor="kilometros_regreso"
                       className="text-slate-700 font-semibold"
                     >
-                      Kilómetros <span className="text-red-500">*</span>
+                      {" "}
+                      Kilómetros <span className="text-red-500">*</span>{" "}
                     </Label>
                     <Input
                       id="kilometros_regreso"
@@ -675,6 +748,7 @@ export default function FuelRegistrarViaje() {
                       }
                       required
                       className="border-slate-200 bg-white"
+                      min="0"
                     />
                   </div>
                 </div>
@@ -682,27 +756,28 @@ export default function FuelRegistrarViaje() {
 
               <Separator />
 
-              {/* Sección Consumo de Combustible */}
+              {/* Combustible */}
               <div className="space-y-4 p-4 bg-green-50/50 rounded-lg border border-green-100">
                 <div className="flex items-center gap-2 mb-2">
-                  <Fuel className="w-5 h-5 text-green-600" />
+                  {" "}
+                  <Fuel className="w-5 h-5 text-green-600" />{" "}
                   <h3 className="font-bold text-slate-900">
                     Consumo de Combustible
-                  </h3>
+                  </h3>{" "}
                   {kmTotales > 0 && (
                     <span className="text-sm text-slate-600 ml-2">
                       (Total: {kmTotales.toFixed(1)} km)
                     </span>
-                  )}
+                  )}{" "}
                 </div>
-
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label
                       htmlFor="litros"
                       className="text-slate-700 font-semibold"
                     >
-                      Litros Consumidos <span className="text-red-500">*</span>
+                      {" "}
+                      Litros <span className="text-red-500">*</span>{" "}
                     </Label>
                     <Input
                       id="litros"
@@ -718,15 +793,16 @@ export default function FuelRegistrarViaje() {
                       }
                       required
                       className="border-slate-200 bg-white"
+                      min="0.01"
                     />
                   </div>
-
                   <div className="space-y-2">
                     <Label
                       htmlFor="costo"
                       className="text-slate-700 font-semibold"
                     >
-                      Costo Total (opcional)
+                      {" "}
+                      Costo Total (opcional){" "}
                     </Label>
                     <Input
                       id="costo"
@@ -741,21 +817,22 @@ export default function FuelRegistrarViaje() {
                         })
                       }
                       className="border-slate-200 bg-white"
+                      min="0"
                     />
                   </div>
                 </div>
-
                 {eficiencia !== "-" && (
                   <div className="p-4 bg-white rounded-lg border border-green-200">
                     <div className="flex items-center justify-between">
                       <div>
+                        {" "}
                         <span className="text-slate-700 font-semibold">
-                          Eficiencia del Viaje:
-                        </span>
+                          Eficiencia:
+                        </span>{" "}
                         <p className="text-xs text-slate-500 mt-1">
                           {kmTotales.toFixed(1)} km ÷ {viaje.litros_combustible}{" "}
                           L
-                        </p>
+                        </p>{" "}
                       </div>
                       <span className="text-3xl font-bold text-green-700">
                         {eficiencia} km/L
@@ -765,13 +842,15 @@ export default function FuelRegistrarViaje() {
                 )}
               </div>
 
+              {/* Notas */}
               <div className="space-y-2">
                 <Label htmlFor="notas" className="text-slate-700 font-semibold">
-                  Notas Adicionales
+                  {" "}
+                  Notas Adicionales{" "}
                 </Label>
                 <Textarea
                   id="notas"
-                  placeholder="Observaciones sobre el viaje..."
+                  placeholder="Observaciones..."
                   value={viaje.notas}
                   onChange={(e) =>
                     setViaje({ ...viaje, notas: e.target.value })
@@ -781,14 +860,16 @@ export default function FuelRegistrarViaje() {
                 />
               </div>
 
+              {/* Botones */}
               <div className="flex gap-4 pt-4">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => navigate(createPageUrl("FuelDashboard"))}
+                  onClick={() => navigate(createPageUrl("ControlCombustible"))}
                   className="flex-1"
                 >
-                  Cancelar
+                  {" "}
+                  Cancelar{" "}
                 </Button>
                 <Button
                   type="submit"
@@ -797,13 +878,11 @@ export default function FuelRegistrarViaje() {
                 >
                   {crearViajeMutation.isPending ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Guardando...
+                      <Loader2 className="w-4 h-4 animate-spin" /> Guardando...
                     </>
                   ) : (
                     <>
-                      <Save className="w-4 h-4" />
-                      Registrar Viaje
+                      <Save className="w-4 h-4" /> Registrar Viaje
                     </>
                   )}
                 </Button>
