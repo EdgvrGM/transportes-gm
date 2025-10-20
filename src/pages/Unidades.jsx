@@ -26,18 +26,29 @@ export default function Unidades() {
         throw new Error(error.message);
       }
 
-      // Ordenar alfabéticamente por marca y luego por modelo
+      // Ordenar alfabéticamente por marca, luego por modelo y finalmente por año (de más nuevo a más antiguo)
       return data.sort((a, b) => {
         const marcaA = a.marca || "";
         const marcaB = b.marca || "";
         const modeloA = a.modelo || "";
         const modeloB = b.modelo || "";
+        const anioA = a.año || 0;
+        const anioB = b.año || 0;
 
+        // 1. Compara por marca
         const marcaCompare = marcaA.localeCompare(marcaB);
         if (marcaCompare !== 0) {
           return marcaCompare;
         }
-        return modeloA.localeCompare(modeloB);
+
+        // 2. Si la marca es igual, compara por modelo
+        const modeloCompare = modeloA.localeCompare(modeloB);
+        if (modeloCompare !== 0) {
+          return modeloCompare;
+        }
+
+        // 3. Si el modelo también es igual, compara por año (de más nuevo a más antiguo)
+        return anioB - anioA;
       });
     },
     initialData: [],
