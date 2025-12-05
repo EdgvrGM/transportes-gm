@@ -233,7 +233,7 @@ export default function FuelRegistrarViaje() {
     const kmTotal = kmIda + kmAdicionales + kmRegreso;
 
     const datosViaje = {
-      fecha: viaje.fecha,
+      fecha: `${viaje.fecha}T12:00:00`,
       conductor_id: viaje.conductor_id ? viaje.conductor_id : null,
       conductor_nombre: viaje.conductor_nombre,
       camion_id: viaje.camion_id ? viaje.camion_id : null,
