@@ -178,7 +178,7 @@ export default function ControlCombustible() {
         const eficiencia = viaje.km_por_litro || 0;
 
         return {
-          Fecha: format(new Date(viaje.fecha), "dd/MM/yyyy"),
+          Fecha: format(new Date(`${viaje.fecha}T12:00:00`), "dd/MM/yyyy"),
           Conductor: viaje.conductor_nombre || "N/A",
           "Ruta Ida": rutaIda,
           "Kilómetros Ida": kmIda,
