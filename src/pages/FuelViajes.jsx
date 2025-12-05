@@ -610,7 +610,7 @@ export default function FuelViajes() {
                                   <Calendar className="w-4 h-4 text-slate-400 flex-shrink-0" />
                                   <span className="text-sm font-semibold text-slate-900">
                                     {format(
-                                      new Date(viaje.fecha),
+                                      new Date(`${viaje.fecha}T12:00:00`),
                                       "dd MMM yyyy",
                                       { locale: es }
                                     )}
@@ -1084,7 +1084,7 @@ export default function FuelViajes() {
                 <strong>
                   {viajeAEliminar &&
                     format(
-                      new Date(viajeAEliminar.fecha),
+                      new Date(`${viajeAEliminar.fecha}T12:00:00`),
                       "dd 'de' MMMM 'de' yyyy",
                       { locale: es }
                     )}
