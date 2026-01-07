@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { supabase } from "@/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import {
   Truck,
@@ -12,7 +11,8 @@ import {
   Download,
   Loader2,
 } from "lucide-react";
-import { format } from "date-fns";
+// Importamos las funciones necesarias para calcular semanas
+import { format, getISOWeek, getYear } from "date-fns";
 
 import StatsCard from "../components/fuel/StatsCard";
 import FiltrosViajes from "../components/fuel/FiltrosViajes";
@@ -21,8 +21,8 @@ import GraficoEficiencia from "../components/fuel/GraficoEficiencia";
 import TablaViajes from "../components/fuel/TablaViajes";
 
 export default function ControlCombustible() {
-  // <--- CAMBIO DE NOMBRE AQUÍ
   const navigate = useNavigate();
+  // Estados de filtros
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
   const [conductorFiltro, setConductorFiltro] = useState("todos");
@@ -30,11 +30,12 @@ export default function ControlCombustible() {
   const [periodoFiltro, setPeriodoFiltro] = useState("todos");
   const [isExporting, setIsExporting] = useState(false);
 
+  // Consulta de datos a Supabase
   const { data: viajes = [], isLoading: loadingViajes } = useQuery({
     queryKey: ["viajes"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("Viaje")
+        .from("Viaje") // Asegúrate que tu tabla en Supabase sea "Viaje" (Mayúscula) o "viajes" (minúscula)
         .select("*")
         .order("fecha", { ascending: false });
       if (error) throw new Error(error.message);
@@ -51,79 +52,52 @@ export default function ControlCombustible() {
     },
   });
 
-  useEffect(() => {
-    const hoy = new Date();
-    let inicio = "";
-    let fin = "";
-
-    switch (periodoFiltro) {
-      case "hoy":
-        inicio = fin = hoy.toISOString().split("T")[0];
-        break;
-      case "esta_semana":
-        const diaSemana = hoy.getDay();
-        const lunes = new Date(hoy);
-        lunes.setDate(hoy.getDate() - diaSemana + (diaSemana === 0 ? -6 : 1));
-        inicio = lunes.toISOString().split("T")[0];
-        fin = hoy.toISOString().split("T")[0];
-        break;
-      case "semana_pasada":
-        const inicioSemPasada = new Date(hoy);
-        const diaSem = hoy.getDay();
-        inicioSemPasada.setDate(
-          hoy.getDate() - diaSem - 6 + (diaSem === 0 ? -6 : 1)
-        );
-        const finSemPasada = new Date(inicioSemPasada);
-        finSemPasada.setDate(inicioSemPasada.getDate() + 6);
-        inicio = inicioSemPasada.toISOString().split("T")[0];
-        fin = finSemPasada.toISOString().split("T")[0];
-        break;
-      case "ultimas_2_semanas":
-        const hace2Semanas = new Date(hoy);
-        hace2Semanas.setDate(hoy.getDate() - 14);
-        inicio = hace2Semanas.toISOString().split("T")[0];
-        fin = hoy.toISOString().split("T")[0];
-        break;
-      case "este_mes":
-        inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1)
-          .toISOString()
-          .split("T")[0];
-        fin = hoy.toISOString().split("T")[0];
-        break;
-      case "mes_pasado":
-        const inicioMesPasado = new Date(
-          hoy.getFullYear(),
-          hoy.getMonth() - 1,
-          1
-        );
-        const finMesPasado = new Date(hoy.getFullYear(), hoy.getMonth(), 0);
-        inicio = inicioMesPasado.toISOString().split("T")[0];
-        fin = finMesPasado.toISOString().split("T")[0];
-        break;
-      case "todos":
-      default:
-        inicio = "";
-        fin = "";
-        break;
-    }
-
-    setFechaInicio(inicio);
-    setFechaFin(fin);
-  }, [periodoFiltro]);
-
+  // --- LÓGICA DE FILTRADO ---
   const viajesFiltrados = viajes.filter((viaje) => {
     let cumpleFiltros = true;
     const rutaPrincipal = viaje.ruta_ida || viaje.ruta || "";
 
-    if (fechaInicio && viaje.fecha < fechaInicio) cumpleFiltros = false;
-    if (fechaFin && viaje.fecha > fechaFin) cumpleFiltros = false;
-    if (conductorFiltro !== "todos" && viaje.conductor_id !== conductorFiltro)
+    // 1. Filtro por Semana (Prioridad alta)
+    if (
+      periodoFiltro !== "todos" &&
+      periodoFiltro !== "personalizado" &&
+      periodoFiltro.startsWith("semana-")
+    ) {
+      // Extraemos el número de semana seleccionado (ej: "semana-5" -> 5)
+      const semanaSeleccionada = parseInt(periodoFiltro.split("-")[1]);
+
+      // Obtenemos la fecha del viaje y calculamos su semana
+      // Agregamos T12:00:00 para evitar problemas de zona horaria que cambien el día
+      const fechaViaje = new Date(`${viaje.fecha}T12:00:00`);
+      const semanaViaje = getISOWeek(fechaViaje);
+      const anioViaje = getYear(fechaViaje);
+      const anioActual = getYear(new Date());
+
+      // Solo mostramos si es del año actual Y la semana coincide
+      if (anioViaje !== anioActual || semanaViaje !== semanaSeleccionada) {
+        cumpleFiltros = false;
+      }
+    }
+    // 2. Filtro por Fechas Manuales (Solo si no es filtro por semana)
+    else {
+      if (fechaInicio && viaje.fecha < fechaInicio) cumpleFiltros = false;
+      if (fechaFin && viaje.fecha > fechaFin) cumpleFiltros = false;
+    }
+
+    // 3. Resto de filtros (Conductor y Ruta)
+    if (
+      conductorFiltro !== "todos" &&
+      String(viaje.conductor_id) !== String(conductorFiltro)
+    ) {
       cumpleFiltros = false;
+    }
+
     if (
       rutaFiltro &&
       !rutaPrincipal.toLowerCase().includes(rutaFiltro.toLowerCase())
-    )
+    ) {
       cumpleFiltros = false;
+    }
 
     return cumpleFiltros;
   });
