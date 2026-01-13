@@ -44,6 +44,7 @@ import {
   Edit,
   Plus,
   Save,
+  X, // Aseguramos importar X para eliminar rutas adicionales
 } from "lucide-react";
 // Importamos las funciones necesarias para la semana
 import { format, getISOWeek, getYear } from "date-fns";
@@ -54,15 +55,16 @@ import FiltrosViajes from "@/components/fuel/FiltrosViajes";
 
 export default function FuelViajes() {
   const queryClient = useQueryClient();
-  // Estados de filtros
+
+  // --- ESTADOS DE FILTROS ---
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
   const [conductorFiltro, setConductorFiltro] = useState("todos");
   const [camionFiltro, setCamionFiltro] = useState("todos");
   const [rutaFiltro, setRutaFiltro] = useState("");
-  const [periodoFiltro, setPeriodoFiltro] = useState("todos"); // <--- Nuevo Estado
+  const [periodoFiltro, setPeriodoFiltro] = useState("todos"); // Filtro de semana
 
-  // Estados de edición/eliminación
+  // --- ESTADOS DE EDICIÓN/ELIMINACIÓN ---
   const [viajeAEliminar, setViajeAEliminar] = useState(null);
   const [viajeEditando, setViajeEditando] = useState(null);
   const [dialogAbierto, setDialogAbierto] = useState(false);
@@ -83,7 +85,7 @@ export default function FuelViajes() {
     notas: "",
   });
 
-  // --- QUERIES ---
+  // --- QUERIES (CONSULTAS A SUPABASE) ---
   const { data: viajes = [], isLoading } = useQuery({
     queryKey: ["viajes"],
     queryFn: async () => {
@@ -114,7 +116,7 @@ export default function FuelViajes() {
     },
   });
 
-  // --- MUTATIONS ---
+  // --- MUTATIONS (ACCIONES EN SUPABASE) ---
   const eliminarMutation = useMutation({
     mutationFn: async (id) => {
       const { error } = await supabase.from("Viaje").delete().eq("id", id);
@@ -142,7 +144,7 @@ export default function FuelViajes() {
     },
   });
 
-  // --- LÓGICA DE FILTRADO (Actualizada con Semanas) ---
+  // --- LÓGICA DE FILTRADO (FILTRO SEMANAL Y MANUAL) ---
   const viajesFiltrados = viajes.filter((viaje) => {
     let cumpleFiltros = true;
     const rutaPrincipal = viaje.ruta_ida || viaje.ruta || "";
@@ -205,7 +207,7 @@ export default function FuelViajes() {
     }
   };
 
-  // --- FUNCIONES DE EDICIÓN Y FORMULARIO (Sin cambios) ---
+  // --- FUNCIONES DE EDICIÓN Y FORMULARIO ---
   const abrirDialogEditar = (viaje) => {
     setViajeEditando(viaje);
     const rutasAdicionales = Array.isArray(viaje.rutas_adicionales)
@@ -234,7 +236,7 @@ export default function FuelViajes() {
     setDialogAbierto(false);
     setViajeEditando(null);
     setFormData({
-      /* Reset form */ fecha: "",
+      fecha: "",
       conductor_id: "",
       conductor_nombre: "",
       camion_id: "",
@@ -372,7 +374,7 @@ export default function FuelViajes() {
           </p>
         </div>
 
-        {/* COMPONENTE DE FILTROS REUTILIZABLE */}
+        {/* COMPONENTE DE FILTROS */}
         <div className="mb-8">
           <FiltrosViajes
             fechaInicio={fechaInicio}
@@ -381,19 +383,19 @@ export default function FuelViajes() {
             setFechaFin={setFechaFin}
             conductorFiltro={conductorFiltro}
             setConductorFiltro={setConductorFiltro}
-            camionFiltro={camionFiltro} // Pasamos prop de camión
-            setCamionFiltro={setCamionFiltro} // Pasamos prop de camión
+            camionFiltro={camionFiltro}
+            setCamionFiltro={setCamionFiltro}
             rutaFiltro={rutaFiltro}
             setRutaFiltro={setRutaFiltro}
             periodoFiltro={periodoFiltro}
             setPeriodoFiltro={setPeriodoFiltro}
             conductores={conductores}
-            camiones={camiones} // Pasamos la data de camiones
+            camiones={camiones}
             limpiarFiltros={limpiarFiltros}
           />
         </div>
 
-        {/* Resumen */}
+        {/* RESUMEN (TARJETAS) */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="border-none shadow-lg">
             <CardContent className="p-6">
@@ -477,7 +479,7 @@ export default function FuelViajes() {
           </Card>
         </div>
 
-        {/* Lista de Viajes */}
+        {/* LISTA DE VIAJES */}
         <Card className="border-none shadow-lg">
           <CardHeader className="border-b border-slate-100">
             <CardTitle className="text-xl font-bold text-slate-900">
@@ -666,7 +668,7 @@ export default function FuelViajes() {
           </CardContent>
         </Card>
 
-        {/* Dialog Editar (Omitido para brevedad ya que no cambió, pero si copias y pegas TODO este bloque, incluye el Dialog que tenías abajo) */}
+        {/* DIALOGO DE EDICIÓN COMPLETO */}
         <Dialog open={dialogAbierto} onOpenChange={cerrarDialog}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -675,11 +677,10 @@ export default function FuelViajes() {
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-6 mt-4">
-              {/* ... (Todo el formulario se mantiene igual, ya está incluido arriba) ... */}
-              {/* Solo inserto el contenido base para que no se pierda al copiar/pegar */}
+              {/* Campos generales */}
               <div className="grid md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-fecha">
+                  <Label htmlFor="edit-fecha" className="font-semibold">
                     Fecha <span className="text-red-500">*</span>
                   </Label>
                   <Input
@@ -693,7 +694,9 @@ export default function FuelViajes() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-conductor">Conductor</Label>
+                  <Label htmlFor="edit-conductor" className="font-semibold">
+                    Conductor
+                  </Label>
                   <Select
                     value={formData.conductor_id}
                     onValueChange={handleConductorChange}
@@ -711,7 +714,9 @@ export default function FuelViajes() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-camion">Camión</Label>
+                  <Label htmlFor="edit-camion" className="font-semibold">
+                    Camión
+                  </Label>
                   <Select
                     value={formData.camion_id}
                     onValueChange={handleCamionChange}
@@ -729,7 +734,213 @@ export default function FuelViajes() {
                   </Select>
                 </div>
               </div>
-              {/* Resto de campos (Ruta, Litros, etc) se mantienen igual que tu archivo original... */}
+
+              {/* Ruta Ida */}
+              <div className="space-y-4 p-4 bg-blue-50/50 rounded-lg border border-blue-100">
+                <h3 className="font-bold text-slate-900">Ruta de Ida</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-ruta-ida" className="font-semibold">
+                      Ruta <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="edit-ruta-ida"
+                      value={formData.ruta_ida}
+                      onChange={(e) =>
+                        setFormData({ ...formData, ruta_ida: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-km-ida" className="font-semibold">
+                      Kilómetros <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="edit-km-ida"
+                      type="number"
+                      step="0.1"
+                      value={formData.kilometros_ida}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          kilometros_ida: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Rutas Adicionales */}
+              <div className="space-y-4 p-4 bg-purple-50/50 rounded-lg border border-purple-100">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-slate-900">
+                    Rutas Adicionales
+                  </h3>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={agregarRutaAdicional}
+                    className="gap-2"
+                  >
+                    <Plus className="w-4 h-4" /> Agregar Ruta
+                  </Button>
+                </div>
+                {Array.isArray(formData.rutas_adicionales) &&
+                  formData.rutas_adicionales.length > 0 && (
+                    <div className="space-y-3">
+                      {formData.rutas_adicionales.map((ruta, index) => (
+                        <div
+                          key={index}
+                          className="grid md:grid-cols-[1fr_auto_auto] gap-3 p-3 bg-white rounded-lg border border-purple-200"
+                        >
+                          <Input
+                            placeholder="Ej: Ciudad B - Ciudad C"
+                            value={ruta.ruta || ""}
+                            onChange={(e) =>
+                              actualizarRutaAdicional(
+                                index,
+                                "ruta",
+                                e.target.value
+                              )
+                            }
+                          />
+                          <Input
+                            type="number"
+                            step="0.1"
+                            placeholder="km"
+                            value={ruta.kilometros || ""}
+                            onChange={(e) =>
+                              actualizarRutaAdicional(
+                                index,
+                                "kilometros",
+                                e.target.value
+                              )
+                            }
+                            className="w-32"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => eliminarRutaAdicional(index)}
+                            className="hover:bg-red-50 hover:text-red-700"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+              </div>
+
+              {/* Ruta Regreso */}
+              <div className="space-y-4 p-4 bg-orange-50/50 rounded-lg border border-orange-100">
+                <h3 className="font-bold text-slate-900">Ruta de Regreso</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="edit-ruta-regreso"
+                      className="font-semibold"
+                    >
+                      Ruta <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="edit-ruta-regreso"
+                      value={formData.ruta_regreso}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          ruta_regreso: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-km-regreso" className="font-semibold">
+                      Kilómetros <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="edit-km-regreso"
+                      type="number"
+                      step="0.1"
+                      value={formData.kilometros_regreso}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          kilometros_regreso: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Combustible */}
+              <div className="space-y-4 p-4 bg-green-50/50 rounded-lg border border-green-100">
+                <h3 className="font-bold text-slate-900">
+                  Consumo de Combustible
+                </h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-litros" className="font-semibold">
+                      Litros <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="edit-litros"
+                      type="number"
+                      step="0.01"
+                      value={formData.litros_combustible}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          litros_combustible: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-costo" className="font-semibold">
+                      Costo Total
+                    </Label>
+                    <Input
+                      id="edit-costo"
+                      type="number"
+                      step="0.01"
+                      value={formData.costo_combustible}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          costo_combustible: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Notas */}
+              <div className="space-y-2">
+                <Label htmlFor="edit-notas" className="font-semibold">
+                  Notas Adicionales
+                </Label>
+                <Textarea
+                  id="edit-notas"
+                  value={formData.notas}
+                  onChange={(e) =>
+                    setFormData({ ...formData, notas: e.target.value })
+                  }
+                  rows={4}
+                />
+              </div>
+
+              {/* Botones */}
               <div className="flex gap-3 pt-4">
                 <Button
                   type="button"
@@ -745,17 +956,23 @@ export default function FuelViajes() {
                   className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white"
                 >
                   {actualizarMutation.isPending ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <>
+                      {" "}
+                      <Loader2 className="w-4 h-4 animate-spin" /> Guardando...{" "}
+                    </>
                   ) : (
-                    <Save className="w-4 h-4 mr-2" />
-                  )}{" "}
-                  Guardar
+                    <>
+                      {" "}
+                      <Save className="w-4 h-4 mr-2" /> Guardar Cambios{" "}
+                    </>
+                  )}
                 </Button>
               </div>
             </form>
           </DialogContent>
         </Dialog>
 
+        {/* DIALOGO DE ELIMINAR */}
         <AlertDialog
           open={!!viajeAEliminar}
           onOpenChange={() => setViajeAEliminar(null)}
