@@ -11,7 +11,6 @@ import {
   Download,
   Loader2,
 } from "lucide-react";
-// Importamos las funciones necesarias para calcular semanas
 import { format, getISOWeek, getYear } from "date-fns";
 
 import StatsCard from "../components/fuel/StatsCard";
@@ -35,7 +34,7 @@ export default function ControlCombustible() {
     queryKey: ["viajes"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("Viaje") // Asegúrate que tu tabla en Supabase sea "Viaje" (Mayúscula) o "viajes" (minúscula)
+        .from("Viaje")
         .select("*")
         .order("fecha", { ascending: false });
       if (error) throw new Error(error.message);
@@ -52,46 +51,40 @@ export default function ControlCombustible() {
     },
   });
 
-  // --- LÓGICA DE FILTRADO ---
+  // --- LÓGICA DE FILTRADO (Igual que en FuelViajes) ---
   const viajesFiltrados = viajes.filter((viaje) => {
     let cumpleFiltros = true;
     const rutaPrincipal = viaje.ruta_ida || viaje.ruta || "";
 
-    // 1. Filtro por Semana (Prioridad alta)
+    // 1. Filtro por Semana
     if (
       periodoFiltro !== "todos" &&
       periodoFiltro !== "personalizado" &&
       periodoFiltro.startsWith("semana-")
     ) {
-      // Extraemos el número de semana seleccionado (ej: "semana-5" -> 5)
       const semanaSeleccionada = parseInt(periodoFiltro.split("-")[1]);
-
-      // Obtenemos la fecha del viaje y calculamos su semana
-      // Agregamos T12:00:00 para evitar problemas de zona horaria que cambien el día
       const fechaViaje = new Date(`${viaje.fecha}T12:00:00`);
       const semanaViaje = getISOWeek(fechaViaje);
       const anioViaje = getYear(fechaViaje);
       const anioActual = getYear(new Date());
 
-      // Solo mostramos si es del año actual Y la semana coincide
       if (anioViaje !== anioActual || semanaViaje !== semanaSeleccionada) {
         cumpleFiltros = false;
       }
     }
-    // 2. Filtro por Fechas Manuales (Solo si no es filtro por semana)
+    // 2. Filtro Manual
     else {
       if (fechaInicio && viaje.fecha < fechaInicio) cumpleFiltros = false;
       if (fechaFin && viaje.fecha > fechaFin) cumpleFiltros = false;
     }
 
-    // 3. Resto de filtros (Conductor y Ruta)
+    // 3. Otros filtros
     if (
       conductorFiltro !== "todos" &&
       String(viaje.conductor_id) !== String(conductorFiltro)
     ) {
       cumpleFiltros = false;
     }
-
     if (
       rutaFiltro &&
       !rutaPrincipal.toLowerCase().includes(rutaFiltro.toLowerCase())
@@ -112,17 +105,14 @@ export default function ControlCombustible() {
 
   const calcularEstadisticas = () => {
     const totalViajes = viajesFiltrados.length;
-
-    const totalKm = viajesFiltrados.reduce((sum, v) => {
-      const km = v.kilometros_total || v.kilometros || 0;
-      return sum + km;
-    }, 0);
-
-    const totalLitros = viajesFiltrados.reduce((sum, v) => {
-      const litros = v.litros_combustible || 0;
-      return sum + litros;
-    }, 0);
-
+    const totalKm = viajesFiltrados.reduce(
+      (sum, v) => sum + (v.kilometros_total || v.kilometros || 0),
+      0
+    );
+    const totalLitros = viajesFiltrados.reduce(
+      (sum, v) => sum + (v.litros_combustible || 0),
+      0
+    );
     const promedioEficiencia = totalLitros > 0 ? totalKm / totalLitros : 0;
     const totalCosto = viajesFiltrados.reduce(
       (sum, v) => sum + (v.costo_combustible || 0),
@@ -140,6 +130,7 @@ export default function ControlCombustible() {
 
   const stats = calcularEstadisticas();
 
+  // --- FUNCIÓN EXPORTAR ACTUALIZADA ---
   const exportarExcel = () => {
     setIsExporting(true);
     try {
@@ -152,7 +143,13 @@ export default function ControlCombustible() {
         const eficiencia = viaje.km_por_litro || 0;
 
         return {
-          Fecha: format(new Date(`${viaje.fecha}T12:00:00`), "dd/MM/yyyy"),
+          "Fecha Salida": format(
+            new Date(`${viaje.fecha}T12:00:00`),
+            "dd/MM/yyyy"
+          ),
+          "Fecha Llegada": viaje.fecha_llegada
+            ? format(new Date(`${viaje.fecha_llegada}T12:00:00`), "dd/MM/yyyy")
+            : "-", // <--- NUEVA COLUMNA
           Conductor: viaje.conductor_nombre || "N/A",
           "Ruta Ida": rutaIda,
           "Kilómetros Ida": kmIda,

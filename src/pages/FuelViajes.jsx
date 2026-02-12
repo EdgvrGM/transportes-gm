@@ -44,32 +44,32 @@ import {
   Edit,
   Plus,
   Save,
-  X, // Aseguramos importar X para eliminar rutas adicionales
+  X,
+  ArrowRight,
 } from "lucide-react";
-// Importamos las funciones necesarias para la semana
 import { format, getISOWeek, getYear } from "date-fns";
 import { es } from "date-fns/locale";
 
-// Importamos el componente de filtros compartido
 import FiltrosViajes from "@/components/fuel/FiltrosViajes";
 
 export default function FuelViajes() {
   const queryClient = useQueryClient();
 
-  // --- ESTADOS DE FILTROS ---
+  // Estados de filtros
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
   const [conductorFiltro, setConductorFiltro] = useState("todos");
   const [camionFiltro, setCamionFiltro] = useState("todos");
   const [rutaFiltro, setRutaFiltro] = useState("");
-  const [periodoFiltro, setPeriodoFiltro] = useState("todos"); // Filtro de semana
+  const [periodoFiltro, setPeriodoFiltro] = useState("todos");
 
-  // --- ESTADOS DE EDICIÓN/ELIMINACIÓN ---
+  // Estados de edición/eliminación
   const [viajeAEliminar, setViajeAEliminar] = useState(null);
   const [viajeEditando, setViajeEditando] = useState(null);
   const [dialogAbierto, setDialogAbierto] = useState(false);
   const [formData, setFormData] = useState({
     fecha: "",
+    fecha_llegada: "",
     conductor_id: "",
     conductor_nombre: "",
     camion_id: "",
@@ -85,7 +85,7 @@ export default function FuelViajes() {
     notas: "",
   });
 
-  // --- QUERIES (CONSULTAS A SUPABASE) ---
+  // Queries
   const { data: viajes = [], isLoading } = useQuery({
     queryKey: ["viajes"],
     queryFn: async () => {
@@ -116,7 +116,7 @@ export default function FuelViajes() {
     },
   });
 
-  // --- MUTATIONS (ACCIONES EN SUPABASE) ---
+  // Mutations
   const eliminarMutation = useMutation({
     mutationFn: async (id) => {
       const { error } = await supabase.from("Viaje").delete().eq("id", id);
@@ -144,12 +144,11 @@ export default function FuelViajes() {
     },
   });
 
-  // --- LÓGICA DE FILTRADO (FILTRO SEMANAL Y MANUAL) ---
+  // Filtrado
   const viajesFiltrados = viajes.filter((viaje) => {
     let cumpleFiltros = true;
     const rutaPrincipal = viaje.ruta_ida || viaje.ruta || "";
 
-    // 1. Filtro por Semana
     if (
       periodoFiltro !== "todos" &&
       periodoFiltro !== "personalizado" &&
@@ -164,14 +163,11 @@ export default function FuelViajes() {
       if (anioViaje !== anioActual || semanaViaje !== semanaSeleccionada) {
         cumpleFiltros = false;
       }
-    }
-    // 2. Filtro Manual de Fechas (Solo si no se seleccionó semana)
-    else {
+    } else {
       if (fechaInicio && viaje.fecha < fechaInicio) cumpleFiltros = false;
       if (fechaFin && viaje.fecha > fechaFin) cumpleFiltros = false;
     }
 
-    // 3. Resto de filtros
     if (
       conductorFiltro !== "todos" &&
       String(viaje.conductor_id) !== conductorFiltro
@@ -197,17 +193,12 @@ export default function FuelViajes() {
     setPeriodoFiltro("todos");
   };
 
-  const confirmarEliminar = (viaje) => {
-    setViajeAEliminar(viaje);
-  };
-
+  const confirmarEliminar = (viaje) => setViajeAEliminar(viaje);
   const handleEliminar = () => {
-    if (viajeAEliminar) {
-      eliminarMutation.mutate(viajeAEliminar.id);
-    }
+    if (viajeAEliminar) eliminarMutation.mutate(viajeAEliminar.id);
   };
 
-  // --- FUNCIONES DE EDICIÓN Y FORMULARIO ---
+  // Funciones de Edición
   const abrirDialogEditar = (viaje) => {
     setViajeEditando(viaje);
     const rutasAdicionales = Array.isArray(viaje.rutas_adicionales)
@@ -215,6 +206,7 @@ export default function FuelViajes() {
       : [];
     setFormData({
       fecha: viaje.fecha,
+      fecha_llegada: viaje.fecha_llegada || "",
       conductor_id: viaje.conductor_id ? String(viaje.conductor_id) : "",
       conductor_nombre: viaje.conductor_nombre || "",
       camion_id: viaje.camion_id ? String(viaje.camion_id) : "",
@@ -237,6 +229,7 @@ export default function FuelViajes() {
     setViajeEditando(null);
     setFormData({
       fecha: "",
+      fecha_llegada: "",
       conductor_id: "",
       conductor_nombre: "",
       camion_id: "",
@@ -319,6 +312,7 @@ export default function FuelViajes() {
 
     const datosViaje = {
       fecha: formData.fecha,
+      fecha_llegada: formData.fecha_llegada || null,
       conductor_id: formData.conductor_id ? formData.conductor_id : null,
       conductor_nombre: formData.conductor_nombre,
       camion_id: formData.camion_id ? formData.camion_id : null,
@@ -374,7 +368,7 @@ export default function FuelViajes() {
           </p>
         </div>
 
-        {/* COMPONENTE DE FILTROS */}
+        {/* FILTROS */}
         <div className="mb-8">
           <FiltrosViajes
             fechaInicio={fechaInicio}
@@ -395,7 +389,7 @@ export default function FuelViajes() {
           />
         </div>
 
-        {/* RESUMEN (TARJETAS) */}
+        {/* RESUMEN */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="border-none shadow-lg">
             <CardContent className="p-6">
@@ -519,22 +513,53 @@ export default function FuelViajes() {
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1 grid md:grid-cols-4 gap-6">
-                            {/* Columna 1 */}
+                            {/* Columna 1: FECHAS (MODIFICADA: Horizontal Compacta) */}
                             <div className="space-y-3">
-                              <div className="space-y-2">
+                              {/* Usamos flex-wrap para que si no caben bajen, y items-start para alinearlos */}
+                              <div className="flex flex-wrap items-start gap-4">
+                                {/* Bloque Salida */}
                                 <div className="flex items-center gap-2">
-                                  <Calendar className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                                  <span className="text-sm font-semibold text-slate-900">
-                                    {format(
-                                      new Date(`${viaje.fecha}T12:00:00`),
-                                      "dd MMM yyyy",
-                                      { locale: es }
-                                    )}
-                                  </span>
+                                  <Calendar className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                                  <div>
+                                    <span className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                                      Salida
+                                    </span>
+                                    <span className="text-sm font-semibold text-slate-900">
+                                      {format(
+                                        new Date(`${viaje.fecha}T12:00:00`),
+                                        "dd MMM",
+                                        { locale: es }
+                                      )}
+                                    </span>
+                                  </div>
                                 </div>
+
+                                {/* Bloque Llegada */}
+                                {viaje.fecha_llegada && (
+                                  <div className="flex items-center gap-2">
+                                    <ArrowRight className="w-4 h-4 text-green-500 flex-shrink-0" />
+                                    <div>
+                                      <span className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                                        Llegada
+                                      </span>
+                                      <span className="text-sm font-semibold text-slate-900">
+                                        {format(
+                                          new Date(
+                                            `${viaje.fecha_llegada}T12:00:00`
+                                          ),
+                                          "dd MMM",
+                                          { locale: es }
+                                        )}
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="pt-2 border-t border-slate-100 mt-2 space-y-2">
                                 {viaje.conductor_nombre && (
                                   <div className="flex items-center gap-2">
-                                    <User className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                                    <User className="w-4 h-4 text-slate-400 flex-shrink-0" />
                                     <span className="text-sm text-slate-700">
                                       {viaje.conductor_nombre}
                                     </span>
@@ -542,22 +567,19 @@ export default function FuelViajes() {
                                 )}
                                 {viaje.camion_nombre && (
                                   <div className="flex items-center gap-2">
-                                    <Truck className="w-4 h-4 text-green-500 flex-shrink-0" />
-                                    <div className="flex flex-col">
-                                      <span className="text-sm text-slate-700">
-                                        {viaje.camion_nombre}
+                                    <Truck className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                                    <span className="text-sm text-slate-700">
+                                      {viaje.camion_nombre}{" "}
+                                      <span className="text-xs text-slate-400">
+                                        ({viaje.camion_placas})
                                       </span>
-                                      {viaje.camion_placas && (
-                                        <span className="text-xs text-slate-500">
-                                          {viaje.camion_placas}
-                                        </span>
-                                      )}
-                                    </div>
+                                    </span>
                                   </div>
                                 )}
                               </div>
                             </div>
-                            {/* Columna 2 */}
+
+                            {/* Columna 2: RUTAS */}
                             <div className="space-y-3">
                               <div className="space-y-2">
                                 <div className="flex items-start gap-2">
@@ -588,7 +610,7 @@ export default function FuelViajes() {
                                 )}
                               </div>
                             </div>
-                            {/* Columna 3 */}
+                            {/* Columna 3: KILOMETRAJE Y COSTOS */}
                             <div className="space-y-3">
                               <div className="space-y-2">
                                 <div className="flex items-center justify-between">
@@ -619,7 +641,7 @@ export default function FuelViajes() {
                                 )}
                               </div>
                             </div>
-                            {/* Columna 4 */}
+                            {/* Columna 4: EFICIENCIA */}
                             <div className="space-y-3">
                               <div className="flex flex-col items-center justify-center h-full">
                                 <Badge
@@ -639,7 +661,6 @@ export default function FuelViajes() {
                               </div>
                             </div>
                           </div>
-                          {/* Botones */}
                           <div className="flex flex-col gap-1">
                             <Button
                               variant="ghost"
@@ -668,7 +689,7 @@ export default function FuelViajes() {
           </CardContent>
         </Card>
 
-        {/* DIALOGO DE EDICIÓN COMPLETO */}
+        {/* DIALOG DE EDICIÓN */}
         <Dialog open={dialogAbierto} onOpenChange={cerrarDialog}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -677,11 +698,11 @@ export default function FuelViajes() {
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-6 mt-4">
-              {/* Campos generales */}
-              <div className="grid md:grid-cols-3 gap-4">
+              {/* Sección 1: Fechas y Unidad */}
+              <div className="grid md:grid-cols-4 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-fecha" className="font-semibold">
-                    Fecha <span className="text-red-500">*</span>
+                    Salida <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="edit-fecha"
@@ -693,6 +714,24 @@ export default function FuelViajes() {
                     required
                   />
                 </div>
+                {/* --- NUEVO CAMPO EDICIÓN --- */}
+                <div className="space-y-2">
+                  <Label htmlFor="edit-fecha-llegada" className="font-semibold">
+                    Llegada
+                  </Label>
+                  <Input
+                    id="edit-fecha-llegada"
+                    type="date"
+                    value={formData.fecha_llegada}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        fecha_llegada: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                {/* --------------------------- */}
                 <div className="space-y-2">
                   <Label htmlFor="edit-conductor" className="font-semibold">
                     Conductor
@@ -940,7 +979,6 @@ export default function FuelViajes() {
                 />
               </div>
 
-              {/* Botones */}
               <div className="flex gap-3 pt-4">
                 <Button
                   type="button"
@@ -972,7 +1010,7 @@ export default function FuelViajes() {
           </DialogContent>
         </Dialog>
 
-        {/* DIALOGO DE ELIMINAR */}
+        {/* DIALOG ELIMINAR */}
         <AlertDialog
           open={!!viajeAEliminar}
           onOpenChange={() => setViajeAEliminar(null)}

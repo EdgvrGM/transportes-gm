@@ -1,13 +1,9 @@
 import React, { useState } from "react";
 import { supabase } from "@/supabaseClient";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -15,30 +11,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  ArrowLeft,
-  Save,
-  Loader2,
-  Plus,
-  ArrowRight,
-  Fuel,
-  X,
-  Route,
-} from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2, Save, Plus, X } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function FuelRegistrarViaje() {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const [error, setError] = useState(null);
-  const [mostrarNuevoConductor, setMostrarNuevoConductor] = useState(false);
-  const [mostrarNuevoCamion, setMostrarNuevoCamion] = useState(false);
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [viaje, setViaje] = useState({
-    // FIX: Inicializa la fecha basándose en la zona horaria local.
-    // Usar 'en-CA' como locale da el formato YYYY-MM-DD.
-    fecha: new Date().toLocaleDateString("en-CA"), // <- CAMBIO AQUÍ
+  // Estado del formulario
+  const [formData, setFormData] = useState({
+    fecha: "",
+    fecha_llegada: "", // <--- NUEVO CAMPO
     conductor_id: "",
     conductor_nombre: "",
     camion_id: "",
@@ -46,6 +31,7 @@ export default function FuelRegistrarViaje() {
     camion_placas: "",
     ruta_ida: "",
     kilometros_ida: "",
+    rutas_adicionales: [],
     ruta_regreso: "",
     kilometros_regreso: "",
     litros_combustible: "",
@@ -53,812 +39,399 @@ export default function FuelRegistrarViaje() {
     notas: "",
   });
 
-  const [rutasAdicionales, setRutasAdicionales] = useState([]);
-
-  const [nuevoConductor, setNuevoConductor] = useState({
-    nombre: "",
-    licencia: "",
-    telefono: "",
-  });
-
-  const [nuevoCamion, setNuevoCamion] = useState({
-    nombre: "",
-    placas: "",
-  });
-
-  // *** CAMBIO: Usar supabase para obtener conductores ***
+  // Queries para llenar los Selects
   const { data: conductores = [] } = useQuery({
     queryKey: ["conductores"],
     queryFn: async () => {
       const { data, error } = await supabase.from("Conductor").select("*");
-      if (error) throw new Error(error.message);
+      if (error) throw error;
       return data;
     },
   });
 
-  // *** CAMBIO: Usar supabase para obtener camiones ***
   const { data: camiones = [] } = useQuery({
     queryKey: ["camiones"],
     queryFn: async () => {
       const { data, error } = await supabase.from("Camion").select("*");
-      if (error) throw new Error(error.message);
+      if (error) throw error;
       return data;
     },
   });
 
-  // *** CAMBIO: Usar supabase para crear viajes ***
-  const crearViajeMutation = useMutation({
-    mutationFn: async (data) => {
-      const { data: result, error } = await supabase
-        .from("Viaje")
-        .insert([data])
-        .select();
-      if (error) throw new Error(error.message);
-      return result;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["viajes"] });
-      // *** CAMBIO: Redirige al dashboard principal después de crear ***
-      navigate(createPageUrl("ControlCombustible"));
-    },
-    onError: (err) => {
-      setError("Error al registrar el viaje. Por favor intenta de nuevo.");
-      console.error("Error creating trip:", err); // Log para depuración
-    },
-  });
-
-  // *** CAMBIO: Usar supabase para crear conductores ***
-  const crearConductorMutation = useMutation({
-    mutationFn: async (data) => {
-      const { data: result, error } = await supabase
-        .from("Conductor")
-        .insert([data])
-        .select();
-      if (error) throw new Error(error.message);
-      return result[0];
-    },
-    onSuccess: (conductor) => {
-      queryClient.invalidateQueries({ queryKey: ["conductores"] });
-      setViaje((prev) => ({
-        ...prev,
-        conductor_id: String(conductor.id),
-        conductor_nombre: conductor.nombre,
-      }));
-      setMostrarNuevoConductor(false);
-      setNuevoConductor({ nombre: "", licencia: "", telefono: "" });
-    },
-    onError: (err) => {
-      setError("Error al crear el conductor.");
-      console.error("Error creating driver:", err); // Log para depuración
-    },
-  });
-
-  // *** CAMBIO: Usar supabase para crear camiones ***
-  const crearCamionMutation = useMutation({
-    mutationFn: async (data) => {
-      const { data: result, error } = await supabase
-        .from("Camion")
-        .insert([data])
-        .select();
-      if (error) throw new Error(error.message);
-      return result[0];
-    },
-    onSuccess: (camion) => {
-      queryClient.invalidateQueries({ queryKey: ["camiones"] });
-      setViaje((prev) => ({
-        ...prev,
-        camion_id: String(camion.id),
-        camion_nombre: camion.nombre,
-        camion_placas: camion.placas,
-      }));
-      setMostrarNuevoCamion(false);
-      setNuevoCamion({ nombre: "", placas: "" });
-    },
-    onError: (err) => {
-      setError("Error al crear el camión.");
-      console.error("Error creating truck:", err); // Log para depuración
-    },
-  });
-
-  // --- Lógica de rutas adicionales ---
-  const agregarRutaAdicional = () => {
-    setRutasAdicionales([...rutasAdicionales, { ruta: "", kilometros: "" }]);
-  };
-
-  const eliminarRutaAdicional = (index) => {
-    setRutasAdicionales(rutasAdicionales.filter((_, i) => i !== index));
-  };
-
-  const actualizarRutaAdicional = (index, campo, valor) => {
-    const nuevasRutas = [...rutasAdicionales];
-    nuevasRutas[index][campo] = valor;
-    setRutasAdicionales(nuevasRutas);
-  };
-
-  // --- Lógica de envío del formulario (incluye validación) ---
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError(null);
-
-    const kmIda = parseFloat(viaje.kilometros_ida);
-    const kmRegreso = parseFloat(viaje.kilometros_regreso);
-    const litros = parseFloat(viaje.litros_combustible);
-
-    // *** VALIDACIÓN DE CAMPOS OBLIGATORIOS ***
-    if (
-      !viaje.fecha ||
-      !viaje.conductor_id ||
-      !viaje.camion_id ||
-      !viaje.ruta_ida ||
-      !kmIda ||
-      isNaN(kmIda) ||
-      !viaje.ruta_regreso ||
-      !kmRegreso ||
-      isNaN(kmRegreso) ||
-      !litros ||
-      isNaN(litros)
-    ) {
-      setError(
-        "Por favor completa todos los campos obligatorios marcados con *."
-      );
-      return;
-    }
-    if (litros <= 0) {
-      setError("Los litros consumidos deben ser mayores a cero.");
-      return;
-    }
-
-    // Validar rutas adicionales si existen
-    for (let i = 0; i < rutasAdicionales.length; i++) {
-      const kmAdicional = parseFloat(rutasAdicionales[i].kilometros);
-      if (
-        !rutasAdicionales[i].ruta ||
-        !kmAdicional ||
-        isNaN(kmAdicional) ||
-        kmAdicional < 0
-      ) {
-        setError(
-          `Por favor completa correctamente los datos (ruta y km > 0) de la ruta adicional ${
-            i + 1
-          }.`
-        );
-        return;
-      }
-    }
-
-    const kmAdicionales = rutasAdicionales.reduce((sum, ruta) => {
-      return sum + parseFloat(ruta.kilometros || 0);
-    }, 0);
-
-    const kmTotal = kmIda + kmAdicionales + kmRegreso;
-
-    const datosViaje = {
-      fecha: `${viaje.fecha}T12:00:00`,
-      conductor_id: viaje.conductor_id ? viaje.conductor_id : null,
-      conductor_nombre: viaje.conductor_nombre,
-      camion_id: viaje.camion_id ? viaje.camion_id : null,
-      camion_nombre: viaje.camion_nombre,
-      camion_placas: viaje.camion_placas,
-      ruta_ida: viaje.ruta_ida,
-      kilometros_ida: kmIda,
-      rutas_adicionales: rutasAdicionales.map((r) => ({
-        ruta: r.ruta,
-        kilometros: parseFloat(r.kilometros || 0),
-      })),
-      ruta_regreso: viaje.ruta_regreso,
-      kilometros_regreso: kmRegreso,
-      kilometros_total: kmTotal,
-      litros_combustible: litros,
-      km_por_litro: kmTotal / litros,
-      costo_combustible: viaje.costo_combustible
-        ? parseFloat(viaje.costo_combustible)
-        : null,
-      notas: viaje.notas,
-    };
-
-    crearViajeMutation.mutate(datosViaje);
-  };
-
-  // --- Handlers para Selects ---
-  const handleConductorChange = (conductorId) => {
-    const conductor = conductores.find((c) => String(c.id) === conductorId);
-    setViaje((prev) => ({
+  // Manejadores de cambios
+  const handleConductorChange = (val) => {
+    const conductor = conductores.find((c) => String(c.id) === val);
+    setFormData((prev) => ({
       ...prev,
-      conductor_id: conductorId,
+      conductor_id: val,
       conductor_nombre: conductor?.nombre || "",
     }));
   };
 
-  const handleCamionChange = (camionId) => {
-    const camion = camiones.find((c) => String(c.id) === camionId);
-    setViaje((prev) => ({
+  const handleCamionChange = (val) => {
+    const camion = camiones.find((c) => String(c.id) === val);
+    setFormData((prev) => ({
       ...prev,
-      camion_id: camionId,
+      camion_id: val,
       camion_nombre: camion?.nombre || "",
       camion_placas: camion?.placas || "",
     }));
   };
 
-  // --- Lógica de cálculo ---
-  const calcularEficiencia = () => {
-    const kmIda = parseFloat(viaje.kilometros_ida) || 0;
-    const kmRegreso = parseFloat(viaje.kilometros_regreso) || 0;
-    const kmAdicionales = rutasAdicionales.reduce((sum, ruta) => {
-      return sum + parseFloat(ruta.kilometros || 0);
-    }, 0);
-    const litros = parseFloat(viaje.litros_combustible);
-
-    if (litros <= 0 || isNaN(litros)) return "-";
-
-    const kmTotal = kmIda + kmAdicionales + kmRegreso;
-    return (kmTotal / litros).toFixed(2);
+  const agregarRutaAdicional = () => {
+    setFormData((prev) => ({
+      ...prev,
+      rutas_adicionales: [
+        ...prev.rutas_adicionales,
+        { ruta: "", kilometros: "" },
+      ],
+    }));
   };
 
-  const calcularKmTotales = () => {
-    const kmIda = parseFloat(viaje.kilometros_ida) || 0;
-    const kmRegreso = parseFloat(viaje.kilometros_regreso) || 0;
-    const kmAdicionales = rutasAdicionales.reduce((sum, ruta) => {
-      return sum + parseFloat(ruta.kilometros || 0);
-    }, 0);
-    return kmIda + kmAdicionales + kmRegreso;
+  const eliminarRutaAdicional = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      rutas_adicionales: prev.rutas_adicionales.filter((_, i) => i !== index),
+    }));
   };
 
-  const eficiencia = calcularEficiencia();
-  const kmTotales = calcularKmTotales();
+  const actualizarRutaAdicional = (index, campo, valor) => {
+    const nuevas = [...formData.rutas_adicionales];
+    nuevas[index][campo] = valor;
+    setFormData((prev) => ({ ...prev, rutas_adicionales: nuevas }));
+  };
 
-  // --- JSX (interfaz de usuario) ---
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const kmIda = parseFloat(formData.kilometros_ida) || 0;
+      const kmRegreso = parseFloat(formData.kilometros_regreso) || 0;
+      const kmAdicionales = formData.rutas_adicionales.reduce(
+        (sum, r) => sum + parseFloat(r.kilometros || 0),
+        0
+      );
+      const kmTotal = kmIda + kmAdicionales + kmRegreso;
+      const litros = parseFloat(formData.litros_combustible) || 0;
+
+      const payload = {
+        fecha: formData.fecha,
+        fecha_llegada: formData.fecha_llegada || null, // <--- ENVIAMOS EL NUEVO CAMPO
+        conductor_id: formData.conductor_id || null,
+        conductor_nombre: formData.conductor_nombre,
+        camion_id: formData.camion_id || null,
+        camion_nombre: formData.camion_nombre,
+        camion_placas: formData.camion_placas,
+        ruta_ida: formData.ruta_ida,
+        kilometros_ida: kmIda,
+        rutas_adicionales: formData.rutas_adicionales,
+        ruta_regreso: formData.ruta_regreso,
+        kilometros_regreso: kmRegreso,
+        kilometros_total: kmTotal,
+        litros_combustible: litros,
+        km_por_litro: litros > 0 ? kmTotal / litros : 0,
+        costo_combustible: formData.costo_combustible
+          ? parseFloat(formData.costo_combustible)
+          : null,
+        notas: formData.notas,
+      };
+
+      const { error } = await supabase.from("Viaje").insert([payload]);
+      if (error) throw error;
+
+      toast({
+        title: "Viaje registrado",
+        description: "El viaje se ha guardado exitosamente.",
+      });
+
+      // Resetear formulario
+      setFormData({
+        fecha: "",
+        fecha_llegada: "",
+        conductor_id: "",
+        conductor_nombre: "",
+        camion_id: "",
+        camion_nombre: "",
+        camion_placas: "",
+        ruta_ida: "",
+        kilometros_ida: "",
+        rutas_adicionales: [],
+        ruta_regreso: "",
+        kilometros_regreso: "",
+        litros_combustible: "",
+        costo_combustible: "",
+        notas: "",
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo registrar el viaje.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <div className="p-4 md:p-8 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+    <div className="p-4 md:p-8 bg-slate-50 min-h-screen">
       <div className="max-w-4xl mx-auto">
-        {/* Encabezado */}
-        <div className="flex items-center gap-4 mb-8">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => navigate(createPageUrl("ControlCombustible"))}
-            className="shadow-md"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">
-              Registrar Nuevo Viaje
-            </h1>
-            <p className="text-slate-600 mt-1">
-              Ingresa los detalles del viaje y consumo
-            </p>
-          </div>
-        </div>
+        <h1 className="text-3xl font-bold text-slate-900 mb-6">
+          Registrar Nuevo Viaje
+        </h1>
 
-        {/* Alerta de error */}
-        {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        {/* Formulario */}
-        <Card className="border-none shadow-xl">
-          <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-blue-50 to-slate-50">
-            <CardTitle className="text-xl font-bold text-slate-900">
-              Detalles del Viaje
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Fila: Fecha, Conductor, Camión */}
-              <div className="grid md:grid-cols-3 gap-6">
-                {/* Fecha */}
+        <form onSubmit={handleSubmit}>
+          <Card className="border-none shadow-lg">
+            <CardHeader className="border-b border-slate-100 bg-white">
+              <CardTitle>Detalles del Viaje</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 space-y-6 bg-white">
+              {/* Sección 1: Fechas y Unidad */}
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="fecha"
-                    className="text-slate-700 font-semibold"
-                  >
-                    Fecha <span className="text-red-500">*</span>
+                  <Label htmlFor="fecha">
+                    Fecha Salida <span className="text-red-500">*</span>
                   </Label>
                   <Input
-                    id="fecha"
                     type="date"
-                    value={viaje.fecha}
+                    id="fecha"
+                    value={formData.fecha}
                     onChange={(e) =>
-                      setViaje({ ...viaje, fecha: e.target.value })
+                      setFormData({ ...formData, fecha: e.target.value })
                     }
                     required
-                    className="border-slate-200"
                   />
                 </div>
-                {/* Conductor */}
+
+                {/* --- NUEVO CAMPO FECHA LLEGADA --- */}
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <Label
-                      htmlFor="conductor"
-                      className="text-slate-700 font-semibold"
-                    >
-                      Conductor <span className="text-red-500">*</span>
-                    </Label>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() =>
-                        setMostrarNuevoConductor(!mostrarNuevoConductor)
-                      }
-                      className="text-blue-600 hover:text-blue-700 gap-1 h-auto p-1"
-                    >
-                      <Plus className="w-4 h-4" /> Nuevo
-                    </Button>
-                  </div>
-                  {!mostrarNuevoConductor ? (
-                    <Select
-                      value={viaje.conductor_id}
-                      onValueChange={handleConductorChange}
-                      required
-                    >
-                      <SelectTrigger className="border-slate-200">
-                        <SelectValue placeholder="Seleccionar conductor" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {conductores.map((conductor) => (
-                          <SelectItem
-                            key={conductor.id}
-                            value={String(conductor.id)}
-                          >
-                            {conductor.nombre}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    /* Formulario nuevo conductor */
-                    <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                      <Input
-                        placeholder="Nombre completo"
-                        value={nuevoConductor.nombre}
-                        onChange={(e) =>
-                          setNuevoConductor({
-                            ...nuevoConductor,
-                            nombre: e.target.value,
-                          })
-                        }
-                        className="bg-white"
-                        required
-                      />
-                      <Input
-                        placeholder="Licencia"
-                        value={nuevoConductor.licencia}
-                        onChange={(e) =>
-                          setNuevoConductor({
-                            ...nuevoConductor,
-                            licencia: e.target.value,
-                          })
-                        }
-                        className="bg-white"
-                      />
-                      <Input
-                        placeholder="Teléfono"
-                        value={nuevoConductor.telefono}
-                        onChange={(e) =>
-                          setNuevoConductor({
-                            ...nuevoConductor,
-                            telefono: e.target.value,
-                          })
-                        }
-                        className="bg-white"
-                      />
-                      <Button
-                        type="button"
-                        onClick={() =>
-                          crearConductorMutation.mutate(nuevoConductor)
-                        }
-                        disabled={
-                          !nuevoConductor.nombre ||
-                          crearConductorMutation.isPending
-                        }
-                        className="w-full bg-blue-600 hover:bg-blue-700"
-                      >
-                        {crearConductorMutation.isPending ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Guardando...
-                          </>
-                        ) : (
-                          "Guardar Conductor"
-                        )}
-                      </Button>
-                    </div>
-                  )}
+                  <Label htmlFor="fecha_llegada">Fecha de Llegada / Carga</Label>
+                  <Input
+                    type="date"
+                    id="fecha_llegada"
+                    value={formData.fecha_llegada}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        fecha_llegada: e.target.value,
+                      })
+                    }
+                  />
                 </div>
-                {/* Camión */}
+                {/* ---------------------------------- */}
+
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <Label
-                      htmlFor="camion"
-                      className="text-slate-700 font-semibold"
-                    >
-                      Camión <span className="text-red-500">*</span>
-                    </Label>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setMostrarNuevoCamion(!mostrarNuevoCamion)}
-                      className="text-green-600 hover:text-green-700 gap-1 h-auto p-1"
-                    >
-                      <Plus className="w-4 h-4" /> Nuevo
-                    </Button>
-                  </div>
-                  {!mostrarNuevoCamion ? (
-                    <Select
-                      value={viaje.camion_id}
-                      onValueChange={handleCamionChange}
-                      required
-                    >
-                      <SelectTrigger className="border-slate-200">
-                        <SelectValue placeholder="Seleccionar camión" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {camiones.map((camion) => (
-                          <SelectItem key={camion.id} value={String(camion.id)}>
-                            {camion.nombre} - {camion.placas}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    /* Formulario nuevo camión */
-                    <div className="space-y-3 p-4 bg-green-50 rounded-lg border border-green-200">
-                      <Input
-                        placeholder="Nombre del camión"
-                        value={nuevoCamion.nombre}
-                        onChange={(e) =>
-                          setNuevoCamion({
-                            ...nuevoCamion,
-                            nombre: e.target.value,
-                          })
-                        }
-                        className="bg-white"
-                        required
-                      />
-                      <Input
-                        placeholder="Placas"
-                        value={nuevoCamion.placas}
-                        onChange={(e) =>
-                          setNuevoCamion({
-                            ...nuevoCamion,
-                            placas: e.target.value,
-                          })
-                        }
-                        className="bg-white"
-                        required
-                      />
-                      <Button
-                        type="button"
-                        onClick={() => crearCamionMutation.mutate(nuevoCamion)}
-                        disabled={
-                          !nuevoCamion.nombre ||
-                          !nuevoCamion.placas ||
-                          crearCamionMutation.isPending
-                        }
-                        className="w-full bg-green-600 hover:bg-green-700"
-                      >
-                        {crearCamionMutation.isPending ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Guardando...
-                          </>
-                        ) : (
-                          "Guardar Camión"
-                        )}
-                      </Button>
-                    </div>
-                  )}
+                  <Label>Conductor</Label>
+                  <Select
+                    value={formData.conductor_id}
+                    onValueChange={handleConductorChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {conductores.map((c) => (
+                        <SelectItem key={c.id} value={String(c.id)}>
+                          {c.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Camión</Label>
+                  <Select
+                    value={formData.camion_id}
+                    onValueChange={handleCamionChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {camiones.map((c) => (
+                        <SelectItem key={c.id} value={String(c.id)}>
+                          {c.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
-              {/* Ruta Ida */}
-              <div className="space-y-4 p-4 bg-blue-50/50 rounded-lg border border-blue-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <ArrowRight className="w-5 h-5 text-blue-600" />
-                  <h3 className="font-bold text-slate-900">Ruta de Ida</h3>
+              {/* Sección 2: Ruta Ida */}
+              <div className="p-4 bg-blue-50/50 rounded-lg border border-blue-100 grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>
+                    Ruta Ida <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    value={formData.ruta_ida}
+                    onChange={(e) =>
+                      setFormData({ ...formData, ruta_ida: e.target.value })
+                    }
+                    placeholder="Origen - Destino"
+                    required
+                  />
                 </div>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="ruta_ida"
-                      className="text-slate-700 font-semibold"
-                    >
-                      Ruta <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="ruta_ida"
-                      placeholder="Ej: Ciudad A - Ciudad B"
-                      value={viaje.ruta_ida}
-                      onChange={(e) =>
-                        setViaje({ ...viaje, ruta_ida: e.target.value })
-                      }
-                      required
-                      className="border-slate-200 bg-white"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="kilometros_ida"
-                      className="text-slate-700 font-semibold"
-                    >
-                      Kilómetros <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="kilometros_ida"
-                      type="number"
-                      step="0.1"
-                      placeholder="0"
-                      value={viaje.kilometros_ida}
-                      onChange={(e) =>
-                        setViaje({ ...viaje, kilometros_ida: e.target.value })
-                      }
-                      required
-                      className="border-slate-200 bg-white"
-                      min="0"
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label>
+                    Kilómetros Ida <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    value={formData.kilometros_ida}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        kilometros_ida: e.target.value,
+                      })
+                    }
+                    required
+                  />
                 </div>
               </div>
 
-              {/* Rutas Adicionales */}
-              <div className="space-y-4 p-4 bg-purple-50/50 rounded-lg border border-purple-100">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Route className="w-5 h-5 text-purple-600" />
-                    <h3 className="font-bold text-slate-900">
-                      Rutas Adicionales
-                    </h3>
-                    <span className="text-xs text-slate-500">(Opcional)</span>
-                  </div>
+              {/* Sección 3: Rutas Adicionales */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label>Rutas Adicionales</Label>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={agregarRutaAdicional}
-                    className="gap-2 hover:bg-purple-50"
+                    className="gap-2"
                   >
-                    <Plus className="w-4 h-4" /> Agregar Ruta
+                    <Plus className="w-4 h-4" /> Agregar
                   </Button>
                 </div>
-                {rutasAdicionales.length === 0 ? (
-                  <p className="text-sm text-slate-500 text-center py-4">
-                    No hay rutas adicionales.
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {rutasAdicionales.map((ruta, index) => (
-                      <div
-                        key={index}
-                        className="grid md:grid-cols-[1fr_auto_auto] gap-3 p-3 bg-white rounded-lg border border-purple-200"
-                      >
-                        <Input
-                          placeholder="Ruta adicional"
-                          value={ruta.ruta}
-                          onChange={(e) =>
-                            actualizarRutaAdicional(
-                              index,
-                              "ruta",
-                              e.target.value
-                            )
-                          }
-                          className="border-slate-200"
-                        />
-                        <Input
-                          type="number"
-                          step="0.1"
-                          placeholder="km"
-                          value={ruta.kilometros}
-                          onChange={(e) =>
-                            actualizarRutaAdicional(
-                              index,
-                              "kilometros",
-                              e.target.value
-                            )
-                          }
-                          className="border-slate-200 w-32"
-                          min="0"
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => eliminarRutaAdicional(index)}
-                          className="hover:bg-red-50 hover:text-red-700"
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Ruta Regreso */}
-              <div className="space-y-4 p-4 bg-orange-50/50 rounded-lg border border-orange-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <ArrowLeft className="w-5 h-5 text-orange-600" />
-                  <h3 className="font-bold text-slate-900">Ruta de Regreso</h3>
-                </div>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="ruta_regreso"
-                      className="text-slate-700 font-semibold"
-                    >
-                      Ruta <span className="text-red-500">*</span>
-                    </Label>
+                {formData.rutas_adicionales.map((ruta, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
                     <Input
-                      id="ruta_regreso"
-                      placeholder="Ej: Ciudad B - Ciudad A"
-                      value={viaje.ruta_regreso}
+                      placeholder="Ruta adicional"
+                      value={ruta.ruta}
                       onChange={(e) =>
-                        setViaje({ ...viaje, ruta_regreso: e.target.value })
+                        actualizarRutaAdicional(idx, "ruta", e.target.value)
                       }
-                      required
-                      className="border-slate-200 bg-white"
+                      className="flex-1"
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="kilometros_regreso"
-                      className="text-slate-700 font-semibold"
-                    >
-                      Kilómetros <span className="text-red-500">*</span>
-                    </Label>
                     <Input
-                      id="kilometros_regreso"
                       type="number"
                       step="0.1"
-                      placeholder="0"
-                      value={viaje.kilometros_regreso}
+                      placeholder="km"
+                      value={ruta.kilometros}
                       onChange={(e) =>
-                        setViaje({
-                          ...viaje,
-                          kilometros_regreso: e.target.value,
-                        })
+                        actualizarRutaAdicional(
+                          idx,
+                          "kilometros",
+                          e.target.value
+                        )
                       }
-                      required
-                      className="border-slate-200 bg-white"
-                      min="0"
+                      className="w-24"
                     />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => eliminarRutaAdicional(idx)}
+                    >
+                      <X className="w-4 h-4 text-red-500" />
+                    </Button>
                   </div>
+                ))}
+              </div>
+
+              {/* Sección 4: Ruta Regreso */}
+              <div className="p-4 bg-orange-50/50 rounded-lg border border-orange-100 grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Ruta Regreso</Label>
+                  <Input
+                    value={formData.ruta_regreso}
+                    onChange={(e) =>
+                      setFormData({ ...formData, ruta_regreso: e.target.value })
+                    }
+                    placeholder="Regreso a base"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Kilómetros Regreso</Label>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    value={formData.kilometros_regreso}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        kilometros_regreso: e.target.value,
+                      })
+                    }
+                  />
                 </div>
               </div>
 
-              <Separator />
-
-              {/* Combustible */}
-              <div className="space-y-4 p-4 bg-green-50/50 rounded-lg border border-green-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <Fuel className="w-5 h-5 text-green-600" />
-                  <h3 className="font-bold text-slate-900">
-                    Consumo de Combustible
-                  </h3>
-                  {kmTotales > 0 && (
-                    <span className="text-sm text-slate-600 ml-2">
-                      (Total: {kmTotales.toFixed(1)} km)
-                    </span>
-                  )}
+              {/* Sección 5: Combustible */}
+              <div className="p-4 bg-green-50/50 rounded-lg border border-green-100 grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>
+                    Litros Diesel <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={formData.litros_combustible}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        litros_combustible: e.target.value,
+                      })
+                    }
+                    required
+                  />
                 </div>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="litros"
-                      className="text-slate-700 font-semibold"
-                    >
-                      Litros <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="litros"
-                      type="number"
-                      step="0.01"
-                      placeholder="0"
-                      value={viaje.litros_combustible}
-                      onChange={(e) =>
-                        setViaje({
-                          ...viaje,
-                          litros_combustible: e.target.value,
-                        })
-                      }
-                      required
-                      className="border-slate-200 bg-white"
-                      min="0.01"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="costo"
-                      className="text-slate-700 font-semibold"
-                    >
-                      Costo Total (opcional)
-                    </Label>
-                    <Input
-                      id="costo"
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      value={viaje.costo_combustible}
-                      onChange={(e) =>
-                        setViaje({
-                          ...viaje,
-                          costo_combustible: e.target.value,
-                        })
-                      }
-                      className="border-slate-200 bg-white"
-                      min="0"
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label>Costo Total ($)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={formData.costo_combustible}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        costo_combustible: e.target.value,
+                      })
+                    }
+                  />
                 </div>
-                {eficiencia !== "-" && (
-                  <div className="p-4 bg-white rounded-lg border border-green-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-slate-700 font-semibold">
-                          Eficiencia:
-                        </span>
-                        <p className="text-xs text-slate-500 mt-1">
-                          {kmTotales.toFixed(1)} km ÷ {viaje.litros_combustible}{" "}
-                          L
-                        </p>
-                      </div>
-                      <span className="text-3xl font-bold text-green-700">
-                        {eficiencia} km/L
-                      </span>
-                    </div>
-                  </div>
-                )}
               </div>
 
-              {/* Notas */}
               <div className="space-y-2">
-                <Label htmlFor="notas" className="text-slate-700 font-semibold">
-                  Notas Adicionales
-                </Label>
+                <Label>Notas</Label>
                 <Textarea
-                  id="notas"
-                  placeholder="Observaciones..."
-                  value={viaje.notas}
+                  value={formData.notas}
                   onChange={(e) =>
-                    setViaje({ ...viaje, notas: e.target.value })
+                    setFormData({ ...formData, notas: e.target.value })
                   }
-                  rows={4}
-                  className="border-slate-200 resize-none"
                 />
               </div>
 
-              {/* Botones */}
-              <div className="flex gap-4 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate(createPageUrl("ControlCombustible"))}
-                  className="flex-1"
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={crearViajeMutation.isPending}
-                  className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-lg gap-2"
-                >
-                  {crearViajeMutation.isPending ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" /> Guardando...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4" /> Registrar Viaje
-                    </>
-                  )}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2 h-12 text-lg"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <Save className="w-5 h-5" />
+                )}{" "}
+                Registrar Viaje
+              </Button>
+            </CardContent>
+          </Card>
+        </form>
       </div>
     </div>
   );
