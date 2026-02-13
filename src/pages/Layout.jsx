@@ -64,13 +64,14 @@ export default function Layout({ children, currentPageName }) {
     <div className="min-h-screen flex bg-slate-50 dark:bg-background transition-colors duration-300">
       <aside className="hidden md:flex md:flex-col w-64 bg-card border-r border-border fixed h-screen z-20">
         <div className="border-b border-border p-6">
-          <div className="flex flex-col items-center gap-2">
-            {/* CAMBIO: Fondo transparente en modo oscuro para que se fusione */}
-            <div className="bg-white/90 dark:bg-transparent p-2 rounded-lg transition-colors">
+          {/* CAMBIO: gap-2 -> gap-0 para reducir separación vertical */}
+          <div className="flex flex-col items-center gap-0">
+            {/* CAMBIO: p-2 -> p-1 para reducir el recuadro y acercar más el logo */}
+            <div className="bg-white/90 dark:bg-transparent p-1 rounded-lg transition-colors">
               <img
                 src="/img/LOGO.PNG"
                 alt="Logo de Transportes GM"
-                className="h-8 w-auto transition-all"
+                className="w-40 h-auto transition-all"
               />
             </div>
 
