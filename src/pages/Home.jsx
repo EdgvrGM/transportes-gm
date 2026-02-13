@@ -83,7 +83,8 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
+    /* CAMBIO: Se agrega la clase 'force-light' para bloquear el modo oscuro en esta página */
+    <div className="force-light min-h-screen bg-white text-slate-900">
       <style>{`
         :root {
           --primary-color: ${primaryColor};
@@ -246,7 +247,7 @@ export default function Home() {
                   >
                     {section}
                   </button>
-                )
+                ),
               )}
             </div>
 
@@ -281,7 +282,7 @@ export default function Home() {
                   >
                     {section}
                   </button>
-                )
+                ),
               )}
             </div>
           </motion.div>
@@ -913,7 +914,7 @@ export default function Home() {
                   "Av. Marciano Cabrera 321, Tepeyac, Tecoman, Colima, 28110",
                 content2: null,
                 link: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                  "Av. Marciano Cabrera 321, Tepeyac, Tecoman, Colima, 28110"
+                  "Av. Marciano Cabrera 321, Tepeyac, Tecoman, Colima, 28110",
                 )}`,
                 bgGradient: "from-orange-50 to-amber-50",
                 iconBg: "from-orange-400 to-amber-500",
@@ -996,7 +997,7 @@ export default function Home() {
                                 <a
                                   href={`tel:${contact.content.replace(
                                     /\s/g,
-                                    ""
+                                    "",
                                   )}`}
                                   className="block text-lg text-gray-700 hover:text-gray-900 transition-all duration-300 font-medium hover:scale-105"
                                 >
@@ -1006,7 +1007,7 @@ export default function Home() {
                                   <a
                                     href={`tel:${contact.content2.replace(
                                       /\s/g,
-                                      ""
+                                      "",
                                     )}`}
                                     className="block text-lg text-gray-700 hover:text-gray-900 transition-all duration-300 font-medium hover:scale-105"
                                   >
@@ -1086,7 +1087,7 @@ export default function Home() {
                       >
                         {link}
                       </button>
-                    )
+                    ),
                   )}
                   <Link
                     to={createPageUrl("Unidades")}
@@ -1123,7 +1124,7 @@ export default function Home() {
           </div>
 
           <div className="border-t border-gray-800 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 Transportes GM. Todos los derechos reservados.</p>
+            <p>© 2024 Transportes GM. Todos los derechos reservados.</p>
           </div>
         </div>
       </footer>

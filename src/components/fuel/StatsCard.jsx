@@ -17,7 +17,8 @@ export default function StatsCard({
       transition={{ duration: 0.4 }}
       className="h-full"
     >
-      <Card className="relative overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-300 h-full bg-white">
+      {/* CAMBIO: bg-white -> bg-card, text-slate -> text-foreground/muted-foreground */}
+      <Card className="relative overflow-hidden border-border shadow-md hover:shadow-xl transition-all duration-300 h-full bg-card">
         {/* Fondos decorativos sutiles */}
         <div
           className={`absolute top-0 right-0 w-32 h-32 transform translate-x-8 -translate-y-8 ${gradient} rounded-full opacity-15 blur-2xl pointer-events-none`}
@@ -28,26 +29,22 @@ export default function StatsCard({
 
         <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full">
           <div className="flex items-start justify-between gap-4">
-            {/* Contenedor de Texto */}
             <div className="flex-1 min-w-0">
-              {" "}
-              {/* min-w-0 es CLAVE para evitar desbordamiento en flex items */}
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 truncate">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 truncate">
                 {title}
               </p>
               <div className="flex flex-wrap items-baseline gap-x-1 gap-y-0">
-                <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight break-all">
+                <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-foreground tracking-tight break-all">
                   {value}
                 </h3>
                 {subtitle && (
-                  <span className="text-sm sm:text-base font-semibold text-slate-400">
+                  <span className="text-sm sm:text-base font-semibold text-muted-foreground">
                     {subtitle}
                   </span>
                 )}
               </div>
             </div>
 
-            {/* Icono (Tamaño fijo para que no se aplaste) */}
             <div
               className={`flex-shrink-0 p-3 sm:p-4 rounded-2xl ${gradient} shadow-lg transform hover:scale-105 transition-transform duration-300`}
             >
@@ -55,17 +52,14 @@ export default function StatsCard({
             </div>
           </div>
 
-          {/* Sección de Tendencia (Opcional) */}
           {trend && (
-            <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-100">
+            <div className="flex items-center gap-2 mt-4 pt-3 border-t border-border">
               <span
-                className={`text-sm font-bold ${
-                  trend.positive ? "text-green-600" : "text-orange-600"
-                }`}
+                className={`text-sm font-bold ${trend.positive ? "text-green-600 dark:text-green-400" : "text-orange-600 dark:text-orange-400"}`}
               >
                 {trend.value}
               </span>
-              <span className="text-xs text-slate-500 font-medium truncate">
+              <span className="text-xs text-muted-foreground font-medium truncate">
                 {trend.label}
               </span>
             </div>

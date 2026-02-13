@@ -46,24 +46,20 @@ import {
   Save,
   X,
   ArrowRight,
+  Filter,
 } from "lucide-react";
 import { format, getISOWeek, getYear } from "date-fns";
 import { es } from "date-fns/locale";
-
 import FiltrosViajes from "@/components/fuel/FiltrosViajes";
 
 export default function FuelViajes() {
   const queryClient = useQueryClient();
-
-  // Estados de filtros
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
   const [conductorFiltro, setConductorFiltro] = useState("todos");
   const [camionFiltro, setCamionFiltro] = useState("todos");
   const [rutaFiltro, setRutaFiltro] = useState("");
   const [periodoFiltro, setPeriodoFiltro] = useState("todos");
-
-  // Estados de edición/eliminación
   const [viajeAEliminar, setViajeAEliminar] = useState(null);
   const [viajeEditando, setViajeEditando] = useState(null);
   const [dialogAbierto, setDialogAbierto] = useState(false);
@@ -85,7 +81,6 @@ export default function FuelViajes() {
     notas: "",
   });
 
-  // Queries
   const { data: viajes = [], isLoading } = useQuery({
     queryKey: ["viajes"],
     queryFn: async () => {
@@ -116,7 +111,6 @@ export default function FuelViajes() {
     },
   });
 
-  // Mutations
   const eliminarMutation = useMutation({
     mutationFn: async (id) => {
       const { error } = await supabase.from("Viaje").delete().eq("id", id);
@@ -144,11 +138,9 @@ export default function FuelViajes() {
     },
   });
 
-  // Filtrado
   const viajesFiltrados = viajes.filter((viaje) => {
     let cumpleFiltros = true;
     const rutaPrincipal = viaje.ruta_ida || viaje.ruta || "";
-
     if (
       periodoFiltro !== "todos" &&
       periodoFiltro !== "personalizado" &&
@@ -159,15 +151,12 @@ export default function FuelViajes() {
       const semanaViaje = getISOWeek(fechaViaje);
       const anioViaje = getYear(fechaViaje);
       const anioActual = getYear(new Date());
-
-      if (anioViaje !== anioActual || semanaViaje !== semanaSeleccionada) {
+      if (anioViaje !== anioActual || semanaViaje !== semanaSeleccionada)
         cumpleFiltros = false;
-      }
     } else {
       if (fechaInicio && viaje.fecha < fechaInicio) cumpleFiltros = false;
       if (fechaFin && viaje.fecha > fechaFin) cumpleFiltros = false;
     }
-
     if (
       conductorFiltro !== "todos" &&
       String(viaje.conductor_id) !== conductorFiltro
@@ -180,7 +169,6 @@ export default function FuelViajes() {
       !rutaPrincipal.toLowerCase().includes(rutaFiltro.toLowerCase())
     )
       cumpleFiltros = false;
-
     return cumpleFiltros;
   });
 
@@ -198,7 +186,6 @@ export default function FuelViajes() {
     if (viajeAEliminar) eliminarMutation.mutate(viajeAEliminar.id);
   };
 
-  // Funciones de Edición
   const abrirDialogEditar = (viaje) => {
     setViajeEditando(viaje);
     const rutasAdicionales = Array.isArray(viaje.rutas_adicionales)
@@ -254,7 +241,6 @@ export default function FuelViajes() {
       conductor_nombre: conductor?.nombre || "",
     }));
   };
-
   const handleCamionChange = (camionId) => {
     const camion = camiones.find((c) => String(c.id) === camionId);
     setFormData((prev) => ({
@@ -264,32 +250,21 @@ export default function FuelViajes() {
       camion_placas: camion?.placas || "",
     }));
   };
-
-  const agregarRutaAdicional = () => {
-    const currentRutas = Array.isArray(formData.rutas_adicionales)
-      ? formData.rutas_adicionales
-      : [];
+  const agregarRutaAdicional = () =>
     setFormData((prev) => ({
       ...prev,
-      rutas_adicionales: [...currentRutas, { ruta: "", kilometros: "" }],
+      rutas_adicionales: [
+        ...prev.rutas_adicionales,
+        { ruta: "", kilometros: "" },
+      ],
     }));
-  };
-
-  const eliminarRutaAdicional = (index) => {
-    const currentRutas = Array.isArray(formData.rutas_adicionales)
-      ? formData.rutas_adicionales
-      : [];
+  const eliminarRutaAdicional = (index) =>
     setFormData((prev) => ({
       ...prev,
-      rutas_adicionales: currentRutas.filter((_, i) => i !== index),
+      rutas_adicionales: prev.rutas_adicionales.filter((_, i) => i !== index),
     }));
-  };
-
   const actualizarRutaAdicional = (index, campo, valor) => {
-    const currentRutas = Array.isArray(formData.rutas_adicionales)
-      ? formData.rutas_adicionales
-      : [];
-    const nuevasRutas = [...currentRutas];
+    const nuevasRutas = [...formData.rutas_adicionales];
     if (nuevasRutas[index]) {
       nuevasRutas[index][campo] = valor;
       setFormData((prev) => ({ ...prev, rutas_adicionales: nuevasRutas }));
@@ -300,16 +275,12 @@ export default function FuelViajes() {
     e.preventDefault();
     const kmIda = parseFloat(formData.kilometros_ida) || 0;
     const kmRegreso = parseFloat(formData.kilometros_regreso) || 0;
-    const currentRutas = Array.isArray(formData.rutas_adicionales)
-      ? formData.rutas_adicionales
-      : [];
-    const kmAdicionales = currentRutas.reduce(
+    const kmAdicionales = formData.rutas_adicionales.reduce(
       (sum, ruta) => sum + parseFloat(ruta.kilometros || 0),
-      0
+      0,
     );
     const kmTotal = kmIda + kmAdicionales + kmRegreso;
     const litros = parseFloat(formData.litros_combustible) || 0;
-
     const datosViaje = {
       fecha: formData.fecha,
       fecha_llegada: formData.fecha_llegada || null,
@@ -320,7 +291,7 @@ export default function FuelViajes() {
       camion_placas: formData.camion_placas,
       ruta_ida: formData.ruta_ida,
       kilometros_ida: kmIda,
-      rutas_adicionales: currentRutas.map((r) => ({
+      rutas_adicionales: formData.rutas_adicionales.map((r) => ({
         ruta: r.ruta,
         kilometros: parseFloat(r.kilometros || 0),
       })),
@@ -334,41 +305,37 @@ export default function FuelViajes() {
         : null,
       notas: formData.notas,
     };
-
-    if (viajeEditando) {
+    if (viajeEditando)
       actualizarMutation.mutate({ id: viajeEditando.id, data: datosViaje });
-    }
   };
 
   const getEficienciaColor = (kmPorLitro) => {
     if (kmPorLitro > 2.25)
-      return "bg-green-100 text-green-800 border-green-200";
+      return "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800";
     if (kmPorLitro >= 2.0)
-      return "bg-yellow-100 text-yellow-800 border-yellow-200";
-    return "bg-red-100 text-red-800 border-red-200";
+      return "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800";
+    return "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800";
   };
 
-  if (isLoading) {
+  if (isLoading)
     return (
-      <div className="flex items-center justify-center h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      <div className="flex items-center justify-center h-screen bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
-  }
 
   return (
-    <div className="p-4 md:p-8 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+    <div className="p-4 md:p-8 bg-slate-50 dark:bg-background min-h-screen transition-colors duration-300">
       <div className="max-w-[1600px] mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
             Registro de Viajes
           </h1>
-          <p className="text-slate-600">
+          <p className="text-muted-foreground">
             Consulta el historial completo de viajes realizados
           </p>
         </div>
 
-        {/* FILTROS */}
         <div className="mb-8">
           <FiltrosViajes
             fechaInicio={fechaInicio}
@@ -389,36 +356,35 @@ export default function FuelViajes() {
           />
         </div>
 
-        {/* RESUMEN */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="border-none shadow-lg">
+          <Card className="border-none shadow-lg bg-card">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-blue-500 dark:bg-blue-600 rounded-xl flex items-center justify-center">
                   <FileText className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500 font-medium">
+                  <p className="text-sm text-muted-foreground font-medium">
                     Total Viajes
                   </p>
-                  <p className="text-2xl font-bold text-slate-900">
+                  <p className="text-2xl font-bold text-foreground">
                     {viajesFiltrados.length}
                   </p>
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="border-none shadow-lg">
+          <Card className="border-none shadow-lg bg-card">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-purple-500 dark:bg-purple-600 rounded-xl flex items-center justify-center">
                   <MapPin className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500 font-medium">
+                  <p className="text-sm text-muted-foreground font-medium">
                     Kilómetros
                   </p>
-                  <p className="text-2xl font-bold text-slate-900">
+                  <p className="text-2xl font-bold text-foreground">
                     {viajesFiltrados
                       .reduce((sum, v) => sum + (v.kilometros_total || 0), 0)
                       .toFixed(0)}
@@ -427,15 +393,17 @@ export default function FuelViajes() {
               </div>
             </CardContent>
           </Card>
-          <Card className="border-none shadow-lg">
+          <Card className="border-none shadow-lg bg-card">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-orange-500 dark:bg-orange-600 rounded-xl flex items-center justify-center">
                   <Gauge className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500 font-medium">Litros</p>
-                  <p className="text-2xl font-bold text-slate-900">
+                  <p className="text-sm text-muted-foreground font-medium">
+                    Litros
+                  </p>
+                  <p className="text-2xl font-bold text-foreground">
                     {viajesFiltrados
                       .reduce((sum, v) => sum + (v.litros_combustible || 0), 0)
                       .toFixed(0)}
@@ -444,23 +412,25 @@ export default function FuelViajes() {
               </div>
             </CardContent>
           </Card>
-          <Card className="border-none shadow-lg">
+          <Card className="border-none shadow-lg bg-card">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-green-500 dark:bg-green-600 rounded-xl flex items-center justify-center">
                   <Gauge className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500 font-medium">Promedio</p>
-                  <p className="text-2xl font-bold text-slate-900">
+                  <p className="text-sm text-muted-foreground font-medium">
+                    Promedio
+                  </p>
+                  <p className="text-2xl font-bold text-foreground">
                     {(() => {
                       const totalKm = viajesFiltrados.reduce(
                         (sum, v) => sum + (v.kilometros_total || 0),
-                        0
+                        0,
                       );
                       const totalLitros = viajesFiltrados.reduce(
                         (sum, v) => sum + (v.litros_combustible || 0),
-                        0
+                        0,
                       );
                       return totalLitros > 0
                         ? (totalKm / totalLitros).toFixed(2)
@@ -473,18 +443,17 @@ export default function FuelViajes() {
           </Card>
         </div>
 
-        {/* LISTA DE VIAJES */}
-        <Card className="border-none shadow-lg">
-          <CardHeader className="border-b border-slate-100">
-            <CardTitle className="text-xl font-bold text-slate-900">
+        <Card className="border-none shadow-lg bg-card">
+          <CardHeader className="border-b border-border">
+            <CardTitle className="text-xl font-bold text-foreground">
               Historial de Viajes
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
             {viajesFiltrados.length === 0 ? (
               <div className="text-center py-12">
-                <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                <p className="text-slate-500 text-lg">
+                <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground text-lg">
                   No hay viajes que coincidan con los filtros
                 </p>
               </div>
@@ -492,7 +461,7 @@ export default function FuelViajes() {
               <div className="space-y-4">
                 {viajesFiltrados.map((viaje) => {
                   const rutasAdicionales = Array.isArray(
-                    viaje.rutas_adicionales
+                    viaje.rutas_adicionales,
                   )
                     ? viaje.rutas_adicionales
                     : [];
@@ -508,69 +477,63 @@ export default function FuelViajes() {
                   return (
                     <Card
                       key={viaje.id}
-                      className="border border-slate-200 hover:shadow-md transition-shadow"
+                      className="border border-border bg-card hover:shadow-md transition-shadow"
                     >
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1 grid md:grid-cols-4 gap-6">
-                            {/* Columna 1: FECHAS (MODIFICADA: Horizontal Compacta) */}
                             <div className="space-y-3">
-                              {/* Usamos flex-wrap para que si no caben bajen, y items-start para alinearlos */}
                               <div className="flex flex-wrap items-start gap-4">
-                                {/* Bloque Salida */}
                                 <div className="flex items-center gap-2">
-                                  <Calendar className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                                  <Calendar className="w-4 h-4 text-blue-500 dark:text-blue-400 flex-shrink-0" />
                                   <div>
-                                    <span className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                                    <span className="block text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
                                       Salida
                                     </span>
-                                    <span className="text-sm font-semibold text-slate-900">
+                                    <span className="text-sm font-semibold text-foreground">
                                       {format(
                                         new Date(`${viaje.fecha}T12:00:00`),
                                         "dd MMM",
-                                        { locale: es }
+                                        { locale: es },
                                       )}
                                     </span>
                                   </div>
                                 </div>
-
-                                {/* Bloque Llegada */}
                                 {viaje.fecha_llegada && (
                                   <div className="flex items-center gap-2">
-                                    <ArrowRight className="w-4 h-4 text-green-500 flex-shrink-0" />
+                                    <ArrowRight className="w-4 h-4 text-green-500 dark:text-green-400 flex-shrink-0" />
                                     <div>
-                                      <span className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                                      <span className="block text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
                                         Llegada
                                       </span>
-                                      <span className="text-sm font-semibold text-slate-900">
+                                      <span className="text-sm font-semibold text-foreground">
                                         {format(
                                           new Date(
-                                            `${viaje.fecha_llegada}T12:00:00`
+                                            `${viaje.fecha_llegada}T12:00:00`,
                                           ),
                                           "dd MMM",
-                                          { locale: es }
+                                          { locale: es },
                                         )}
                                       </span>
                                     </div>
                                   </div>
                                 )}
                               </div>
-
-                              <div className="pt-2 border-t border-slate-100 mt-2 space-y-2">
+                              <div className="pt-2 border-t border-border mt-2 space-y-2">
                                 {viaje.conductor_nombre && (
                                   <div className="flex items-center gap-2">
-                                    <User className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                                    <span className="text-sm text-slate-700">
+                                    <User className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                    <span className="text-sm text-foreground">
                                       {viaje.conductor_nombre}
                                     </span>
                                   </div>
                                 )}
                                 {viaje.camion_nombre && (
                                   <div className="flex items-center gap-2">
-                                    <Truck className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                                    <span className="text-sm text-slate-700">
+                                    <Truck className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                    <span className="text-sm text-foreground">
                                       {viaje.camion_nombre}{" "}
-                                      <span className="text-xs text-slate-400">
+                                      <span className="text-xs text-muted-foreground">
                                         ({viaje.camion_placas})
                                       </span>
                                     </span>
@@ -578,13 +541,11 @@ export default function FuelViajes() {
                                 )}
                               </div>
                             </div>
-
-                            {/* Columna 2: RUTAS */}
                             <div className="space-y-3">
                               <div className="space-y-2">
                                 <div className="flex items-start gap-2">
-                                  <MapPin className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
-                                  <span className="text-sm text-slate-700">
+                                  <MapPin className="w-4 h-4 text-blue-500 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                                  <span className="text-sm text-foreground">
                                     {rutaPrincipal}
                                   </span>
                                 </div>
@@ -594,67 +555,63 @@ export default function FuelViajes() {
                                       key={idx}
                                       className="flex items-start gap-2 ml-6"
                                     >
-                                      <Route className="w-3 h-3 text-purple-500 mt-0.5 flex-shrink-0" />
-                                      <span className="text-sm text-slate-600">
+                                      <Route className="w-3 h-3 text-purple-500 dark:text-purple-400 mt-0.5 flex-shrink-0" />
+                                      <span className="text-sm text-muted-foreground">
                                         {rutaAd.ruta}
                                       </span>
                                     </div>
                                   ))}
                                 {tieneRegreso && (
                                   <div className="flex items-start gap-2">
-                                    <ArrowLeftRight className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
-                                    <span className="text-sm text-slate-700">
+                                    <ArrowLeftRight className="w-4 h-4 text-orange-500 dark:text-orange-400 mt-0.5 flex-shrink-0" />
+                                    <span className="text-sm text-foreground">
                                       {viaje.ruta_regreso}
                                     </span>
                                   </div>
                                 )}
                               </div>
                             </div>
-                            {/* Columna 3: KILOMETRAJE Y COSTOS */}
                             <div className="space-y-3">
                               <div className="space-y-2">
                                 <div className="flex items-center justify-between">
-                                  <span className="text-xs text-slate-500">
+                                  <span className="text-xs text-muted-foreground">
                                     Kilómetros:
                                   </span>
-                                  <span className="text-sm font-semibold text-slate-900">
+                                  <span className="text-sm font-semibold text-foreground">
                                     {kmTotal.toFixed(1)} km
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                  <span className="text-xs text-slate-500">
+                                  <span className="text-xs text-muted-foreground">
                                     Litros:
                                   </span>
-                                  <span className="text-sm font-semibold text-slate-900">
+                                  <span className="text-sm font-semibold text-foreground">
                                     {litros.toFixed(2)} L
                                   </span>
                                 </div>
                                 {viaje.costo_combustible && (
                                   <div className="flex items-center justify-between">
-                                    <span className="text-xs text-slate-500">
+                                    <span className="text-xs text-muted-foreground">
                                       Costo:
                                     </span>
-                                    <span className="text-sm font-semibold text-slate-900">
+                                    <span className="text-sm font-semibold text-foreground">
                                       ${viaje.costo_combustible.toFixed(2)}
                                     </span>
                                   </div>
                                 )}
                               </div>
                             </div>
-                            {/* Columna 4: EFICIENCIA */}
                             <div className="space-y-3">
                               <div className="flex flex-col items-center justify-center h-full">
                                 <Badge
                                   variant="outline"
-                                  className={`${getEficienciaColor(
-                                    eficiencia
-                                  )} border font-semibold text-base px-4 py-2 mb-2`}
+                                  className={`${getEficienciaColor(eficiencia)} border font-semibold text-base px-4 py-2 mb-2`}
                                 >
                                   <Gauge className="w-4 h-4 mr-2" />
                                   {eficiencia.toFixed(2)} km/L
                                 </Badge>
                                 {viaje.notas && (
-                                  <p className="text-xs text-slate-500 text-center mt-2 line-clamp-2">
+                                  <p className="text-xs text-muted-foreground text-center mt-2 line-clamp-2">
                                     {viaje.notas}
                                   </p>
                                 )}
@@ -666,7 +623,7 @@ export default function FuelViajes() {
                               variant="ghost"
                               size="icon"
                               onClick={() => abrirDialogEditar(viaje)}
-                              className="h-8 w-8 hover:bg-blue-50 hover:text-blue-700"
+                              className="h-8 w-8 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400"
                             >
                               <Edit className="w-4 h-4" />
                             </Button>
@@ -674,7 +631,7 @@ export default function FuelViajes() {
                               variant="ghost"
                               size="icon"
                               onClick={() => confirmarEliminar(viaje)}
-                              className="h-8 w-8 hover:bg-red-50 hover:text-red-700"
+                              className="h-8 w-8 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-400"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -689,19 +646,20 @@ export default function FuelViajes() {
           </CardContent>
         </Card>
 
-        {/* DIALOG DE EDICIÓN */}
         <Dialog open={dialogAbierto} onOpenChange={cerrarDialog}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-card border-border">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-slate-900">
+              <DialogTitle className="text-2xl font-bold text-foreground">
                 Editar Viaje
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-6 mt-4">
-              {/* Sección 1: Fechas y Unidad */}
               <div className="grid md:grid-cols-4 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-fecha" className="font-semibold">
+                  <Label
+                    htmlFor="edit-fecha"
+                    className="font-semibold text-foreground"
+                  >
                     Salida <span className="text-red-500">*</span>
                   </Label>
                   <Input
@@ -712,11 +670,14 @@ export default function FuelViajes() {
                       setFormData({ ...formData, fecha: e.target.value })
                     }
                     required
+                    className="bg-background border-input"
                   />
                 </div>
-                {/* --- NUEVO CAMPO EDICIÓN --- */}
                 <div className="space-y-2">
-                  <Label htmlFor="edit-fecha-llegada" className="font-semibold">
+                  <Label
+                    htmlFor="edit-fecha-llegada"
+                    className="font-semibold text-foreground"
+                  >
                     Llegada
                   </Label>
                   <Input
@@ -729,18 +690,21 @@ export default function FuelViajes() {
                         fecha_llegada: e.target.value,
                       })
                     }
+                    className="bg-background border-input"
                   />
                 </div>
-                {/* --------------------------- */}
                 <div className="space-y-2">
-                  <Label htmlFor="edit-conductor" className="font-semibold">
+                  <Label
+                    htmlFor="edit-conductor"
+                    className="font-semibold text-foreground"
+                  >
                     Conductor
                   </Label>
                   <Select
                     value={formData.conductor_id}
                     onValueChange={handleConductorChange}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-background border-input">
                       <SelectValue placeholder="Seleccionar" />
                     </SelectTrigger>
                     <SelectContent>
@@ -753,14 +717,17 @@ export default function FuelViajes() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-camion" className="font-semibold">
+                  <Label
+                    htmlFor="edit-camion"
+                    className="font-semibold text-foreground"
+                  >
                     Camión
                   </Label>
                   <Select
                     value={formData.camion_id}
                     onValueChange={handleCamionChange}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-background border-input">
                       <SelectValue placeholder="Seleccionar" />
                     </SelectTrigger>
                     <SelectContent>
@@ -774,12 +741,14 @@ export default function FuelViajes() {
                 </div>
               </div>
 
-              {/* Ruta Ida */}
-              <div className="space-y-4 p-4 bg-blue-50/50 rounded-lg border border-blue-100">
-                <h3 className="font-bold text-slate-900">Ruta de Ida</h3>
+              <div className="space-y-4 p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-900">
+                <h3 className="font-bold text-foreground">Ruta de Ida</h3>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="edit-ruta-ida" className="font-semibold">
+                    <Label
+                      htmlFor="edit-ruta-ida"
+                      className="font-semibold text-foreground"
+                    >
                       Ruta <span className="text-red-500">*</span>
                     </Label>
                     <Input
@@ -789,10 +758,14 @@ export default function FuelViajes() {
                         setFormData({ ...formData, ruta_ida: e.target.value })
                       }
                       required
+                      className="bg-background border-input"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="edit-km-ida" className="font-semibold">
+                    <Label
+                      htmlFor="edit-km-ida"
+                      className="font-semibold text-foreground"
+                    >
                       Kilómetros <span className="text-red-500">*</span>
                     </Label>
                     <Input
@@ -807,15 +780,15 @@ export default function FuelViajes() {
                         })
                       }
                       required
+                      className="bg-background border-input"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Rutas Adicionales */}
-              <div className="space-y-4 p-4 bg-purple-50/50 rounded-lg border border-purple-100">
+              <div className="space-y-4 p-4 bg-purple-50/50 dark:bg-purple-900/10 rounded-lg border border-purple-100 dark:border-purple-900">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-slate-900">
+                  <h3 className="font-bold text-foreground">
                     Rutas Adicionales
                   </h3>
                   <Button
@@ -823,7 +796,7 @@ export default function FuelViajes() {
                     variant="outline"
                     size="sm"
                     onClick={agregarRutaAdicional}
-                    className="gap-2"
+                    className="gap-2 bg-background hover:bg-muted"
                   >
                     <Plus className="w-4 h-4" /> Agregar Ruta
                   </Button>
@@ -834,7 +807,7 @@ export default function FuelViajes() {
                       {formData.rutas_adicionales.map((ruta, index) => (
                         <div
                           key={index}
-                          className="grid md:grid-cols-[1fr_auto_auto] gap-3 p-3 bg-white rounded-lg border border-purple-200"
+                          className="grid md:grid-cols-[1fr_auto_auto] gap-3 p-3 bg-background/50 rounded-lg border border-border"
                         >
                           <Input
                             placeholder="Ej: Ciudad B - Ciudad C"
@@ -843,9 +816,10 @@ export default function FuelViajes() {
                               actualizarRutaAdicional(
                                 index,
                                 "ruta",
-                                e.target.value
+                                e.target.value,
                               )
                             }
+                            className="bg-background border-input"
                           />
                           <Input
                             type="number"
@@ -856,17 +830,17 @@ export default function FuelViajes() {
                               actualizarRutaAdicional(
                                 index,
                                 "kilometros",
-                                e.target.value
+                                e.target.value,
                               )
                             }
-                            className="w-32"
+                            className="w-32 bg-background border-input"
                           />
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon"
                             onClick={() => eliminarRutaAdicional(index)}
-                            className="hover:bg-red-50 hover:text-red-700"
+                            className="hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-400"
                           >
                             <X className="w-4 h-4" />
                           </Button>
@@ -876,14 +850,13 @@ export default function FuelViajes() {
                   )}
               </div>
 
-              {/* Ruta Regreso */}
-              <div className="space-y-4 p-4 bg-orange-50/50 rounded-lg border border-orange-100">
-                <h3 className="font-bold text-slate-900">Ruta de Regreso</h3>
+              <div className="space-y-4 p-4 bg-orange-50/50 dark:bg-orange-900/10 rounded-lg border border-orange-100 dark:border-orange-900">
+                <h3 className="font-bold text-foreground">Ruta de Regreso</h3>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label
                       htmlFor="edit-ruta-regreso"
-                      className="font-semibold"
+                      className="font-semibold text-foreground"
                     >
                       Ruta <span className="text-red-500">*</span>
                     </Label>
@@ -897,10 +870,14 @@ export default function FuelViajes() {
                         })
                       }
                       required
+                      className="bg-background border-input"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="edit-km-regreso" className="font-semibold">
+                    <Label
+                      htmlFor="edit-km-regreso"
+                      className="font-semibold text-foreground"
+                    >
                       Kilómetros <span className="text-red-500">*</span>
                     </Label>
                     <Input
@@ -915,19 +892,22 @@ export default function FuelViajes() {
                         })
                       }
                       required
+                      className="bg-background border-input"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Combustible */}
-              <div className="space-y-4 p-4 bg-green-50/50 rounded-lg border border-green-100">
-                <h3 className="font-bold text-slate-900">
+              <div className="space-y-4 p-4 bg-green-50/50 dark:bg-green-900/10 rounded-lg border border-green-100 dark:border-green-900">
+                <h3 className="font-bold text-foreground">
                   Consumo de Combustible
                 </h3>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="edit-litros" className="font-semibold">
+                    <Label
+                      htmlFor="edit-litros"
+                      className="font-semibold text-foreground"
+                    >
                       Litros <span className="text-red-500">*</span>
                     </Label>
                     <Input
@@ -942,10 +922,14 @@ export default function FuelViajes() {
                         })
                       }
                       required
+                      className="bg-background border-input"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="edit-costo" className="font-semibold">
+                    <Label
+                      htmlFor="edit-costo"
+                      className="font-semibold text-foreground"
+                    >
                       Costo Total
                     </Label>
                     <Input
@@ -959,14 +943,17 @@ export default function FuelViajes() {
                           costo_combustible: e.target.value,
                         })
                       }
+                      className="bg-background border-input"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Notas */}
               <div className="space-y-2">
-                <Label htmlFor="edit-notas" className="font-semibold">
+                <Label
+                  htmlFor="edit-notas"
+                  className="font-semibold text-foreground"
+                >
                   Notas Adicionales
                 </Label>
                 <Textarea
@@ -976,6 +963,7 @@ export default function FuelViajes() {
                     setFormData({ ...formData, notas: e.target.value })
                   }
                   rows={4}
+                  className="bg-background border-input"
                 />
               </div>
 
@@ -984,19 +972,20 @@ export default function FuelViajes() {
                   type="button"
                   variant="outline"
                   onClick={cerrarDialog}
-                  className="flex-1"
+                  className="flex-1 bg-background hover:bg-muted"
                 >
                   Cancelar
                 </Button>
                 <Button
                   type="submit"
                   disabled={actualizarMutation.isPending}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white"
+                  className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   {actualizarMutation.isPending ? (
                     <>
                       {" "}
-                      <Loader2 className="w-4 h-4 animate-spin" /> Guardando...{" "}
+                      <Loader2 className="w-4 h-4 animate-spin" />{" "}
+                      Guardando...{" "}
                     </>
                   ) : (
                     <>
@@ -1010,23 +999,24 @@ export default function FuelViajes() {
           </DialogContent>
         </Dialog>
 
-        {/* DIALOG ELIMINAR */}
         <AlertDialog
           open={!!viajeAEliminar}
           onOpenChange={() => setViajeAEliminar(null)}
         >
-          <AlertDialogContent>
+          <AlertDialogContent className="bg-card border-border text-foreground">
             <AlertDialogHeader>
               <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-              <AlertDialogDescription>
+              <AlertDialogDescription className="text-muted-foreground">
                 Esta acción no se puede deshacer.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogCancel className="bg-background hover:bg-muted">
+                Cancelar
+              </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleEliminar}
-                className="bg-red-600"
+                className="bg-red-600 hover:bg-red-700"
               >
                 Eliminar
               </AlertDialogAction>

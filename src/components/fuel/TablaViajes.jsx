@@ -16,18 +16,18 @@ import { es } from "date-fns/locale";
 export default function TablaViajes({ viajes }) {
   const getEficienciaColor = (kmPorLitro) => {
     if (kmPorLitro > 2.25)
-      return "bg-green-100 text-green-800 border-green-200";
+      return "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800";
     if (kmPorLitro >= 2.0)
-      return "bg-yellow-100 text-yellow-800 border-yellow-200";
-    return "bg-red-100 text-red-800 border-red-200";
+      return "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800";
+    return "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800";
   };
 
   return (
-    <Card className="border-none shadow-lg">
-      <CardHeader className="border-b border-slate-100 pb-4">
+    <Card className="border-none shadow-lg bg-card">
+      <CardHeader className="border-b border-border pb-4">
         <div className="flex items-center gap-2">
-          <FileText className="w-5 h-5 text-blue-600" />
-          <CardTitle className="text-lg font-bold text-slate-900">
+          <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <CardTitle className="text-lg font-bold text-foreground">
             Registro de Viajes
           </CardTitle>
         </div>
@@ -36,28 +36,26 @@ export default function TablaViajes({ viajes }) {
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-slate-50 hover:bg-slate-50">
-                <TableHead className="font-semibold text-slate-700 w-[200px]">
-                  {" "}
-                  {/* Aumentamos ancho para que quepan horizontal */}
+              <TableRow className="bg-muted/50 hover:bg-muted/50 border-border">
+                <TableHead className="font-semibold text-muted-foreground w-[200px]">
                   Fechas
                 </TableHead>
-                <TableHead className="font-semibold text-slate-700">
+                <TableHead className="font-semibold text-muted-foreground">
                   Conductor
                 </TableHead>
-                <TableHead className="font-semibold text-slate-700">
+                <TableHead className="font-semibold text-muted-foreground">
                   Ruta
                 </TableHead>
-                <TableHead className="font-semibold text-slate-700 text-right">
+                <TableHead className="font-semibold text-muted-foreground text-right">
                   Kilómetros
                 </TableHead>
-                <TableHead className="font-semibold text-slate-700 text-right">
+                <TableHead className="font-semibold text-muted-foreground text-right">
                   Litros
                 </TableHead>
-                <TableHead className="font-semibold text-slate-700 text-center">
+                <TableHead className="font-semibold text-muted-foreground text-center">
                   km/L
                 </TableHead>
-                <TableHead className="font-semibold text-slate-700 text-right">
+                <TableHead className="font-semibold text-muted-foreground text-right">
                   Costo
                 </TableHead>
               </TableRow>
@@ -78,35 +76,32 @@ export default function TablaViajes({ viajes }) {
                 return (
                   <TableRow
                     key={viaje.id}
-                    className="hover:bg-slate-50 transition-colors duration-150"
+                    className="hover:bg-muted/50 transition-colors duration-150 border-border"
                   >
-                    {/* CELDA DE FECHAS ESTILIZADA HORIZONTAL */}
                     <TableCell className="align-top py-3">
                       <div className="flex flex-wrap items-start gap-4">
-                        {/* Fecha Salida */}
                         <div>
-                          <span className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">
+                          <span className="block text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-0.5">
                             Salida
                           </span>
-                          <span className="font-medium text-slate-900 block bg-slate-100 px-2 py-0.5 rounded-md w-fit text-sm">
+                          <span className="font-medium text-foreground block bg-muted px-2 py-0.5 rounded-md w-fit text-sm">
                             {format(
                               new Date(`${viaje.fecha}T12:00:00`),
                               "dd MMM",
-                              { locale: es }
+                              { locale: es },
                             )}
                           </span>
                         </div>
-                        {/* Fecha Llegada */}
                         {viaje.fecha_llegada && (
                           <div>
-                            <span className="block text-[10px] uppercase font-bold text-blue-400 tracking-wider mb-0.5">
+                            <span className="block text-[10px] uppercase font-bold text-blue-500 dark:text-blue-400 tracking-wider mb-0.5">
                               Llegada
                             </span>
-                            <span className="font-medium text-slate-900 block bg-blue-50 px-2 py-0.5 rounded-md w-fit text-sm">
+                            <span className="font-medium text-foreground block bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-md w-fit text-sm">
                               {format(
                                 new Date(`${viaje.fecha_llegada}T12:00:00`),
                                 "dd MMM",
-                                { locale: es }
+                                { locale: es },
                               )}
                             </span>
                           </div>
@@ -116,12 +111,12 @@ export default function TablaViajes({ viajes }) {
 
                     <TableCell className="align-top py-3">
                       <div className="flex items-center gap-2 mt-1">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <span className="text-xs font-semibold text-blue-700">
+                        <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                          <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">
                             {viaje.conductor_nombre?.[0]?.toUpperCase() || "C"}
                           </span>
                         </div>
-                        <span className="text-slate-700 font-medium text-sm">
+                        <span className="text-foreground font-medium text-sm">
                           {viaje.conductor_nombre || "N/A"}
                         </span>
                       </div>
@@ -129,8 +124,8 @@ export default function TablaViajes({ viajes }) {
                     <TableCell className="align-top py-3">
                       <div className="space-y-1.5 mt-1">
                         <div className="flex items-start gap-2">
-                          <MapPin className="w-4 h-4 text-blue-400 mt-0.5" />
-                          <span className="text-slate-700 text-sm font-medium leading-tight">
+                          <MapPin className="w-4 h-4 text-blue-500 dark:text-blue-400 mt-0.5" />
+                          <span className="text-foreground text-sm font-medium leading-tight">
                             {rutaPrincipal}
                           </span>
                         </div>
@@ -141,8 +136,8 @@ export default function TablaViajes({ viajes }) {
                                 key={idx}
                                 className="flex items-center gap-2 text-xs"
                               >
-                                <Route className="w-3 h-3 text-purple-500" />
-                                <span className="text-slate-500">
+                                <Route className="w-3 h-3 text-purple-500 dark:text-purple-400" />
+                                <span className="text-muted-foreground">
                                   {rutaAd.ruta}
                                 </span>
                               </div>
@@ -151,8 +146,8 @@ export default function TablaViajes({ viajes }) {
                         )}
                         {tieneRegreso && (
                           <div className="flex items-start gap-2 text-xs">
-                            <ArrowLeftRight className="w-3.5 h-3.5 text-orange-500 mt-0.5" />
-                            <span className="text-slate-500">
+                            <ArrowLeftRight className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400 mt-0.5" />
+                            <span className="text-muted-foreground">
                               {viaje.ruta_regreso}
                             </span>
                           </div>
@@ -161,31 +156,31 @@ export default function TablaViajes({ viajes }) {
                     </TableCell>
                     <TableCell className="text-right align-top py-3">
                       <div className="space-y-1 mt-1">
-                        <div className="font-bold text-slate-900">
+                        <div className="font-bold text-foreground">
                           {kmTotal.toFixed(1)} km
                         </div>
                         {(tieneRegreso || tieneAdicionales) && (
-                          <div className="text-xs text-slate-400">
+                          <div className="text-xs text-muted-foreground">
                             Detalles disponibles
                           </div>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right font-semibold text-slate-900 align-top py-3 mt-1">
+                    <TableCell className="text-right font-semibold text-foreground align-top py-3 mt-1">
                       {litros.toFixed(2)} L
                     </TableCell>
                     <TableCell className="text-center align-top py-3">
                       <Badge
                         variant="outline"
                         className={`${getEficienciaColor(
-                          eficiencia
+                          eficiencia,
                         )} border font-semibold mt-1`}
                       >
                         <Gauge className="w-3 h-3 mr-1" />
                         {eficiencia.toFixed(2)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right font-semibold text-slate-900 align-top py-3 mt-1">
+                    <TableCell className="text-right font-semibold text-foreground align-top py-3 mt-1">
                       {viaje.costo_combustible
                         ? `$${viaje.costo_combustible.toFixed(2)}`
                         : "-"}

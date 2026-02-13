@@ -21,7 +21,6 @@ import TablaViajes from "../components/fuel/TablaViajes";
 
 export default function ControlCombustible() {
   const navigate = useNavigate();
-  // Estados de filtros
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
   const [conductorFiltro, setConductorFiltro] = useState("todos");
@@ -29,7 +28,6 @@ export default function ControlCombustible() {
   const [periodoFiltro, setPeriodoFiltro] = useState("todos");
   const [isExporting, setIsExporting] = useState(false);
 
-  // Consulta de datos a Supabase
   const { data: viajes = [], isLoading: loadingViajes } = useQuery({
     queryKey: ["viajes"],
     queryFn: async () => {
@@ -51,12 +49,10 @@ export default function ControlCombustible() {
     },
   });
 
-  // --- LÓGICA DE FILTRADO (Igual que en FuelViajes) ---
   const viajesFiltrados = viajes.filter((viaje) => {
     let cumpleFiltros = true;
     const rutaPrincipal = viaje.ruta_ida || viaje.ruta || "";
 
-    // 1. Filtro por Semana
     if (
       periodoFiltro !== "todos" &&
       periodoFiltro !== "personalizado" &&
@@ -71,14 +67,11 @@ export default function ControlCombustible() {
       if (anioViaje !== anioActual || semanaViaje !== semanaSeleccionada) {
         cumpleFiltros = false;
       }
-    }
-    // 2. Filtro Manual
-    else {
+    } else {
       if (fechaInicio && viaje.fecha < fechaInicio) cumpleFiltros = false;
       if (fechaFin && viaje.fecha > fechaFin) cumpleFiltros = false;
     }
 
-    // 3. Otros filtros
     if (
       conductorFiltro !== "todos" &&
       String(viaje.conductor_id) !== String(conductorFiltro)
@@ -107,16 +100,16 @@ export default function ControlCombustible() {
     const totalViajes = viajesFiltrados.length;
     const totalKm = viajesFiltrados.reduce(
       (sum, v) => sum + (v.kilometros_total || v.kilometros || 0),
-      0
+      0,
     );
     const totalLitros = viajesFiltrados.reduce(
       (sum, v) => sum + (v.litros_combustible || 0),
-      0
+      0,
     );
     const promedioEficiencia = totalLitros > 0 ? totalKm / totalLitros : 0;
     const totalCosto = viajesFiltrados.reduce(
       (sum, v) => sum + (v.costo_combustible || 0),
-      0
+      0,
     );
 
     return {
@@ -130,7 +123,6 @@ export default function ControlCombustible() {
 
   const stats = calcularEstadisticas();
 
-  // --- FUNCIÓN EXPORTAR ACTUALIZADA ---
   const exportarExcel = () => {
     setIsExporting(true);
     try {
@@ -145,11 +137,11 @@ export default function ControlCombustible() {
         return {
           "Fecha Salida": format(
             new Date(`${viaje.fecha}T12:00:00`),
-            "dd/MM/yyyy"
+            "dd/MM/yyyy",
           ),
           "Fecha Llegada": viaje.fecha_llegada
             ? format(new Date(`${viaje.fecha_llegada}T12:00:00`), "dd/MM/yyyy")
-            : "-", // <--- NUEVA COLUMNA
+            : "-",
           Conductor: viaje.conductor_nombre || "N/A",
           "Ruta Ida": rutaIda,
           "Kilómetros Ida": kmIda,
@@ -171,7 +163,7 @@ export default function ControlCombustible() {
       const csvContent = [
         headers.join(","),
         ...datos.map((row) =>
-          headers.map((header) => JSON.stringify(row[header] || "")).join(",")
+          headers.map((header) => JSON.stringify(row[header] || "")).join(","),
         ),
       ].join("\n");
 
@@ -183,7 +175,7 @@ export default function ControlCombustible() {
       link.setAttribute("href", url);
       link.setAttribute(
         "download",
-        `reporte_viajes_${format(new Date(), "yyyy-MM-dd")}.csv`
+        `reporte_viajes_${format(new Date(), "yyyy-MM-dd")}.csv`,
       );
       document.body.appendChild(link);
       link.click();
@@ -196,28 +188,29 @@ export default function ControlCombustible() {
 
   if (loadingViajes) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      <div className="flex items-center justify-center h-screen bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-8 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+    // CAMBIO: Fondo dinámico bg-background
+    <div className="p-4 md:p-8 bg-slate-50 dark:bg-background min-h-screen transition-colors duration-300">
       <div className="max-w-[1600px] mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
               Panel de Control
             </h1>
-            <p className="text-slate-600">
+            <p className="text-muted-foreground">
               Monitoreo de consumo y eficiencia de combustible
             </p>
           </div>
           <Button
             onClick={exportarExcel}
             disabled={isExporting || viajesFiltrados.length === 0}
-            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg gap-2"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg gap-2"
           >
             {isExporting ? (
               <>
@@ -238,28 +231,28 @@ export default function ControlCombustible() {
             title="Viajes"
             value={stats.totalViajes}
             icon={Truck}
-            gradient="bg-gradient-to-br from-blue-500 to-blue-600"
+            gradient="bg-blue-500 dark:bg-blue-600"
           />
           <StatsCard
             title="Kilómetros"
             value={stats.totalKm.toFixed(0)}
             subtitle="km"
             icon={TrendingUp}
-            gradient="bg-gradient-to-br from-purple-500 to-purple-600"
+            gradient="bg-purple-500 dark:bg-purple-600"
           />
           <StatsCard
             title="Litros"
             value={stats.totalLitros.toFixed(0)}
             subtitle="L"
             icon={Droplet}
-            gradient="bg-gradient-to-br from-orange-500 to-orange-600"
+            gradient="bg-orange-500 dark:bg-orange-600"
           />
           <StatsCard
             title="Eficiencia"
             value={stats.promedioEficiencia.toFixed(2)}
             subtitle="km/L"
             icon={Gauge}
-            gradient="bg-gradient-to-br from-green-500 to-green-600"
+            gradient="bg-green-500 dark:bg-green-600"
           />
         </div>
 

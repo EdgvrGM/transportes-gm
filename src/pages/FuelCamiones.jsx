@@ -43,7 +43,6 @@ export default function FuelCamiones() {
     estado: "activo",
   });
 
-  // Query para obtener camiones desde Supabase
   const { data: camiones = [], isLoading } = useQuery({
     queryKey: ["camiones"],
     queryFn: async () => {
@@ -53,7 +52,6 @@ export default function FuelCamiones() {
     },
   });
 
-  // Query para obtener viajes (necesario para las estadísticas)
   const { data: viajes = [] } = useQuery({
     queryKey: ["viajes"],
     queryFn: async () => {
@@ -63,7 +61,6 @@ export default function FuelCamiones() {
     },
   });
 
-  // Mutación para crear un camión en Supabase
   const crearMutation = useMutation({
     mutationFn: async (data) => {
       const { data: result, error } = await supabase
@@ -79,7 +76,6 @@ export default function FuelCamiones() {
     },
   });
 
-  // Mutación para actualizar un camión en Supabase
   const actualizarMutation = useMutation({
     mutationFn: async ({ id, data }) => {
       const { data: result, error } = await supabase
@@ -96,7 +92,6 @@ export default function FuelCamiones() {
     },
   });
 
-  // Mutación para eliminar un camión en Supabase
   const eliminarMutation = useMutation({
     mutationFn: async (id) => {
       const { error } = await supabase.from("Camion").delete().eq("id", id);
@@ -150,11 +145,11 @@ export default function FuelCamiones() {
     const totalViajes = viajesCamion.length;
     const totalKm = viajesCamion.reduce(
       (sum, v) => sum + (v.kilometros_total || 0),
-      0
+      0,
     );
     const totalLitros = viajesCamion.reduce(
       (sum, v) => sum + (v.litros_combustible || 0),
-      0
+      0,
     );
     const promedio = totalLitros > 0 ? totalKm / totalLitros : 0;
 
@@ -164,13 +159,13 @@ export default function FuelCamiones() {
   const getEstadoColor = (estado) => {
     switch (estado) {
       case "activo":
-        return "bg-green-100 text-green-800 border-green-200";
+        return "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800";
       case "mantenimiento":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+        return "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800";
       case "inactivo":
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-muted text-muted-foreground border-border";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-muted text-muted-foreground border-border";
     }
   };
 
@@ -189,34 +184,38 @@ export default function FuelCamiones() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      <div className="flex items-center justify-center h-screen bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-8 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+    // CAMBIO: Fondo dinámico
+    <div className="p-4 md:p-8 bg-slate-50 dark:bg-background min-h-screen transition-colors duration-300">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
               Camiones
             </h1>
-            <p className="text-slate-600">Gestiona tu flota de vehículos</p>
+            <p className="text-muted-foreground">
+              Gestiona tu flota de vehículos
+            </p>
           </div>
           <Button
             onClick={() => abrirDialog()}
-            className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-lg gap-2"
+            className="bg-green-600 text-white hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 shadow-lg gap-2"
           >
             <Plus className="w-4 h-4" />
             Nuevo Camión
           </Button>
         </div>
 
-        <Card className="border-none shadow-xl">
-          <CardHeader className="border-b border-slate-100">
-            <CardTitle className="text-xl font-bold text-slate-900">
+        {/* CAMBIO: Fondo Card y Tabla dinámicos */}
+        <Card className="border-none shadow-xl bg-card">
+          <CardHeader className="border-b border-border">
+            <CardTitle className="text-xl font-bold text-foreground">
               Lista de Camiones
             </CardTitle>
           </CardHeader>
@@ -224,26 +223,26 @@ export default function FuelCamiones() {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-slate-50 hover:bg-slate-50">
-                    <TableHead className="font-semibold text-slate-700">
+                  <TableRow className="bg-muted/50 hover:bg-muted/50 border-border">
+                    <TableHead className="font-semibold text-muted-foreground">
                       Nombre
                     </TableHead>
-                    <TableHead className="font-semibold text-slate-700">
+                    <TableHead className="font-semibold text-muted-foreground">
                       Placas
                     </TableHead>
-                    <TableHead className="font-semibold text-slate-700">
+                    <TableHead className="font-semibold text-muted-foreground">
                       Estado
                     </TableHead>
-                    <TableHead className="font-semibold text-slate-700 text-center">
+                    <TableHead className="font-semibold text-muted-foreground text-center">
                       Viajes
                     </TableHead>
-                    <TableHead className="font-semibold text-slate-700 text-center">
+                    <TableHead className="font-semibold text-muted-foreground text-center">
                       Kilómetros
                     </TableHead>
-                    <TableHead className="font-semibold text-slate-700 text-center">
+                    <TableHead className="font-semibold text-muted-foreground text-center">
                       Eficiencia
                     </TableHead>
-                    <TableHead className="font-semibold text-slate-700 text-center">
+                    <TableHead className="font-semibold text-muted-foreground text-center">
                       Acciones
                     </TableHead>
                   </TableRow>
@@ -254,21 +253,21 @@ export default function FuelCamiones() {
                     return (
                       <TableRow
                         key={camion.id}
-                        className="hover:bg-slate-50 transition-colors duration-150"
+                        className="hover:bg-muted/50 transition-colors duration-150 border-border"
                       >
                         <TableCell>
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-md">
+                            <div className="w-10 h-10 bg-green-500 dark:bg-green-600 rounded-full flex items-center justify-center shadow-md">
                               <Truck className="w-5 h-5 text-white" />
                             </div>
-                            <span className="font-semibold text-slate-900">
+                            <span className="font-semibold text-foreground">
                               {camion.nombre}
                             </span>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2 text-slate-700">
-                            <FileText className="w-4 h-4 text-slate-400" />
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <FileText className="w-4 h-4 text-muted-foreground" />
                             {camion.placas}
                           </div>
                         </TableCell>
@@ -276,25 +275,25 @@ export default function FuelCamiones() {
                           <Badge
                             variant="outline"
                             className={`${getEstadoColor(
-                              camion.estado
+                              camion.estado,
                             )} border font-semibold`}
                           >
                             {getEstadoTexto(camion.estado)}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-center font-semibold text-slate-900">
+                        <TableCell className="text-center font-semibold text-foreground">
                           {stats.totalViajes}
                         </TableCell>
-                        <TableCell className="text-center font-semibold text-slate-900">
+                        <TableCell className="text-center font-semibold text-foreground">
                           {stats.totalKm.toFixed(0)} km
                         </TableCell>
                         <TableCell className="text-center">
                           {stats.totalViajes > 0 ? (
-                            <span className="font-semibold text-green-700">
+                            <span className="font-semibold text-green-600 dark:text-green-400">
                               {stats.promedio.toFixed(2)} km/L
                             </span>
                           ) : (
-                            <span className="text-slate-400">-</span>
+                            <span className="text-muted-foreground">-</span>
                           )}
                         </TableCell>
                         <TableCell className="text-center">
@@ -303,7 +302,7 @@ export default function FuelCamiones() {
                               variant="ghost"
                               size="sm"
                               onClick={() => abrirDialog(camion)}
-                              className="hover:bg-green-50 hover:text-green-700"
+                              className="hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-700 dark:hover:text-green-400"
                             >
                               <Edit className="w-4 h-4" />
                             </Button>
@@ -311,7 +310,7 @@ export default function FuelCamiones() {
                               variant="ghost"
                               size="sm"
                               onClick={() => confirmarEliminar(camion)}
-                              className="hover:bg-red-50 hover:text-red-700"
+                              className="hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-400"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -326,16 +325,20 @@ export default function FuelCamiones() {
           </CardContent>
         </Card>
 
+        {/* CAMBIO: Dialog con colores dinámicos */}
         <Dialog open={dialogAbierto} onOpenChange={setDialogAbierto}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md bg-card border-border text-foreground">
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-slate-900">
+              <DialogTitle className="text-xl font-bold text-foreground">
                 {camionEditando ? "Editar Camión" : "Nuevo Camión"}
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 mt-4">
               <div className="space-y-2">
-                <Label htmlFor="nombre" className="font-semibold">
+                <Label
+                  htmlFor="nombre"
+                  className="font-semibold text-foreground"
+                >
                   Nombre del Camión <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -346,11 +349,15 @@ export default function FuelCamiones() {
                   }
                   required
                   placeholder="Camión 1"
+                  className="bg-background border-input"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="placas" className="font-semibold">
+                <Label
+                  htmlFor="placas"
+                  className="font-semibold text-foreground"
+                >
                   Placas <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -361,6 +368,7 @@ export default function FuelCamiones() {
                   }
                   required
                   placeholder="ABC-123"
+                  className="bg-background border-input"
                 />
               </div>
 
@@ -369,7 +377,7 @@ export default function FuelCamiones() {
                   type="button"
                   variant="outline"
                   onClick={cerrarDialog}
-                  className="flex-1"
+                  className="flex-1 bg-background hover:bg-muted"
                 >
                   Cancelar
                 </Button>
@@ -378,7 +386,7 @@ export default function FuelCamiones() {
                   disabled={
                     crearMutation.isPending || actualizarMutation.isPending
                   }
-                  className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+                  className="flex-1 bg-green-600 text-white hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800"
                 >
                   {crearMutation.isPending || actualizarMutation.isPending ? (
                     <>
@@ -400,10 +408,10 @@ export default function FuelCamiones() {
           open={!!camionAEliminar}
           onOpenChange={() => setCamionAEliminar(null)}
         >
-          <AlertDialogContent>
+          <AlertDialogContent className="bg-card border-border text-foreground">
             <AlertDialogHeader>
               <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-              <AlertDialogDescription>
+              <AlertDialogDescription className="text-muted-foreground">
                 Esta acción eliminará permanentemente el camión{" "}
                 <strong>{camionAEliminar?.nombre}</strong> (
                 {camionAEliminar?.placas}). Los viajes registrados con este
@@ -411,7 +419,9 @@ export default function FuelCamiones() {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogCancel className="bg-background hover:bg-muted">
+                Cancelar
+              </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleEliminar}
                 className="bg-red-600 hover:bg-red-700"

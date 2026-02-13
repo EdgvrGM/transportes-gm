@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Truck, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -36,7 +36,6 @@ export default function Login() {
         throw error;
       }
 
-      // Si el inicio de sesión es exitoso, redirige al dashboard
       navigate("/controlCombustible");
     } catch (error) {
       setError("Credenciales inválidas. Por favor, inténtalo de nuevo.");
@@ -46,27 +45,32 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
-      <Card className="w-full max-w-md shadow-2xl border-none">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-background p-4 transition-colors duration-300">
+      <Card className="w-full max-w-md shadow-2xl border-none bg-card">
         <CardHeader className="text-center">
           <div className="flex justify-center items-center mb-4">
-            <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg border border-slate-200">
+            {/* CAMBIO: Fondo transparente en modo oscuro (se fusiona con la tarjeta) */}
+            <div className="w-16 h-16 bg-white dark:bg-transparent rounded-xl flex items-center justify-center shadow-lg border border-slate-200 dark:border-border transition-colors">
               <img
                 src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f16cb7f5621b8175468c2c/13d31cc08_LOGO.png"
                 alt="Transportes GM"
-                className="w-full h-full object-contain p-2"
+                className="w-full h-full object-contain p-2 transition-all"
               />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-slate-900">
+          <CardTitle className="text-2xl font-bold text-foreground">
             Iniciar Sesión
           </CardTitle>
-          <CardDescription>Sistema de Control de Combustible</CardDescription>
+          <CardDescription className="text-muted-foreground">
+            Sistema de Control de Combustible
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email">Correo Electrónico</Label>
+              <Label htmlFor="email" className="text-foreground">
+                Correo Electrónico
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -74,10 +78,13 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="bg-background border-input text-foreground"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
+              <Label htmlFor="password" classname="text-foreground">
+                Contraseña
+              </Label>
               <Input
                 id="password"
                 type="password"
@@ -85,6 +92,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="bg-background border-input text-foreground"
               />
             </div>
             {error && (
@@ -93,7 +101,11 @@ export default function Login() {
               </Alert>
             )}
             <div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button
+                type="submit"
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                disabled={loading}
+              >
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
