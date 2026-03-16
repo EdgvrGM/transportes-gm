@@ -43,6 +43,7 @@ export default function FuelRegistrarViaje() {
     camion_id: "",
     camion_nombre: "",
     camion_placas: "",
+    tipo_viaje: "Sencillo", // <-- NUEVO ESTADO
     ruta_ida: "",
     kilometros_ida: "",
     ruta_regreso: "",
@@ -97,7 +98,6 @@ export default function FuelRegistrarViaje() {
     },
   });
 
-  // (Mutation creadores de conductor y camion omitidos por brevedad, no cambian estructura visual)
   const crearConductorMutation = useMutation({
     mutationFn: async (data) => {
       const { data: result, error } = await supabase
@@ -183,12 +183,13 @@ export default function FuelRegistrarViaje() {
 
     const datosViaje = {
       fecha: `${viaje.fecha}T12:00:00`,
-      fecha_llegada: viaje.fecha_llegada || null, // Nuevo campo
+      fecha_llegada: viaje.fecha_llegada || null,
       conductor_id: viaje.conductor_id || null,
       conductor_nombre: viaje.conductor_nombre,
       camion_id: viaje.camion_id || null,
       camion_nombre: viaje.camion_nombre,
       camion_placas: viaje.camion_placas,
+      tipo_viaje: viaje.tipo_viaje, // <-- NUEVO DATO ENVIADO A BD
       ruta_ida: viaje.ruta_ida,
       kilometros_ida: kmIda,
       rutas_adicionales: rutasAdicionales.map((r) => ({
@@ -234,7 +235,6 @@ export default function FuelRegistrarViaje() {
   const eficiencia = litrosVal > 0 ? (kmTotales / litrosVal).toFixed(2) : "-";
 
   return (
-    // CAMBIO: Fondo general oscuro
     <div className="p-4 md:p-8 bg-slate-50 dark:bg-background min-h-screen transition-colors duration-300">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-4 mb-8">
@@ -270,9 +270,8 @@ export default function FuelRegistrarViaje() {
           </CardHeader>
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid md:grid-cols-4 gap-4">
-                {" "}
-                {/* Ajustado para incluir fecha llegada */}
+              {/* CAMBIO: Grid ajustado a 5 columnas para incluir el Tipo de Viaje */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="space-y-2">
                   <Label
                     htmlFor="fecha"
@@ -291,7 +290,7 @@ export default function FuelRegistrarViaje() {
                     className="bg-background border-input"
                   />
                 </div>
-                {/* Nuevo campo llegada */}
+
                 <div className="space-y-2">
                   <Label
                     htmlFor="fecha_llegada"
@@ -309,6 +308,7 @@ export default function FuelRegistrarViaje() {
                     className="bg-background border-input"
                   />
                 </div>
+
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <Label className="text-foreground font-semibold">
@@ -344,7 +344,6 @@ export default function FuelRegistrarViaje() {
                       </SelectContent>
                     </Select>
                   ) : (
-                    /* Nuevo Conductor Form */
                     <div className="space-y-2 p-2 bg-muted rounded border border-border">
                       <Input
                         placeholder="Nombre"
@@ -370,6 +369,7 @@ export default function FuelRegistrarViaje() {
                     </div>
                   )}
                 </div>
+
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <Label className="text-foreground font-semibold">
@@ -403,7 +403,6 @@ export default function FuelRegistrarViaje() {
                       </SelectContent>
                     </Select>
                   ) : (
-                    /* Nuevo Camion Form */
                     <div className="space-y-2 p-2 bg-muted rounded border border-border">
                       <Input
                         placeholder="Nombre"
@@ -438,9 +437,31 @@ export default function FuelRegistrarViaje() {
                     </div>
                   )}
                 </div>
+
+                {/* NUEVO CAMPO: Tipo de Viaje */}
+                <div className="space-y-2">
+                  <Label className="text-foreground font-semibold">
+                    Tipo <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={viaje.tipo_viaje}
+                    onValueChange={(val) =>
+                      setViaje({ ...viaje, tipo_viaje: val })
+                    }
+                    required
+                  >
+                    <SelectTrigger className="bg-background border-input font-medium">
+                      <SelectValue placeholder="Seleccionar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Sencillo">SENCILLO</SelectItem>
+                      <SelectItem value="FULL">FULL</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
-              {/* RUTA IDA - Colores dinámicos */}
+              {/* RUTA IDA */}
               <div className="space-y-4 p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-900">
                 <div className="flex items-center gap-2 mb-2">
                   <ArrowRight className="w-5 h-5 text-blue-600 dark:text-blue-400" />

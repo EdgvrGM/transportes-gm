@@ -142,6 +142,7 @@ export default function ControlCombustible() {
           "Fecha Llegada": viaje.fecha_llegada
             ? format(new Date(`${viaje.fecha_llegada}T12:00:00`), "dd/MM/yyyy")
             : "-",
+          "Tipo Viaje": viaje.tipo_viaje || "Sencillo", // <-- AÑADIDO PARA EL REPORTE
           Conductor: viaje.conductor_nombre || "N/A",
           "Ruta Ida": rutaIda,
           "Kilómetros Ida": kmIda,

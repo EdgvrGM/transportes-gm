@@ -71,6 +71,7 @@ export default function FuelViajes() {
     camion_id: "",
     camion_nombre: "",
     camion_placas: "",
+    tipo_viaje: "Sencillo",
     ruta_ida: "",
     kilometros_ida: "",
     rutas_adicionales: [],
@@ -199,6 +200,7 @@ export default function FuelViajes() {
       camion_id: viaje.camion_id ? String(viaje.camion_id) : "",
       camion_nombre: viaje.camion_nombre || "",
       camion_placas: viaje.camion_placas || "",
+      tipo_viaje: viaje.tipo_viaje || "Sencillo",
       ruta_ida: viaje.ruta_ida || viaje.ruta || "",
       kilometros_ida: viaje.kilometros_ida || viaje.kilometros || "",
       rutas_adicionales: rutasAdicionales,
@@ -222,6 +224,7 @@ export default function FuelViajes() {
       camion_id: "",
       camion_nombre: "",
       camion_placas: "",
+      tipo_viaje: "Sencillo",
       ruta_ida: "",
       kilometros_ida: "",
       rutas_adicionales: [],
@@ -289,6 +292,7 @@ export default function FuelViajes() {
       camion_id: formData.camion_id ? formData.camion_id : null,
       camion_nombre: formData.camion_nombre,
       camion_placas: formData.camion_placas,
+      tipo_viaje: formData.tipo_viaje,
       ruta_ida: formData.ruta_ida,
       kilometros_ida: kmIda,
       rutas_adicionales: formData.rutas_adicionales.map((r) => ({
@@ -357,6 +361,7 @@ export default function FuelViajes() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          {/* (Tarjetas de Estadísticas iguales) */}
           <Card className="border-none shadow-lg bg-card">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
@@ -474,6 +479,9 @@ export default function FuelViajes() {
                   const litros = viaje.litros_combustible || 0;
                   const eficiencia = viaje.km_por_litro || 0;
 
+                  const tipoViaje = viaje.tipo_viaje || "Sencillo";
+                  const isFull = tipoViaje === "FULL";
+
                   return (
                     <Card
                       key={viaje.id}
@@ -543,32 +551,54 @@ export default function FuelViajes() {
                             </div>
                             <div className="space-y-3">
                               <div className="space-y-2">
-                                <div className="flex items-start gap-2">
-                                  <MapPin className="w-4 h-4 text-blue-500 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-                                  <span className="text-sm text-foreground">
-                                    {rutaPrincipal}
-                                  </span>
-                                </div>
-                                {tieneAdicionales &&
-                                  rutasAdicionales.map((rutaAd, idx) => (
-                                    <div
-                                      key={idx}
-                                      className="flex items-start gap-2 ml-6"
+                                {/* CAMBIO: Etiqueta debajo de la ruta en la tarjeta móvil */}
+                                {/* Columna 2: RUTAS CORREGIDA */}
+                                <div className="space-y-3">
+                                  <div className="space-y-2">
+                                    <Badge
+                                      variant="outline"
+                                      className={`w-fit text-[10px] px-1.5 py-0 uppercase font-bold tracking-wider mb-1 ${
+                                        isFull
+                                          ? "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800"
+                                          : "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800"
+                                      }`}
                                     >
-                                      <Route className="w-3 h-3 text-purple-500 dark:text-purple-400 mt-0.5 flex-shrink-0" />
-                                      <span className="text-sm text-muted-foreground">
-                                        {rutaAd.ruta}
+                                      {tipoViaje}
+                                    </Badge>
+
+                                    {/* RUTA DE IDA */}
+                                    <div className="flex items-start gap-2">
+                                      <MapPin className="w-4 h-4 text-blue-500 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                                      <span className="text-sm text-foreground">
+                                        {rutaPrincipal}
                                       </span>
                                     </div>
-                                  ))}
-                                {tieneRegreso && (
-                                  <div className="flex items-start gap-2">
-                                    <ArrowLeftRight className="w-4 h-4 text-orange-500 dark:text-orange-400 mt-0.5 flex-shrink-0" />
-                                    <span className="text-sm text-foreground">
-                                      {viaje.ruta_regreso}
-                                    </span>
+
+                                    {/* RUTAS ADICIONALES */}
+                                    {tieneAdicionales &&
+                                      rutasAdicionales.map((rutaAd, idx) => (
+                                        <div
+                                          key={idx}
+                                          className="flex items-start gap-2 ml-6"
+                                        >
+                                          <Route className="w-3 h-3 text-purple-500 dark:text-purple-400 mt-0.5 flex-shrink-0" />
+                                          <span className="text-sm text-muted-foreground">
+                                            {rutaAd.ruta}
+                                          </span>
+                                        </div>
+                                      ))}
+
+                                    {/* RUTA DE REGRESO (Una sola vez) */}
+                                    {tieneRegreso && (
+                                      <div className="flex items-start gap-2">
+                                        <ArrowLeftRight className="w-4 h-4 text-orange-500 dark:text-orange-400 mt-0.5 flex-shrink-0" />
+                                        <span className="text-sm text-foreground">
+                                          {viaje.ruta_regreso}
+                                        </span>
+                                      </div>
+                                    )}
                                   </div>
-                                )}
+                                </div>
                               </div>
                             </div>
                             <div className="space-y-3">
@@ -654,7 +684,8 @@ export default function FuelViajes() {
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-6 mt-4">
-              <div className="grid md:grid-cols-4 gap-4">
+              {/* CAMBIO: Grid ajustado a 5 columnas con el campo Tipo */}
+              <div className="grid md:grid-cols-5 gap-4">
                 <div className="space-y-2">
                   <Label
                     htmlFor="edit-fecha"
@@ -736,6 +767,27 @@ export default function FuelViajes() {
                           {c.nombre} - {c.placas}
                         </SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="font-semibold text-foreground">
+                    Tipo <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={formData.tipo_viaje}
+                    onValueChange={(val) =>
+                      setFormData({ ...formData, tipo_viaje: val })
+                    }
+                    required
+                  >
+                    <SelectTrigger className="bg-background border-input">
+                      <SelectValue placeholder="Seleccionar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Sencillo">Sencillo</SelectItem>
+                      <SelectItem value="FULL">FULL</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
