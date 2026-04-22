@@ -73,7 +73,6 @@ export default function TablaViajes({ viajes }) {
                 const litros = viaje.litros_combustible || 0;
                 const eficiencia = viaje.km_por_litro || 0;
 
-                // NUEVO: Lógica para la etiqueta del tipo de viaje
                 const tipoViaje = viaje.tipo_viaje || "Sencillo";
                 const isFull = tipoViaje === "FULL";
 
@@ -82,6 +81,7 @@ export default function TablaViajes({ viajes }) {
                     key={viaje.id}
                     className="hover:bg-muted/50 transition-colors duration-150 border-border"
                   >
+                    {/* 1. FECHAS */}
                     <TableCell className="align-top py-3">
                       <div className="flex flex-wrap items-start gap-4">
                         <div>
@@ -91,7 +91,7 @@ export default function TablaViajes({ viajes }) {
                           <span className="font-medium text-foreground block bg-muted px-2 py-0.5 rounded-md w-fit text-sm">
                             {format(
                               new Date(`${viaje.fecha}T12:00:00`),
-                              "dd MMM",
+                              "dd MMM yyyy",
                               { locale: es },
                             )}
                           </span>
@@ -104,7 +104,7 @@ export default function TablaViajes({ viajes }) {
                             <span className="font-medium text-foreground block bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-md w-fit text-sm">
                               {format(
                                 new Date(`${viaje.fecha_llegada}T12:00:00`),
-                                "dd MMM",
+                                "dd MMM yyyy",
                                 { locale: es },
                               )}
                             </span>
@@ -113,6 +113,7 @@ export default function TablaViajes({ viajes }) {
                       </div>
                     </TableCell>
 
+                    {/* 2. CONDUCTOR */}
                     <TableCell className="align-top py-3">
                       <div className="flex items-center gap-2 mt-1">
                         <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
@@ -126,7 +127,7 @@ export default function TablaViajes({ viajes }) {
                       </div>
                     </TableCell>
 
-                    {/* CELDA DE RUTAS CORREGIDA */}
+                    {/* 3. RUTA */}
                     <TableCell className="align-top py-3">
                       <div className="space-y-2 mt-1">
                         <Badge
@@ -141,7 +142,6 @@ export default function TablaViajes({ viajes }) {
                         </Badge>
 
                         <div className="space-y-1.5">
-                          {/* RUTA DE IDA */}
                           <div className="flex items-start gap-2">
                             <MapPin className="w-4 h-4 text-blue-500 dark:text-blue-400 mt-0.5" />
                             <span className="text-foreground text-sm font-medium leading-tight">
@@ -149,7 +149,6 @@ export default function TablaViajes({ viajes }) {
                             </span>
                           </div>
 
-                          {/* RUTAS ADICIONALES */}
                           {tieneAdicionales && (
                             <div className="ml-6 space-y-1">
                               {viaje.rutas_adicionales.map((rutaAd, idx) => (
@@ -166,7 +165,6 @@ export default function TablaViajes({ viajes }) {
                             </div>
                           )}
 
-                          {/* RUTA DE REGRESO (Una sola vez) */}
                           {tieneRegreso && (
                             <div className="flex items-start gap-2 text-xs">
                               <ArrowLeftRight className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400 mt-0.5" />
@@ -178,21 +176,38 @@ export default function TablaViajes({ viajes }) {
                         </div>
                       </div>
                     </TableCell>
-                    
+
+                    {/* 4. KILÓMETROS (Esta es la celda que faltaba) */}
+                    <TableCell className="text-right align-top py-3">
+                      <div className="space-y-1 mt-1">
+                        <div className="font-bold text-foreground">
+                          {kmTotal.toFixed(1)} km
+                        </div>
+                        {(tieneRegreso || tieneAdicionales) && (
+                          <div className="text-xs text-muted-foreground">
+                            Detalles disponibles
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+
+                    {/* 5. LITROS */}
                     <TableCell className="text-right font-semibold text-foreground align-top py-3 mt-1">
                       {litros.toFixed(2)} L
                     </TableCell>
+
+                    {/* 6. EFICIENCIA */}
                     <TableCell className="text-center align-top py-3">
                       <Badge
                         variant="outline"
-                        className={`${getEficienciaColor(
-                          eficiencia,
-                        )} border font-semibold mt-1`}
+                        className={`${getEficienciaColor(eficiencia)} border font-semibold mt-1`}
                       >
                         <Gauge className="w-3 h-3 mr-1" />
                         {eficiencia.toFixed(2)}
                       </Badge>
                     </TableCell>
+
+                    {/* 7. COSTO */}
                     <TableCell className="text-right font-semibold text-foreground align-top py-3 mt-1">
                       {viaje.costo_combustible
                         ? `$${viaje.costo_combustible.toFixed(2)}`
