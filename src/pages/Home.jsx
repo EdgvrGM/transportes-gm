@@ -910,11 +910,9 @@ export default function Home() {
               {
                 icon: MapPin,
                 title: "Ubicación",
-                content:
-                  "Av. Marciano Cabrera 321, Tepeyac, Tecoman, Colima, 28110",
+                content: "Tecoman, Colima, Mexico. 28110",
                 content2: null,
-                link: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                  "Av. Marciano Cabrera 321, Tepeyac, Tecoman, Colima, 28110",
+                link: `https://www.google.com/maps/place/Tecom%C3%A1n,+Colima/@18.9151529,-103.8987044,8243m/data=!3m2!1e3!4b1!4m6!3m5!1s0x843ab659e3ad4c75:0xf75a2010d124c583!8m2!3d18.9173829!4d-103.8738031!16zL20vMDFnbjNt!5m1!1e1?entry=ttu&g_ep=EgoyMDI2MDQyNi4wIKXMDSoASAFQAw%3D%3D",
                 )}`,
                 bgGradient: "from-orange-50 to-amber-50",
                 iconBg: "from-orange-400 to-amber-500",
@@ -1106,7 +1104,7 @@ export default function Home() {
               </h4>
               <div className="rounded-xl overflow-hidden shadow-lg border border-gray-700">
                 <iframe
-                  src="https://maps.google.com/maps?q=Av.+Marciano+Cabrera+321,+Tepeyac,+Tecoman,+Colima,+28110&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d35895.799631122114!2d-103.89870435843876!3d18.915152858014416!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x843ab659e3ad4c75%3A0xf75a2010d124c583!2sTecom%C3%A1n%2C%20Colima!5e1!3m2!1sen!2smx!4v1777427674859!5m2!1sen!2smx"
                   width="100%"
                   height="250"
                   style={{ border: 0 }}
@@ -1118,7 +1116,7 @@ export default function Home() {
               </div>
               <p className="text-sm text-gray-400 mt-3 flex items-start gap-2">
                 <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-yellow-400" />
-                Av. Marciano Cabrera 321, Tepeyac, Tecoman, Colima, 28110
+                Tecoman, Colima, Mexico. 28110
               </p>
             </div>
           </div>
