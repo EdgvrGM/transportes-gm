@@ -5,9 +5,12 @@ import ControlCombustible from "./ControlCombustible.jsx";
 import FuelRegistrarViaje from "./FuelRegistrarViaje";
 import FuelConductores from "./FuelConductores";
 import FuelCamiones from "./FuelCamiones";
+import FuelRemolques from "./FuelRemolques";
 import FuelViajes from "./FuelViajes";
-import Login from "./Login.jsx"; // <-- AÑADIDO
-import ProtectedRoute from "./ProtectedRoute.jsx"; // <-- AÑADIDO
+import FuelProgramaCargas from "./FuelProgramaCargas";
+import Login from "./Login.jsx";
+import ProtectedRoute from "./ProtectedRoute.jsx";
+import Clientes from "./Clientes"; // <-- Importado correctamente
 import {
   BrowserRouter as Router,
   Route,
@@ -15,6 +18,7 @@ import {
   useLocation,
 } from "react-router-dom";
 
+// AGREGAMOS CLIENTES A LA LISTA DE PÁGINAS ACTIVAS
 const PAGES = {
   Home: Home,
   Unidades: Unidades,
@@ -22,11 +26,13 @@ const PAGES = {
   FuelRegistrarViaje: FuelRegistrarViaje,
   FuelConductores: FuelConductores,
   FuelCamiones: FuelCamiones,
+  FuelRemolques: FuelRemolques,
   FuelViajes: FuelViajes,
-  Login: Login, // <-- AÑADIDO
+  FuelProgramaCargas: FuelProgramaCargas,
+  Login: Login,
+  Clientes: Clientes, // <-- ¡Este era el detalle que faltaba!
 };
 
-// ... (la función _getCurrentPage se mantiene igual) ...
 function _getCurrentPage(url) {
   if (url.endsWith("/")) {
     url = url.slice(0, -1);
@@ -36,7 +42,7 @@ function _getCurrentPage(url) {
     urlLastPart = urlLastPart.split("?")[0];
   }
   const pageName = Object.keys(PAGES).find(
-    (page) => page.toLowerCase() === urlLastPart.toLowerCase()
+    (page) => page.toLowerCase() === urlLastPart.toLowerCase(),
   );
   return pageName || Object.keys(PAGES)[0];
 }
@@ -60,7 +66,10 @@ function PagesContent() {
           <Route path="/fuelregistrarviaje" element={<FuelRegistrarViaje />} />
           <Route path="/fuelconductores" element={<FuelConductores />} />
           <Route path="/fuelcamiones" element={<FuelCamiones />} />
+          <Route path="/fuelremolques" element={<FuelRemolques />} />
           <Route path="/fuelviajes" element={<FuelViajes />} />
+          <Route path="/fuelprogramacargas" element={<FuelProgramaCargas />} />
+          <Route path="/clientes" element={<Clientes />} />
         </Route>
       </Routes>
     </Layout>

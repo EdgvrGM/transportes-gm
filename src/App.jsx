@@ -2,6 +2,7 @@ import "./App.css";
 import Pages from "@/pages/index.jsx";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider"; // <--- Importar
+import FuelProgramaCargas from "@/pages/FuelProgramaCargas";
 
 function App() {
   return (
