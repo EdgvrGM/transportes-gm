@@ -107,8 +107,13 @@ export default function ControlCombustible() {
       0,
     );
     const promedioEficiencia = totalLitros > 0 ? totalKm / totalLitros : 0;
+
     const totalCosto = viajesFiltrados.reduce(
-      (sum, v) => sum + (v.costo_combustible || 0),
+      (sum, v) =>
+        sum +
+        (v.costo_combustible || 0) +
+        (v.casetas_ida || 0) +
+        (v.casetas_regreso || 0),
       0,
     );
 
@@ -123,6 +128,14 @@ export default function ControlCombustible() {
 
   const stats = calcularEstadisticas();
 
+  // Función corregida sin Math.round()
+  const formatNumber = (num, decimals = 0) => {
+    return Number(num).toLocaleString("en-US", {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
+  };
+
   const exportarExcel = () => {
     setIsExporting(true);
     try {
@@ -134,6 +147,13 @@ export default function ControlCombustible() {
         const litros = viaje.litros_combustible || 0;
         const eficiencia = viaje.km_por_litro || 0;
 
+        // Costos
+        const costoCombustible = viaje.costo_combustible || 0;
+        const casetasIda = viaje.casetas_ida || 0;
+        const casetasRegreso = viaje.casetas_regreso || 0;
+        const totalCasetas = casetasIda + casetasRegreso;
+        const costoTotal = costoCombustible + totalCasetas;
+
         return {
           "Fecha Salida": format(
             new Date(`${viaje.fecha}T12:00:00`),
@@ -142,7 +162,7 @@ export default function ControlCombustible() {
           "Fecha Llegada": viaje.fecha_llegada
             ? format(new Date(`${viaje.fecha_llegada}T12:00:00`), "dd/MM/yyyy")
             : "-",
-          "Tipo Viaje": viaje.tipo_viaje || "Sencillo", // <-- AÑADIDO PARA EL REPORTE
+          "Tipo Viaje": viaje.tipo_viaje || "Sencillo",
           Conductor: viaje.conductor_nombre || "N/A",
           "Ruta Ida": rutaIda,
           "Kilómetros Ida": kmIda,
@@ -151,7 +171,11 @@ export default function ControlCombustible() {
           "Kilómetros Total": kmTotal,
           Litros: litros,
           "km/L": eficiencia.toFixed(2),
-          Costo: viaje.costo_combustible || 0,
+          "Costo Combustible": costoCombustible,
+          "Casetas Ida": casetasIda,
+          "Casetas Regreso": casetasRegreso,
+          "Total Casetas": totalCasetas,
+          "Costo Total Viaje": costoTotal,
         };
       });
 
@@ -196,7 +220,6 @@ export default function ControlCombustible() {
   }
 
   return (
-    // CAMBIO: Fondo dinámico bg-background
     <div className="p-4 md:p-8 bg-slate-50 dark:bg-background min-h-screen transition-colors duration-300">
       <div className="max-w-[1600px] mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -230,27 +253,27 @@ export default function ControlCombustible() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatsCard
             title="Viajes"
-            value={stats.totalViajes}
+            value={formatNumber(stats.totalViajes, 0)}
             icon={Truck}
             gradient="bg-blue-500 dark:bg-blue-600"
           />
           <StatsCard
             title="Kilómetros"
-            value={stats.totalKm.toFixed(0)}
+            value={formatNumber(stats.totalKm, 0)}
             subtitle="km"
             icon={TrendingUp}
             gradient="bg-purple-500 dark:bg-purple-600"
           />
           <StatsCard
             title="Litros"
-            value={stats.totalLitros.toFixed(0)}
+            value={formatNumber(stats.totalLitros, 0)}
             subtitle="L"
             icon={Droplet}
             gradient="bg-orange-500 dark:bg-orange-600"
           />
           <StatsCard
             title="Eficiencia"
-            value={stats.promedioEficiencia.toFixed(2)}
+            value={formatNumber(stats.promedioEficiencia, 2)}
             subtitle="km/L"
             icon={Gauge}
             gradient="bg-green-500 dark:bg-green-600"

@@ -46,7 +46,7 @@ import {
   Save,
   X,
   ArrowRight,
-  Filter,
+  Ticket,
 } from "lucide-react";
 import { format, getISOWeek, getYear } from "date-fns";
 import { es } from "date-fns/locale";
@@ -63,6 +63,7 @@ export default function FuelViajes() {
   const [viajeAEliminar, setViajeAEliminar] = useState(null);
   const [viajeEditando, setViajeEditando] = useState(null);
   const [dialogAbierto, setDialogAbierto] = useState(false);
+
   const [formData, setFormData] = useState({
     fecha: "",
     fecha_llegada: "",
@@ -79,6 +80,8 @@ export default function FuelViajes() {
     kilometros_regreso: "",
     litros_combustible: "",
     costo_combustible: "",
+    casetas_ida: "",
+    casetas_regreso: "",
     notas: "",
   });
 
@@ -208,6 +211,8 @@ export default function FuelViajes() {
       kilometros_regreso: viaje.kilometros_regreso || "",
       litros_combustible: viaje.litros_combustible || "",
       costo_combustible: viaje.costo_combustible || "",
+      casetas_ida: viaje.casetas_ida || "",
+      casetas_regreso: viaje.casetas_regreso || "",
       notas: viaje.notas || "",
     });
     setDialogAbierto(true);
@@ -232,6 +237,8 @@ export default function FuelViajes() {
       kilometros_regreso: "",
       litros_combustible: "",
       costo_combustible: "",
+      casetas_ida: "",
+      casetas_regreso: "",
       notas: "",
     });
   };
@@ -284,6 +291,7 @@ export default function FuelViajes() {
     );
     const kmTotal = kmIda + kmAdicionales + kmRegreso;
     const litros = parseFloat(formData.litros_combustible) || 0;
+
     const datosViaje = {
       fecha: formData.fecha,
       fecha_llegada: formData.fecha_llegada || null,
@@ -307,6 +315,12 @@ export default function FuelViajes() {
       costo_combustible: formData.costo_combustible
         ? parseFloat(formData.costo_combustible)
         : null,
+      casetas_ida: formData.casetas_ida
+        ? parseFloat(formData.casetas_ida)
+        : null,
+      casetas_regreso: formData.casetas_regreso
+        ? parseFloat(formData.casetas_regreso)
+        : null,
       notas: formData.notas,
     };
     if (viajeEditando)
@@ -320,6 +334,18 @@ export default function FuelViajes() {
       return "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800";
     return "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800";
   };
+
+  // Funciones corregidas sin usar Math.round()
+  const formatCurrency = (amount) =>
+    Number(amount).toLocaleString("en-US", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
+  const formatNumber = (num, decimals = 0) =>
+    Number(num).toLocaleString("en-US", {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
 
   if (isLoading)
     return (
@@ -360,8 +386,8 @@ export default function FuelViajes() {
           />
         </div>
 
+        {/* TARJETAS RESUMEN ARRIBA */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          {/* (Tarjetas de Estadísticas iguales) */}
           <Card className="border-none shadow-lg bg-card">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
@@ -373,7 +399,7 @@ export default function FuelViajes() {
                     Total Viajes
                   </p>
                   <p className="text-2xl font-bold text-foreground">
-                    {viajesFiltrados.length}
+                    {formatNumber(viajesFiltrados.length, 0)}
                   </p>
                 </div>
               </div>
@@ -390,9 +416,13 @@ export default function FuelViajes() {
                     Kilómetros
                   </p>
                   <p className="text-2xl font-bold text-foreground">
-                    {viajesFiltrados
-                      .reduce((sum, v) => sum + (v.kilometros_total || 0), 0)
-                      .toFixed(0)}
+                    {formatNumber(
+                      viajesFiltrados.reduce(
+                        (sum, v) => sum + (v.kilometros_total || 0),
+                        0,
+                      ),
+                      0,
+                    )}
                   </p>
                 </div>
               </div>
@@ -409,9 +439,13 @@ export default function FuelViajes() {
                     Litros
                   </p>
                   <p className="text-2xl font-bold text-foreground">
-                    {viajesFiltrados
-                      .reduce((sum, v) => sum + (v.litros_combustible || 0), 0)
-                      .toFixed(0)}
+                    {formatNumber(
+                      viajesFiltrados.reduce(
+                        (sum, v) => sum + (v.litros_combustible || 0),
+                        0,
+                      ),
+                      0,
+                    )}
                   </p>
                 </div>
               </div>
@@ -438,7 +472,7 @@ export default function FuelViajes() {
                         0,
                       );
                       return totalLitros > 0
-                        ? (totalKm / totalLitros).toFixed(2)
+                        ? formatNumber(totalKm / totalLitros, 2)
                         : "0.00";
                     })()}
                   </p>
@@ -476,11 +510,16 @@ export default function FuelViajes() {
                   const rutaPrincipal = viaje.ruta_ida || viaje.ruta || "-";
                   const kmTotal =
                     viaje.kilometros_total || viaje.kilometros || 0;
+                  const kmIda = viaje.kilometros_ida || viaje.kilometros || 0;
+                  const kmRegreso = viaje.kilometros_regreso || 0;
                   const litros = viaje.litros_combustible || 0;
                   const eficiencia = viaje.km_por_litro || 0;
-
                   const tipoViaje = viaje.tipo_viaje || "Sencillo";
                   const isFull = tipoViaje === "FULL";
+
+                  const costoCombustible = viaje.costo_combustible || 0;
+                  const costoCasetas =
+                    (viaje.casetas_ida || 0) + (viaje.casetas_regreso || 0);
 
                   return (
                     <Card
@@ -490,6 +529,7 @@ export default function FuelViajes() {
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1 grid md:grid-cols-4 gap-6">
+                            {/* COL 1: FECHAS */}
                             <div className="space-y-3">
                               <div className="flex flex-wrap items-start gap-4">
                                 <div className="flex items-center gap-2">
@@ -549,88 +589,108 @@ export default function FuelViajes() {
                                 )}
                               </div>
                             </div>
+
+                            {/* COL 2: RUTAS */}
                             <div className="space-y-3">
                               <div className="space-y-2">
-                                {/* CAMBIO: Etiqueta debajo de la ruta en la tarjeta móvil */}
-                                {/* Columna 2: RUTAS CORREGIDA */}
-                                <div className="space-y-3">
-                                  <div className="space-y-2">
-                                    <Badge
-                                      variant="outline"
-                                      className={`w-fit text-[10px] px-1.5 py-0 uppercase font-bold tracking-wider mb-1 ${
-                                        isFull
-                                          ? "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800"
-                                          : "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800"
-                                      }`}
+                                <Badge
+                                  variant="outline"
+                                  className={`w-fit text-[10px] px-1.5 py-0 uppercase font-bold tracking-wider mb-1 ${isFull ? "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800" : "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800"}`}
+                                >
+                                  {tipoViaje}
+                                </Badge>
+                                <div className="flex items-start gap-2">
+                                  <MapPin className="w-4 h-4 text-blue-500 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                                  <span className="text-sm text-foreground">
+                                    {rutaPrincipal}
+                                  </span>
+                                </div>
+                                {tieneAdicionales &&
+                                  rutasAdicionales.map((rutaAd, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="flex items-start gap-2 ml-6"
                                     >
-                                      {tipoViaje}
-                                    </Badge>
-
-                                    {/* RUTA DE IDA */}
-                                    <div className="flex items-start gap-2">
-                                      <MapPin className="w-4 h-4 text-blue-500 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-                                      <span className="text-sm text-foreground">
-                                        {rutaPrincipal}
+                                      <Route className="w-3 h-3 text-purple-500 dark:text-purple-400 mt-0.5 flex-shrink-0" />
+                                      <span className="text-sm text-muted-foreground">
+                                        {rutaAd.ruta}
                                       </span>
                                     </div>
-
-                                    {/* RUTAS ADICIONALES */}
-                                    {tieneAdicionales &&
-                                      rutasAdicionales.map((rutaAd, idx) => (
-                                        <div
-                                          key={idx}
-                                          className="flex items-start gap-2 ml-6"
-                                        >
-                                          <Route className="w-3 h-3 text-purple-500 dark:text-purple-400 mt-0.5 flex-shrink-0" />
-                                          <span className="text-sm text-muted-foreground">
-                                            {rutaAd.ruta}
-                                          </span>
-                                        </div>
-                                      ))}
-
-                                    {/* RUTA DE REGRESO (Una sola vez) */}
-                                    {tieneRegreso && (
-                                      <div className="flex items-start gap-2">
-                                        <ArrowLeftRight className="w-4 h-4 text-orange-500 dark:text-orange-400 mt-0.5 flex-shrink-0" />
-                                        <span className="text-sm text-foreground">
-                                          {viaje.ruta_regreso}
-                                        </span>
-                                      </div>
-                                    )}
+                                  ))}
+                                {tieneRegreso && (
+                                  <div className="flex items-start gap-2">
+                                    <ArrowLeftRight className="w-4 h-4 text-orange-500 dark:text-orange-400 mt-0.5 flex-shrink-0" />
+                                    <span className="text-sm text-foreground">
+                                      {viaje.ruta_regreso}
+                                    </span>
                                   </div>
-                                </div>
+                                )}
                               </div>
                             </div>
+
+                            {/* COL 3: COSTOS Y KILÓMETROS */}
                             <div className="space-y-3">
                               <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-xs text-muted-foreground">
+                                <div className="flex items-start justify-between">
+                                  <span className="text-xs text-muted-foreground mt-0.5">
                                     Kilómetros:
                                   </span>
-                                  <span className="text-sm font-semibold text-foreground">
-                                    {kmTotal.toFixed(1)} km
-                                  </span>
+                                  <div className="text-right">
+                                    <span className="text-sm font-semibold text-foreground block">
+                                      {formatNumber(kmTotal, 0)} km
+                                    </span>
+                                    {(tieneRegreso || tieneAdicionales) && (
+                                      <span className="text-[10px] text-muted-foreground block mt-0.5">
+                                        ({formatNumber(kmIda, 0)}
+                                        {tieneAdicionales &&
+                                          ` + ${formatNumber(
+                                            rutasAdicionales.reduce(
+                                              (sum, r) =>
+                                                sum +
+                                                parseFloat(r.kilometros || 0),
+                                              0,
+                                            ),
+                                            0,
+                                          )}`}
+                                        {tieneRegreso &&
+                                          ` + ${formatNumber(kmRegreso, 0)}`}
+                                        )
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                                 <div className="flex items-center justify-between">
                                   <span className="text-xs text-muted-foreground">
                                     Litros:
                                   </span>
                                   <span className="text-sm font-semibold text-foreground">
-                                    {litros.toFixed(2)} L
+                                    {formatNumber(litros, 0)} L
                                   </span>
                                 </div>
-                                {viaje.costo_combustible && (
+                                {costoCombustible > 0 && (
                                   <div className="flex items-center justify-between">
                                     <span className="text-xs text-muted-foreground">
-                                      Costo:
+                                      Combustible:
                                     </span>
                                     <span className="text-sm font-semibold text-foreground">
-                                      ${viaje.costo_combustible.toFixed(2)}
+                                      ${formatCurrency(costoCombustible)}
+                                    </span>
+                                  </div>
+                                )}
+                                {costoCasetas > 0 && (
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs text-muted-foreground">
+                                      Casetas:
+                                    </span>
+                                    <span className="text-sm font-semibold text-foreground">
+                                      ${formatCurrency(costoCasetas)}
                                     </span>
                                   </div>
                                 )}
                               </div>
                             </div>
+
+                            {/* COL 4: EFICIENCIA */}
                             <div className="space-y-3">
                               <div className="flex flex-col items-center justify-center h-full">
                                 <Badge
@@ -638,7 +698,7 @@ export default function FuelViajes() {
                                   className={`${getEficienciaColor(eficiencia)} border font-semibold text-base px-4 py-2 mb-2`}
                                 >
                                   <Gauge className="w-4 h-4 mr-2" />
-                                  {eficiencia.toFixed(2)} km/L
+                                  {formatNumber(eficiencia, 2)} km/L
                                 </Badge>
                                 {viaje.notas && (
                                   <p className="text-xs text-muted-foreground text-center mt-2 line-clamp-2">
@@ -648,6 +708,8 @@ export default function FuelViajes() {
                               </div>
                             </div>
                           </div>
+
+                          {/* BOTONES */}
                           <div className="flex flex-col gap-1">
                             <Button
                               variant="ghost"
@@ -684,7 +746,6 @@ export default function FuelViajes() {
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-6 mt-4">
-              {/* CAMBIO: Grid ajustado a 5 columnas con el campo Tipo */}
               <div className="grid md:grid-cols-5 gap-4">
                 <div className="space-y-2">
                   <Label
@@ -770,7 +831,6 @@ export default function FuelViajes() {
                     </SelectContent>
                   </Select>
                 </div>
-
                 <div className="space-y-2">
                   <Label className="font-semibold text-foreground">
                     Tipo <span className="text-red-500">*</span>
@@ -982,7 +1042,7 @@ export default function FuelViajes() {
                       htmlFor="edit-costo"
                       className="font-semibold text-foreground"
                     >
-                      Costo Total
+                      Costo Combustible ($)
                     </Label>
                     <Input
                       id="edit-costo"
@@ -993,6 +1053,50 @@ export default function FuelViajes() {
                         setFormData({
                           ...formData,
                           costo_combustible: e.target.value,
+                        })
+                      }
+                      className="bg-background border-input"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* CASETAS */}
+              <div className="space-y-4 p-4 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-lg border border-indigo-100 dark:border-indigo-900">
+                <div className="flex items-center gap-2 mb-2">
+                  <Ticket className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                  <h3 className="font-bold text-foreground">Casetas</h3>
+                </div>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-foreground font-semibold">
+                      Casetas Ida ($)
+                    </Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={formData.casetas_ida}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          casetas_ida: e.target.value,
+                        })
+                      }
+                      className="bg-background border-input"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-foreground font-semibold">
+                      Casetas Regreso ($)
+                    </Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={formData.casetas_regreso}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          casetas_regreso: e.target.value,
                         })
                       }
                       className="bg-background border-input"

@@ -24,6 +24,7 @@ import {
   Fuel,
   X,
   Route,
+  Ticket,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
@@ -43,13 +44,15 @@ export default function FuelRegistrarViaje() {
     camion_id: "",
     camion_nombre: "",
     camion_placas: "",
-    tipo_viaje: "Sencillo", // <-- NUEVO ESTADO
+    tipo_viaje: "Sencillo",
     ruta_ida: "",
     kilometros_ida: "",
     ruta_regreso: "",
     kilometros_regreso: "",
     litros_combustible: "",
     costo_combustible: "",
+    casetas_ida: "", // <-- NUEVO CAMPO
+    casetas_regreso: "", // <-- NUEVO CAMPO
     notas: "",
   });
 
@@ -189,7 +192,7 @@ export default function FuelRegistrarViaje() {
       camion_id: viaje.camion_id || null,
       camion_nombre: viaje.camion_nombre,
       camion_placas: viaje.camion_placas,
-      tipo_viaje: viaje.tipo_viaje, // <-- NUEVO DATO ENVIADO A BD
+      tipo_viaje: viaje.tipo_viaje,
       ruta_ida: viaje.ruta_ida,
       kilometros_ida: kmIda,
       rutas_adicionales: rutasAdicionales.map((r) => ({
@@ -204,6 +207,10 @@ export default function FuelRegistrarViaje() {
       costo_combustible: viaje.costo_combustible
         ? parseFloat(viaje.costo_combustible)
         : null,
+      casetas_ida: viaje.casetas_ida ? parseFloat(viaje.casetas_ida) : null, // <-- NUEVO
+      casetas_regreso: viaje.casetas_regreso
+        ? parseFloat(viaje.casetas_regreso)
+        : null, // <-- NUEVO
       notas: viaje.notas,
     };
     crearViajeMutation.mutate(datosViaje);
@@ -270,7 +277,6 @@ export default function FuelRegistrarViaje() {
           </CardHeader>
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* CAMBIO: Grid ajustado a 5 columnas para incluir el Tipo de Viaje */}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="space-y-2">
                   <Label
@@ -438,7 +444,6 @@ export default function FuelRegistrarViaje() {
                   )}
                 </div>
 
-                {/* NUEVO CAMPO: Tipo de Viaje */}
                 <div className="space-y-2">
                   <Label className="text-foreground font-semibold">
                     Tipo <span className="text-red-500">*</span>
@@ -454,14 +459,14 @@ export default function FuelRegistrarViaje() {
                       <SelectValue placeholder="Seleccionar" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Sencillo">SENCILLO</SelectItem>
-                      <SelectItem value="FULL">FULL</SelectItem>
+                      <SelectItem value="Sencillo">Sencillo (1)</SelectItem>
+                      <SelectItem value="FULL">FULL (2)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
-              {/* RUTA IDA */}
+              {/* RUTAS */}
               <div className="space-y-4 p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-900">
                 <div className="flex items-center gap-2 mb-2">
                   <ArrowRight className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -499,7 +504,6 @@ export default function FuelRegistrarViaje() {
                 </div>
               </div>
 
-              {/* RUTAS ADICIONALES */}
               <div className="space-y-4 p-4 bg-purple-50/50 dark:bg-purple-900/10 rounded-lg border border-purple-100 dark:border-purple-900">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
@@ -557,7 +561,6 @@ export default function FuelRegistrarViaje() {
                 ))}
               </div>
 
-              {/* RUTA REGRESO */}
               <div className="space-y-4 p-4 bg-orange-50/50 dark:bg-orange-900/10 rounded-lg border border-orange-100 dark:border-orange-900">
                 <div className="flex items-center gap-2 mb-2">
                   <ArrowLeft className="w-5 h-5 text-orange-600 dark:text-orange-400" />
@@ -632,7 +635,7 @@ export default function FuelRegistrarViaje() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-foreground font-semibold">
-                      Costo ($)
+                      Costo Combustible ($)
                     </Label>
                     <Input
                       type="number"
@@ -663,6 +666,44 @@ export default function FuelRegistrarViaje() {
                     </span>
                   </div>
                 )}
+              </div>
+
+              {/* CASETAS (NUEVO BLOQUE) */}
+              <div className="space-y-4 p-4 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-lg border border-indigo-100 dark:border-indigo-900">
+                <div className="flex items-center gap-2 mb-2">
+                  <Ticket className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                  <h3 className="font-bold text-foreground">Casetas</h3>
+                </div>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-foreground font-semibold">
+                      Casetas Ida ($)
+                    </Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={viaje.casetas_ida}
+                      onChange={(e) =>
+                        setViaje({ ...viaje, casetas_ida: e.target.value })
+                      }
+                      className="bg-background border-input"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-foreground font-semibold">
+                      Casetas Regreso ($)
+                    </Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={viaje.casetas_regreso}
+                      onChange={(e) =>
+                        setViaje({ ...viaje, casetas_regreso: e.target.value })
+                      }
+                      className="bg-background border-input"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2">
