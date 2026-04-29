@@ -153,8 +153,7 @@ export default function Unidades() {
               Nuestra Flota
             </h1>
             <p className="text-xl text-gray-300">
-              Conoce nuestras unidades equipadas con la mejor tecnología para el
-              transporte de carga
+              Conoce nuestras unidades en excelentes condiciones para brindarte un servicio de calidad
             </p>
             <p className="text-sm text-gray-400 mt-2">
               Total de unidades: {unidades?.length || 0}
@@ -262,18 +261,6 @@ export default function Unidades() {
                             <p className="text-xs text-gray-500">Año</p>
                             <p className="font-semibold text-gray-900">
                               {unidad.año}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
-                      {unidad.placa && (
-                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                          <CreditCard className="w-5 h-5 text-yellow-600" />
-                          <div>
-                            <p className="text-xs text-gray-500">Placa</p>
-                            <p className="font-semibold text-gray-900">
-                              {unidad.placa}
                             </p>
                           </div>
                         </div>
