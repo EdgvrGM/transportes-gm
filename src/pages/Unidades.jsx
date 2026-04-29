@@ -258,7 +258,7 @@ export default function Unidades() {
                         <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                           <Calendar className="w-5 h-5 text-yellow-600" />
                           <div>
-                            <p className="text-xs text-gray-500">Año</p>
+                            <p className="text-xs text-gray-500">Modelo</p>
                             <p className="font-semibold text-gray-900">
                               {unidad.año}
                             </p>
