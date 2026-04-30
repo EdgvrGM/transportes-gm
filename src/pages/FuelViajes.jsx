@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { supabase } from "@/supabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,13 +54,15 @@ import { es } from "date-fns/locale";
 import FiltrosViajes from "@/components/fuel/FiltrosViajes";
 
 export default function FuelViajes() {
+  const location = useLocation();
+  const stateData = location.state || {};
   const queryClient = useQueryClient();
-  const [fechaInicio, setFechaInicio] = useState("");
-  const [fechaFin, setFechaFin] = useState("");
-  const [conductorFiltro, setConductorFiltro] = useState("todos");
+  const [fechaInicio, setFechaInicio] = useState(stateData.fechaInicio || "");
+  const [fechaFin, setFechaFin] = useState(stateData.fechaFin || "");
+  const [conductorFiltro, setConductorFiltro] = useState(stateData.conductorFiltro || "todos");
   const [camionFiltro, setCamionFiltro] = useState("todos");
   const [rutaFiltro, setRutaFiltro] = useState("");
-  const [periodoFiltro, setPeriodoFiltro] = useState("todos");
+  const [periodoFiltro, setPeriodoFiltro] = useState(stateData.periodoFiltro || "todos");
   const [viajeAEliminar, setViajeAEliminar] = useState(null);
   const [viajeEditando, setViajeEditando] = useState(null);
   const [dialogAbierto, setDialogAbierto] = useState(false);

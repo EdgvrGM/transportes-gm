@@ -16,9 +16,10 @@ import { format, getISOWeek, getYear } from "date-fns";
 import StatsCard from "../components/fuel/StatsCard";
 import ColaCarga from "../components/fuel/ColaCarga";
 import FiltrosViajes from "../components/fuel/FiltrosViajes";
-import GraficoConsumo from "../components/fuel/GraficoConsumo";
 import GraficoEficiencia from "../components/fuel/GraficoEficiencia";
-import TablaViajes from "../components/fuel/TablaViajes";
+import RankingConductores from "../components/fuel/RankingConductores";
+import AnomaliasCombustible from "../components/fuel/AnomaliasCombustible";
+import { DollarSign } from "lucide-react";
 
 export default function ControlCombustible() {
   const navigate = useNavigate();
@@ -112,11 +113,12 @@ export default function ControlCombustible() {
     const totalCosto = viajesFiltrados.reduce(
       (sum, v) =>
         sum +
-        (v.costo_combustible || 0) +
-        (v.casetas_ida || 0) +
-        (v.casetas_regreso || 0),
+        (parseFloat(v.costo_combustible) || 0) +
+        (parseFloat(v.casetas_ida) || 0) +
+        (parseFloat(v.casetas_regreso) || 0),
       0,
     );
+    const cpk = totalKm > 0 ? totalCosto / totalKm : 0;
 
     return {
       totalViajes,
@@ -124,6 +126,7 @@ export default function ControlCombustible() {
       totalLitros,
       promedioEficiencia,
       totalCosto,
+      cpk,
     };
   };
 
@@ -251,12 +254,26 @@ export default function ControlCombustible() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+          <StatsCard
+            title="Costo por Km"
+            value={`$${formatNumber(stats.cpk, 2)}`}
+            subtitle="CPK Promedio"
+            icon={DollarSign}
+            gradient="bg-blue-600 dark:bg-blue-700"
+          />
+          <StatsCard
+            title="Eficiencia"
+            value={formatNumber(stats.promedioEficiencia, 2)}
+            subtitle="km/L"
+            icon={Gauge}
+            gradient="bg-green-500 dark:bg-green-600"
+          />
           <StatsCard
             title="Viajes"
             value={formatNumber(stats.totalViajes, 0)}
             icon={Truck}
-            gradient="bg-blue-500 dark:bg-blue-600"
+            gradient="bg-slate-500 dark:bg-slate-600"
           />
           <StatsCard
             title="Kilómetros"
@@ -271,13 +288,6 @@ export default function ControlCombustible() {
             subtitle="L"
             icon={Droplet}
             gradient="bg-orange-500 dark:bg-orange-600"
-          />
-          <StatsCard
-            title="Eficiencia"
-            value={formatNumber(stats.promedioEficiencia, 2)}
-            subtitle="km/L"
-            icon={Gauge}
-            gradient="bg-green-500 dark:bg-green-600"
           />
         </div>
 
@@ -300,13 +310,24 @@ export default function ControlCombustible() {
           />
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6 mb-8">
-          <GraficoConsumo viajes={viajesFiltrados} />
-          <GraficoEficiencia viajes={viajesFiltrados} />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <RankingConductores 
+                viajes={viajesFiltrados} 
+                conductores={conductores} 
+              />
+              <GraficoEficiencia 
+                viajes={viajesFiltrados} 
+              />
+            </div>
+            <div className="space-y-6">
+              <AnomaliasCombustible 
+                viajes={viajesFiltrados} 
+              />
+            </div>
+          </div>
         </div>
-
-        <TablaViajes viajes={viajesFiltrados} />
       </div>
-    </div>
   );
 }
+
