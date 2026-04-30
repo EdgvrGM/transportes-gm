@@ -690,7 +690,7 @@ export default function FuelRegistrarViaje() {
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-foreground font-semibold">
-                      Litros <span className="text-red-500">*</span>
+                      Litros
                     </Label>
                     <Input
                       type="number"
@@ -702,7 +702,6 @@ export default function FuelRegistrarViaje() {
                           litros_combustible: e.target.value,
                         })
                       }
-                      required
                       className="bg-background border-input"
                     />
                   </div>
