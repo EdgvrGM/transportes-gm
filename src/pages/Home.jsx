@@ -19,7 +19,7 @@ import {
   MessageSquare,
   Settings,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useSpring } from "framer-motion";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
@@ -54,8 +54,30 @@ export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("inicio");
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
+  
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  
+  const springConfig = { damping: 25, stiffness: 150 };
+  const smoothX = useSpring(mouseX, springConfig);
+  const smoothY = useSpring(mouseY, springConfig);
+
   const websiteInfo = staticWebsiteInfo;
   const isLoading = false;
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      const { clientX, clientY } = e;
+      const { innerWidth, innerHeight } = window;
+      const x = (clientX / innerWidth - 0.5) * 60;
+      const y = (clientY / innerHeight - 0.5) * 60;
+      mouseX.set(x);
+      mouseY.set(y);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [mouseX, mouseY]);
 
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
@@ -169,70 +191,20 @@ export default function Home() {
         }
         
         .btn-primary:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-        
-        .btn-secondary {
-          position: relative;
-          overflow: hidden;
-          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .btn-secondary::after {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-          transition: left 0.5s;
-        }
-        
-        .btn-secondary:hover::after {
-          left: 100%;
+          transform: translateY(-5px);
+          box-shadow: 0 25px 50px -12px rgba(234, 179, 8, 0.4);
         }
         
         .btn-secondary:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-        
-        .btn-submit {
-          position: relative;
-          overflow: hidden;
-          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .btn-submit::before {
-          content: '';
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 0;
-          height: 0;
-          border-radius: 50%;
-          background: rgba(255, 255, 255, 0.2);
-          transform: translate(-50%, -50%);
-          transition: width 0.6s, height 0.6s;
-        }
-        
-        .btn-submit:hover::before {
-          width: 300px;
-          height: 300px;
-        }
-        
-        .btn-submit:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+          transform: translateY(-5px);
+          box-shadow: 0 25px 50px -12px rgba(255, 255, 255, 0.2);
         }
 
         .nav-button {
           position: relative;
           transition: all 0.3s ease;
         }
-        
+
         .nav-button::before {
           content: '';
           position: absolute;
@@ -250,20 +222,46 @@ export default function Home() {
         }
 
         @keyframes scroll {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(calc(-100% / 3));
-          }
+          0% { transform: translateX(0); }
+          100% { transform: translateX(calc(-100% / 4)); }
         }
-        
+
         .animate-scroll {
-          animation: scroll 30s linear infinite;
+          animation: scroll 40s linear infinite;
         }
         
         .animate-scroll:hover {
           animation-play-state: paused;
+        }
+
+        .spotlight-card {
+          position: relative;
+          overflow: hidden;
+        }
+
+        .spotlight-card::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(800px circle at var(--x) var(--y), rgba(234, 179, 8, 0.1), transparent 40%);
+          opacity: 0;
+          transition: opacity 0.3s;
+          pointer-events: none;
+          z-index: 10;
+        }
+
+        .spotlight-card:hover::before {
+          opacity: 1;
+        }
+
+        @keyframes float {
+          0% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(5deg); }
+          100% { transform: translateY(0px) rotate(0deg); }
+        }
+
+        .floating-shape {
+          animation: float 6s ease-in-out infinite;
         }
 
         .scroll-indicator {
@@ -405,57 +403,48 @@ export default function Home() {
         className="pt-20 min-h-screen flex items-center relative overflow-hidden"
       >
         <div className="absolute inset-0 z-0">
-          <img
-            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f1a8df21531359b12e1164/4bb0ddead_trailers.jpg"
-            alt="Flota Transportes GM"
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
             className="w-full h-full object-cover"
-          />
+          >
+            <source src="/vid/loop.mp4" type="video/mp4" />
+          </video>
           <div
             className="absolute inset-0"
             style={{
-              background: `linear-gradient(135deg, ${darkColor}ee 0%, ${primaryColor}99 100%)`,
+              background: `linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.8) 100%)`,
             }}
           />
         </div>
 
-        <div className="absolute inset-0 z-0 opacity-10">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-yellow-300 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-yellow-300 rounded-full blur-3xl"></div>
-        </div>
-
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <motion.span 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-                className="inline-block px-4 py-1 rounded-full bg-yellow-400/20 text-yellow-400 text-sm font-bold uppercase tracking-wider mb-4 border border-yellow-400/30 backdrop-blur-sm"
-              >
-                {websiteInfo?.tagline || "Tu socio confiable en transporte de carga"}
-              </motion.span>
-              <h1 className="text-5xl md:text-6xl lg:text-8xl font-black text-white leading-tight mb-6 drop-shadow-2xl">
+              <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-white leading-tight mb-8 drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
                 {websiteInfo?.company_name || "Transportes GM"}
               </h1>
-              <p className="text-lg md:text-2xl text-white/90 mb-10 leading-relaxed max-w-xl">
+              <p className="text-xl md:text-3xl text-white/90 mb-12 leading-relaxed font-medium max-w-2xl mx-auto">
                 Desde Manzanillo, Colima, movemos su carga con seguridad,
-                eficiencia y un compromiso inquebrantable con la puntualidad.
+                eficiencia y puntualidad inquebrantable.
               </p>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap justify-center gap-6">
                 <Button
                   size="lg"
                   onClick={() => handleNavigation("servicios")}
-                  className="btn-primary text-lg px-8 py-7 font-bold shadow-2xl text-gray-900 rounded-xl"
+                  className="btn-primary text-xl px-10 py-8 font-black shadow-2xl text-gray-900 rounded-2xl"
                   style={{
                     background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
                   }}
                 >
                   Nuestros Servicios
-                  <ChevronRight className="w-5 h-5 ml-2" />
+                  <ChevronRight className="w-6 h-6 ml-2" />
                 </Button>
                 
                 <a
@@ -466,44 +455,13 @@ export default function Home() {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="btn-secondary text-lg px-8 py-7 font-bold border-2 border-white text-white hover:bg-white hover:text-gray-900 transition-all rounded-xl backdrop-blur-sm bg-white/10"
+                    className="btn-secondary text-xl px-10 py-8 font-black border-2 border-white text-white hover:bg-white hover:text-gray-900 transition-all rounded-2xl backdrop-blur-md bg-white/10"
                   >
                     Cotizar por WhatsApp
-                    <Phone className="w-5 h-5 ml-2" />
+                    <Phone className="w-6 h-6 ml-2" />
                   </Button>
                 </a>
               </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
-              animate={{ opacity: 1, scale: 1, rotate: 0 }}
-              transition={{ duration: 1, delay: 0.2, type: "spring" }}
-              className="hidden lg:block relative"
-            >
-              <div className="relative z-10">
-                <div className="absolute inset-0 bg-yellow-400/20 rounded-[2rem] transform rotate-6 scale-105 blur-sm -z-10"></div>
-                <img
-                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f1a8df21531359b12e1164/59126a98e_kenw.png"
-                  alt="Kenworth Transportes GM"
-                  className="relative rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-full border-4 border-white/10"
-                />
-              </div>
-              
-              {/* Badges decorativos */}
-              <motion.div 
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute -top-10 -right-10 bg-white p-4 rounded-2xl shadow-2xl z-20 hidden xl:flex items-center gap-3 border border-gray-100"
-              >
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600">
-                  <Shield className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 font-bold uppercase">Carga Segura</p>
-                  <p className="text-sm font-black text-gray-900">100% Protegida</p>
-                </div>
-              </motion.div>
             </motion.div>
           </div>
         </div>
@@ -522,8 +480,12 @@ export default function Home() {
       </section>
 
       {/* Services Section */}
-      <section id="servicios" className="py-24 bg-gray-50/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="servicios" className="py-24 bg-gray-50/50 relative overflow-hidden">
+        {/* Floating background elements */}
+        <div className="absolute top-20 left-0 w-64 h-64 bg-yellow-400/5 rounded-full blur-3xl floating-shape" style={{ animationDelay: '0s' }}></div>
+        <div className="absolute bottom-20 right-0 w-96 h-96 bg-yellow-400/5 rounded-full blur-3xl floating-shape" style={{ animationDelay: '2s' }}></div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -694,38 +656,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-20 bg-gray-900 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:20px_20px]"></div>
-        </div>
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-12">
-            {[
-              { label: "Viajes Realizados", value: "5,000+", icon: Truck },
-              { label: "Clientes Satisfechos", value: "150+", icon: Users },
-              { label: "Toneladas Movidas", value: "80k+", icon: Gauge },
-              { label: "Premios Logísticos", value: "12", icon: Award },
-            ].map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="text-center"
-              >
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-yellow-400 mb-6 rotate-3">
-                  <stat.icon className="w-8 h-8 text-gray-900" />
-                </div>
-                <h3 className="text-4xl md:text-5xl font-black text-white mb-2">{stat.value}</h3>
-                <p className="text-gray-400 font-bold uppercase tracking-wider text-xs">{stat.label}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Value Proposition Section */}
       <section className="py-24 bg-white relative overflow-hidden">
@@ -781,13 +711,20 @@ export default function Home() {
             ].map((item, index) => (
               <motion.div
                 key={item.label}
+                onMouseMove={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = e.clientX - rect.left;
+                  const y = e.clientY - rect.top;
+                  e.currentTarget.style.setProperty("--x", `${x}px`);
+                  e.currentTarget.style.setProperty("--y", `${y}px`);
+                }}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="group p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100 hover:bg-white hover:shadow-2xl transition-all duration-500"
+                className="spotlight-card group p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100 hover:bg-white hover:shadow-2xl transition-all duration-500 cursor-default"
               >
-                <div className="flex items-start gap-6">
+                <div className="flex items-start gap-6 relative z-20">
                   <div className={`w-20 h-20 rounded-[1.5rem] ${item.color} flex-shrink-0 flex items-center justify-center text-white shadow-2xl transition-transform group-hover:scale-110 group-hover:rotate-3`}>
                     <item.icon className="w-10 h-10" />
                   </div>
@@ -843,7 +780,7 @@ export default function Home() {
               className="text-4xl md:text-6xl font-black mb-4 tracking-tight"
               style={{ color: darkColor }}
             >
-              Empresas que Confían en GM
+              Empresas que confían en nosotros
             </h2>
             <div className="w-24 h-1.5 bg-yellow-400 mx-auto rounded-full mb-6"></div>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto font-medium">
