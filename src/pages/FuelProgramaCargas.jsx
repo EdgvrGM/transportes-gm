@@ -758,7 +758,7 @@ export default function FuelProgramaCargas() {
                           <SelectContent>
                             {camiones.map((c) => (
                               <SelectItem key={c.id} value={String(c.id)}>
-                                {c.nombre}
+                                {c.nombre} - {c.placas}
                               </SelectItem>
                             ))}
                           </SelectContent>
