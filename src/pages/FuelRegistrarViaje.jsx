@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { supabase } from "@/supabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,21 +31,23 @@ import { Separator } from "@/components/ui/separator";
 
 export default function FuelRegistrarViaje() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const stateData = location.state || {};
   const queryClient = useQueryClient();
   const [error, setError] = useState(null);
   const [mostrarNuevoConductor, setMostrarNuevoConductor] = useState(false);
   const [mostrarNuevoCamion, setMostrarNuevoCamion] = useState(false);
 
   const [viaje, setViaje] = useState({
-    fecha: new Date().toLocaleDateString("en-CA"),
+    fecha: stateData.fecha || new Date().toLocaleDateString("en-CA"),
     fecha_llegada: "",
-    conductor_id: "",
-    conductor_nombre: "",
-    camion_id: "",
-    camion_nombre: "",
-    camion_placas: "",
+    conductor_id: stateData.conductor_id || "",
+    conductor_nombre: stateData.conductor_nombre || "",
+    camion_id: stateData.camion_id || "",
+    camion_nombre: stateData.camion_nombre || "",
+    camion_placas: stateData.camion_placas || "",
     tipo_viaje: "Sencillo",
-    ruta_ida: "",
+    ruta_ida: stateData.destino || "",
     kilometros_ida: "",
     ruta_regreso: "",
     kilometros_regreso: "",

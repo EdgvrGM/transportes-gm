@@ -14,6 +14,7 @@ import {
 import { format, getISOWeek, getYear } from "date-fns";
 
 import StatsCard from "../components/fuel/StatsCard";
+import ColaCarga from "../components/fuel/ColaCarga";
 import FiltrosViajes from "../components/fuel/FiltrosViajes";
 import GraficoConsumo from "../components/fuel/GraficoConsumo";
 import GraficoEficiencia from "../components/fuel/GraficoEficiencia";
@@ -279,6 +280,8 @@ export default function ControlCombustible() {
             gradient="bg-green-500 dark:bg-green-600"
           />
         </div>
+
+        <ColaCarga />
 
         <div className="mb-8">
           <FiltrosViajes

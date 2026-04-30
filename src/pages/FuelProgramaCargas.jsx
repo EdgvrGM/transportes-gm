@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { supabase } from "@/supabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +45,8 @@ import {
   Package,
   Briefcase,
   Eye,
+  Fuel,
+  CheckCircle2,
 } from "lucide-react";
 import { format, addDays, parseISO, getISOWeek } from "date-fns";
 import { es } from "date-fns/locale";
@@ -161,12 +165,15 @@ const ProgramCard = ({ prog, onVer, totalViajes }) => {
 
 export default function FuelProgramaCargas() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [dialogAbierto, setDialogAbierto] = useState(false);
   const [dialogVerAbierto, setDialogVerAbierto] = useState(false);
   const [semanaAEliminar, setSemanaAEliminar] = useState(null);
   const [programaSeleccionado, setProgramaSeleccionado] = useState(null);
   const [diaActivo, setDiaActivo] = useState("Lunes");
   const [diaVerActivo, setDiaVerActivo] = useState("Lunes");
+  const [dialogConsumoAbierto, setDialogConsumoAbierto] = useState(false);
+  const [viajeConsumoSeleccionado, setViajeConsumoSeleccionado] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [formData, setFormData] = useState({
     id: null,
@@ -216,6 +223,14 @@ export default function FuelProgramaCargas() {
     queryKey: ["remolques"],
     queryFn: async () => {
       const { data } = await supabase.from("Remolque").select("*");
+      return data || [];
+    },
+  });
+
+  const { data: viajes = [] } = useQuery({
+    queryKey: ["viajes"],
+    queryFn: async () => {
+      const { data } = await supabase.from("Viaje").select("*");
       return data || [];
     },
   });
@@ -364,6 +379,53 @@ export default function FuelProgramaCargas() {
     return format(parseISO(fechaStr), "dd/MM/yyyy");
   };
 
+  const handleRegistrarCombustible = (viaje) => {
+    const diasMap = {
+      "Lunes": 0, "Martes": 1, "Miércoles": 2, "Jueves": 3, "Viernes": 4, "Sábado": 5
+    };
+    const indexDia = diasMap[diaVerActivo] || 0;
+    const fechaInicio = parseISO(programaSeleccionado.fecha_inicio);
+    const fechaViaje = addDays(fechaInicio, indexDia);
+    
+    const conductor = conductores.find(c => String(c.id) === String(viaje.conductor));
+    const camion = camiones.find(c => String(c.id) === String(viaje.camion));
+
+    navigate(createPageUrl("FuelRegistrarViaje"), {
+      state: {
+        fecha: format(fechaViaje, "yyyy-MM-dd"),
+        conductor_id: viaje.conductor,
+        conductor_nombre: conductor ? conductor.nombre : "",
+        camion_id: viaje.camion,
+        camion_nombre: camion ? camion.nombre : "",
+        camion_placas: camion ? camion.placas : "",
+        destino: viaje.destino
+      }
+    });
+  };
+
+  const getRegisteredTrip = (viajeProgramado, diaActivo) => {
+    if (!programaSeleccionado) return null;
+    const diasMap = { "Lunes": 0, "Martes": 1, "Miércoles": 2, "Jueves": 3, "Viernes": 4, "Sábado": 5 };
+    const indexDia = diasMap[diaActivo] || 0;
+    const fechaInicio = parseISO(programaSeleccionado.fecha_inicio);
+    const fechaViaje = addDays(fechaInicio, indexDia);
+    const fechaStr = format(fechaViaje, "yyyy-MM-dd");
+
+    return viajes.find((v) => {
+      const matchFecha = v.fecha && v.fecha.startsWith(fechaStr);
+      const matchConductor = String(v.conductor_id) === String(viajeProgramado.conductor);
+      const matchCamion = String(v.camion_id) === String(viajeProgramado.camion);
+      return matchFecha && matchConductor && matchCamion;
+    });
+  };
+
+  const getEficienciaColor = (kmPorLitro) => {
+    if (!kmPorLitro) return "text-slate-400";
+    if (kmPorLitro > 2.25) return "text-green-600 dark:text-green-400";
+    if (kmPorLitro >= 2.0) return "text-yellow-600 dark:text-yellow-400";
+    return "text-red-600 dark:text-red-400";
+  };
+
   if (isLoading)
     return (
       <div className="flex h-screen items-center justify-center">
@@ -455,7 +517,7 @@ export default function FuelProgramaCargas() {
                   (viaje, idx, arr) => (
                     <div
                       key={idx}
-                      className={`p-4 md:px-6 md:py-5 grid grid-cols-2 md:grid-cols-5 gap-4 items-center hover:bg-slate-50 transition-colors ${idx !== arr.length - 1 ? "border-b border-border/60" : ""}`}
+                      className={`p-4 md:px-6 md:py-5 grid grid-cols-2 md:grid-cols-[1fr_1fr_1fr_1fr_1fr_auto] gap-4 items-center hover:bg-slate-50 transition-colors ${idx !== arr.length - 1 ? "border-b border-border/60" : ""}`}
                     >
                       <div>
                         <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">
@@ -498,6 +560,37 @@ export default function FuelProgramaCargas() {
                         <p className="text-sm font-semibold">
                           {getRemolquePlacas(viaje.remolque)}
                         </p>
+                      </div>
+                      <div className="flex justify-end items-center col-span-2 md:col-span-1 pt-2 md:pt-0">
+                        {(() => {
+                          const registeredViaje = getRegisteredTrip(viaje, diaVerActivo);
+                          if (registeredViaje) {
+                            return (
+                              <Button
+                                variant="outline"
+                                onClick={() => {
+                                  setViajeConsumoSeleccionado(registeredViaje);
+                                  setDialogConsumoAbierto(true);
+                                }}
+                                className="w-full md:w-auto h-9 gap-2 border-green-200 text-green-700 bg-green-50 hover:bg-green-100 hover:text-green-800 hover:border-green-300 dark:bg-green-900/30 dark:border-green-800/50 dark:text-green-400 dark:hover:bg-green-900/50"
+                              >
+                                <Eye className="w-4 h-4" />
+                                <span className="md:hidden lg:inline text-[10px] font-bold uppercase tracking-widest">Ver Consumo</span>
+                              </Button>
+                            );
+                          }
+                          return (
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleRegistrarCombustible(viaje)}
+                              className="w-full md:w-9 h-9 border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 hover:border-green-300 dark:border-green-900/50 dark:text-green-400 dark:hover:bg-green-950/50"
+                              title="Registrar Combustible"
+                            >
+                              <Fuel className="w-4 h-4" />
+                            </Button>
+                          );
+                        })()}
                       </div>
                     </div>
                   ),
@@ -772,6 +865,79 @@ export default function FuelProgramaCargas() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* --- MODAL DETALLES DE CONSUMO --- */}
+        <Dialog open={dialogConsumoAbierto} onOpenChange={setDialogConsumoAbierto}>
+          <DialogContent className="max-w-md w-[95vw] p-0 overflow-hidden bg-slate-50 dark:bg-zinc-950 border-border rounded-[2rem] shadow-2xl">
+            <DialogHeader className="px-6 py-5 bg-card border-b border-border">
+              <DialogTitle className="text-xl font-black flex items-center gap-2 text-slate-800 dark:text-slate-100">
+                <Fuel className="w-5 h-5 text-primary" />
+                Detalles de Consumo
+              </DialogTitle>
+              <DialogDescription className="mt-1 text-xs font-bold uppercase tracking-widest text-muted-foreground text-left">
+                Resumen del viaje registrado
+              </DialogDescription>
+            </DialogHeader>
+            {viajeConsumoSeleccionado && (
+              <div className="p-6 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-border/50 shadow-sm flex flex-col justify-center">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Litros Cargados</p>
+                    <p className="text-3xl font-black text-slate-800 dark:text-slate-100">
+                      {viajeConsumoSeleccionado.litros_combustible || 0} <span className="text-sm font-medium text-slate-400">L</span>
+                    </p>
+                  </div>
+                  <div className="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-border/50 shadow-sm flex flex-col justify-between">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Desglose de Costos</p>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-[10px] font-bold uppercase text-slate-400">Diésel</span>
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">${(viajeConsumoSeleccionado.costo_combustible || 0).toLocaleString("en-US", {minimumFractionDigits: 2})}</span>
+                      </div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-[10px] font-bold uppercase text-slate-400">Casetas</span>
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">${((viajeConsumoSeleccionado.casetas_ida || 0) + (viajeConsumoSeleccionado.casetas_regreso || 0)).toLocaleString("en-US", {minimumFractionDigits: 2})}</span>
+                      </div>
+                    </div>
+                    <div className="border-t border-border/50 pt-2 flex justify-between items-center mt-1">
+                      <span className="text-[10px] font-black uppercase text-slate-800 dark:text-slate-100">Total</span>
+                      <p className="text-base font-black text-slate-800 dark:text-slate-100">
+                        <span className="text-[10px] font-medium text-slate-400 mr-0.5">$</span>{((viajeConsumoSeleccionado.costo_combustible || 0) + (viajeConsumoSeleccionado.casetas_ida || 0) + (viajeConsumoSeleccionado.casetas_regreso || 0)).toLocaleString("en-US", {minimumFractionDigits: 2})}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-border/50 shadow-sm col-span-2">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Eficiencia</p>
+                        <p className={`text-2xl font-black ${getEficienciaColor(viajeConsumoSeleccionado.km_por_litro)}`}>
+                          {viajeConsumoSeleccionado.km_por_litro ? viajeConsumoSeleccionado.km_por_litro.toFixed(2) : "-"} <span className="text-sm font-medium opacity-70">km/L</span>
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Distancia</p>
+                        <p className="text-lg font-bold text-slate-700 dark:text-slate-300">
+                          {viajeConsumoSeleccionado.kilometros_total || 0} <span className="text-xs">km</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {viajeConsumoSeleccionado.notas && (
+                   <div className="bg-amber-50 dark:bg-amber-900/10 p-4 rounded-2xl border border-amber-200/50 dark:border-amber-800/30">
+                     <p className="text-[10px] font-bold uppercase tracking-widest text-amber-800 dark:text-amber-500 mb-1">Notas del Viaje</p>
+                     <p className="text-sm text-amber-900 dark:text-amber-400/80 font-medium">{viajeConsumoSeleccionado.notas}</p>
+                   </div>
+                )}
+              </div>
+            )}
+            <div className="px-6 py-4 bg-card border-t border-border flex justify-end">
+              <Button variant="outline" onClick={() => setDialogConsumoAbierto(false)} className="rounded-xl font-bold px-6 h-10">
+                Cerrar
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
