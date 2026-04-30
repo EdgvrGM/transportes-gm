@@ -22,6 +22,25 @@ import {
 } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
 
+export const TrailerIcon = ({ className, ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    <path d="M3 7h15a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z" />
+    <circle cx="6" cy="18" r="2" />
+    <circle cx="14" cy="18" r="2" />
+    <path d="M19 13h3" />
+  </svg>
+);
+
 export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -261,7 +280,7 @@ export default function Layout({ children, currentPageName }) {
                       location.pathname === createPageUrl("FuelRemolques"),
                     )}
                   >
-                    <Package className="w-4 h-4" />
+                    <TrailerIcon className="w-4 h-4" />
                     <span>Remolques</span>
                   </Link>
                 </div>

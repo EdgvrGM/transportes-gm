@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Plus, Edit, Trash2, Package } from "lucide-react";
+import { TrailerIcon } from "./Layout";
 
 export default function FuelRemolques() {
   const queryClient = useQueryClient();
@@ -134,7 +135,7 @@ export default function FuelRemolques() {
         <Card className="border-none shadow-lg bg-card">
           <CardHeader className="border-b border-border">
             <CardTitle className="text-xl font-bold flex items-center gap-2">
-              <Package className="w-5 h-5 text-primary" />
+              <TrailerIcon className="w-5 h-5 text-primary" />
               Lista de Remolques
             </CardTitle>
           </CardHeader>
