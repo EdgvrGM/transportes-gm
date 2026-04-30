@@ -25,6 +25,7 @@ import {
   X,
   Route,
   Ticket,
+  MapPin,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
@@ -47,14 +48,14 @@ export default function FuelRegistrarViaje() {
     camion_nombre: stateData.camion_nombre || "",
     camion_placas: stateData.camion_placas || "",
     tipo_viaje: "Sencillo",
-    ruta_ida: stateData.destino || "",
+    ruta_ida: "",
     kilometros_ida: "",
     ruta_regreso: "",
     kilometros_regreso: "",
     litros_combustible: "",
     costo_combustible: "",
-    casetas_ida: "", // <-- NUEVO CAMPO
-    casetas_regreso: "", // <-- NUEVO CAMPO
+    casetas_ida: "",
+    casetas_regreso: "",
     notas: "",
   });
 
@@ -82,6 +83,22 @@ export default function FuelRegistrarViaje() {
       if (error) throw new Error(error.message);
       return data;
     },
+  });
+
+  const { data: rutasHistoricas = [] } = useQuery({
+    queryKey: ["viajesParaRutas"],
+    queryFn: async () => {
+      const { data } = await supabase.from("Viaje").select("ruta_ida, kilometros_ida");
+      if (!data) return [];
+      
+      const rutasMap = new Map();
+      data.forEach(v => {
+        if (v.ruta_ida && v.kilometros_ida && !rutasMap.has(v.ruta_ida)) {
+          rutasMap.set(v.ruta_ida, v.kilometros_ida);
+        }
+      });
+      return Array.from(rutasMap, ([ruta, km]) => ({ ruta, km }));
+    }
   });
 
   const crearViajeMutation = useMutation({
@@ -236,6 +253,46 @@ export default function FuelRegistrarViaje() {
     }));
   };
 
+  const handleRutaIdaChange = (e) => {
+    const val = e.target.value;
+    
+    setViaje((prev) => {
+      const updated = { ...prev, ruta_ida: val };
+      
+      const match = rutasHistoricas.find(r => r.ruta.toLowerCase() === val.toLowerCase());
+      if (match) {
+        updated.kilometros_ida = match.km;
+      }
+      
+      // Intelligent reverse
+      if (val.includes("-")) {
+         const parts = val.split("-").map(p => p.trim());
+         if (parts.length === 2 && parts[0] && parts[1]) {
+            updated.ruta_regreso = `${parts[1]} - ${parts[0]}`;
+            if (match) {
+               updated.kilometros_regreso = match.km;
+            } else if (updated.kilometros_ida) {
+               updated.kilometros_regreso = updated.kilometros_ida;
+            }
+         }
+      }
+      
+      return updated;
+    });
+  };
+
+  const handleKmIdaChange = (e) => {
+    const val = e.target.value;
+    setViaje((prev) => {
+       const updated = { ...prev, kilometros_ida: val };
+       // Mirror to return if return km is empty or was the same as previous IDA
+       if (!prev.kilometros_regreso || prev.kilometros_regreso === prev.kilometros_ida) {
+          updated.kilometros_regreso = val;
+       }
+       return updated;
+    });
+  };
+
   const kmTotales =
     (parseFloat(viaje.kilometros_ida) || 0) +
     (parseFloat(viaje.kilometros_regreso) || 0) +
@@ -278,6 +335,17 @@ export default function FuelRegistrarViaje() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
+            {stateData.destino && (
+              <div className="mb-6 bg-blue-50/50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-200/60 dark:border-blue-800/40 flex items-center gap-3">
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/40 rounded-lg shrink-0">
+                  <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-blue-600/70 dark:text-blue-400/70 mb-0.5">Destino Programado</p>
+                  <p className="font-bold text-base text-blue-900 dark:text-blue-100">{stateData.destino}</p>
+                </div>
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="space-y-2">
@@ -480,13 +548,18 @@ export default function FuelRegistrarViaje() {
                       Ruta <span className="text-red-500">*</span>
                     </Label>
                     <Input
+                      list="rutas-sugerencias"
                       value={viaje.ruta_ida}
-                      onChange={(e) =>
-                        setViaje({ ...viaje, ruta_ida: e.target.value })
-                      }
+                      onChange={handleRutaIdaChange}
                       required
+                      placeholder="Ej. Tecoman - Colima"
                       className="bg-background border-input"
                     />
+                    <datalist id="rutas-sugerencias">
+                      {rutasHistoricas.map((r, i) => (
+                        <option key={i} value={r.ruta} />
+                      ))}
+                    </datalist>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-foreground font-semibold">
@@ -496,9 +569,7 @@ export default function FuelRegistrarViaje() {
                       type="number"
                       step="0.1"
                       value={viaje.kilometros_ida}
-                      onChange={(e) =>
-                        setViaje({ ...viaje, kilometros_ida: e.target.value })
-                      }
+                      onChange={handleKmIdaChange}
                       required
                       className="bg-background border-input"
                     />
