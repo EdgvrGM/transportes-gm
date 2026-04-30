@@ -335,7 +335,9 @@ export default function FuelProgramaCargas() {
         destino: "",
         conductor: "",
         camion: "",
+        modalidad: "Sencillo",
         remolque: "",
+        remolque2: "",
       },
     ];
     setFormData({
@@ -371,8 +373,21 @@ export default function FuelProgramaCargas() {
     const c = camiones.find((c) => String(c.id) === String(id));
     return c ? `${c.nombre} (${c.placas})` : "N/A";
   };
-  const getRemolquePlacas = (id) =>
-    remolques.find((r) => String(r.id) === String(id))?.placas || "N/A";
+  const getAbreviacionTipo = (tipo) => {
+    if (!tipo) return "";
+    const t = tipo.toLowerCase();
+    if (t.includes("seca")) return "CS";
+    if (t.includes("chasis") || t.includes("contenedor")) return "CH";
+    if (t.includes("plataforma")) return "PT";
+    return "";
+  };
+
+  const getRemolquePlacas = (id) => {
+    const r = remolques.find((r) => String(r.id) === String(id));
+    if (!r) return "N/A";
+    const abv = getAbreviacionTipo(r.tipo);
+    return abv ? `[${abv}] ${r.placas}` : r.placas;
+  };
 
   const formatearFechaDisplay = (fechaStr) => {
     if (!fechaStr) return "";
@@ -398,7 +413,8 @@ export default function FuelProgramaCargas() {
         camion_id: viaje.camion,
         camion_nombre: camion ? camion.nombre : "",
         camion_placas: camion ? camion.placas : "",
-        destino: viaje.destino
+        destino: viaje.destino,
+        tipo_viaje: viaje.modalidad || "Sencillo"
       }
     });
   };
@@ -517,9 +533,9 @@ export default function FuelProgramaCargas() {
                   (viaje, idx, arr) => (
                     <div
                       key={idx}
-                      className={`p-4 md:px-6 md:py-5 grid grid-cols-2 md:grid-cols-[1fr_1fr_1fr_1fr_1fr_auto] gap-4 items-center hover:bg-slate-50 transition-colors ${idx !== arr.length - 1 ? "border-b border-border/60" : ""}`}
+                      className={`p-4 md:px-6 md:py-5 grid grid-cols-2 md:grid-cols-3 lg:flex lg:flex-wrap gap-x-6 gap-y-4 items-center hover:bg-slate-50 transition-colors ${idx !== arr.length - 1 ? "border-b border-border/60" : ""}`}
                     >
-                      <div>
+                      <div className="flex-1 min-w-[120px]">
                         <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">
                           <Briefcase className="w-3 h-3 inline mr-1" /> Cliente
                         </p>
@@ -527,7 +543,7 @@ export default function FuelProgramaCargas() {
                           {getClienteName(viaje.cliente)}
                         </p>
                       </div>
-                      <div>
+                      <div className="flex-1 min-w-[120px]">
                         <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">
                           <MapPin className="w-3 h-3 inline mr-1 text-red-500" />{" "}
                           Destino
@@ -536,7 +552,7 @@ export default function FuelProgramaCargas() {
                           {viaje.destino || "-"}
                         </p>
                       </div>
-                      <div>
+                      <div className="flex-1 min-w-[120px]">
                         <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">
                           <User className="w-3 h-3 inline mr-1" /> Chofer
                         </p>
@@ -544,7 +560,7 @@ export default function FuelProgramaCargas() {
                           {getConductorName(viaje.conductor)}
                         </p>
                       </div>
-                      <div>
+                      <div className="flex-1 min-w-[120px]">
                         <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">
                           <Truck className="w-3 h-3 inline mr-1" /> Unidad
                         </p>
@@ -552,16 +568,37 @@ export default function FuelProgramaCargas() {
                           {getCamionName(viaje.camion)}
                         </p>
                       </div>
-                      <div>
+                      <div className="flex-1 min-w-[120px]">
+                        <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">
+                          Modalidad
+                        </p>
+                        <p className="text-sm font-semibold">
+                          <span className={`px-2 py-0.5 rounded-md text-xs ${viaje.modalidad === 'FULL' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}`}>
+                            {viaje.modalidad || 'Sencillo'}
+                          </span>
+                        </p>
+                      </div>
+                      <div className="flex-1 min-w-[120px]">
                         <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">
                           <TrailerIcon className="w-3 h-3 inline mr-1" />{" "}
-                          Remolque
+                          Remolque 1
                         </p>
                         <p className="text-sm font-semibold">
                           {getRemolquePlacas(viaje.remolque)}
                         </p>
                       </div>
-                      <div className="flex justify-end items-center col-span-2 md:col-span-1 pt-2 md:pt-0">
+                      {viaje.modalidad === "FULL" && (
+                        <div className="flex-1 min-w-[120px]">
+                          <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">
+                            <TrailerIcon className="w-3 h-3 inline mr-1" />{" "}
+                            Remolque 2
+                          </p>
+                          <p className="text-sm font-semibold">
+                            {getRemolquePlacas(viaje.remolque2)}
+                          </p>
+                        </div>
+                      )}
+                      <div className="flex justify-end items-center col-span-2 md:col-span-3 lg:ml-auto pt-2 lg:pt-0">
                         {(() => {
                           const registeredViaje = getRegisteredTrip(viaje, diaVerActivo);
                           if (registeredViaje) {
@@ -684,7 +721,7 @@ export default function FuelProgramaCargas() {
                   {formData.programacion[diaActivo].map((viaje, index, arr) => (
                     <div
                       key={viaje.id}
-                      className={`p-4 md:px-6 md:py-5 grid grid-cols-1 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_auto] gap-4 items-center hover:bg-slate-50 transition-colors ${index !== arr.length - 1 ? "border-b border-border/60" : ""}`}
+                      className={`p-4 md:px-6 md:py-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end hover:bg-slate-50 transition-colors ${index !== arr.length - 1 ? "border-b border-border/60" : ""}`}
                     >
                       <div className="space-y-1.5">
                         <Label className="text-[10px] font-bold uppercase text-muted-foreground text-nowrap">
@@ -766,7 +803,27 @@ export default function FuelProgramaCargas() {
                       </div>
                       <div className="space-y-1.5">
                         <Label className="text-[10px] font-bold uppercase text-muted-foreground text-nowrap">
-                          Remolque
+                          Modalidad
+                        </Label>
+                        <Select
+                          value={viaje.modalidad || "Sencillo"}
+                          onValueChange={(v) => {
+                            actualizarViaje(index, "modalidad", v);
+                            if (v === "Sencillo") actualizarViaje(index, "remolque2", "");
+                          }}
+                        >
+                          <SelectTrigger className="h-11 rounded-xl bg-slate-50 font-medium border-purple-200">
+                            <SelectValue placeholder="Elegir" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Sencillo">Sencillo</SelectItem>
+                            <SelectItem value="FULL">FULL</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] font-bold uppercase text-muted-foreground text-nowrap">
+                          Remolque 1
                         </Label>
                         <Select
                           value={viaje.remolque}
@@ -778,19 +835,51 @@ export default function FuelProgramaCargas() {
                             <SelectValue placeholder="Elegir" />
                           </SelectTrigger>
                           <SelectContent>
-                            {remolques.map((r) => (
-                              <SelectItem key={r.id} value={String(r.id)}>
-                                {r.placas}
-                              </SelectItem>
-                            ))}
+                            {remolques.map((r) => {
+                              const abv = getAbreviacionTipo(r.tipo);
+                              const label = abv ? `[${abv}] ${r.placas}` : r.placas;
+                              return (
+                                <SelectItem key={r.id} value={String(r.id)}>
+                                  {label}
+                                </SelectItem>
+                              );
+                            })}
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="pt-4 lg:pt-5 flex justify-end">
+                      {viaje.modalidad === "FULL" && (
+                        <div className="space-y-1.5">
+                          <Label className="text-[10px] font-bold uppercase text-muted-foreground text-nowrap">
+                            Remolque 2
+                          </Label>
+                          <Select
+                            value={viaje.remolque2}
+                            onValueChange={(v) =>
+                              actualizarViaje(index, "remolque2", v)
+                            }
+                          >
+                            <SelectTrigger className="h-11 rounded-xl bg-slate-50 font-medium border-purple-200">
+                              <SelectValue placeholder="Elegir" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {remolques.map((r) => {
+                                const abv = getAbreviacionTipo(r.tipo);
+                                const label = abv ? `[${abv}] ${r.placas}` : r.placas;
+                                return (
+                                  <SelectItem key={r.id} value={String(r.id)}>
+                                    {label}
+                                  </SelectItem>
+                                );
+                              })}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                      <div className="flex justify-end pb-1 md:col-span-full lg:col-span-1">
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-10 w-10 text-slate-400 hover:text-red-600 rounded-xl"
+                          className="h-10 w-10 text-slate-400 hover:text-red-600 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-900/10 dark:hover:bg-red-900/30"
                           onClick={() => eliminarViaje(index)}
                         >
                           <Trash2 className="w-5 h-5" />

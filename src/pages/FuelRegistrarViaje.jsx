@@ -47,7 +47,7 @@ export default function FuelRegistrarViaje() {
     camion_id: stateData.camion_id || "",
     camion_nombre: stateData.camion_nombre || "",
     camion_placas: stateData.camion_placas || "",
-    tipo_viaje: "Sencillo",
+    tipo_viaje: stateData.tipo_viaje || "Sencillo",
     ruta_ida: "",
     kilometros_ida: "",
     ruta_regreso: "",

@@ -6,6 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -39,7 +46,7 @@ export default function FuelRemolques() {
   const [remolqueAEliminar, setRemolqueAEliminar] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null); // <-- NUEVO ESTADO PARA ERRORES
 
-  const [formData, setFormData] = useState({ id: null, placas: "" });
+  const [formData, setFormData] = useState({ id: null, placas: "", tipo: "Caja Seca" });
 
   const { data: remolques = [], isLoading } = useQuery({
     queryKey: ["remolques"],
@@ -58,13 +65,13 @@ export default function FuelRemolques() {
       if (datos.id) {
         const { error } = await supabase
           .from("Remolque")
-          .update({ placas: datos.placas })
+          .update({ placas: datos.placas, tipo: datos.tipo })
           .eq("id", datos.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("Remolque")
-          .insert([{ placas: datos.placas }]);
+          .insert([{ placas: datos.placas, tipo: datos.tipo }]);
         if (error) throw error;
       }
     },
@@ -92,9 +99,13 @@ export default function FuelRemolques() {
   const abrirDialog = (remolque = null) => {
     setErrorMsg(null); // Limpiamos errores pasados
     if (remolque) {
-      setFormData(remolque);
+      setFormData({
+        id: remolque.id,
+        placas: remolque.placas,
+        tipo: remolque.tipo || "Caja Seca",
+      });
     } else {
-      setFormData({ id: null, placas: "" });
+      setFormData({ id: null, placas: "", tipo: "Caja Seca" });
     }
     setDialogAbierto(true);
   };
@@ -146,6 +157,9 @@ export default function FuelRemolques() {
                   <TableHead className="font-semibold">
                     Placas del Remolque
                   </TableHead>
+                  <TableHead className="font-semibold">
+                    Tipo
+                  </TableHead>
                   <TableHead className="text-right font-semibold">
                     Acciones
                   </TableHead>
@@ -166,6 +180,9 @@ export default function FuelRemolques() {
                     <TableRow key={remolque.id} className="hover:bg-muted/50">
                       <TableCell className="font-medium text-foreground">
                         {remolque.placas}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {remolque.tipo || "-"}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button
@@ -210,19 +227,40 @@ export default function FuelRemolques() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-              <div className="space-y-2">
-                <Label className="text-foreground font-semibold">
-                  Placas <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  required
-                  value={formData.placas}
-                  onChange={(e) =>
-                    setFormData({ ...formData, placas: e.target.value })
-                  }
-                  placeholder="Ej. 123-TR-4"
-                  className="bg-background"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-foreground font-semibold">
+                    Placas <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    required
+                    value={formData.placas}
+                    onChange={(e) =>
+                      setFormData({ ...formData, placas: e.target.value })
+                    }
+                    placeholder="Ej. 123-TR-4"
+                    className="bg-background"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-foreground font-semibold">
+                    Tipo <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={formData.tipo}
+                    onValueChange={(val) => setFormData({ ...formData, tipo: val })}
+                    required
+                  >
+                    <SelectTrigger className="bg-background">
+                      <SelectValue placeholder="Seleccionar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Caja Seca">Caja Seca</SelectItem>
+                      <SelectItem value="Chasis Porta Contenedor">Chasis Porta Contenedor</SelectItem>
+                      <SelectItem value="Plataforma">Plataforma</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="flex gap-3 pt-4">
                 <Button
