@@ -19,7 +19,7 @@ export default function AnomaliasCombustible({ viajes }) {
   if (anomalias.length === 0) return null;
 
   return (
-    <Card className="border-red-200 dark:border-red-900/50 shadow-xl bg-red-50/30 dark:bg-red-950/10 h-full flex flex-col rounded-[2rem] overflow-hidden relative z-10">
+    <Card className="border-red-200 dark:border-red-900/50 shadow-xl bg-red-50/30 dark:bg-red-950/10 flex flex-col rounded-[2rem] overflow-hidden relative">
       <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-red-500 to-orange-500" />
       <CardHeader className="bg-red-50/50 dark:bg-red-900/20 border-b border-red-100 dark:border-red-900/40 pb-4 pt-5 px-6 flex flex-row items-center justify-between">
         <div className="flex items-center gap-3">

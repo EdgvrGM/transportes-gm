@@ -254,7 +254,7 @@ export default function ControlCombustible() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
           <StatsCard
             title="Costo por Km"
             value={`$${formatNumber(stats.cpk, 2)}`}

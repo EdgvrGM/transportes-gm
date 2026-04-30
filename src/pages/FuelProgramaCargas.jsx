@@ -376,8 +376,13 @@ export default function FuelProgramaCargas() {
   const getAbreviacionTipo = (tipo) => {
     if (!tipo) return "";
     const t = tipo.toLowerCase();
-    if (t.includes("seca")) return "CS";
-    if (t.includes("chasis") || t.includes("contenedor")) return "CH";
+    if (t.includes("seca") || t.includes("caja")) return "CS";
+    if (
+      t.includes("chasis") ||
+      t.includes("contenedor") ||
+      t.includes("portacontenedor")
+    )
+      return "CH";
     if (t.includes("plataforma")) return "PT";
     return "";
   };
@@ -385,8 +390,7 @@ export default function FuelProgramaCargas() {
   const getRemolquePlacas = (id) => {
     const r = remolques.find((r) => String(r.id) === String(id));
     if (!r) return "N/A";
-    const abv = getAbreviacionTipo(r.tipo);
-    return abv ? `[${abv}] ${r.placas}` : r.placas;
+    return r.placas;
   };
 
   const formatearFechaDisplay = (fechaStr) => {
@@ -414,7 +418,9 @@ export default function FuelProgramaCargas() {
         camion_nombre: camion ? camion.nombre : "",
         camion_placas: camion ? camion.placas : "",
         destino: viaje.destino,
-        tipo_viaje: viaje.modalidad || "Sencillo"
+        tipo_viaje: viaje.modalidad || "Sencillo",
+        remolque_id: viaje.remolque,
+        remolque2_id: viaje.remolque2
       }
     });
   };
@@ -438,7 +444,7 @@ export default function FuelProgramaCargas() {
   const getEficienciaColor = (kmPorLitro) => {
     if (!kmPorLitro) return "text-slate-400";
     if (kmPorLitro > 2.25) return "text-green-600 dark:text-green-400";
-    if (kmPorLitro >= 2.0) return "text-yellow-600 dark:text-yellow-400";
+    if (kmPorLitro >= 2.0) return "text-amber-600 dark:text-amber-400";
     return "text-red-600 dark:text-red-400";
   };
 
@@ -486,145 +492,155 @@ export default function FuelProgramaCargas() {
         {/* --- MODAL DETALLES --- */}
         <Dialog open={dialogVerAbierto} onOpenChange={setDialogVerAbierto}>
           <DialogContent className="max-w-6xl w-[95vw] h-[90vh] flex flex-col p-0 gap-0 overflow-hidden bg-slate-50 dark:bg-zinc-950 border-border rounded-[2rem] shadow-2xl">
-            <DialogHeader className="px-8 py-6 bg-card border-b border-border shrink-0 flex flex-row items-center justify-between">
-              <div>
-                <DialogTitle className="text-3xl font-black">
-                  {programaSeleccionado?.titulo}
-                </DialogTitle>
-                <DialogDescription className="text-sm font-bold text-slate-500 uppercase tracking-widest mt-1">
-                  {formatearFechaDisplay(programaSeleccionado?.fecha_inicio)} al{" "}
-                  {formatearFechaDisplay(programaSeleccionado?.fecha_fin)}
-                </DialogDescription>
-              </div>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  className="rounded-xl font-bold border-slate-200 text-slate-700 hover:bg-slate-50 gap-2"
-                  onClick={() => abrirDialogEditar(programaSeleccionado)}
-                >
-                  <Edit className="w-4 h-4" /> Editar Semana
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="rounded-xl font-bold text-red-500 hover:bg-red-50 gap-2"
-                  onClick={() => setSemanaAEliminar(programaSeleccionado?.id)}
-                >
-                  <Trash2 className="w-4 h-4" /> Eliminar
-                </Button>
+            <DialogHeader className="px-4 md:px-8 py-4 md:py-6 bg-card border-b border-border shrink-0">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <DialogTitle className="text-2xl md:text-3xl font-black">
+                    {programaSeleccionado?.titulo}
+                  </DialogTitle>
+                  <DialogDescription className="text-sm font-bold text-slate-500 uppercase tracking-widest mt-1">
+                    {formatearFechaDisplay(programaSeleccionado?.fecha_inicio)} al{" "}
+                    {formatearFechaDisplay(programaSeleccionado?.fecha_fin)}
+                  </DialogDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-xl font-bold border-border text-foreground hover:bg-muted gap-2"
+                    onClick={() => abrirDialogEditar(programaSeleccionado)}
+                  >
+                    <Edit className="w-4 h-4" /> <span className="hidden sm:inline">Editar Semana</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="rounded-xl font-bold text-red-500 hover:bg-red-500/10 gap-2"
+                    onClick={() => setSemanaAEliminar(programaSeleccionado?.id)}
+                  >
+                    <Trash2 className="w-4 h-4" /> <span className="hidden sm:inline">Eliminar</span>
+                  </Button>
+                </div>
               </div>
             </DialogHeader>
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              <div className="flex p-1.5 bg-card border border-border shadow-sm rounded-2xl overflow-x-auto hide-scrollbar shrink-0">
+              <div className="flex p-1 md:p-1.5 bg-card border border-border shadow-sm rounded-2xl overflow-x-auto hide-scrollbar shrink-0 touch-pan-x">
                 {DIAS_SEMANA.map((dia) => (
                   <button
                     key={dia}
                     onClick={() => setDiaVerActivo(dia)}
-                    className={`flex-1 min-w-[100px] py-3 px-4 text-xs font-bold uppercase rounded-xl transition-all ${diaVerActivo === dia ? "bg-primary text-primary-foreground shadow-md scale-[1.02]" : "text-muted-foreground hover:bg-muted"}`}
+                    className={`flex-1 min-w-[70px] py-2.5 md:py-3 px-2 md:px-4 text-[10px] md:text-xs font-bold uppercase rounded-xl transition-all ${diaVerActivo === dia ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:bg-muted"}`}
                   >
-                    {dia}{" "}
-                    <span className="ml-1 opacity-50">
+                    <span className="hidden sm:inline">{dia}</span>
+                    <span className="sm:hidden">{dia.substring(0,3)}</span>{" "}
+                    <span className="ml-0.5 opacity-50">
                       ({programaSeleccionado?.programacion[dia]?.length || 0})
                     </span>
                   </button>
                 ))}
               </div>
-              <div className="border border-border/60 bg-white dark:bg-zinc-950 rounded-2xl overflow-hidden shadow-sm">
+              <div className="border border-border/80 bg-background dark:bg-card rounded-2xl overflow-hidden shadow-sm divide-y divide-border/60">
                 {(programaSeleccionado?.programacion[diaVerActivo] || []).map(
-                  (viaje, idx, arr) => (
+                  (viaje, idx) => (
                     <div
                       key={idx}
-                      className={`p-4 md:px-6 md:py-5 grid grid-cols-2 md:grid-cols-3 lg:flex lg:flex-wrap gap-x-6 gap-y-4 items-center hover:bg-slate-50 transition-colors ${idx !== arr.length - 1 ? "border-b border-border/60" : ""}`}
+                      className={`relative group p-6 md:px-8 md:py-6 flex flex-col gap-6 transition-all duration-300 ${
+                        idx % 2 === 0 ? "bg-background dark:bg-card" : "bg-slate-50/40 dark:bg-muted/20"
+                      } hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20`}
                     >
-                      <div className="flex-1 min-w-[120px]">
-                        <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">
-                          <Briefcase className="w-3 h-3 inline mr-1" /> Cliente
-                        </p>
-                        <p className="text-sm font-semibold">
-                          {getClienteName(viaje.cliente)}
-                        </p>
-                      </div>
-                      <div className="flex-1 min-w-[120px]">
-                        <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">
-                          <MapPin className="w-3 h-3 inline mr-1 text-red-500" />{" "}
-                          Destino
-                        </p>
-                        <p className="text-sm font-semibold">
-                          {viaje.destino || "-"}
-                        </p>
-                      </div>
-                      <div className="flex-1 min-w-[120px]">
-                        <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">
-                          <User className="w-3 h-3 inline mr-1" /> Chofer
-                        </p>
-                        <p className="text-sm font-semibold">
-                          {getConductorName(viaje.conductor)}
-                        </p>
-                      </div>
-                      <div className="flex-1 min-w-[120px]">
-                        <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">
-                          <Truck className="w-3 h-3 inline mr-1" /> Unidad
-                        </p>
-                        <p className="text-sm font-semibold">
-                          {getCamionName(viaje.camion)}
-                        </p>
-                      </div>
-                      <div className="flex-1 min-w-[120px]">
-                        <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">
-                          Modalidad
-                        </p>
-                        <p className="text-sm font-semibold">
-                          <span className={`px-2 py-0.5 rounded-md text-xs ${viaje.modalidad === 'FULL' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}`}>
-                            {viaje.modalidad || 'Sencillo'}
-                          </span>
-                        </p>
-                      </div>
-                      <div className="flex-1 min-w-[120px]">
-                        <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">
-                          <TrailerIcon className="w-3 h-3 inline mr-1" />{" "}
-                          Remolque 1
-                        </p>
-                        <p className="text-sm font-semibold">
-                          {getRemolquePlacas(viaje.remolque)}
-                        </p>
-                      </div>
-                      {viaje.modalidad === "FULL" && (
-                        <div className="flex-1 min-w-[120px]">
-                          <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">
-                            <TrailerIcon className="w-3 h-3 inline mr-1" />{" "}
-                            Remolque 2
+                      {/* Indicador Lateral Premium */}
+                      <div className="absolute left-0 top-0 bottom-0 w-[5px] bg-primary scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-center" />
+
+                      {/* Fila Superior: Datos */}
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 items-start">
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] uppercase font-black text-slate-600 dark:text-slate-400 tracking-widest flex items-center gap-1.5">
+                            <Briefcase className="w-3.5 h-3.5" /> Cliente
                           </p>
-                          <p className="text-sm font-semibold">
-                            {getRemolquePlacas(viaje.remolque2)}
+                          <p className="text-sm font-black text-slate-900 dark:text-slate-100 leading-tight">
+                            {getClienteName(viaje.cliente)}
                           </p>
                         </div>
-                      )}
-                      <div className="flex justify-end items-center col-span-2 md:col-span-3 lg:ml-auto pt-2 lg:pt-0">
+
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] uppercase font-black text-slate-600 dark:text-slate-400 tracking-widest flex items-center gap-1.5">
+                            <MapPin className="w-3.5 h-3.5 text-red-600" /> Destino
+                          </p>
+                          <p className="text-sm font-black text-slate-900 dark:text-slate-100 leading-tight">
+                            {viaje.destino || "-"}
+                          </p>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] uppercase font-black text-slate-600 dark:text-slate-400 tracking-widest flex items-center gap-1.5">
+                            <User className="w-3.5 h-3.5" /> Chofer
+                          </p>
+                          <p className="text-sm font-bold text-slate-800 dark:text-slate-200 leading-tight">
+                            {getConductorName(viaje.conductor)}
+                          </p>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] uppercase font-black text-slate-600 dark:text-slate-400 tracking-widest flex items-center gap-1.5">
+                            <Truck className="w-3.5 h-3.5" /> Unidad
+                          </p>
+                          <p className="text-sm font-bold text-slate-800 dark:text-slate-200 leading-tight">
+                            {getCamionName(viaje.camion)}
+                          </p>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] uppercase font-black text-slate-600 dark:text-slate-400 tracking-widest">
+                            Modalidad
+                          </p>
+                          <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-black tracking-tight w-fit ${viaje.modalidad === 'FULL' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}`}>
+                            {viaje.modalidad || 'Sencillo'}
+                          </span>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] uppercase font-black text-slate-600 dark:text-slate-400 tracking-widest flex items-center gap-1.5">
+                            <TrailerIcon className="w-3.5 h-3.5" /> Remolques
+                          </p>
+                          <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400 leading-tight">
+                            {getRemolquePlacas(viaje.remolque)}
+                            {viaje.modalidad === "FULL" && (
+                              <>
+                                <span className="mx-1.5 opacity-40">/</span>
+                                {getRemolquePlacas(viaje.remolque2)}
+                              </>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Fila Inferior: Botón Centrado */}
+                      <div className="flex justify-center pt-2">
                         {(() => {
                           const registeredViaje = getRegisteredTrip(viaje, diaVerActivo);
                           if (registeredViaje) {
                             return (
-                              <Button
-                                variant="outline"
-                                onClick={() => {
-                                  setViajeConsumoSeleccionado(registeredViaje);
-                                  setDialogConsumoAbierto(true);
-                                }}
-                                className="w-full md:w-auto h-9 gap-2 border-green-200 text-green-700 bg-green-50 hover:bg-green-100 hover:text-green-800 hover:border-green-300 dark:bg-green-900/30 dark:border-green-800/50 dark:text-green-400 dark:hover:bg-green-900/50"
-                              >
-                                <Eye className="w-4 h-4" />
-                                <span className="md:hidden lg:inline text-[10px] font-bold uppercase tracking-widest">Ver Consumo</span>
-                              </Button>
+                                <Button
+                                  variant="outline"
+                                  onClick={() => {
+                                    setViajeConsumoSeleccionado(registeredViaje);
+                                    setDialogConsumoAbierto(true);
+                                  }}
+                                  className="h-9 px-6 gap-2 border-green-200 text-green-700 bg-green-50/50 hover:bg-green-100 dark:border-green-900/30 dark:text-green-400 dark:bg-green-900/20 dark:hover:bg-green-900/40 rounded-xl font-black text-[10px] shadow-sm active:scale-95 transition-all"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                  <span>VER CONSUMO REGISTRADO</span>
+                                </Button>
                             );
                           }
                           return (
                             <Button
                               variant="outline"
-                              size="icon"
                               onClick={() => handleRegistrarCombustible(viaje)}
-                              className="w-full md:w-9 h-9 border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 hover:border-green-300 dark:border-green-900/50 dark:text-green-400 dark:hover:bg-green-950/50"
-                              title="Registrar Combustible"
+                              className="h-9 px-6 border-orange-200 text-orange-600 hover:bg-orange-50 dark:border-orange-900/30 dark:text-orange-400 dark:bg-orange-900/20 dark:hover:bg-orange-900/40 rounded-xl font-black text-[10px] gap-2 shadow-sm active:scale-95 transition-all"
                             >
                               <Fuel className="w-4 h-4" />
+                              <span>REGISTRAR COMBUSTIBLE Y GASTOS</span>
                             </Button>
                           );
                         })()}
@@ -669,23 +685,29 @@ export default function FuelProgramaCargas() {
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground">
                     Fecha Inicio (Lunes)
                   </Label>
-                  <Input
-                    type="date"
-                    value={formData.fecha_inicio}
-                    onChange={handleFechaInicio}
-                    className="h-11 rounded-xl bg-slate-50 font-medium"
-                  />
+                  <div className="relative group/date cursor-pointer" onClick={(e) => e.currentTarget.querySelector('input')?.showPicker()}>
+                    <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-hover/date:text-primary transition-colors" />
+                    <Input
+                      type="date"
+                      value={formData.fecha_inicio}
+                      onChange={handleFechaInicio}
+                      className="h-11 pl-10 rounded-xl bg-background font-medium border-border/60 cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground">
                     Fecha Fin
                   </Label>
-                  <Input
-                    type="date"
-                    value={formData.fecha_fin}
-                    readOnly
-                    className="h-11 rounded-xl bg-muted/50 border-dashed"
-                  />
+                  <div className="relative opacity-60">
+                    <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type="date"
+                      value={formData.fecha_fin}
+                      readOnly
+                      className="h-11 pl-10 rounded-xl bg-muted/20 border-dashed border-border/60 [&::-webkit-calendar-picker-indicator]:hidden"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground">
@@ -696,20 +718,21 @@ export default function FuelProgramaCargas() {
                     onChange={(e) =>
                       setFormData({ ...formData, titulo: e.target.value })
                     }
-                    className="h-11 rounded-xl bg-slate-50 font-bold"
+                    className="h-11 rounded-xl bg-background font-bold border-border/60"
                   />
                 </div>
               </div>
 
-              <div className="flex p-1.5 bg-card border border-border shadow-sm rounded-2xl overflow-x-auto hide-scrollbar">
+              <div className="flex p-1 md:p-1.5 bg-card border border-border shadow-sm rounded-2xl overflow-x-auto hide-scrollbar touch-pan-x">
                 {DIAS_SEMANA.map((dia) => (
                   <button
                     key={dia}
                     onClick={() => setDiaActivo(dia)}
-                    className={`flex-1 min-w-[100px] py-3 px-4 text-xs font-bold uppercase rounded-xl transition-all ${diaActivo === dia ? "bg-primary text-primary-foreground shadow-md scale-[1.02]" : "text-muted-foreground hover:bg-muted"}`}
+                    className={`flex-1 min-w-[70px] py-2.5 md:py-3 px-2 md:px-4 text-[10px] md:text-xs font-bold uppercase rounded-xl transition-all ${diaActivo === dia ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:bg-muted"}`}
                   >
-                    {dia}{" "}
-                    <span className="ml-1 opacity-50">
+                    <span className="hidden sm:inline">{dia}</span>
+                    <span className="sm:hidden">{dia.substring(0,3)}</span>{" "}
+                    <span className="ml-0.5 opacity-50">
                       ({formData.programacion[dia]?.length || 0})
                     </span>
                   </button>
@@ -721,10 +744,30 @@ export default function FuelProgramaCargas() {
                   {formData.programacion[diaActivo].map((viaje, index, arr) => (
                     <div
                       key={viaje.id}
-                      className={`p-4 md:px-6 md:py-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end hover:bg-slate-50 transition-colors ${index !== arr.length - 1 ? "border-b border-border/60" : ""}`}
+                      className={`relative p-5 md:px-6 md:py-5 flex flex-col md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 items-end transition-all ${
+                        index !== arr.length - 1 ? "md:border-b border-border/60" : ""
+                      } ${
+                        // Estilos específicos para móvil: convertir en tarjeta
+                        "mb-6 mx-2 md:mb-0 md:mx-0 rounded-[1.5rem] md:rounded-none bg-white dark:bg-zinc-900 md:bg-transparent border border-slate-200 dark:border-zinc-800 md:border-0 shadow-sm md:shadow-none"
+                      }`}
                     >
-                      <div className="space-y-1.5">
-                        <Label className="text-[10px] font-bold uppercase text-muted-foreground text-nowrap">
+                      {/* Indicador de número de viaje solo en móvil */}
+                      <div className="md:hidden w-full flex items-center justify-between mb-2 pb-3 border-b border-slate-100 dark:border-zinc-800">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary bg-primary/10 px-3 py-1 rounded-full">
+                          Viaje #{index + 1}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full"
+                          onClick={() => eliminarViaje(index)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+
+                      <div className="space-y-1.5 w-full">
+                        <Label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider">
                           Cliente
                         </Label>
                         <Select
@@ -733,7 +776,7 @@ export default function FuelProgramaCargas() {
                             actualizarViaje(index, "cliente", v)
                           }
                         >
-                          <SelectTrigger className="h-11 rounded-xl bg-slate-50 font-medium">
+                          <SelectTrigger className="h-11 rounded-xl bg-background font-medium border-border/60">
                             <SelectValue placeholder="Elegir" />
                           </SelectTrigger>
                           <SelectContent>
@@ -745,8 +788,8 @@ export default function FuelProgramaCargas() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-[10px] font-bold uppercase text-muted-foreground">
+                      <div className="space-y-1.5 w-full">
+                        <Label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider">
                           Destino
                         </Label>
                         <Input
@@ -754,11 +797,12 @@ export default function FuelProgramaCargas() {
                           onChange={(e) =>
                             actualizarViaje(index, "destino", e.target.value)
                           }
-                          className="h-11 rounded-xl bg-slate-50 font-medium"
+                          placeholder="Ciudad / Planta"
+                          className="h-11 rounded-xl bg-background font-medium border-border/60"
                         />
                       </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-[10px] font-bold uppercase text-muted-foreground">
+                      <div className="space-y-1.5 w-full">
+                        <Label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider">
                           Chofer
                         </Label>
                         <Select
@@ -767,7 +811,7 @@ export default function FuelProgramaCargas() {
                             actualizarViaje(index, "conductor", v)
                           }
                         >
-                          <SelectTrigger className="h-11 rounded-xl bg-slate-50 font-medium">
+                          <SelectTrigger className="h-11 rounded-xl bg-slate-50 dark:bg-zinc-950 font-medium border-slate-200 dark:border-zinc-800">
                             <SelectValue placeholder="Elegir" />
                           </SelectTrigger>
                           <SelectContent>
@@ -779,8 +823,8 @@ export default function FuelProgramaCargas() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-[10px] font-bold uppercase text-muted-foreground text-nowrap">
+                      <div className="space-y-1.5 w-full">
+                        <Label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider">
                           Unidad
                         </Label>
                         <Select
@@ -789,7 +833,7 @@ export default function FuelProgramaCargas() {
                             actualizarViaje(index, "camion", v)
                           }
                         >
-                          <SelectTrigger className="h-11 rounded-xl bg-slate-50 font-medium">
+                          <SelectTrigger className="h-11 rounded-xl bg-slate-50 dark:bg-zinc-950 font-medium border-slate-200 dark:border-zinc-800">
                             <SelectValue placeholder="Elegir" />
                           </SelectTrigger>
                           <SelectContent>
@@ -801,8 +845,8 @@ export default function FuelProgramaCargas() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-[10px] font-bold uppercase text-muted-foreground text-nowrap">
+                      <div className="space-y-1.5 w-full">
+                        <Label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider">
                           Modalidad
                         </Label>
                         <Select
@@ -812,7 +856,7 @@ export default function FuelProgramaCargas() {
                             if (v === "Sencillo") actualizarViaje(index, "remolque2", "");
                           }}
                         >
-                          <SelectTrigger className="h-11 rounded-xl bg-slate-50 font-medium border-purple-200">
+                          <SelectTrigger className="h-11 rounded-xl bg-slate-50 dark:bg-zinc-950 font-medium border-purple-200 dark:border-purple-900/30">
                             <SelectValue placeholder="Elegir" />
                           </SelectTrigger>
                           <SelectContent>
@@ -821,8 +865,8 @@ export default function FuelProgramaCargas() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-[10px] font-bold uppercase text-muted-foreground text-nowrap">
+                      <div className="space-y-1.5 w-full">
+                        <Label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider">
                           Remolque 1
                         </Label>
                         <Select
@@ -831,13 +875,15 @@ export default function FuelProgramaCargas() {
                             actualizarViaje(index, "remolque", v)
                           }
                         >
-                          <SelectTrigger className="h-11 rounded-xl bg-slate-50 font-medium">
+                          <SelectTrigger className="h-11 rounded-xl bg-slate-50 dark:bg-zinc-950 font-medium border-slate-200 dark:border-zinc-800">
                             <SelectValue placeholder="Elegir" />
                           </SelectTrigger>
                           <SelectContent>
                             {remolques.map((r) => {
                               const abv = getAbreviacionTipo(r.tipo);
-                              const label = abv ? `[${abv}] ${r.placas}` : r.placas;
+                              const label = abv
+                                ? `[${abv}] ${r.placas}`
+                                : r.placas;
                               return (
                                 <SelectItem key={r.id} value={String(r.id)}>
                                   {label}
@@ -848,8 +894,8 @@ export default function FuelProgramaCargas() {
                         </Select>
                       </div>
                       {viaje.modalidad === "FULL" && (
-                        <div className="space-y-1.5">
-                          <Label className="text-[10px] font-bold uppercase text-muted-foreground text-nowrap">
+                        <div className="space-y-1.5 w-full">
+                          <Label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider">
                             Remolque 2
                           </Label>
                           <Select
@@ -858,7 +904,7 @@ export default function FuelProgramaCargas() {
                               actualizarViaje(index, "remolque2", v)
                             }
                           >
-                            <SelectTrigger className="h-11 rounded-xl bg-slate-50 font-medium border-purple-200">
+                            <SelectTrigger className="h-11 rounded-xl bg-slate-50 dark:bg-zinc-950 font-medium border-purple-200 dark:border-purple-900/30">
                               <SelectValue placeholder="Elegir" />
                             </SelectTrigger>
                             <SelectContent>
@@ -875,7 +921,7 @@ export default function FuelProgramaCargas() {
                           </Select>
                         </div>
                       )}
-                      <div className="flex justify-end pb-1 md:col-span-full lg:col-span-1">
+                      <div className="hidden md:flex justify-end pb-1 md:col-span-full lg:col-span-1">
                         <Button
                           variant="ghost"
                           size="icon"

@@ -45,7 +45,7 @@ function PendingCard({ viaje, conductor, camion, cliente, handleRegistrar }) {
         ...transitionStyle,
       }}
     >
-      <div className="bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-[1.5rem] p-6 shadow-sm hover:shadow-xl relative overflow-hidden flex flex-col flex-1">
+      <div className="bg-card dark:bg-card border border-border dark:border-border/50 rounded-[1.5rem] p-6 shadow-sm hover:shadow-xl relative overflow-hidden flex flex-col flex-1 transition-all">
         {/* Decorador Lateral */}
         <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-400 to-cyan-400 opacity-70 group-hover:opacity-100 transition-opacity" />
 
@@ -64,15 +64,15 @@ function PendingCard({ viaje, conductor, camion, cliente, handleRegistrar }) {
           >
             {viaje.destino || "Sin destino"}
           </p>
-          <p className="text-xs font-bold text-slate-500 mt-1.5 truncate bg-slate-200/50 dark:bg-zinc-800/50 inline-block px-2 py-0.5 rounded-md">
+          <p className="text-xs font-bold text-muted-foreground mt-1.5 truncate bg-muted/50 inline-block px-2 py-0.5 rounded-md">
             {cliente?.nombre || "Cliente no asignado"}
           </p>
         </div>
 
         <div className="space-y-2.5 mb-6 flex-1">
-          <div className="flex items-center gap-3 bg-white dark:bg-zinc-950 p-3 rounded-xl border border-slate-100 dark:border-zinc-800 shadow-sm">
-            <div className="bg-slate-50 dark:bg-zinc-900 p-2 rounded-lg border border-slate-100 dark:border-zinc-800">
-              <User className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+          <div className="flex items-center gap-3 bg-muted/20 dark:bg-muted/10 p-3 rounded-xl border border-border/40 shadow-sm">
+            <div className="bg-muted/40 dark:bg-muted/20 p-2 rounded-lg border border-border/40">
+              <User className="w-4 h-4 text-muted-foreground" />
             </div>
             <div className="truncate flex-1">
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Conductor</p>
@@ -81,9 +81,9 @@ function PendingCard({ viaje, conductor, camion, cliente, handleRegistrar }) {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3 bg-white dark:bg-zinc-950 p-3 rounded-xl border border-slate-100 dark:border-zinc-800 shadow-sm">
-            <div className="bg-slate-50 dark:bg-zinc-900 p-2 rounded-lg border border-slate-100 dark:border-zinc-800">
-              <Truck className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+          <div className="flex items-center gap-3 bg-muted/20 dark:bg-muted/10 p-3 rounded-xl border border-border/40 shadow-sm">
+            <div className="bg-muted/40 dark:bg-muted/20 p-2 rounded-lg border border-border/40">
+              <Truck className="w-4 h-4 text-muted-foreground" />
             </div>
             <div className="truncate flex-1">
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Unidad</p>
@@ -233,9 +233,9 @@ export default function ColaCarga() {
   return (
     <Card className="border-border shadow-xl hover:shadow-2xl transition-shadow bg-card mb-8 overflow-hidden rounded-[2rem] relative z-10">
       <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-orange-500" />
-      <CardHeader className="bg-slate-50/50 dark:bg-zinc-900/50 border-b border-border/60 flex flex-col md:flex-row md:items-center justify-between pb-5 pt-6 px-6 md:px-8 gap-4">
+      <CardHeader className="bg-muted/30 dark:bg-muted/10 border-b border-border/60 flex flex-col md:flex-row md:items-center justify-between pb-5 pt-6 px-6 md:px-8 gap-4">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-white dark:bg-zinc-950 shadow-md border border-border/80 text-blue-600 dark:text-blue-400 rounded-2xl shrink-0">
+          <div className="p-3 bg-card shadow-md border border-border/80 text-blue-600 dark:text-blue-400 rounded-2xl shrink-0">
             <Clock className="w-6 h-6" />
           </div>
           <div>
@@ -260,7 +260,7 @@ export default function ColaCarga() {
         </div>
       </CardHeader>
 
-      <CardContent className="p-0 bg-white dark:bg-zinc-950">
+      <CardContent className="p-0 bg-card">
         {pendientes.length === 0 ? (
           <div className="p-16 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-500">
             <div className="w-20 h-20 bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 text-green-600 dark:text-green-500 rounded-[2rem] flex items-center justify-center mb-6 shadow-lg shadow-green-500/10">

@@ -48,6 +48,8 @@ import {
   X,
   ArrowRight,
   Ticket,
+  ArrowLeft,
+  Layers,
 } from "lucide-react";
 import { format, getISOWeek, getYear } from "date-fns";
 import { es } from "date-fns/locale";
@@ -117,6 +119,34 @@ export default function FuelViajes() {
       return data;
     },
   });
+
+  const { data: remolques = [] } = useQuery({
+    queryKey: ["remolques"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("Remolque").select("*");
+      if (error) throw new Error(error.message);
+      return data;
+    },
+  });
+
+  const getRemolquePlacas = (id) => {
+    const r = remolques.find((r) => String(r.id) === String(id));
+    return r ? r.placas : "";
+  };
+
+  const getAbreviacionTipo = (tipo) => {
+    if (!tipo) return "";
+    const t = tipo.toLowerCase();
+    if (t.includes("seca") || t.includes("caja")) return "CS";
+    if (
+      t.includes("chasis") ||
+      t.includes("contenedor") ||
+      t.includes("portacontenedor")
+    )
+      return "CH";
+    if (t.includes("plataforma")) return "PT";
+    return "";
+  };
 
   const eliminarMutation = useMutation({
     mutationFn: async (id) => {
@@ -216,6 +246,8 @@ export default function FuelViajes() {
       costo_combustible: viaje.costo_combustible || "",
       casetas_ida: viaje.casetas_ida || "",
       casetas_regreso: viaje.casetas_regreso || "",
+      remolque_id: viaje.remolque_id ? String(viaje.remolque_id) : "",
+      remolque2_id: viaje.remolque2_id ? String(viaje.remolque2_id) : "",
       notas: viaje.notas || "",
     });
     setDialogAbierto(true);
@@ -242,6 +274,8 @@ export default function FuelViajes() {
       costo_combustible: "",
       casetas_ida: "",
       casetas_regreso: "",
+      remolque_id: "",
+      remolque2_id: "",
       notas: "",
     });
   };
@@ -324,6 +358,8 @@ export default function FuelViajes() {
       casetas_regreso: formData.casetas_regreso
         ? parseFloat(formData.casetas_regreso)
         : null,
+      remolque_id: formData.remolque_id || null,
+      remolque2_id: formData.remolque2_id || null,
       notas: formData.notas,
     };
     if (viajeEditando)
@@ -390,7 +426,7 @@ export default function FuelViajes() {
         </div>
 
         {/* TARJETAS RESUMEN ARRIBA */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
           <Card className="border-none shadow-lg bg-card">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
@@ -529,9 +565,9 @@ export default function FuelViajes() {
                       key={viaje.id}
                       className="border border-border bg-card hover:shadow-md transition-shadow"
                     >
-                      <CardContent className="p-6">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1 grid md:grid-cols-4 gap-6">
+                      <CardContent className="p-4 md:p-6">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
                             {/* COL 1: FECHAS */}
                             <div className="space-y-3">
                               <div className="flex flex-wrap items-start gap-4">
@@ -586,6 +622,18 @@ export default function FuelViajes() {
                                       {viaje.camion_nombre}{" "}
                                       <span className="text-xs text-muted-foreground">
                                         ({viaje.camion_placas})
+                                      </span>
+                                    </span>
+                                  </div>
+                                )}
+                                {(viaje.remolque_id || viaje.remolque2_id) && (
+                                  <div className="flex items-center gap-2">
+                                    <Layers className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                    <span className="text-sm text-foreground font-medium">
+                                      {viaje.remolque2_id ? "Remolques: " : "Remolque: "}
+                                      <span className="text-muted-foreground font-normal">
+                                        {getRemolquePlacas(viaje.remolque_id)}
+                                        {viaje.remolque2_id && ` / ${getRemolquePlacas(viaje.remolque2_id)}`}
                                       </span>
                                     </span>
                                   </div>
@@ -742,14 +790,14 @@ export default function FuelViajes() {
         </Card>
 
         <Dialog open={dialogAbierto} onOpenChange={cerrarDialog}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-card border-border">
+          <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto bg-card border-border">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold text-foreground">
                 Editar Viaje
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-6 mt-4">
-              <div className="grid md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="space-y-2">
                   <Label
                     htmlFor="edit-fecha"
@@ -757,16 +805,19 @@ export default function FuelViajes() {
                   >
                     Salida <span className="text-red-500">*</span>
                   </Label>
-                  <Input
-                    id="edit-fecha"
-                    type="date"
-                    value={formData.fecha}
-                    onChange={(e) =>
-                      setFormData({ ...formData, fecha: e.target.value })
-                    }
-                    required
-                    className="bg-background border-input"
-                  />
+                  <div className="relative group/date cursor-pointer" onClick={(e) => e.currentTarget.querySelector('input')?.showPicker()}>
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-hover/date:text-primary transition-colors pointer-events-none" />
+                    <Input
+                      id="edit-fecha"
+                      type="date"
+                      value={formData.fecha}
+                      onChange={(e) =>
+                        setFormData({ ...formData, fecha: e.target.value })
+                      }
+                      required
+                      className="pl-10 bg-background border-input cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label
@@ -775,18 +826,21 @@ export default function FuelViajes() {
                   >
                     Llegada
                   </Label>
-                  <Input
-                    id="edit-fecha-llegada"
-                    type="date"
-                    value={formData.fecha_llegada}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        fecha_llegada: e.target.value,
-                      })
-                    }
-                    className="bg-background border-input"
-                  />
+                  <div className="relative group/date cursor-pointer" onClick={(e) => e.currentTarget.querySelector('input')?.showPicker()}>
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-hover/date:text-primary transition-colors pointer-events-none" />
+                    <Input
+                      id="edit-fecha-llegada"
+                      type="date"
+                      value={formData.fecha_llegada}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          fecha_llegada: e.target.value,
+                        })
+                      }
+                      className="pl-10 bg-background border-input cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label
@@ -854,6 +908,56 @@ export default function FuelViajes() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                <div className="space-y-2">
+                  <Label className="font-semibold text-foreground">
+                    Remolque 1
+                  </Label>
+                  <Select
+                    value={formData.remolque_id}
+                    onValueChange={(val) => setFormData({ ...formData, remolque_id: val })}
+                  >
+                    <SelectTrigger className="bg-background border-input">
+                      <SelectValue placeholder="Seleccionar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {remolques.map((r) => {
+                        const abv = getAbreviacionTipo(r.tipo);
+                        return (
+                          <SelectItem key={r.id} value={String(r.id)}>
+                            {abv ? `[${abv}] ` : ""}{r.placas}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {formData.tipo_viaje === "FULL" && (
+                  <div className="space-y-2">
+                    <Label className="font-semibold text-foreground">
+                      Remolque 2
+                    </Label>
+                    <Select
+                      value={formData.remolque2_id}
+                      onValueChange={(val) => setFormData({ ...formData, remolque2_id: val })}
+                    >
+                      <SelectTrigger className="bg-background border-input">
+                        <SelectValue placeholder="Seleccionar" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {remolques.map((r) => {
+                          const abv = getAbreviacionTipo(r.tipo);
+                          return (
+                            <SelectItem key={r.id} value={String(r.id)}>
+                              {abv ? `[${abv}] ` : ""}{r.placas}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-4 p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-900">

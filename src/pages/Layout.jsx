@@ -47,8 +47,8 @@ export default function Layout({ children, currentPageName }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Estados para controlar qué secciones desplegables están abiertas
-  const [openProgramacion, setOpenProgramacion] = useState(false);
   const [openCombustible, setOpenCombustible] = useState(false);
+  const [openCatalogos, setOpenCatalogos] = useState(false);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -61,20 +61,22 @@ export default function Layout({ children, currentPageName }) {
 
     const path = location.pathname.toLowerCase();
 
-    // Auto-abrir Programación si estamos en sus rutas
-    if (path.includes("fuelprogramacargas") || path.includes("clientes")) {
-      setOpenProgramacion(true);
-    }
-
     // Auto-abrir Control de Combustible si estamos en sus rutas
     if (
       path.includes("fuelviajes") ||
-      path.includes("fuelregistrarviaje") ||
-      path.includes("fuelconductores") ||
-      path.includes("fuelcamiones") ||
-      path.includes("fuelremolques")
+      path.includes("fuelregistrarviaje")
     ) {
       setOpenCombustible(true);
+    }
+
+    // Auto-abrir Catálogos si estamos en sus rutas
+    if (
+      path.includes("fuelconductores") ||
+      path.includes("fuelcamiones") ||
+      path.includes("fuelremolques") ||
+      path.includes("clientes")
+    ) {
+      setOpenCatalogos(true);
     }
   }, [location.pathname]);
 
@@ -112,7 +114,7 @@ export default function Layout({ children, currentPageName }) {
     flex items-center gap-3 px-4 py-2.5 rounded-xl mb-1 ml-4 transition-all duration-200 text-sm
     ${
       isActive
-        ? "bg-primary/10 text-primary font-bold border-l-2 border-primary rounded-l-none"
+        ? "bg-primary/10 text-primary font-bold border-l-2 border-primary rounded-l-none dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500"
         : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
     }
   `;
@@ -145,7 +147,7 @@ export default function Layout({ children, currentPageName }) {
 
       {/* SIDEBAR */}
       <aside
-        className={`fixed inset-y-0 left-0 w-64 bg-card border-r border-border z-50 flex flex-col transition-transform duration-300 ease-in-out md:translate-x-0 ${isMobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"}`}
+        className={`fixed inset-y-0 left-0 w-64 bg-card/80 dark:bg-card/95 backdrop-blur-xl border-r border-border z-50 flex flex-col transition-all duration-300 ease-in-out md:translate-x-0 ${isMobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"}`}
       >
         <div className="border-b border-border p-6 relative">
           <button
@@ -178,46 +180,16 @@ export default function Layout({ children, currentPageName }) {
               <span className="font-medium">Panel de Control</span>
             </Link>
 
-            {/* SECCIÓN: PROGRAMACIÓN (Desplegable) */}
-            <div className="space-y-1">
-              <button
-                onClick={() => setOpenProgramacion(!openProgramacion)}
-                className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200"
-              >
-                <div className="flex items-center gap-3">
-                  <Settings2 className="w-5 h-5" />
-                  <span className="font-medium">Programación</span>
-                </div>
-                {openProgramacion ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRight className="w-4 h-4" />
-                )}
-              </button>
-
-              {openProgramacion && (
-                <div className="space-y-1 animate-in fade-in slide-in-from-top-1 duration-200">
-                  <Link
-                    to={createPageUrl("FuelProgramaCargas")}
-                    className={subItemClass(
-                      location.pathname === createPageUrl("FuelProgramaCargas"),
-                    )}
-                  >
-                    <CalendarDays className="w-4 h-4" />
-                    <span>Programa de Cargas</span>
-                  </Link>
-                  <Link
-                    to={createPageUrl("Clientes")}
-                    className={subItemClass(
-                      location.pathname === createPageUrl("Clientes"),
-                    )}
-                  >
-                    <Briefcase className="w-4 h-4" />
-                    <span>Clientes</span>
-                  </Link>
-                </div>
+            {/* BOTÓN: PROGRAMA DE CARGAS (Directo) */}
+            <Link
+              to={createPageUrl("FuelProgramaCargas")}
+              className={navItemClass(
+                location.pathname === createPageUrl("FuelProgramaCargas"),
               )}
-            </div>
+            >
+              <CalendarDays className="w-5 h-5" />
+              <span className="font-medium">Programa de Cargas</span>
+            </Link>
 
             {/* SECCIÓN: CONTROL DE COMBUSTIBLE (Desplegable) */}
             <div className="space-y-1">
@@ -255,6 +227,38 @@ export default function Layout({ children, currentPageName }) {
                   >
                     <PlusCircle className="w-4 h-4" />
                     <span>Registrar Viaje</span>
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* SECCIÓN: CATÁLOGOS (Desplegable) */}
+            <div className="space-y-1">
+              <button
+                onClick={() => setOpenCatalogos(!openCatalogos)}
+                className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200"
+              >
+                <div className="flex items-center gap-3">
+                  <Settings2 className="w-5 h-5" />
+                  <span className="font-medium">Catálogos</span>
+                </div>
+                {openCatalogos ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
+              </button>
+
+              {openCatalogos && (
+                <div className="space-y-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <Link
+                    to={createPageUrl("Clientes")}
+                    className={subItemClass(
+                      location.pathname === createPageUrl("Clientes"),
+                    )}
+                  >
+                    <Briefcase className="w-4 h-4" />
+                    <span>Clientes</span>
                   </Link>
                   <Link
                     to={createPageUrl("FuelConductores")}
@@ -317,7 +321,7 @@ export default function Layout({ children, currentPageName }) {
       </aside>
 
       {/* CONTENIDO PRINCIPAL */}
-      <main className="flex-1 md:ml-64 w-full pt-16 md:pt-0 overflow-x-hidden">
+      <main className="flex-1 md:ml-64 w-full min-w-0 pt-16 md:pt-0 overflow-x-hidden">
         {children}
       </main>
     </div>

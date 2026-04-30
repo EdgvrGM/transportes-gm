@@ -86,30 +86,36 @@ export default function FiltrosViajes({
               <label className="text-sm font-medium text-foreground">
                 Fecha Inicio
               </label>
-              <Input
-                type="date"
-                value={fechaInicio}
-                onChange={(e) => {
-                  setFechaInicio(e.target.value);
-                  setPeriodoFiltro("personalizado");
-                }}
-                className="border-input bg-background"
-              />
+              <div className="relative group/date cursor-pointer" onClick={(e) => e.currentTarget.querySelector('input')?.showPicker()}>
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-hover/date:text-primary transition-colors pointer-events-none" />
+                <Input
+                  type="date"
+                  value={fechaInicio}
+                  onChange={(e) => {
+                    setFechaInicio(e.target.value);
+                    setPeriodoFiltro("personalizado");
+                  }}
+                  className="pl-10 border-input bg-background cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
                 Fecha Fin
               </label>
-              <Input
-                type="date"
-                value={fechaFin}
-                onChange={(e) => {
-                  setFechaFin(e.target.value);
-                  setPeriodoFiltro("personalizado");
-                }}
-                className="border-input bg-background"
-              />
+              <div className="relative group/date cursor-pointer" onClick={(e) => e.currentTarget.querySelector('input')?.showPicker()}>
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-hover/date:text-primary transition-colors pointer-events-none" />
+                <Input
+                  type="date"
+                  value={fechaFin}
+                  onChange={(e) => {
+                    setFechaFin(e.target.value);
+                    setPeriodoFiltro("personalizado");
+                  }}
+                  className="pl-10 border-input bg-background cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">

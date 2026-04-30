@@ -66,10 +66,10 @@ export default function Unidades() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-zinc-900 dark:to-background transition-colors duration-300">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-700 text-lg">Cargando unidades...</p>
+          <div className="w-16 h-16 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground text-lg">Cargando unidades...</p>
         </div>
       </div>
     );
@@ -77,16 +77,15 @@ export default function Unidades() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-red-50">
+      <div className="min-h-screen flex items-center justify-center bg-red-50 dark:bg-red-950/20">
         <div className="text-center p-8">
-          <h2 className="text-2xl font-bold text-red-700 mb-4">
+          <h2 className="text-2xl font-bold text-red-700 dark:text-red-400 mb-4">
             Error al Cargar Datos
           </h2>
-          <p className="text-red-600">
-            No se pudieron cargar los datos de las unidades desde la base de
-            datos.
+          <p className="text-red-600 dark:text-red-300">
+            No se pudieron cargar los datos de las unidades desde la base de datos.
           </p>
-          <p className="text-sm text-gray-500 mt-2">
+          <p className="text-sm text-muted-foreground mt-2">
             Por favor, revisa la consola para más detalles.
           </p>
         </div>
@@ -95,7 +94,7 @@ export default function Unidades() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-background dark:to-card transition-colors duration-300">
       <style>{`
         .unit-card {
           position: relative;
@@ -209,7 +208,7 @@ export default function Unidades() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Card className="unit-card border-0 shadow-lg h-full">
+                <Card className="unit-card border border-border dark:border-border/50 shadow-lg h-full bg-card">
                   {/* Image Section */}
                   <div className="relative h-56 overflow-hidden rounded-t-xl bg-gradient-to-br from-gray-100 to-gray-200">
                     {unidad.imagen_url ? (
@@ -245,8 +244,7 @@ export default function Unidades() {
                   <CardContent className="p-6">
                     {/* Title */}
                     <h3
-                      className="text-2xl font-bold mb-4"
-                      style={{ color: darkColor }}
+                      className="text-2xl font-bold mb-4 text-foreground leading-tight"
                     >
                       {unidad.marca || "Sin marca"}{" "}
                       {unidad.modelo || "Sin modelo"}
@@ -255,11 +253,11 @@ export default function Unidades() {
                     {/* Specifications Grid */}
                     <div className="space-y-3">
                       {unidad.año && (
-                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                          <Calendar className="w-5 h-5 text-yellow-600" />
+                        <div className="flex items-center gap-3 p-3 bg-muted/40 dark:bg-muted/20 rounded-lg border border-border/40">
+                          <Calendar className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
                           <div>
-                            <p className="text-xs text-gray-500">Modelo</p>
-                            <p className="font-semibold text-gray-900">
+                            <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest leading-none mb-1">Modelo</p>
+                            <p className="font-bold text-foreground">
                               {unidad.año}
                             </p>
                           </div>

@@ -53,17 +53,68 @@ const staticWebsiteInfo = {
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("inicio");
+  const [showScrollIndicator, setShowScrollIndicator] = useState(true);
   const websiteInfo = staticWebsiteInfo;
   const isLoading = false;
 
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
     if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
+      const offset = 80;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+      });
       setActiveSection(sectionId);
       setIsMenuOpen(false);
     }
   };
+
+  useEffect(() => {
+    const sections = ["inicio", "servicios", "nosotros", "contacto", "cotizar"];
+    const observers = [];
+
+    const observerOptions = {
+      root: null,
+      rootMargin: "-20% 0px -70% 0px",
+      threshold: 0,
+    };
+
+    const observerCallback = (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id);
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+
+    sections.forEach((sectionId) => {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        observer.observe(element);
+      }
+    });
+
+    const handleScroll = () => {
+      if (window.scrollY > 100) {
+        setShowScrollIndicator(false);
+      } else {
+        setShowScrollIndicator(true);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   const handleNavigation = (sectionId) => {
     scrollToSection(sectionId);
@@ -214,47 +265,106 @@ export default function Home() {
         .animate-scroll:hover {
           animation-play-state: paused;
         }
+
+        .scroll-indicator {
+          position: absolute;
+          bottom: 30px;
+          left: 50%;
+          transform: translateX(-50%);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+          color: white;
+          z-index: 20;
+          opacity: 0.8;
+        }
+
+        .mouse {
+          width: 26px;
+          height: 42px;
+          border: 2px solid white;
+          border-radius: 20px;
+          position: relative;
+        }
+
+        .wheel {
+          width: 4px;
+          height: 8px;
+          background: white;
+          border-radius: 2px;
+          position: absolute;
+          top: 8px;
+          left: 50%;
+          transform: translateX(-50%);
+          animation: scroll-wheel 2s infinite;
+        }
+
+        @keyframes scroll-wheel {
+          0% { top: 8px; opacity: 1; }
+          100% { top: 25px; opacity: 0; }
+        }
+
+        .floating-whatsapp {
+          position: fixed;
+          bottom: 30px;
+          right: 30px;
+          z-index: 100;
+          transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .floating-whatsapp:hover {
+          transform: scale(1.1);
+        }
       `}</style>
 
       {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-gray-900 shadow-lg z-50">
+      <nav className="fixed top-0 w-full z-50 transition-all duration-500 bg-gray-900/90 backdrop-blur-md border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
+          <div className="flex justify-between items-center h-24">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-3"
+              className="flex items-center gap-3 cursor-pointer"
+              onClick={() => handleNavigation("inicio")}
             >
               <img
                 src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f1a8df21531359b12e1164/2dfaaffb2_LOGO.png"
                 alt="Transportes GM Logo"
-                className="h-16 w-auto"
+                className="h-16 md:h-20 w-auto transition-transform hover:scale-105"
               />
             </motion.div>
 
             {/* Desktop Menu */}
-            <div className="hidden md:flex items-center gap-8">
+            <div className="hidden lg:flex items-center gap-10">
               {["inicio", "servicios", "nosotros", "contacto"].map(
                 (section) => (
                   <button
                     key={section}
                     onClick={() => handleNavigation(section)}
-                    className={`nav-button text-sm font-medium transition-colors capitalize ${
+                    className={`nav-button text-xs font-black uppercase tracking-widest transition-all ${
                       activeSection === section
                         ? "text-yellow-400"
-                        : "text-gray-300 hover:text-yellow-400"
+                        : "text-gray-300 hover:text-white"
                     }`}
                   >
                     {section}
                   </button>
                 ),
               )}
+              
+              <Button
+                onClick={() => handleNavigation("cotizar")}
+                className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-black uppercase tracking-tighter text-xs px-6 py-2 rounded-lg transition-all shadow-lg shadow-yellow-400/20"
+              >
+                Cotizar
+              </Button>
             </div>
 
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 text-white"
+              className="lg:hidden p-3 text-white bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
             >
               {isMenuOpen ? (
                 <X className="w-6 h-6" />
@@ -320,10 +430,18 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <h2 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight mb-6">
+              <motion.span 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="inline-block px-4 py-1 rounded-full bg-yellow-400/20 text-yellow-400 text-sm font-bold uppercase tracking-wider mb-4 border border-yellow-400/30 backdrop-blur-sm"
+              >
+                {websiteInfo?.tagline || "Tu socio confiable en transporte de carga"}
+              </motion.span>
+              <h1 className="text-5xl md:text-6xl lg:text-8xl font-black text-white leading-tight mb-6 drop-shadow-2xl">
                 {websiteInfo?.company_name || "Transportes GM"}
-              </h2>
-              <p className="text-xl md:text-2xl text-white/90 mb-8 leading-relaxed">
+              </h1>
+              <p className="text-lg md:text-2xl text-white/90 mb-10 leading-relaxed max-w-xl">
                 Desde Manzanillo, Colima, movemos su carga con seguridad,
                 eficiencia y un compromiso inquebrantable con la puntualidad.
               </p>
@@ -331,7 +449,7 @@ export default function Home() {
                 <Button
                   size="lg"
                   onClick={() => handleNavigation("servicios")}
-                  className="btn-primary text-lg px-8 py-6 font-semibold shadow-2xl text-gray-900"
+                  className="btn-primary text-lg px-8 py-7 font-bold shadow-2xl text-gray-900 rounded-xl"
                   style={{
                     background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
                   }}
@@ -339,55 +457,97 @@ export default function Home() {
                   Nuestros Servicios
                   <ChevronRight className="w-5 h-5 ml-2" />
                 </Button>
+                
+                <a
+                  href={`https://wa.me/${websiteInfo?.contact?.phone?.replace(/\D/g, "") || "523131130198"}?text=Hola, me gustaría solicitar una cotización`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="btn-secondary text-lg px-8 py-7 font-bold border-2 border-white text-white hover:bg-white hover:text-gray-900 transition-all rounded-xl backdrop-blur-sm bg-white/10"
+                  >
+                    Cotizar por WhatsApp
+                    <Phone className="w-5 h-5 ml-2" />
+                  </Button>
+                </a>
               </div>
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="hidden lg:block"
+              initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              transition={{ duration: 1, delay: 0.2, type: "spring" }}
+              className="hidden lg:block relative"
             >
-              <div className="relative">
-                <div className="absolute inset-0 bg-yellow-300/20 rounded-3xl transform rotate-6"></div>
+              <div className="relative z-10">
+                <div className="absolute inset-0 bg-yellow-400/20 rounded-[2rem] transform rotate-6 scale-105 blur-sm -z-10"></div>
                 <img
                   src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f1a8df21531359b12e1164/59126a98e_kenw.png"
                   alt="Kenworth Transportes GM"
-                  className="relative rounded-3xl shadow-2xl w-full"
+                  className="relative rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-full border-4 border-white/10"
                 />
               </div>
+              
+              {/* Badges decorativos */}
+              <motion.div 
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -top-10 -right-10 bg-white p-4 rounded-2xl shadow-2xl z-20 hidden xl:flex items-center gap-3 border border-gray-100"
+              >
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+                  <Shield className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 font-bold uppercase">Carga Segura</p>
+                  <p className="text-sm font-black text-gray-900">100% Protegida</p>
+                </div>
+              </motion.div>
             </motion.div>
           </div>
         </div>
+
+        {/* Scroll Indicator */}
+        <motion.div 
+          animate={{ opacity: showScrollIndicator ? 0.8 : 0, y: showScrollIndicator ? 0 : 20 }}
+          transition={{ duration: 0.5 }}
+          className="scroll-indicator pointer-events-none"
+        >
+          <span className="text-xs font-bold tracking-[0.2em] uppercase mb-2">Deslizar</span>
+          <div className="mouse">
+            <div className="wheel"></div>
+          </div>
+        </motion.div>
       </section>
 
       {/* Services Section */}
-      <section id="servicios" className="py-24 bg-gray-50">
+      <section id="servicios" className="py-24 bg-gray-50/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-20"
           >
             <h2
-              className="text-4xl md:text-5xl font-bold mb-4"
+              className="text-4xl md:text-6xl font-black mb-4 tracking-tight"
               style={{ color: darkColor }}
             >
               Nuestros Servicios
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Ofrecemos soluciones completas de transporte adaptadas a tus
-              necesidades
+            <div className="w-24 h-1.5 bg-yellow-400 mx-auto rounded-full mb-6"></div>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto font-medium">
+              Ofrecemos soluciones integrales de logística y transporte, con los más altos estándares de calidad y seguridad.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10 mb-16">
             {[
               {
                 title: "Transporte en Caja Seca",
                 description:
-                  "Disponibilidad de unidades con caja seca de 53 pies, ideales para el traslado seguro de una amplia variedad de mercancías.",
+                  "Unidades de 53 pies equipadas para el traslado seguro de mercancías generales y especializadas.",
                 icon: Package,
                 image:
                   "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f1a8df21531359b12e1164/65a32921e_cajaseca.jpg",
@@ -395,7 +555,7 @@ export default function Home() {
               {
                 title: "Arrastre de Contenedores",
                 description:
-                  "Chasis portacontenedor para unidades de 20 y 40 pies, con capacidad de arrastre en configuración sencilla y full.",
+                  "Chasis especializados para contenedores de 20 y 40 pies, disponibles en configuración sencilla y full.",
                 icon: Truck,
                 image:
                   "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f1a8df21531359b12e1164/a10e65ba9_contenedores.jpg",
@@ -403,7 +563,7 @@ export default function Home() {
               {
                 title: "Cobertura Nacional",
                 description:
-                  "Gestionamos rutas estratégicas desde el puerto de Manzanillo hacia los principales centros de distribución del país.",
+                  "Conectamos el puerto de Manzanillo con los centros logísticos más importantes de todo México.",
                 icon: MapPin,
                 image:
                   "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f1a8df21531359b12e1164/c439f68d9_mapa-nacional.png",
@@ -411,33 +571,37 @@ export default function Home() {
             ].map((service, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -10, scale: 1.02 }}
+                transition={{ delay: index * 0.15 }}
               >
-                <Card className="h-full hover:shadow-2xl transition-all duration-500 border-0 shadow-lg group relative overflow-hidden">
+                <Card className="group h-[450px] relative overflow-hidden border-0 rounded-[2rem] shadow-xl hover:shadow-[0_20px_40px_rgba(0,0,0,0.1)] transition-all duration-500">
                   <div
-                    className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
+                    className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
                     style={{
                       backgroundImage: `url(${service.image})`,
                     }}
                   />
 
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/80 group-hover:from-black/80 group-hover:via-black/70 group-hover:to-black/90 transition-all duration-500" />
+                  {/* Overlays */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
+                  <div className="absolute inset-0 bg-yellow-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                  <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/0 to-orange-400/0 group-hover:from-yellow-400/20 group-hover:to-orange-400/20 transition-all duration-500" />
-
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-300/20 rounded-full blur-3xl transform translate-x-16 -translate-y-16 group-hover:scale-150 transition-transform duration-500" />
-
-                  <CardContent className="p-8 text-center relative z-10">
-                    <h3 className="text-2xl font-bold mb-4 text-white group-hover:text-yellow-400 transition-colors duration-300">
-                      {service.title}
-                    </h3>
-                    <p className="text-gray-200 leading-relaxed group-hover:text-white transition-colors duration-300">
-                      {service.description}
-                    </p>
+                  <CardContent className="absolute inset-0 p-8 flex flex-col justify-end text-white">
+                    <div className="transform transition-all duration-500 group-hover:-translate-y-4">
+                      <div className="w-14 h-14 rounded-2xl bg-yellow-400 flex items-center justify-center mb-4 shadow-lg rotate-3 group-hover:rotate-0 transition-all duration-500">
+                        <service.icon className="w-7 h-7 text-gray-900" />
+                      </div>
+                      <h3 className="text-2xl font-black mb-2 group-hover:text-yellow-400 transition-colors leading-tight">
+                        {service.title}
+                      </h3>
+                      <div className="max-h-0 opacity-0 group-hover:max-h-32 group-hover:opacity-100 transition-all duration-500 overflow-hidden">
+                        <p className="text-gray-200 text-sm leading-relaxed pt-2 border-t border-white/10 mt-2">
+                          {service.description}
+                        </p>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -453,12 +617,12 @@ export default function Home() {
             <Button
               size="lg"
               onClick={() => scrollToSection("cotizar")}
-              className="btn-primary text-lg px-10 py-6 font-semibold shadow-2xl text-gray-900"
+              className="btn-primary text-lg px-12 py-7 font-bold shadow-2xl text-gray-900 rounded-xl"
               style={{
                 background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
               }}
             >
-              Cotizar Ahora
+              Iniciar Cotización
               <ChevronRight className="w-5 h-5 ml-2" />
             </Button>
           </motion.div>
@@ -473,11 +637,14 @@ export default function Home() {
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
+              className="relative"
             >
+              <div className="absolute -inset-4 bg-yellow-400/10 rounded-[3rem] -rotate-3 blur-2xl"></div>
               <img
                 src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f1a8df21531359b12e1164/276431c4f_cam.png"
                 alt="Sobre nosotros"
-                className="rounded-3xl shadow-2xl"
+                className="relative rounded-[2rem] shadow-2xl border-8 border-white"
+                loading="lazy"
               />
             </motion.div>
 
@@ -486,44 +653,83 @@ export default function Home() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
             >
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-10 h-1 bg-yellow-400 rounded-full"></div>
+                <span className="text-yellow-600 font-bold uppercase tracking-widest text-sm">Trayectoria</span>
+              </div>
               <h2
-                className="text-4xl md:text-5xl font-bold mb-6"
+                className="text-4xl md:text-6xl font-black mb-8 leading-tight"
                 style={{ color: darkColor }}
               >
-                Sobre Nosotros
+                Comprometidos con la Excelencia Logística
               </h2>
-              <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                Somos una empresa familiar mexicana, con sede en el estado de
-                Colima, dedicada a ofrecer soluciones de transporte de carga
-                local y foráneo. Nuestro negocio es joven, con 15 años de
-                experiencia en el rubro y muy comprometidos en superarnos cada
-                día cumpliendo las expectativas de cada uno de nuestros
-                clientes.
+              <p className="text-xl text-gray-600 mb-10 leading-relaxed font-medium">
+                Somos una empresa familiar mexicana con 15 años de experiencia, dedicada a ofrecer soluciones de transporte de carga local y foráneo con los más altos estándares de la industria.
               </p>
+
+              <div className="grid grid-cols-2 gap-6 mb-10">
+                <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                  <h4 className="text-3xl font-black text-gray-900 mb-1">+15</h4>
+                  <p className="text-sm text-gray-500 font-bold uppercase">Años de Exp.</p>
+                </div>
+                <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                  <h4 className="text-3xl font-black text-gray-900 mb-1">100%</h4>
+                  <p className="text-sm text-gray-500 font-bold uppercase">Mexicanos</p>
+                </div>
+              </div>
 
               <Link
                 to={createPageUrl("Unidades")}
-                className="btn-primary font-semibold text-gray-900 shadow-lg text-lg px-10 py-6 inline-flex items-center justify-center rounded-md"
+                className="btn-primary font-bold text-gray-900 shadow-xl text-lg px-10 py-6 inline-flex items-center justify-center rounded-xl"
                 style={{
                   background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
                 }}
                 onClick={() => setIsMenuOpen(false)}
               >
-                Ver nuestra flota
+                Explorar nuestra flota
+                <ChevronRight className="w-5 h-5 ml-2" />
               </Link>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Value Proposition Section */}
-      <section className="py-24 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-20 left-10 w-96 h-96 bg-yellow-400 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-orange-400 rounded-full blur-3xl"></div>
+      {/* Stats Section */}
+      <section className="py-20 bg-gray-900 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:20px_20px]"></div>
         </div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-12">
+            {[
+              { label: "Viajes Realizados", value: "5,000+", icon: Truck },
+              { label: "Clientes Satisfechos", value: "150+", icon: Users },
+              { label: "Toneladas Movidas", value: "80k+", icon: Gauge },
+              { label: "Premios Logísticos", value: "12", icon: Award },
+            ].map((stat, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="text-center"
+              >
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-yellow-400 mb-6 rotate-3">
+                  <stat.icon className="w-8 h-8 text-gray-900" />
+                </div>
+                <h3 className="text-4xl md:text-5xl font-black text-white mb-2">{stat.value}</h3>
+                <p className="text-gray-400 font-bold uppercase tracking-wider text-xs">{stat.label}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      {/* Value Proposition Section */}
+      <section className="py-24 bg-white relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -531,104 +737,66 @@ export default function Home() {
             className="text-center mb-20"
           >
             <h2
-              className="text-4xl md:text-5xl font-bold mb-4"
+              className="text-4xl md:text-6xl font-black mb-4 tracking-tight"
               style={{ color: darkColor }}
             >
-              Nuestra Propuesta de Valor
+              ¿Por qué elegirnos?
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Comprometidos con la excelencia en cada entrega
+            <div className="w-24 h-1.5 bg-yellow-400 mx-auto rounded-full mb-6"></div>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto font-medium">
+              Nuestra filosofía de trabajo se basa en cuatro pilares fundamentales que garantizan el éxito de su logística.
             </p>
           </motion.div>
 
-          <div className="space-y-20">
+          <div className="grid md:grid-cols-2 gap-8">
             {[
               {
                 icon: Clock,
                 label: "Puntualidad y Seguridad",
-                description:
-                  "Priorizamos la entrega a tiempo y en perfectas condiciones de cada envío, utilizando las mejores prácticas de seguridad.",
-                gradient: "from-blue-500 to-cyan-500",
+                description: "Entregas en tiempo récord bajo los más estrictos protocolos de monitoreo y seguridad 24/7.",
+                color: "bg-blue-500",
+                shadow: "shadow-blue-200"
               },
               {
                 icon: MessageSquare,
                 label: "Comunicación Constante",
-                description:
-                  "Mantenemos una línea de comunicación abierta y proactiva para informar sobre el estatus de su carga en todo momento.",
-                gradient: "from-purple-500 to-pink-500",
+                description: "Mantenemos a nuestros clientes informados en tiempo real sobre el estatus de sus embarques.",
+                color: "bg-purple-500",
+                shadow: "shadow-purple-200"
               },
               {
                 icon: Settings,
                 label: "Flexibilidad y Adaptación",
-                description:
-                  "Diseñamos soluciones logísticas a la medida de los requerimientos de cada socio comercial, sin importar la complejidad.",
-                gradient: "from-orange-500 to-red-500",
+                description: "Diseñamos rutas y esquemas de transporte a la medida exacta de sus requerimientos.",
+                color: "bg-orange-500",
+                shadow: "shadow-orange-200"
               },
               {
                 icon: Award,
                 label: "Profesionalismo",
-                description:
-                  "Todo nuestro personal opera con un alto sentido de responsabilidad y profesionalismo en cada etapa del servicio.",
-                gradient: "from-green-500 to-emerald-500",
+                description: "Personal altamente capacitado y certificado para manejar cualquier tipo de carga.",
+                color: "bg-green-500",
+                shadow: "shadow-green-200"
               },
             ].map((item, index) => (
               <motion.div
                 key={item.label}
-                initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className={`flex flex-col md:flex-row items-center gap-8 ${
-                  index % 2 === 1 ? "md:flex-row-reverse" : ""
-                }`}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="group p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100 hover:bg-white hover:shadow-2xl transition-all duration-500"
               >
-                <motion.div
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  className="flex-shrink-0"
-                >
-                  <div
-                    className={`w-32 h-32 rounded-3xl bg-gradient-to-br ${item.gradient} shadow-2xl flex items-center justify-center transform hover:shadow-3xl transition-all duration-300`}
-                  >
-                    <item.icon
-                      className="w-16 h-16 text-white"
-                      strokeWidth={1.5}
-                    />
+                <div className="flex items-start gap-6">
+                  <div className={`w-20 h-20 rounded-[1.5rem] ${item.color} flex-shrink-0 flex items-center justify-center text-white shadow-2xl transition-transform group-hover:scale-110 group-hover:rotate-3`}>
+                    <item.icon className="w-10 h-10" />
                   </div>
-                </motion.div>
-
-                <div className="flex-1 w-full">
-                  <div
-                    className={`mb-4 ${
-                      index % 2 === 1
-                        ? "text-center md:text-right"
-                        : "text-center md:text-left"
-                    }`}
-                  >
-                    <div className="relative inline-block">
-                      <h3 className="text-3xl font-bold text-gray-900 relative z-10">
-                        {item.label}
-                      </h3>
-                      <div
-                        className="absolute bottom-0 left-0 w-full h-3 bg-gradient-to-r from-yellow-400 to-orange-400 opacity-30 transform -skew-x-12"
-                        style={{ zIndex: 0 }}
-                      ></div>
-                    </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-gray-900 mb-3">{item.label}</h3>
+                    <p className="text-gray-600 leading-relaxed font-medium">
+                      {item.description}
+                    </p>
                   </div>
-                  <p
-                    className={`text-lg text-gray-600 leading-relaxed max-w-md text-center ${
-                      index % 2 === 1
-                        ? "md:text-right md:ml-auto"
-                        : "md:text-left md:mr-auto"
-                    } mx-auto md:mx-0`}
-                  >
-                    {item.description}
-                  </p>
-                </div>
-
-                <div className="hidden md:block flex-shrink-0 w-8">
-                  <div
-                    className={`h-px w-full bg-gradient-to-r ${item.gradient} opacity-30`}
-                  ></div>
                 </div>
               </motion.div>
             ))}
@@ -640,28 +808,30 @@ export default function Home() {
             viewport={{ once: true }}
             className="mt-20 text-center"
           >
-            <div className="inline-block p-8 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-3xl shadow-xl border border-yellow-200">
-              <p className="text-lg text-gray-700 mb-4 font-semibold">
-                ¿Listo para experimentar la diferencia?
-              </p>
-              <Button
-                size="lg"
-                onClick={() => scrollToSection("cotizar")}
-                className="btn-primary text-lg px-10 py-6 font-semibold shadow-2xl text-gray-900"
-                style={{
-                  background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
-                }}
-              >
-                Solicitar Cotización
-                <ChevronRight className="w-5 h-5 ml-2" />
-              </Button>
+            <div className="inline-block p-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl shadow-2xl">
+              <div className="bg-white px-10 py-8 rounded-[0.9rem]">
+                <p className="text-xl text-gray-800 mb-6 font-black">
+                  ¿Listo para experimentar la diferencia GM?
+                </p>
+                <Button
+                  size="lg"
+                  onClick={() => scrollToSection("cotizar")}
+                  className="btn-primary text-lg px-12 py-7 font-bold text-gray-900 rounded-xl"
+                  style={{
+                    background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
+                  }}
+                >
+                  Solicitar Cotización Ahora
+                  <ChevronRight className="w-5 h-5 ml-2" />
+                </Button>
+              </div>
             </div>
           </motion.div>
         </div>
       </section>
 
       {/* Clients Section */}
-      <section className="py-24 bg-white relative overflow-hidden">
+      <section className="py-24 bg-gray-50/30 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -670,36 +840,38 @@ export default function Home() {
             className="text-center mb-16"
           >
             <h2
-              className="text-4xl md:text-5xl font-bold mb-4"
+              className="text-4xl md:text-6xl font-black mb-4 tracking-tight"
               style={{ color: darkColor }}
             >
-              Clientes que Confían en Nosotros
+              Empresas que Confían en GM
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Orgullosos de servir a empresas líderes en sus industrias
+            <div className="w-24 h-1.5 bg-yellow-400 mx-auto rounded-full mb-6"></div>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto font-medium">
+              Orgullosos de ser el socio estratégico de empresas líderes en su industria.
             </p>
           </motion.div>
 
           <div className="relative">
-            <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-white to-transparent z-10" />
-            <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-white to-transparent z-10" />
+            <div className="absolute left-0 top-0 bottom-0 w-40 bg-gradient-to-r from-gray-50/50 to-transparent z-10" />
+            <div className="absolute right-0 top-0 bottom-0 w-40 bg-gradient-to-l from-gray-50/50 to-transparent z-10" />
 
             <div className="overflow-hidden">
               <div
-                className="flex gap-16 items-center animate-scroll"
+                className="flex gap-12 items-center animate-scroll py-8"
                 style={{ width: "max-content" }}
               >
-                {[...Array(3)].map((_, setIndex) => (
+                {[...Array(4)].map((_, setIndex) => (
                   <React.Fragment key={`set-${setIndex}`}>
                     {clientLogos.map((logo, index) => (
                       <div
                         key={`logo-${setIndex}-${index}`}
-                        className="flex-shrink-0 w-48 h-32 bg-white rounded-xl flex items-center justify-center hover:bg-gray-50 transition-all duration-300 hover:scale-110 hover:shadow-xl border border-gray-100 p-4"
+                        className="flex-shrink-0 w-56 h-32 bg-white rounded-[2rem] flex items-center justify-center hover:bg-white transition-all duration-500 hover:scale-110 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] border border-gray-100 p-8 group"
                       >
                         <img
                           src={logo}
                           alt={`Cliente ${index + 1}`}
-                          className="max-w-full max-h-full object-contain"
+                          className="max-w-full max-h-full object-contain grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500"
+                          loading="lazy"
                         />
                       </div>
                     ))}
@@ -708,17 +880,6 @@ export default function Home() {
               </div>
             </div>
           </div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mt-12"
-          >
-            <p className="text-gray-700 text-lg mb-6 font-semibold">
-              Experimenta nuestro servicio por ti mismo, cotiza ahora.
-            </p>
-          </motion.div>
         </div>
       </section>
 
@@ -742,7 +903,7 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -1122,10 +1283,30 @@ export default function Home() {
           </div>
 
           <div className="border-t border-gray-800 pt-8 text-center text-gray-400">
-            <p>© 2024 Transportes GM. Todos los derechos reservados.</p>
+            <p>© {new Date().getFullYear()} Transportes GM. Todos los derechos reservados.</p>
           </div>
         </div>
       </footer>
+
+      {/* Floating WhatsApp Button */}
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.5, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ delay: 1 }}
+        className="floating-whatsapp"
+      >
+        <a
+          href={`https://wa.me/${websiteInfo?.contact?.phone?.replace(/\D/g, "") || "523131130198"}?text=Hola, me gustaría solicitar una cotización`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block group relative"
+        >
+          <div className="absolute -inset-2 bg-green-500/30 rounded-full blur-xl group-hover:bg-green-500/50 transition-all"></div>
+          <div className="relative w-16 h-16 bg-[#25D366] rounded-full flex items-center justify-center shadow-[0_10px_30px_rgba(37,211,102,0.4)] group-hover:rotate-12 transition-transform">
+            <Phone className="w-8 h-8 text-white fill-current" />
+          </div>
+        </a>
+      </motion.div>
     </div>
   );
 }
@@ -1179,100 +1360,117 @@ function QuoteForm({ primaryColor, secondaryColor }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid md:grid-cols-2 gap-4">
-        <div>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <label className="text-sm font-bold text-gray-700 ml-1">Nombre completo *</label>
           <input
             type="text"
             name="name"
             value={formData.name}
             onChange={handleChange}
-            placeholder="Nombre completo *"
+            placeholder="Ej. Juan Pérez"
             required
-            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 outline-none transition-all"
+            className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-yellow-500 focus:ring-4 focus:ring-yellow-100 outline-none transition-all bg-gray-50/50"
           />
         </div>
-        <div>
+        <div className="space-y-2">
+          <label className="text-sm font-bold text-gray-700 ml-1">Email *</label>
           <input
             type="email"
             name="email"
             value={formData.email}
             onChange={handleChange}
-            placeholder="Email *"
+            placeholder="correo@empresa.com"
             required
-            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 outline-none transition-all"
+            className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-yellow-500 focus:ring-4 focus:ring-yellow-100 outline-none transition-all bg-gray-50/50"
           />
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        <div>
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <label className="text-sm font-bold text-gray-700 ml-1">Teléfono *</label>
           <input
             type="tel"
             name="phone"
             value={formData.phone}
             onChange={handleChange}
-            placeholder="Teléfono *"
+            placeholder="10 dígitos"
             required
-            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 outline-none transition-all"
+            className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-yellow-500 focus:ring-4 focus:ring-yellow-100 outline-none transition-all bg-gray-50/50"
           />
         </div>
-        <div>
+        <div className="space-y-2">
+          <label className="text-sm font-bold text-gray-700 ml-1">Empresa (opcional)</label>
           <input
             type="text"
             name="company"
             value={formData.company}
             onChange={handleChange}
-            placeholder="Empresa (opcional)"
-            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 outline-none transition-all"
+            placeholder="Nombre de tu empresa"
+            className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-yellow-500 focus:ring-4 focus:ring-yellow-100 outline-none transition-all bg-gray-50/50"
           />
         </div>
       </div>
 
-      <div>
+      <div className="space-y-2">
+        <label className="text-sm font-bold text-gray-700 ml-1">Tu mensaje *</label>
         <textarea
           name="message"
           value={formData.message}
           onChange={handleChange}
-          placeholder="Escribe tu mensaje"
+          placeholder="Cuéntanos sobre tus necesidades de transporte..."
           required
-          rows="6"
-          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 outline-none transition-all resize-none"
+          rows="5"
+          className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-yellow-500 focus:ring-4 focus:ring-yellow-100 outline-none transition-all bg-gray-50/50 resize-none"
         />
       </div>
 
       {submitStatus === "success" && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
-          ¡Cotización enviada exitosamente! Nos pondremos en contacto contigo
-          pronto.
-        </div>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-800 flex items-center gap-3"
+        >
+          <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white flex-shrink-0">
+            <Award className="w-5 h-5" />
+          </div>
+          <p className="font-medium">¡Cotización enviada con éxito! Te contactaremos pronto.</p>
+        </motion.div>
       )}
 
       {submitStatus === "error" && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
-          Hubo un error al enviar la cotización. Por favor intenta de nuevo o
-          contáctanos directamente.
-        </div>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-800 flex items-center gap-3"
+        >
+          <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white flex-shrink-0">
+            <X className="w-5 h-5" />
+          </div>
+          <p className="font-medium">Error al enviar. Por favor, llámanos directamente.</p>
+        </motion.div>
       )}
 
       <Button
         type="submit"
         size="lg"
         disabled={isSubmitting}
-        className="btn-submit w-full text-lg py-6 font-semibold text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="btn-submit w-full text-lg py-7 font-black text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl"
         style={{
           background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
         }}
       >
         {isSubmitting ? (
           <>
-            <div className="w-5 h-5 border-2 border-gray-900 border-t-transparent rounded-full animate-spin mr-2" />
-            Enviando...
+            <div className="w-6 h-6 border-3 border-gray-900 border-t-transparent rounded-full animate-spin mr-3" />
+            Procesando...
           </>
         ) : (
           <>
-            Enviar Cotización
-            <ChevronRight className="w-5 h-5 ml-2" />
+            Enviar Solicitud
+            <ChevronRight className="w-6 h-6 ml-2" />
           </>
         )}
       </Button>

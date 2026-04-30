@@ -50,7 +50,7 @@ export default function RankingConductores({ viajes, conductores }) {
   };
 
   return (
-    <Card className="border-border shadow-xl hover:shadow-2xl transition-shadow bg-card h-full flex flex-col rounded-[2rem] overflow-hidden relative z-10">
+    <Card className="border-border shadow-xl hover:shadow-2xl transition-shadow bg-card flex flex-col rounded-[2rem] overflow-hidden relative">
       <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-500 to-cyan-400" />
       <CardHeader className="bg-slate-50/50 dark:bg-zinc-900/50 border-b border-border/60 pb-4 pt-5 px-6">
         <div className="flex items-center gap-3">

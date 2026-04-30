@@ -26,6 +26,7 @@ import {
   Route,
   Ticket,
   MapPin,
+  Calendar,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
@@ -48,6 +49,8 @@ export default function FuelRegistrarViaje() {
     camion_nombre: stateData.camion_nombre || "",
     camion_placas: stateData.camion_placas || "",
     tipo_viaje: stateData.tipo_viaje || "Sencillo",
+    remolque_id: stateData.remolque_id || "",
+    remolque2_id: stateData.remolque2_id || "",
     ruta_ida: "",
     kilometros_ida: "",
     ruta_regreso: "",
@@ -58,6 +61,20 @@ export default function FuelRegistrarViaje() {
     casetas_regreso: "",
     notas: "",
   });
+
+  const getAbreviacionTipo = (tipo) => {
+    if (!tipo) return "";
+    const t = tipo.toLowerCase();
+    if (t.includes("seca") || t.includes("caja")) return "CS";
+    if (
+      t.includes("chasis") ||
+      t.includes("contenedor") ||
+      t.includes("portacontenedor")
+    )
+      return "CH";
+    if (t.includes("plataforma")) return "PT";
+    return "";
+  };
 
   const [rutasAdicionales, setRutasAdicionales] = useState([]);
   const [nuevoConductor, setNuevoConductor] = useState({
@@ -80,6 +97,15 @@ export default function FuelRegistrarViaje() {
     queryKey: ["camiones"],
     queryFn: async () => {
       const { data, error } = await supabase.from("Camion").select("*");
+      if (error) throw new Error(error.message);
+      return data;
+    },
+  });
+
+  const { data: remolques = [] } = useQuery({
+    queryKey: ["remolques"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("Remolque").select("*");
       if (error) throw new Error(error.message);
       return data;
     },
@@ -212,6 +238,8 @@ export default function FuelRegistrarViaje() {
       camion_nombre: viaje.camion_nombre,
       camion_placas: viaje.camion_placas,
       tipo_viaje: viaje.tipo_viaje,
+      remolque_id: viaje.remolque_id || null,
+      remolque2_id: viaje.remolque2_id || null,
       ruta_ida: viaje.ruta_ida,
       kilometros_ida: kmIda,
       rutas_adicionales: rutasAdicionales.map((r) => ({
@@ -355,16 +383,19 @@ export default function FuelRegistrarViaje() {
                   >
                     Salida <span className="text-red-500">*</span>
                   </Label>
-                  <Input
-                    id="fecha"
-                    type="date"
-                    value={viaje.fecha}
-                    onChange={(e) =>
-                      setViaje({ ...viaje, fecha: e.target.value })
-                    }
-                    required
-                    className="bg-background border-input"
-                  />
+                  <div className="relative group/date cursor-pointer" onClick={(e) => e.currentTarget.querySelector('input')?.showPicker()}>
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-hover/date:text-primary transition-colors pointer-events-none" />
+                    <Input
+                      id="fecha"
+                      type="date"
+                      value={viaje.fecha}
+                      onChange={(e) =>
+                        setViaje({ ...viaje, fecha: e.target.value })
+                      }
+                      required
+                      className="pl-10 bg-background border-input cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -374,15 +405,18 @@ export default function FuelRegistrarViaje() {
                   >
                     Llegada / Carga
                   </Label>
-                  <Input
-                    id="fecha_llegada"
-                    type="date"
-                    value={viaje.fecha_llegada}
-                    onChange={(e) =>
-                      setViaje({ ...viaje, fecha_llegada: e.target.value })
-                    }
-                    className="bg-background border-input"
-                  />
+                  <div className="relative group/date cursor-pointer" onClick={(e) => e.currentTarget.querySelector('input')?.showPicker()}>
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-hover/date:text-primary transition-colors pointer-events-none" />
+                    <Input
+                      id="fecha_llegada"
+                      type="date"
+                      value={viaje.fecha_llegada}
+                      onChange={(e) =>
+                        setViaje({ ...viaje, fecha_llegada: e.target.value })
+                      }
+                      className="pl-10 bg-background border-input cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -521,7 +555,11 @@ export default function FuelRegistrarViaje() {
                   <Select
                     value={viaje.tipo_viaje}
                     onValueChange={(val) =>
-                      setViaje({ ...viaje, tipo_viaje: val })
+                      setViaje({ 
+                        ...viaje, 
+                        tipo_viaje: val,
+                        remolque2_id: val === "Sencillo" ? "" : viaje.remolque2_id
+                      })
                     }
                     required
                   >
@@ -529,11 +567,61 @@ export default function FuelRegistrarViaje() {
                       <SelectValue placeholder="Seleccionar" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Sencillo">Sencillo (1)</SelectItem>
-                      <SelectItem value="FULL">FULL (2)</SelectItem>
+                      <SelectItem value="Sencillo">Sencillo</SelectItem>
+                      <SelectItem value="FULL">FULL</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+
+                <div className="space-y-2">
+                  <Label className="text-foreground font-semibold">
+                    Remolque 1
+                  </Label>
+                  <Select
+                    value={viaje.remolque_id}
+                    onValueChange={(val) => setViaje({ ...viaje, remolque_id: val })}
+                  >
+                    <SelectTrigger className="bg-background border-input">
+                      <SelectValue placeholder="Seleccionar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {remolques.map((r) => {
+                        const abv = getAbreviacionTipo(r.tipo);
+                        return (
+                          <SelectItem key={r.id} value={String(r.id)}>
+                            {abv ? `[${abv}] ` : ""}{r.placas}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {viaje.tipo_viaje === "FULL" && (
+                  <div className="space-y-2">
+                    <Label className="text-foreground font-semibold">
+                      Remolque 2
+                    </Label>
+                    <Select
+                      value={viaje.remolque2_id}
+                      onValueChange={(val) => setViaje({ ...viaje, remolque2_id: val })}
+                    >
+                      <SelectTrigger className="bg-background border-input">
+                        <SelectValue placeholder="Seleccionar" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {remolques.map((r) => {
+                          const abv = getAbreviacionTipo(r.tipo);
+                          return (
+                            <SelectItem key={r.id} value={String(r.id)}>
+                              {abv ? `[${abv}] ` : ""}{r.placas}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
 
               {/* RUTAS */}
@@ -598,7 +686,7 @@ export default function FuelRegistrarViaje() {
                 {rutasAdicionales.map((ruta, index) => (
                   <div
                     key={index}
-                    className="grid md:grid-cols-[1fr_auto_auto] gap-3 p-3 bg-background/50 rounded-lg border border-border"
+                    className="grid grid-cols-[1fr_auto_auto] md:grid-cols-[1fr_auto_auto] gap-3 p-3 bg-background/50 rounded-lg border border-border"
                   >
                     <Input
                       placeholder="Ruta"
@@ -620,7 +708,7 @@ export default function FuelRegistrarViaje() {
                           e.target.value,
                         )
                       }
-                      className="bg-background w-32"
+                      className="bg-background w-24 md:w-32"
                     />
                     <Button
                       type="button"
@@ -796,26 +884,32 @@ export default function FuelRegistrarViaje() {
                 />
               </div>
 
-              <div className="flex gap-4 pt-4">
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => navigate(createPageUrl("ControlCombustible"))}
-                  className="flex-1 bg-background hover:bg-muted"
+                  className="flex-1 bg-card hover:bg-muted border-border"
                 >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
                   Cancelar
                 </Button>
                 <Button
                   type="submit"
                   disabled={crearViajeMutation.isPending}
-                  className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
+                  className="flex-1 bg-green-600 text-white hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 shadow-lg"
                 >
                   {crearViajeMutation.isPending ? (
-                    <Loader2 className="animate-spin" />
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Guardando...
+                    </>
                   ) : (
-                    <Save />
-                  )}{" "}
-                  Registrar Viaje
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Registrar Viaje
+                    </>
+                  )}
                 </Button>
               </div>
             </form>

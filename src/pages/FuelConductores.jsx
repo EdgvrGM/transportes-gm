@@ -30,13 +30,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Edit, Phone, CreditCard, Loader2, Trash2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Plus, Edit, Phone, CreditCard, Loader2, Trash2, User } from "lucide-react";
 
 export default function FuelConductores() {
   const queryClient = useQueryClient();
   const [dialogAbierto, setDialogAbierto] = useState(false);
   const [conductorEditando, setConductorEditando] = useState(null);
   const [conductorAEliminar, setConductorAEliminar] = useState(null);
+  const [mostrarInactivos, setMostrarInactivos] = useState(false);
   const [formData, setFormData] = useState({
     nombre: "",
     licencia: "",
@@ -47,7 +55,11 @@ export default function FuelConductores() {
   const { data: conductores = [], isLoading } = useQuery({
     queryKey: ["conductores"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("Conductor").select("*");
+      const { data, error } = await supabase
+        .from("Conductor")
+        .select("*")
+        .order("estado", { ascending: true })
+        .order("nombre", { ascending: true });
       if (error) throw new Error(error.message);
       return data;
     },
@@ -160,6 +172,13 @@ export default function FuelConductores() {
     return { totalViajes, totalKm, promedio };
   };
 
+  const getEficienciaColor = (kmPorLitro) => {
+    if (!kmPorLitro || kmPorLitro === 0) return "text-slate-400";
+    if (kmPorLitro > 2.25) return "text-green-600 dark:text-green-400";
+    if (kmPorLitro >= 2.0) return "text-amber-600 dark:text-amber-400";
+    return "text-red-600 dark:text-red-400";
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-background">
@@ -169,12 +188,11 @@ export default function FuelConductores() {
   }
 
   return (
-    // CAMBIO: Fondo dinámico
     <div className="p-4 md:p-8 bg-slate-50 dark:bg-background min-h-screen transition-colors duration-300">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+      <div className="max-w-[1600px] mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2 tracking-tight">
               Conductores
             </h1>
             <p className="text-muted-foreground">
@@ -183,9 +201,9 @@ export default function FuelConductores() {
           </div>
           <Button
             onClick={() => abrirDialog()}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg gap-2"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-xl gap-2 px-6 h-12 rounded-xl font-bold"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-5 h-5" />
             Nuevo Conductor
           </Button>
         </div>
@@ -198,114 +216,194 @@ export default function FuelConductores() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
+            {/* ── VISTA MOBILE: Cards ── */}
+            <div className="md:hidden divide-y divide-border">
+              {conductores.map((conductor) => {
+                const stats = obtenerEstadisticasConductor(conductor.id);
+                return (
+                  <div key={conductor.id} className="p-4 flex items-start gap-4">
+                    <div className="w-10 h-10 bg-blue-500 dark:bg-blue-600 rounded-full flex items-center justify-center shadow-md shrink-0">
+                      <span className="text-white font-bold text-sm">
+                        {conductor.nombre[0].toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-semibold text-foreground truncate">{conductor.nombre}</p>
+                        <Badge
+                          variant="outline"
+                          className={`shrink-0 text-[10px] px-1.5 py-0 ${
+                            conductor.estado === "activo"
+                              ? "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800"
+                              : "bg-muted text-muted-foreground border-border"
+                          }`}
+                        >
+                          {conductor.estado === "activo" ? "Activo" : "Inactivo"}
+                        </Badge>
+                      </div>
+                      <div className="mt-1 space-y-0.5">
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <CreditCard className="w-3 h-3" /> {conductor.licencia || "-"}
+                        </p>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Phone className="w-3 h-3" /> {conductor.telefono || "-"}
+                        </p>
+                      </div>
+                      <div className="mt-2 flex items-center justify-between">
+                        <div className="flex gap-3 text-xs text-muted-foreground">
+                          <span><span className="font-bold text-foreground">{stats.totalViajes}</span> viajes</span>
+                          {stats.totalViajes > 0 && (
+                            <span className="font-semibold text-green-600 dark:text-green-400">{stats.promedio.toFixed(2)} km/L</span>
+                          )}
+                        </div>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => abrirDialog(conductor)}
+                            className="h-8 w-8 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700">
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => confirmarEliminar(conductor)}
+                            className="h-8 w-8 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              {conductores.length === 0 && (
+                <p className="text-center py-8 text-muted-foreground">No hay conductores registrados.</p>
+              )}
+            </div>
+
+            {/* ── VISTA DESKTOP: Tabla ── */}
+            <div className="hidden md:block overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/50 hover:bg-muted/50 border-border">
-                    <TableHead className="font-semibold text-muted-foreground">
-                      Nombre
-                    </TableHead>
-                    <TableHead className="font-semibold text-muted-foreground">
-                      Licencia
-                    </TableHead>
-                    <TableHead className="font-semibold text-muted-foreground">
-                      Teléfono
-                    </TableHead>
-                    <TableHead className="font-semibold text-muted-foreground">
-                      Estado
-                    </TableHead>
-                    <TableHead className="font-semibold text-muted-foreground text-center">
-                      Viajes
-                    </TableHead>
-                    <TableHead className="font-semibold text-muted-foreground text-center">
-                      Eficiencia
-                    </TableHead>
-                    <TableHead className="font-semibold text-muted-foreground text-center">
-                      Acciones
-                    </TableHead>
+                  <TableRow className="bg-slate-50/80 dark:bg-zinc-900/80 hover:bg-transparent border-b border-border/60">
+                    <TableHead className="w-[25%] pl-8 font-bold text-[10px] uppercase tracking-widest text-slate-500 py-4">Nombre del Conductor</TableHead>
+                    <TableHead className="w-[12%] text-center font-bold text-[10px] uppercase tracking-widest text-slate-500 py-4">Estado</TableHead>
+                    <TableHead className="w-[15%] text-center font-bold text-[10px] uppercase tracking-widest text-slate-500 py-4">Licencia</TableHead>
+                    <TableHead className="w-[18%] text-center font-bold text-[10px] uppercase tracking-widest text-slate-500 py-4">Teléfono</TableHead>
+                    <TableHead className="w-[15%] text-center font-bold text-[10px] uppercase tracking-widest text-slate-500 py-4">Eficiencia</TableHead>
+                    <TableHead className="w-[15%] text-right font-bold text-[10px] uppercase tracking-widest text-slate-500 pr-10 py-4">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {conductores.map((conductor) => {
-                    const stats = obtenerEstadisticasConductor(conductor.id);
-                    return (
-                      <TableRow
-                        key={conductor.id}
-                        className="hover:bg-muted/50 transition-colors duration-150 border-border"
-                      >
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-blue-500 dark:bg-blue-600 rounded-full flex items-center justify-center shadow-md">
-                              <span className="text-white font-bold">
-                                {conductor.nombre[0].toUpperCase()}
-                              </span>
+                  {/* CONDUCTORES ACTIVOS */}
+                  {conductores
+                    .filter((c) => c.estado === "activo")
+                    .map((conductor) => {
+                      const stats = obtenerEstadisticasConductor(conductor.id);
+                      return (
+                        <TableRow key={conductor.id} className="group relative border-l-4 border-transparent hover:border-indigo-600 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-all duration-300 border-b border-border/40 last:border-0">
+                          <TableCell className="py-3 pl-8">
+                            <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 bg-indigo-100/80 dark:bg-indigo-900/40 rounded-xl flex items-center justify-center text-indigo-600 transition-all group-hover:bg-indigo-600 group-hover:text-white group-hover:scale-110 shadow-sm border border-indigo-200/50 dark:border-indigo-800/50">
+                                <User className="w-5 h-5" />
+                              </div>
+                              <span className="font-black text-slate-900 dark:text-slate-100 tracking-tight">{conductor.nombre}</span>
                             </div>
-                            <span className="font-semibold text-foreground">
-                              {conductor.nombre}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <CreditCard className="w-4 h-4 text-muted-foreground" />
-                            {conductor.licencia || "-"}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Phone className="w-4 h-4 text-muted-foreground" />
-                            {conductor.telefono || "-"}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className={
-                              conductor.estado === "activo"
-                                ? "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800"
-                                : "bg-muted text-muted-foreground border-border"
-                            }
-                          >
-                            {conductor.estado === "activo"
-                              ? "Activo"
-                              : "Inactivo"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-center font-semibold text-foreground">
-                          {stats.totalViajes}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {stats.totalViajes > 0 ? (
-                            <span className="font-semibold text-green-600 dark:text-green-400">
-                              {stats.promedio.toFixed(2)} km/L
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => abrirDialog(conductor)}
-                              className="hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => confirmarEliminar(conductor)}
-                              className="hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-400"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge variant="outline" className="font-black text-[10px] uppercase tracking-tighter bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800">
+                              Activo
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-center py-3 font-black text-slate-500 dark:text-slate-400 text-xs uppercase tracking-tighter">
+                            {conductor.licencia || "N/A"}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex items-center justify-center gap-2 text-slate-500 dark:text-slate-400 font-bold text-xs">
+                              <Phone className="w-3.5 h-3.5 text-indigo-500/70" />
+                              {conductor.telefono || "-"}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {stats.totalViajes > 0 ? (
+                              <span className={`font-black text-xs ${getEficienciaColor(stats.promedio)}`}>{stats.promedio.toFixed(2)} KM/L</span>
+                            ) : (
+                              <span className="text-slate-400 text-xs">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right pr-6">
+                            <div className="flex justify-end gap-1.5">
+                              <Button variant="ghost" size="icon" onClick={() => abrirDialog(conductor)}
+                                className="h-9 w-9 text-blue-600 bg-blue-50/50 hover:bg-blue-600 hover:text-white rounded-xl transition-all shadow-sm">
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => confirmarEliminar(conductor)}
+                                className="h-9 w-9 text-red-600 bg-red-50/50 hover:bg-red-600 hover:text-white rounded-xl transition-all shadow-sm">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+
+                  {/* SECCIÓN PLEGABLE PARA INACTIVOS */}
+                  {conductores.filter((c) => c.estado !== "activo").length > 0 && (
+                    <TableRow 
+                      className="bg-slate-50/80 dark:bg-zinc-900/80 hover:bg-slate-100 dark:hover:bg-zinc-900 cursor-pointer transition-colors"
+                      onClick={() => setMostrarInactivos(!mostrarInactivos)}
+                    >
+                      <TableCell colSpan={6} className="py-4 text-center">
+                        <div className="flex items-center justify-center gap-2 text-slate-500 font-black text-[10px] uppercase tracking-widest">
+                          <span>{mostrarInactivos ? "Ocultar" : "Mostrar"} Conductores Inactivos ({conductores.filter((c) => c.estado !== "activo").length})</span>
+                          <Plus className={`w-3 h-3 transition-transform duration-300 ${mostrarInactivos ? "rotate-45" : ""}`} />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+
+                  {/* CONDUCTORES INACTIVOS (CONDICIONAL) */}
+                  {mostrarInactivos && conductores
+                    .filter((c) => c.estado !== "activo")
+                    .map((conductor) => {
+                      const stats = obtenerEstadisticasConductor(conductor.id);
+                      return (
+                        <TableRow key={conductor.id} className="group relative border-l-4 border-transparent hover:border-red-600 bg-red-50/5 dark:bg-red-900/5 hover:bg-red-50/20 dark:hover:bg-red-900/10 transition-all duration-300 border-b border-border/40 last:border-0 opacity-80">
+                          <TableCell className="py-3 pl-8">
+                            <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 bg-slate-100/80 dark:bg-zinc-800/80 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-red-600 group-hover:text-white transition-all shadow-sm">
+                                <User className="w-5 h-5" />
+                              </div>
+                              <span className="font-black text-slate-500 dark:text-slate-400 tracking-tight">{conductor.nombre}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge variant="outline" className="font-black text-[10px] uppercase tracking-tighter bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800">
+                              Inactivo
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-center py-3 font-black text-slate-400 text-xs uppercase tracking-tighter">
+                            {conductor.licencia || "N/A"}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex items-center justify-center gap-2 text-slate-400 font-bold text-xs">
+                              <Phone className="w-3.5 h-3.5 opacity-50" />
+                              {conductor.telefono || "-"}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className="text-slate-400 text-xs">-</span>
+                          </TableCell>
+                          <TableCell className="text-right pr-6">
+                            <div className="flex justify-end gap-1.5">
+                              <Button variant="ghost" size="icon" onClick={() => abrirDialog(conductor)}
+                                className="h-9 w-9 text-blue-600 bg-blue-50/50 hover:bg-blue-600 hover:text-white rounded-xl transition-all shadow-sm">
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => confirmarEliminar(conductor)}
+                                className="h-9 w-9 text-red-600 bg-red-50/50 hover:bg-red-600 hover:text-white rounded-xl transition-all shadow-sm">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                 </TableBody>
               </Table>
             </div>
@@ -374,6 +472,22 @@ export default function FuelConductores() {
                   placeholder="+1 234 567 890"
                   className="bg-background border-input"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="font-semibold text-foreground">Estado</Label>
+                <Select
+                  value={formData.estado}
+                  onValueChange={(val) => setFormData({ ...formData, estado: val })}
+                >
+                  <SelectTrigger className="bg-background border-input rounded-xl">
+                    <SelectValue placeholder="Seleccionar estado" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border">
+                    <SelectItem value="activo">Activo</SelectItem>
+                    <SelectItem value="inactivo">Inactivo</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex gap-3 pt-4">
