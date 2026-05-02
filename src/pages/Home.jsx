@@ -54,10 +54,10 @@ export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("inicio");
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
-  
+
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  
+
   const springConfig = { damping: 25, stiffness: 150 };
   const smoothX = useSpring(mouseX, springConfig);
   const smoothY = useSpring(mouseY, springConfig);
@@ -113,7 +113,10 @@ export default function Home() {
       });
     };
 
-    const observer = new IntersectionObserver(observerCallback, observerOptions);
+    const observer = new IntersectionObserver(
+      observerCallback,
+      observerOptions,
+    );
 
     sections.forEach((sectionId) => {
       const element = document.getElementById(sectionId);
@@ -265,18 +268,22 @@ export default function Home() {
         }
 
         .scroll-indicator {
-          position: absolute;
-          bottom: 30px;
-          left: 50%;
-          transform: translateX(-50%);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 8px;
-          color: white;
-          z-index: 20;
-          opacity: 0.8;
-        }
+  position: absolute;
+  bottom: 30px;
+  left: 0;               /* Define el inicio en el borde izquierdo */
+  right: 0;              /* Define el final en el borde derecho */
+  margin-left: auto;     /* Equilibra el espacio a la izquierda[cite: 1] */
+  margin-right: auto;    /* Equilibra el espacio a la derecha[cite: 1] */
+  width: fit-content;    /* Ajusta el contenedor al tamaño real del icono[cite: 1] */
+  display: flex;
+  flex-direction: column;
+  align-items: center;   /* Centra internamente el texto y el ratón[cite: 1] */
+  gap: 8px;
+  color: white;
+  z-index: 20;
+  opacity: 0.8;
+  pointer-events: none;  /* Evita interferencias con clics en el video o botones[cite: 1] */
+}
 
         .mouse {
           width: 26px;
@@ -350,7 +357,7 @@ export default function Home() {
                   </button>
                 ),
               )}
-              
+
               <Button
                 onClick={() => handleNavigation("cotizar")}
                 className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-black uppercase tracking-tighter text-xs px-6 py-2 rounded-lg transition-all shadow-lg shadow-yellow-400/20"
@@ -434,11 +441,11 @@ export default function Home() {
                 Desde Manzanillo, Colima, movemos su carga con seguridad,
                 eficiencia y puntualidad inquebrantable.
               </p>
-              <div className="flex flex-wrap justify-center gap-6">
+              <div className="flex flex-col sm:flex-row justify-center gap-6">
                 <Button
                   size="lg"
                   onClick={() => handleNavigation("servicios")}
-                  className="btn-primary text-xl px-10 py-8 font-black shadow-2xl text-gray-900 rounded-2xl"
+                  className="btn-primary text-xl w-full sm:w-[280px] py-8 font-black shadow-2xl text-gray-900 rounded-2xl"
                   style={{
                     background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
                   }}
@@ -446,16 +453,17 @@ export default function Home() {
                   Nuestros Servicios
                   <ChevronRight className="w-6 h-6 ml-2" />
                 </Button>
-                
+
                 <a
                   href={`https://wa.me/${websiteInfo?.contact?.phone?.replace(/\D/g, "") || "523131130198"}?text=Hola, me gustaría solicitar una cotización`}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="w-full sm:w-[280px]"
                 >
                   <Button
                     size="lg"
                     variant="outline"
-                    className="btn-secondary text-xl px-10 py-8 font-black border-2 border-white text-white hover:bg-white hover:text-gray-900 transition-all rounded-2xl backdrop-blur-md bg-white/10"
+                    className="btn-secondary text-xl w-full py-8 font-black border-2 border-white text-white hover:bg-white hover:text-gray-900 transition-all rounded-2xl backdrop-blur-md bg-white/10"
                   >
                     Cotizar por WhatsApp
                     <Phone className="w-6 h-6 ml-2" />
@@ -467,12 +475,18 @@ export default function Home() {
         </div>
 
         {/* Scroll Indicator */}
-        <motion.div 
-          animate={{ opacity: showScrollIndicator ? 0.8 : 0, y: showScrollIndicator ? 0 : 20 }}
+        {/* Scroll Indicator Corregido */}
+        <motion.div
+          animate={{
+            opacity: showScrollIndicator ? 0.8 : 0,
+            y: showScrollIndicator ? 0 : 20,
+          }}
           transition={{ duration: 0.5 }}
-          className="scroll-indicator pointer-events-none"
+          className="scroll-indicator"
         >
-          <span className="text-xs font-bold tracking-[0.2em] uppercase mb-2">Deslizar</span>
+          <span className="text-[10px] font-bold tracking-[0.2em] uppercase mb-2">
+            Deslizar
+          </span>
           <div className="mouse">
             <div className="wheel"></div>
           </div>
@@ -480,11 +494,20 @@ export default function Home() {
       </section>
 
       {/* Services Section */}
-      <section id="servicios" className="py-24 bg-gray-50/50 relative overflow-hidden">
+      <section
+        id="servicios"
+        className="py-24 bg-gray-50/50 relative overflow-hidden"
+      >
         {/* Floating background elements */}
-        <div className="absolute top-20 left-0 w-64 h-64 bg-yellow-400/5 rounded-full blur-3xl floating-shape" style={{ animationDelay: '0s' }}></div>
-        <div className="absolute bottom-20 right-0 w-96 h-96 bg-yellow-400/5 rounded-full blur-3xl floating-shape" style={{ animationDelay: '2s' }}></div>
-        
+        <div
+          className="absolute top-20 left-0 w-64 h-64 bg-yellow-400/5 rounded-full blur-3xl floating-shape"
+          style={{ animationDelay: "0s" }}
+        ></div>
+        <div
+          className="absolute bottom-20 right-0 w-96 h-96 bg-yellow-400/5 rounded-full blur-3xl floating-shape"
+          style={{ animationDelay: "2s" }}
+        ></div>
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -500,7 +523,8 @@ export default function Home() {
             </h2>
             <div className="w-24 h-1.5 bg-yellow-400 mx-auto rounded-full mb-6"></div>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto font-medium">
-              Ofrecemos soluciones integrales de logística y transporte, con los más altos estándares de calidad y seguridad.
+              Ofrecemos soluciones integrales de logística y transporte, con los
+              más altos estándares de calidad y seguridad.
             </p>
           </motion.div>
 
@@ -617,7 +641,9 @@ export default function Home() {
             >
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-10 h-1 bg-yellow-400 rounded-full"></div>
-                <span className="text-yellow-600 font-bold uppercase tracking-widest text-sm">Trayectoria</span>
+                <span className="text-yellow-600 font-bold uppercase tracking-widest text-sm">
+                  Trayectoria
+                </span>
               </div>
               <h2
                 className="text-4xl md:text-6xl font-black mb-8 leading-tight"
@@ -626,17 +652,27 @@ export default function Home() {
                 Comprometidos con la Excelencia Logística
               </h2>
               <p className="text-xl text-gray-600 mb-10 leading-relaxed font-medium">
-                Somos una empresa familiar mexicana con 15 años de experiencia, dedicada a ofrecer soluciones de transporte de carga local y foráneo con los más altos estándares de la industria.
+                Somos una empresa familiar mexicana con 15 años de experiencia,
+                dedicada a ofrecer soluciones de transporte de carga local y
+                foráneo con los más altos estándares de la industria.
               </p>
 
               <div className="grid grid-cols-2 gap-6 mb-10">
                 <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100">
-                  <h4 className="text-3xl font-black text-gray-900 mb-1">+15</h4>
-                  <p className="text-sm text-gray-500 font-bold uppercase">Años de Exp.</p>
+                  <h4 className="text-3xl font-black text-gray-900 mb-1">
+                    +15
+                  </h4>
+                  <p className="text-sm text-gray-500 font-bold uppercase">
+                    Años de Exp.
+                  </p>
                 </div>
                 <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100">
-                  <h4 className="text-3xl font-black text-gray-900 mb-1">100%</h4>
-                  <p className="text-sm text-gray-500 font-bold uppercase">Mexicanos</p>
+                  <h4 className="text-3xl font-black text-gray-900 mb-1">
+                    100%
+                  </h4>
+                  <p className="text-sm text-gray-500 font-bold uppercase">
+                    Mexicanos
+                  </p>
                 </div>
               </div>
 
@@ -656,7 +692,6 @@ export default function Home() {
         </div>
       </section>
 
-
       {/* Value Proposition Section */}
       <section className="py-24 bg-white relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -674,7 +709,8 @@ export default function Home() {
             </h2>
             <div className="w-24 h-1.5 bg-yellow-400 mx-auto rounded-full mb-6"></div>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto font-medium">
-              Nuestra filosofía de trabajo se basa en cuatro pilares fundamentales que garantizan el éxito de su logística.
+              Nuestra filosofía de trabajo se basa en cuatro pilares
+              fundamentales que garantizan el éxito de su logística.
             </p>
           </motion.div>
 
@@ -683,30 +719,34 @@ export default function Home() {
               {
                 icon: Clock,
                 label: "Puntualidad y Seguridad",
-                description: "Entregas en tiempo récord bajo los más estrictos protocolos de monitoreo y seguridad 24/7.",
+                description:
+                  "Entregas en tiempo récord bajo los más estrictos protocolos de monitoreo y seguridad 24/7.",
                 color: "bg-blue-500",
-                shadow: "shadow-blue-200"
+                shadow: "shadow-blue-200",
               },
               {
                 icon: MessageSquare,
                 label: "Comunicación Constante",
-                description: "Mantenemos a nuestros clientes informados en tiempo real sobre el estatus de sus embarques.",
+                description:
+                  "Mantenemos a nuestros clientes informados en tiempo real sobre el estatus de sus embarques.",
                 color: "bg-purple-500",
-                shadow: "shadow-purple-200"
+                shadow: "shadow-purple-200",
               },
               {
                 icon: Settings,
                 label: "Flexibilidad y Adaptación",
-                description: "Diseñamos rutas y esquemas de transporte a la medida exacta de sus requerimientos.",
+                description:
+                  "Diseñamos rutas y esquemas de transporte a la medida exacta de sus requerimientos.",
                 color: "bg-orange-500",
-                shadow: "shadow-orange-200"
+                shadow: "shadow-orange-200",
               },
               {
                 icon: Award,
                 label: "Profesionalismo",
-                description: "Personal altamente capacitado y certificado para manejar cualquier tipo de carga.",
+                description:
+                  "Personal altamente capacitado y certificado para manejar cualquier tipo de carga.",
                 color: "bg-green-500",
-                shadow: "shadow-green-200"
+                shadow: "shadow-green-200",
               },
             ].map((item, index) => (
               <motion.div
@@ -725,11 +765,15 @@ export default function Home() {
                 className="spotlight-card group p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100 hover:bg-white hover:shadow-2xl transition-all duration-500 cursor-default"
               >
                 <div className="flex items-start gap-6 relative z-20">
-                  <div className={`w-20 h-20 rounded-[1.5rem] ${item.color} flex-shrink-0 flex items-center justify-center text-white shadow-2xl transition-transform group-hover:scale-110 group-hover:rotate-3`}>
+                  <div
+                    className={`w-20 h-20 rounded-[1.5rem] ${item.color} flex-shrink-0 flex items-center justify-center text-white shadow-2xl transition-transform group-hover:scale-110 group-hover:rotate-3`}
+                  >
                     <item.icon className="w-10 h-10" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-gray-900 mb-3">{item.label}</h3>
+                    <h3 className="text-2xl font-black text-gray-900 mb-3">
+                      {item.label}
+                    </h3>
                     <p className="text-gray-600 leading-relaxed font-medium">
                       {item.description}
                     </p>
@@ -784,7 +828,8 @@ export default function Home() {
             </h2>
             <div className="w-24 h-1.5 bg-yellow-400 mx-auto rounded-full mb-6"></div>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto font-medium">
-              Orgullosos de ser el socio estratégico de empresas líderes en su industria.
+              Orgullosos de ser el socio estratégico de empresas líderes en su
+              industria.
             </p>
           </motion.div>
 
@@ -1220,13 +1265,16 @@ export default function Home() {
           </div>
 
           <div className="border-t border-gray-800 pt-8 text-center text-gray-400">
-            <p>© {new Date().getFullYear()} Transportes GM. Todos los derechos reservados.</p>
+            <p>
+              © {new Date().getFullYear()} Transportes GM. Todos los derechos
+              reservados.
+            </p>
           </div>
         </div>
       </footer>
 
       {/* Floating WhatsApp Button */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.5, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ delay: 1 }}
@@ -1300,7 +1348,9 @@ function QuoteForm({ primaryColor, secondaryColor }) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid md:grid-cols-2 gap-6">
         <div className="space-y-2">
-          <label className="text-sm font-bold text-gray-700 ml-1">Nombre completo *</label>
+          <label className="text-sm font-bold text-gray-700 ml-1">
+            Nombre completo *
+          </label>
           <input
             type="text"
             name="name"
@@ -1312,7 +1362,9 @@ function QuoteForm({ primaryColor, secondaryColor }) {
           />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-bold text-gray-700 ml-1">Email *</label>
+          <label className="text-sm font-bold text-gray-700 ml-1">
+            Email *
+          </label>
           <input
             type="email"
             name="email"
@@ -1327,7 +1379,9 @@ function QuoteForm({ primaryColor, secondaryColor }) {
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="space-y-2">
-          <label className="text-sm font-bold text-gray-700 ml-1">Teléfono *</label>
+          <label className="text-sm font-bold text-gray-700 ml-1">
+            Teléfono *
+          </label>
           <input
             type="tel"
             name="phone"
@@ -1339,7 +1393,9 @@ function QuoteForm({ primaryColor, secondaryColor }) {
           />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-bold text-gray-700 ml-1">Empresa (opcional)</label>
+          <label className="text-sm font-bold text-gray-700 ml-1">
+            Empresa (opcional)
+          </label>
           <input
             type="text"
             name="company"
@@ -1352,7 +1408,9 @@ function QuoteForm({ primaryColor, secondaryColor }) {
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-bold text-gray-700 ml-1">Tu mensaje *</label>
+        <label className="text-sm font-bold text-gray-700 ml-1">
+          Tu mensaje *
+        </label>
         <textarea
           name="message"
           value={formData.message}
@@ -1365,7 +1423,7 @@ function QuoteForm({ primaryColor, secondaryColor }) {
       </div>
 
       {submitStatus === "success" && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-800 flex items-center gap-3"
@@ -1373,12 +1431,14 @@ function QuoteForm({ primaryColor, secondaryColor }) {
           <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white flex-shrink-0">
             <Award className="w-5 h-5" />
           </div>
-          <p className="font-medium">¡Cotización enviada con éxito! Te contactaremos pronto.</p>
+          <p className="font-medium">
+            ¡Cotización enviada con éxito! Te contactaremos pronto.
+          </p>
         </motion.div>
       )}
 
       {submitStatus === "error" && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-800 flex items-center gap-3"
@@ -1386,7 +1446,9 @@ function QuoteForm({ primaryColor, secondaryColor }) {
           <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white flex-shrink-0">
             <X className="w-5 h-5" />
           </div>
-          <p className="font-medium">Error al enviar. Por favor, llámanos directamente.</p>
+          <p className="font-medium">
+            Error al enviar. Por favor, llámanos directamente.
+          </p>
         </motion.div>
       )}
 
