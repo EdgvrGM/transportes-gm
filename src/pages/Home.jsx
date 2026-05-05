@@ -44,7 +44,7 @@ const staticWebsiteInfo = {
     },
   ],
   contact: {
-    phone: "+523131130198",
+    phone: "+523131911815",
     email: "ventas@transportesgm.mx",
     address: "Av. Marciano Cabrera 321, Tepeyac, Tecoman, Colima, 28110",
   },
@@ -455,7 +455,7 @@ export default function Home() {
                 </Button>
 
                 <a
-                  href={`https://wa.me/${websiteInfo?.contact?.phone?.replace(/\D/g, "") || "523131130198"}?text=Hola, me gustaría solicitar una cotización`}
+                  href={`https://wa.me/${websiteInfo?.contact?.phone?.replace(/\D/g, "") || "523131911815"}?text=Hola, me gustaría solicitar una cotización`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full sm:w-[280px]"
@@ -1035,9 +1035,9 @@ export default function Home() {
             {[
               {
                 icon: Phone,
-                title: "Teléfonos",
-                content: "+52 313 113 01 98",
-                content2: "+52 313 136 96 06",
+                title: "Teléfono",
+                content: "+52 313 324 2919",
+                //content2: "+52 313 136 96 06",
                 bgGradient: "from-yellow-50 to-orange-50",
                 iconBg: "from-yellow-400 to-orange-500",
               },
@@ -1281,7 +1281,7 @@ export default function Home() {
         className="floating-whatsapp"
       >
         <a
-          href={`https://wa.me/${websiteInfo?.contact?.phone?.replace(/\D/g, "") || "523131130198"}?text=Hola, me gustaría solicitar una cotización`}
+          href={`https://wa.me/${websiteInfo?.contact?.phone?.replace(/\D/g, "") || "523131911815"}?text=Hola, me gustaría solicitar una cotización`}
           target="_blank"
           rel="noopener noreferrer"
           className="block group relative"
