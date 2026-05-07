@@ -367,12 +367,10 @@ export default function FuelProgramaCargas() {
               fechaViaje = format(d, "yyyy-MM-dd");
             }
 
-            // Si el ID no es de 13 dígitos (generado por Date.now()), asumimos que es un ID válido de la BD (BIGINT o UUID)
-            const stringId = String(viaje.id || "");
-            const isDBId = viaje.id && stringId.length !== 13;
-
+            // Enviar siempre el ID. Si es nuevo (13 dígitos) o de BD (UUID/Int), 
+            // la DB lo necesita ya que la columna es NOT NULL y podría no tener autoincremento.
             viajesRows.push({
-              ...(isDBId ? { id: viaje.id } : {}), // Mantener el ID para UPSERT si es de BD
+              ...(viaje.id ? { id: viaje.id } : {}),
               programa_id: programaId,                          
               cliente_id: viaje.cliente || null,               
               conductor_id: viaje.conductor ? parseInt(viaje.conductor, 10) : null, 
