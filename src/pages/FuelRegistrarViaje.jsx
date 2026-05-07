@@ -40,6 +40,9 @@ export default function FuelRegistrarViaje() {
   const [mostrarNuevoConductor, setMostrarNuevoConductor] = useState(false);
   const [mostrarNuevoCamion, setMostrarNuevoCamion] = useState(false);
 
+  const viajeRegistradoId = stateData.viaje_registrado_id || null;
+  const esVinculado = !!viajeRegistradoId;
+
   const [viaje, setViaje] = useState({
     fecha: stateData.fecha || new Date().toLocaleDateString("en-CA"),
     fecha_llegada: "",
@@ -129,15 +132,48 @@ export default function FuelRegistrarViaje() {
 
   const crearViajeMutation = useMutation({
     mutationFn: async (data) => {
+      // Intentar inserción con viaje_id
       const { data: result, error } = await supabase
         .from("Viaje")
         .insert([data])
         .select();
-      if (error) throw new Error(error.message);
-      return result;
+        
+      if (error) {
+        // Fallback: Si la columna viaje_id no existe en la tabla legacy
+        if (error.message.includes("viaje_id") || error.code === "PGRST204" || error.code === "42703") {
+          const { viaje_id, ...dataSinViajeId } = data;
+          const { data: resultFallback, error: errorFallback } = await supabase
+            .from("Viaje")
+            .insert([dataSinViajeId])
+            .select();
+          if (errorFallback) throw new Error(errorFallback.message);
+          return { result: resultFallback, usabaViajeId: false };
+        }
+        throw new Error(error.message);
+      }
+      return { result, usabaViajeId: true };
     },
-    onSuccess: () => {
+    onSuccess: async ({ result, usabaViajeId }) => {
+      // Cierre del Ciclo: Actualizar tabla de viajes_registrados
+      if (viajeRegistradoId) {
+        await supabase
+          .from("viajes_registrados")
+          .update({ combustible_registrado: true })
+          .eq("id", viajeRegistradoId);
+      } else {
+        // Soft Update: Si no hay ID directo, buscamos por coincidencia de datos
+        // para asegurar que el dashboard se mantenga al día.
+        await supabase
+          .from("viajes_registrados")
+          .update({ combustible_registrado: true })
+          .match({
+            fecha_viaje: viaje.fecha,
+            conductor_id: viaje.conductor_id,
+            camion_id: viaje.camion_id
+          });
+      }
       queryClient.invalidateQueries({ queryKey: ["viajes"] });
+      queryClient.invalidateQueries({ queryKey: ["viajes_registrados"] });
       navigate(createPageUrl("ControlCombustible"));
     },
     onError: (err) => {
@@ -257,8 +293,10 @@ export default function FuelRegistrarViaje() {
       casetas_ida: viaje.casetas_ida ? parseFloat(viaje.casetas_ida) : null, // <-- NUEVO
       casetas_regreso: viaje.casetas_regreso
         ? parseFloat(viaje.casetas_regreso)
-        : null, // <-- NUEVO
+        : null,
       notas: viaje.notas,
+      // Se incluye como BIGINT (número entero)
+      viaje_id: viajeRegistradoId ? parseInt(viajeRegistradoId, 10) : null,
     };
     crearViajeMutation.mutate(datosViaje);
   };
@@ -356,6 +394,15 @@ export default function FuelRegistrarViaje() {
           </Alert>
         )}
 
+        {esVinculado && (
+          <Alert className="mb-6 bg-blue-50/80 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100 border-blue-200 dark:border-blue-800 shadow-sm rounded-xl">
+            <AlertDescription className="font-bold flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              Registro vinculado al Programa de Cargas - Datos de unidad y ruta protegidos
+            </AlertDescription>
+          </Alert>
+        )}
+
         <Card className="border-none shadow-xl bg-card">
           <CardHeader className="border-b border-border bg-muted/20">
             <CardTitle className="text-xl font-bold text-foreground">
@@ -441,6 +488,7 @@ export default function FuelRegistrarViaje() {
                       value={viaje.conductor_id}
                       onValueChange={handleConductorChange}
                       required
+                      disabled={esVinculado}
                     >
                       <SelectTrigger className="bg-background border-input">
                         <SelectValue placeholder="Seleccionar" />
@@ -500,6 +548,7 @@ export default function FuelRegistrarViaje() {
                       value={viaje.camion_id}
                       onValueChange={handleCamionChange}
                       required
+                      disabled={esVinculado}
                     >
                       <SelectTrigger className="bg-background border-input">
                         <SelectValue placeholder="Seleccionar" />
@@ -562,6 +611,7 @@ export default function FuelRegistrarViaje() {
                       })
                     }
                     required
+                    disabled={esVinculado}
                   >
                     <SelectTrigger className="bg-background border-input font-medium">
                       <SelectValue placeholder="Seleccionar" />
@@ -580,6 +630,7 @@ export default function FuelRegistrarViaje() {
                   <Select
                     value={viaje.remolque_id}
                     onValueChange={(val) => setViaje({ ...viaje, remolque_id: val })}
+                    disabled={esVinculado}
                   >
                     <SelectTrigger className="bg-background border-input">
                       <SelectValue placeholder="Seleccionar" />
@@ -605,6 +656,7 @@ export default function FuelRegistrarViaje() {
                     <Select
                       value={viaje.remolque2_id}
                       onValueChange={(val) => setViaje({ ...viaje, remolque2_id: val })}
+                      disabled={esVinculado}
                     >
                       <SelectTrigger className="bg-background border-input">
                         <SelectValue placeholder="Seleccionar" />

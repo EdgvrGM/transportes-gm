@@ -50,10 +50,13 @@ import {
   Ticket,
   ArrowLeft,
   Layers,
+  Briefcase,
 } from "lucide-react";
 import { format, getISOWeek, getYear } from "date-fns";
 import { es } from "date-fns/locale";
 import FiltrosViajes from "@/components/fuel/FiltrosViajes";
+
+const FECHA_LIMITE_ARCHIVO = '2026-04-24';
 
 export default function FuelViajes() {
   const location = useLocation();
@@ -63,6 +66,7 @@ export default function FuelViajes() {
   const [fechaFin, setFechaFin] = useState(stateData.fechaFin || "");
   const [conductorFiltro, setConductorFiltro] = useState(stateData.conductorFiltro || "todos");
   const [camionFiltro, setCamionFiltro] = useState("todos");
+  const [clienteFiltro, setClienteFiltro] = useState("todos");
   const [rutaFiltro, setRutaFiltro] = useState("");
   const [periodoFiltro, setPeriodoFiltro] = useState(stateData.periodoFiltro || "todos");
   const [viajeAEliminar, setViajeAEliminar] = useState(null);
@@ -96,10 +100,13 @@ export default function FuelViajes() {
       const { data, error } = await supabase
         .from("Viaje")
         .select("*")
+        .gte("fecha", FECHA_LIMITE_ARCHIVO)
         .order("fecha", { ascending: false });
       if (error) throw new Error(error.message);
       return data;
     },
+    staleTime: 0,
+    gcTime: 0,
   });
 
   const { data: conductores = [] } = useQuery({
@@ -128,6 +135,51 @@ export default function FuelViajes() {
       return data;
     },
   });
+
+  const { data: clientes = [] } = useQuery({
+    queryKey: ["clientes"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("Cliente").select("*");
+      if (error) throw new Error(error.message);
+      return data;
+    },
+  });
+
+  const { data: viajesRegistrados = [] } = useQuery({
+    queryKey: ["viajesRegistradosAll"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("viajes_registrados").select("*");
+      if (error) throw new Error(error.message);
+      return data;
+    },
+    staleTime: 0,
+    gcTime: 0,
+  });
+
+  const getClienteDelViaje = (viaje) => {
+    if (!viaje) return null;
+    
+    // 1. Intento por ID directo (el más preciso)
+    let vr = null;
+    if (viaje.viaje_id) {
+      vr = viajesRegistrados.find((v) => String(v.id) === String(viaje.viaje_id));
+    }
+    
+    // 2. Intento por Validación Inteligente (Misma que Programa de Cargas)
+    if (!vr) {
+      const fechaBusqueda = viaje.fecha ? viaje.fecha.split("T")[0] : "";
+      vr = viajesRegistrados.find((v) => {
+        const matchFecha = v.fecha_viaje === fechaBusqueda;
+        const matchConductor = String(v.conductor_id) === String(viaje.conductor_id);
+        const matchCamion = String(v.camion_id) === String(viaje.camion_id);
+        return matchFecha && matchConductor && matchCamion;
+      });
+    }
+
+    if (!vr) return null;
+    const cliente = clientes.find((c) => String(c.id) === String(vr.cliente_id));
+    return cliente ? cliente.nombre : null;
+  };
 
   const getRemolquePlacas = (id) => {
     const r = remolques.find((r) => String(r.id) === String(id));
@@ -201,6 +253,11 @@ export default function FuelViajes() {
       cumpleFiltros = false;
     if (camionFiltro !== "todos" && String(viaje.camion_id) !== camionFiltro)
       cumpleFiltros = false;
+    if (clienteFiltro !== "todos") {
+      const clienteNombre = getClienteDelViaje(viaje);
+      const clienteIdMatch = clientes.find(c => c.nombre === clienteNombre)?.id;
+      if (String(clienteIdMatch) !== clienteFiltro) cumpleFiltros = false;
+    }
     if (
       rutaFiltro &&
       !rutaPrincipal.toLowerCase().includes(rutaFiltro.toLowerCase())
@@ -214,6 +271,7 @@ export default function FuelViajes() {
     setFechaFin("");
     setConductorFiltro("todos");
     setCamionFiltro("todos");
+    setClienteFiltro("todos");
     setRutaFiltro("");
     setPeriodoFiltro("todos");
   };
@@ -248,6 +306,7 @@ export default function FuelViajes() {
       casetas_regreso: viaje.casetas_regreso || "",
       remolque_id: viaje.remolque_id ? String(viaje.remolque_id) : "",
       remolque2_id: viaje.remolque2_id ? String(viaje.remolque2_id) : "",
+      viaje_id: viaje.viaje_id || null,
       notas: viaje.notas || "",
     });
     setDialogAbierto(true);
@@ -276,6 +335,7 @@ export default function FuelViajes() {
       casetas_regreso: "",
       remolque_id: "",
       remolque2_id: "",
+      viaje_id: null,
       notas: "",
     });
   };
@@ -415,12 +475,15 @@ export default function FuelViajes() {
             setConductorFiltro={setConductorFiltro}
             camionFiltro={camionFiltro}
             setCamionFiltro={setCamionFiltro}
+            clienteFiltro={clienteFiltro}
+            setClienteFiltro={setClienteFiltro}
             rutaFiltro={rutaFiltro}
             setRutaFiltro={setRutaFiltro}
             periodoFiltro={periodoFiltro}
             setPeriodoFiltro={setPeriodoFiltro}
             conductores={conductores}
             camiones={camiones}
+            clientes={clientes}
             limpiarFiltros={limpiarFiltros}
           />
         </div>
@@ -566,8 +629,8 @@ export default function FuelViajes() {
                       className="border border-border bg-card hover:shadow-md transition-shadow"
                     >
                       <CardContent className="p-4 md:p-6">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 items-center">
                             {/* COL 1: FECHAS */}
                             <div className="space-y-3">
                               <div className="flex flex-wrap items-start gap-4">
@@ -644,6 +707,14 @@ export default function FuelViajes() {
                             {/* COL 2: RUTAS */}
                             <div className="space-y-3">
                               <div className="space-y-2">
+                                {getClienteDelViaje(viaje) && (
+                                  <div className="flex items-center gap-1.5 mb-1.5">
+                                    <Briefcase className="w-4 h-4 text-muted-foreground" />
+                                    <span className="text-[13px] font-black uppercase tracking-tight text-foreground">
+                                      {getClienteDelViaje(viaje)}
+                                    </span>
+                                  </div>
+                                )}
                                 <Badge
                                   variant="outline"
                                   className={`w-fit text-[10px] px-1.5 py-0 uppercase font-bold tracking-wider mb-1 ${isFull ? "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800" : "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800"}`}
@@ -690,24 +761,6 @@ export default function FuelViajes() {
                                     <span className="text-sm font-semibold text-foreground block">
                                       {formatNumber(kmTotal, 0)} km
                                     </span>
-                                    {(tieneRegreso || tieneAdicionales) && (
-                                      <span className="text-[10px] text-muted-foreground block mt-0.5">
-                                        ({formatNumber(kmIda, 0)}
-                                        {tieneAdicionales &&
-                                          ` + ${formatNumber(
-                                            rutasAdicionales.reduce(
-                                              (sum, r) =>
-                                                sum +
-                                                parseFloat(r.kilometros || 0),
-                                              0,
-                                            ),
-                                            0,
-                                          )}`}
-                                        {tieneRegreso &&
-                                          ` + ${formatNumber(kmRegreso, 0)}`}
-                                        )
-                                      </span>
-                                    )}
                                   </div>
                                 </div>
                                 <div className="flex items-center justify-between">
@@ -796,7 +849,16 @@ export default function FuelViajes() {
                 Editar Viaje
               </DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+             <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+              {getClienteDelViaje(formData) && (
+                <div className="p-4 bg-slate-100/50 dark:bg-muted/30 border border-border rounded-xl flex items-center gap-3">
+                  <Briefcase className="w-5 h-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cliente Programado</p>
+                    <p className="font-bold text-lg text-foreground">{getClienteDelViaje(formData)}</p>
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="space-y-2">
                   <Label

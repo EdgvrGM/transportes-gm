@@ -11,6 +11,8 @@ import FuelProgramaCargas from "./FuelProgramaCargas";
 import Login from "./Login.jsx";
 import ProtectedRoute from "./ProtectedRoute.jsx";
 import Clientes from "./Clientes"; // <-- Importado correctamente
+import IAAuditorChat from "./IAAuditorChat.jsx";
+import ExpertoLogistica from "./ExpertoLogistica.jsx";
 import {
   BrowserRouter as Router,
   Route,
@@ -31,6 +33,8 @@ const PAGES = {
   FuelProgramaCargas: FuelProgramaCargas,
   Login: Login,
   Clientes: Clientes, // <-- ¡Este era el detalle que faltaba!
+  IAAuditorChat: IAAuditorChat,
+  ExpertoLogistica: ExpertoLogistica,
 };
 
 function _getCurrentPage(url) {
@@ -70,6 +74,8 @@ function PagesContent() {
           <Route path="/fuelviajes" element={<FuelViajes />} />
           <Route path="/fuelprogramacargas" element={<FuelProgramaCargas />} />
           <Route path="/clientes" element={<Clientes />} />
+          <Route path="/iaauditorchat" element={<IAAuditorChat />} />
+          <Route path="/expertologistica" element={<ExpertoLogistica />} />
         </Route>
       </Routes>
     </Layout>

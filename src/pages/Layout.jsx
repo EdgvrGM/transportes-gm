@@ -19,6 +19,7 @@ import {
   ChevronRight,
   Settings2,
   Fuel,
+  Sparkles,
 } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
 
@@ -89,6 +90,7 @@ export default function Layout({ children, currentPageName }) {
     "FuelConductores",
     "FuelCamiones",
     "FuelRemolques",
+    "ExpertoLogistica",
   ];
 
   const isPublicRoute = ["/", "/home", "/login"].includes(
@@ -291,6 +293,25 @@ export default function Layout({ children, currentPageName }) {
               )}
             </div>
           </nav>
+
+          {/* EXPERTO EN LOGÍSTICA IA */}
+          <div className="mt-4 pt-3 border-t border-border">
+            <Link
+              to={createPageUrl("ExpertoLogistica")}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                location.pathname === createPageUrl("ExpertoLogistica")
+                  ? "bg-violet-600 text-white shadow-lg shadow-violet-500/25"
+                  : "bg-violet-50 dark:bg-violet-900/10 text-violet-700 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-900/20 border border-violet-200 dark:border-violet-800/40"
+              }`}
+            >
+              <Sparkles className="w-5 h-5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-sm leading-none">Experto en Logística</p>
+                <p className="text-[10px] opacity-70 mt-0.5 leading-none">Transportes GM · IA</p>
+              </div>
+              <span className="text-[9px] font-black px-1.5 py-0.5 rounded-md bg-violet-200 dark:bg-violet-700 text-violet-700 dark:text-violet-200">IA</span>
+            </Link>
+          </div>
         </div>
 
         {/* PIE DEL SIDEBAR */}

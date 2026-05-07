@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/supabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -47,10 +47,14 @@ import {
   Eye,
   Fuel,
   CheckCircle2,
+  Brain,
+  Download,
 } from "lucide-react";
 import { format, addDays, parseISO, getISOWeek } from "date-fns";
 import { es } from "date-fns/locale";
 import { TrailerIcon } from "./Layout";
+
+const FECHA_LIMITE_ARCHIVO = '2026-04-24';
 
 const DIAS_SEMANA = [
   "Lunes",
@@ -189,10 +193,13 @@ export default function FuelProgramaCargas() {
       const { data, error } = await supabase
         .from("ProgramaCargas")
         .select("*")
+        .gte("fecha_inicio", FECHA_LIMITE_ARCHIVO)
         .order("fecha_inicio", { ascending: false });
       if (error) throw new Error(error.message);
       return data;
     },
+    staleTime: 0,
+    gcTime: 0,
   });
 
   const { data: clientes = [] } = useQuery({
@@ -227,6 +234,81 @@ export default function FuelProgramaCargas() {
     },
   });
 
+  const { data: viajesRegistrados = [] } = useQuery({
+    queryKey: ["viajesRegistrados", programaSeleccionado?.id],
+    enabled: !!programaSeleccionado?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("viajes_registrados")
+        .select("*")
+        .eq("programa_id", programaSeleccionado.id);
+      if (error) throw new Error(error.message);
+
+      if ((!data || data.length === 0) && programaSeleccionado.programacion) {
+        const legacyData = programaSeleccionado.programacion;
+        const hasLegacyTrips = Object.values(legacyData).some(
+          (dia) => Array.isArray(dia) && dia.length > 0
+        );
+
+        if (hasLegacyTrips) {
+          const diasMap = {
+            Lunes: 0, Martes: 1, "Miércoles": 2, Jueves: 3, Viernes: 4, Sábado: 5,
+          };
+          const fechaInicio = programaSeleccionado.fecha_inicio
+            ? new Date(programaSeleccionado.fecha_inicio + "T12:00:00")
+            : null;
+
+          const viajesRows = [];
+          for (const [dia, viajesDia] of Object.entries(legacyData)) {
+            if (!Array.isArray(viajesDia)) continue;
+            const offsetDia = diasMap[dia] ?? 0;
+
+            for (const viaje of viajesDia) {
+              if (!viaje.conductor || !viaje.camion || !viaje.cliente) continue;
+
+              let fechaViaje = null;
+              if (fechaInicio) {
+                const d = new Date(fechaInicio);
+                d.setDate(d.getDate() + offsetDia);
+                fechaViaje = format(d, "yyyy-MM-dd");
+              }
+
+              viajesRows.push({
+                programa_id: programaSeleccionado.id,
+                cliente_id: viaje.cliente || null,
+                conductor_id: viaje.conductor ? parseInt(viaje.conductor, 10) : null,
+                camion_id: viaje.camion ? parseInt(viaje.camion, 10) : null,
+                remolque_id: viaje.remolque ? parseInt(viaje.remolque, 10) : null,
+                remolque2_id: viaje.remolque2 ? parseInt(viaje.remolque2, 10) : null,
+                destino: viaje.destino || null,
+                modalidad: viaje.modalidad || "Sencillo",
+                fecha_viaje: fechaViaje,
+              });
+            }
+          }
+
+          if (viajesRows.length > 0) {
+            const { data: insertedData, error: insertError } = await supabase
+              .from("viajes_registrados")
+              .insert(viajesRows)
+              .select("*");
+            
+            if (!insertError && insertedData) {
+              return insertedData;
+            } else if (insertError) {
+               console.error("Error migrando datos al vuelo:", insertError);
+            }
+          }
+        }
+      }
+
+      return data || [];
+    },
+    staleTime: 0,
+    gcTime: 0,
+  });
+
+  // Query legacy de Viaje (para compatibilidad con consumo registrado)
   const { data: viajes = [] } = useQuery({
     queryKey: ["viajes"],
     queryFn: async () => {
@@ -236,28 +318,132 @@ export default function FuelProgramaCargas() {
   });
 
   const guardarMutation = useMutation({
+    onMutate: () => setErrorMsg(null),
     mutationFn: async (datos) => {
-      const payload = {
-        titulo: datos.titulo,
-        fecha_inicio: datos.fecha_inicio,
-        fecha_fin: datos.fecha_fin,
-        programacion: datos.programacion,
-      };
-      if (datos.id) {
-        const { error } = await supabase
-          .from("ProgramaCargas")
-          .update(payload)
-          .eq("id", datos.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("ProgramaCargas")
-          .insert([payload]);
-        if (error) throw error;
+      try {
+        // 1. Upsert en ProgramaCargas
+        const payload = {
+          titulo: datos.titulo,
+          fecha_inicio: datos.fecha_inicio,
+          fecha_fin: datos.fecha_fin,
+          programacion: datos.programacion,
+        };
+
+        let programaId = datos.id;
+
+        if (datos.id) {
+          const { error } = await supabase
+            .from("ProgramaCargas")
+            .update(payload)
+            .eq("id", datos.id);
+          if (error) throw error;
+        } else {
+          const { data: insertData, error } = await supabase
+            .from("ProgramaCargas")
+            .insert([payload])
+            .select("id")
+            .single();
+          if (error) throw error;
+          programaId = insertData.id;
+        }
+
+        // 2. Construir registros para viajes_registrados desde la programación
+        const diasMap = {
+          Lunes: 0, Martes: 1, "Miércoles": 2, Jueves: 3, Viernes: 4, Sábado: 5,
+        };
+        const fechaInicio = datos.fecha_inicio ? new Date(datos.fecha_inicio + "T12:00:00") : null;
+
+        const viajesRows = [];
+        for (const [dia, viajesDia] of Object.entries(datos.programacion)) {
+          const offsetDia = diasMap[dia] ?? 0;
+          for (const viaje of viajesDia) {
+            if (!viaje.conductor && !viaje.camion && !viaje.cliente) continue;
+
+            // Calcular fecha del viaje según día de la semana
+            let fechaViaje = null;
+            if (fechaInicio) {
+              const d = new Date(fechaInicio);
+              d.setDate(d.getDate() + offsetDia);
+              fechaViaje = format(d, "yyyy-MM-dd");
+            }
+
+            // Si el ID no es de 13 dígitos (generado por Date.now()), asumimos que es un ID válido de la BD (BIGINT o UUID)
+            const stringId = String(viaje.id || "");
+            const isDBId = viaje.id && stringId.length !== 13;
+
+            viajesRows.push({
+              ...(isDBId ? { id: viaje.id } : {}), // Mantener el ID para UPSERT si es de BD
+              programa_id: programaId,                          
+              cliente_id: viaje.cliente || null,               
+              conductor_id: viaje.conductor ? parseInt(viaje.conductor, 10) : null, 
+              camion_id: viaje.camion ? parseInt(viaje.camion, 10) : null,           
+              remolque_id: viaje.remolque ? parseInt(viaje.remolque, 10) : null,     
+              remolque2_id: viaje.remolque2 ? parseInt(viaje.remolque2, 10) : null,  
+              destino: viaje.destino || null,
+              modalidad: viaje.modalidad || "Sencillo",
+              fecha_viaje: fechaViaje,
+            });
+          }
+        }
+
+        // 3. Sincronización Inteligente: Eliminar solo los que faltan y hacer UPSERT del resto
+        const { data: dbTrips } = await supabase
+          .from("viajes_registrados")
+          .select("id")
+          .eq("programa_id", programaId);
+
+        if (dbTrips) {
+          const uiIds = viajesRows.filter(v => v.id != null).map(v => String(v.id));
+          const dbIds = dbTrips.map(t => String(t.id));
+          const toDelete = dbIds.filter(id => !uiIds.includes(id));
+
+          if (toDelete.length > 0) {
+            const { error: delErr, count } = await supabase
+              .from("viajes_registrados")
+              .delete({ count: "exact" })
+              .in("id", toDelete);
+              
+            if (delErr) {
+              throw new Error(`No se pudo eliminar un viaje. Es probable que ya tenga consumos vinculados. Detalle: ${delErr.message}`);
+            }
+            if (count === 0) {
+              throw new Error("La base de datos bloqueó la eliminación del viaje. Verifica las políticas de seguridad (RLS) en Supabase.");
+            }
+          }
+        }
+
+        if (viajesRows.length > 0) {
+          const { error: upsertError } = await supabase
+            .from("viajes_registrados")
+            .upsert(viajesRows);
+
+          if (upsertError) {
+            // Detección de errores de foreign key constraint
+            const msg = upsertError.message || "";
+            if (msg.includes("violates check constraint")) {
+              throw new Error(`Error de validación: ${msg}. Los datos enviados no cumplen con las reglas de la base de datos.`);
+            } else if (msg.includes("foreign key") || msg.includes("violates")) {
+              if (msg.includes("cliente_id")) {
+                throw new Error("Error de clave foránea en Cliente: el UUID del cliente no existe en la tabla Cliente.");
+              } else if (msg.includes("conductor_id")) {
+                throw new Error("Error de clave foránea en Chofer: el ID del conductor no existe en el catálogo.");
+              } else if (msg.includes("camion_id")) {
+                throw new Error("Error de clave foránea en Unidad: el ID del camión no existe en el catálogo.");
+              } else if (msg.includes("remolque_id")) {
+                throw new Error("Error de clave foránea en Remolque: el ID del remolque no existe en el catálogo.");
+              }
+              throw new Error(`Error de integridad referencial: ${msg}. Verifica los catálogos.`);
+            }
+            throw upsertError;
+          }
+        }
+      } catch (err) {
+        throw err;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["programaCargas"] });
+      queryClient.invalidateQueries({ queryKey: ["viajesRegistrados"] });
       setDialogAbierto(false);
     },
     onError: (err) => setErrorMsg(err.message),
@@ -291,12 +477,47 @@ export default function FuelProgramaCargas() {
     setDialogAbierto(true);
   };
 
-  const abrirDialogEditar = (programa) => {
+  const abrirDialogEditar = async (programa) => {
     setErrorMsg(null);
+    setProgramaSeleccionado(programa); // Para pre-cargar dependencias
+    
+    // Extraer datos reales de la BD para popular el formulario con UUIDs verdaderos
+    const { data: realTrips } = await supabase
+      .from("viajes_registrados")
+      .select("*")
+      .eq("programa_id", programa.id);
+
+    let programacionUI = JSON.parse(JSON.stringify(PLANTILLA_VACIA));
+    
+    if (realTrips && realTrips.length > 0) {
+      realTrips.forEach(rt => {
+        // Encontrar en qué pestaña de día va basado en la fecha del viaje
+        const date = new Date(rt.fecha_viaje + "T12:00:00");
+        const fInicio = new Date(programa.fecha_inicio + "T12:00:00");
+        const diffTime = Math.abs(date - fInicio);
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        const diasInvertidos = { 0: "Lunes", 1: "Martes", 2: "Miércoles", 3: "Jueves", 4: "Viernes", 5: "Sábado" };
+        const nombreDia = diasInvertidos[diffDays] || "Lunes";
+        
+        programacionUI[nombreDia].push({
+          id: rt.id, // UUID real
+          cliente: rt.cliente_id || "",
+          conductor: rt.conductor_id ? String(rt.conductor_id) : "",
+          camion: rt.camion_id ? String(rt.camion_id) : "",
+          remolque: rt.remolque_id ? String(rt.remolque_id) : "",
+          remolque2: rt.remolque2_id ? String(rt.remolque2_id) : "",
+          destino: rt.destino || "",
+          modalidad: rt.modalidad || "Sencillo",
+        });
+      });
+    } else {
+      // Fallback a legacy si no hay registros relacionales aún
+      programacionUI = programa.programacion || JSON.parse(JSON.stringify(PLANTILLA_VACIA));
+    }
+
     setFormData({
       ...programa,
-      programacion:
-        programa.programacion || JSON.parse(JSON.stringify(PLANTILLA_VACIA)),
+      programacion: programacionUI,
     });
     setDiaActivo("Lunes");
     setDialogVerAbierto(false);
@@ -304,11 +525,18 @@ export default function FuelProgramaCargas() {
   };
 
   const abrirDialogVer = (programa) => {
+    // Bloqueo de datos archivados
+    if (programa.fecha_inicio < FECHA_LIMITE_ARCHIVO) {
+      alert("Estos datos han sido archivados para optimizar el rendimiento. Contacte al administrador para consultas históricas.");
+      return;
+    }
     setProgramaSeleccionado(programa);
     const primerDia =
-      DIAS_SEMANA.find((dia) => programa.programacion[dia]?.length > 0) ||
+      DIAS_SEMANA.find((dia) => programa.programacion?.[dia]?.length > 0) ||
       "Lunes";
     setDiaVerActivo(primerDia);
+    // Invalidar query de viajes_registrados para el nuevo programa
+    queryClient.invalidateQueries({ queryKey: ["viajesRegistrados", programa.id] });
     setDialogVerAbierto(true);
   };
 
@@ -411,6 +639,7 @@ export default function FuelProgramaCargas() {
 
     navigate(createPageUrl("FuelRegistrarViaje"), {
       state: {
+        viaje_registrado_id: viaje.id || null, // ID del viaje en viajes_registrados
         fecha: format(fechaViaje, "yyyy-MM-dd"),
         conductor_id: viaje.conductor,
         conductor_nombre: conductor ? conductor.nombre : "",
@@ -439,6 +668,28 @@ export default function FuelProgramaCargas() {
       const matchCamion = String(v.camion_id) === String(viajeProgramado.camion);
       return matchFecha && matchConductor && matchCamion;
     });
+  };
+
+  const getViajesPorDia = (dia) => {
+    if (!programaSeleccionado || !viajesRegistrados) return [];
+    const diasMap = { "Lunes": 0, "Martes": 1, "Miércoles": 2, "Jueves": 3, "Viernes": 4, "Sábado": 5 };
+    const indexDia = diasMap[dia] || 0;
+    const fechaInicio = parseISO(programaSeleccionado.fecha_inicio);
+    const fechaDia = format(addDays(fechaInicio, indexDia), "yyyy-MM-dd");
+    
+    return viajesRegistrados
+      .filter(v => v.fecha_viaje && v.fecha_viaje.startsWith(fechaDia))
+      .map(v => ({
+        id: v.id,
+        cliente: v.cliente_id,
+        conductor: v.conductor_id ? String(v.conductor_id) : "",
+        camion: v.camion_id ? String(v.camion_id) : "",
+        remolque: v.remolque_id ? String(v.remolque_id) : "",
+        remolque2: v.remolque2_id ? String(v.remolque2_id) : "",
+        destino: v.destino,
+        modalidad: v.modalidad || "Sencillo",
+        esRegistrado: true,
+      }));
   };
 
   const getEficienciaColor = (kmPorLitro) => {
@@ -481,7 +732,7 @@ export default function FuelProgramaCargas() {
               key={prog.id}
               prog={prog}
               onVer={abrirDialogVer}
-              totalViajes={Object.values(prog.programacion).reduce(
+              totalViajes={Object.values(prog.programacion || {}).reduce(
                 (acc, v) => acc + (v?.length || 0),
                 0,
               )}
@@ -534,16 +785,17 @@ export default function FuelProgramaCargas() {
                     <span className="hidden sm:inline">{dia}</span>
                     <span className="sm:hidden">{dia.substring(0,3)}</span>{" "}
                     <span className="ml-0.5 opacity-50">
-                      ({programaSeleccionado?.programacion[dia]?.length || 0})
+                      ({getViajesPorDia(dia).length})
                     </span>
                   </button>
                 ))}
               </div>
               <div className="border border-border/80 bg-background dark:bg-card rounded-2xl overflow-hidden shadow-sm divide-y divide-border/60">
-                {(programaSeleccionado?.programacion[diaVerActivo] || []).map(
-                  (viaje, idx) => (
+                {getViajesPorDia(diaVerActivo).map(
+                  (viaje, idx) => {
+                    return (
                     <div
-                      key={idx}
+                      key={viaje.id || idx}
                       className={`relative group p-6 md:px-8 md:py-6 flex flex-col gap-6 transition-all duration-300 ${
                         idx % 2 === 0 ? "bg-background dark:bg-card" : "bg-slate-50/40 dark:bg-muted/20"
                       } hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20`}
@@ -620,17 +872,19 @@ export default function FuelProgramaCargas() {
                           const registeredViaje = getRegisteredTrip(viaje, diaVerActivo);
                           if (registeredViaje) {
                             return (
-                                <Button
-                                  variant="outline"
-                                  onClick={() => {
-                                    setViajeConsumoSeleccionado(registeredViaje);
-                                    setDialogConsumoAbierto(true);
-                                  }}
-                                  className="h-9 px-6 gap-2 border-green-200 text-green-700 bg-green-50/50 hover:bg-green-100 dark:border-green-900/30 dark:text-green-400 dark:bg-green-900/20 dark:hover:bg-green-900/40 rounded-xl font-black text-[10px] shadow-sm active:scale-95 transition-all"
-                                >
-                                  <Eye className="w-3.5 h-3.5" />
-                                  <span>VER CONSUMO REGISTRADO</span>
-                                </Button>
+                                <div className="flex gap-2 w-full justify-center">
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                      setViajeConsumoSeleccionado(registeredViaje);
+                                      setDialogConsumoAbierto(true);
+                                    }}
+                                    className="h-9 px-6 gap-2 border-green-200 text-green-700 bg-green-50/50 hover:bg-green-100 dark:border-green-900/30 dark:text-green-400 dark:bg-green-900/20 dark:hover:bg-green-900/40 rounded-xl font-black text-[10px] shadow-sm active:scale-95 transition-all"
+                                  >
+                                    <Eye className="w-3.5 h-3.5" />
+                                    <span>VER CONSUMO REGISTRADO</span>
+                                  </Button>
+                                </div>
                             );
                           }
                           return (
@@ -646,7 +900,8 @@ export default function FuelProgramaCargas() {
                         })()}
                       </div>
                     </div>
-                  ),
+                  );
+                }
                 )}
               </div>
             </div>

@@ -20,12 +20,15 @@ export default function FiltrosViajes({
   setConductorFiltro,
   camionFiltro,
   setCamionFiltro,
+  clienteFiltro,
+  setClienteFiltro,
   rutaFiltro,
   setRutaFiltro,
   periodoFiltro,
   setPeriodoFiltro,
   conductores = [],
   camiones = [],
+  clientes = [],
   limpiarFiltros,
 }) {
   const semanas = Array.from({ length: 53 }, (_, i) => i + 1);
@@ -160,6 +163,25 @@ export default function FiltrosViajes({
                 </Select>
               </div>
             )}
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">
+                Cliente
+              </label>
+              <Select value={clienteFiltro} onValueChange={setClienteFiltro}>
+                <SelectTrigger className="border-input bg-background">
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  {clientes.map((cliente) => (
+                    <SelectItem key={cliente.id} value={String(cliente.id)}>
+                      {cliente.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
