@@ -21,6 +21,8 @@ import RankingConductores from "../components/fuel/RankingConductores";
 import AnomaliasCombustible from "../components/fuel/AnomaliasCombustible";
 import { DollarSign } from "lucide-react";
 
+const FECHA_LIMITE_ARCHIVO = '2026-04-24';
+
 export default function ControlCombustible() {
   const navigate = useNavigate();
   const [fechaInicio, setFechaInicio] = useState("");
@@ -35,7 +37,7 @@ export default function ControlCombustible() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("Viaje")
-        .select("*")
+        .select("*").gte("fecha", FECHA_LIMITE_ARCHIVO)
         .order("fecha", { ascending: false });
       if (error) throw new Error(error.message);
       return data;
