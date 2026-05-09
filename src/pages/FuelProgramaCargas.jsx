@@ -49,6 +49,7 @@ import {
   CheckCircle2,
   Brain,
   Download,
+  ArrowRight,
 } from "lucide-react";
 import { format, addDays, parseISO, getISOWeek } from "date-fns";
 import { es } from "date-fns/locale";
@@ -517,7 +518,7 @@ export default function FuelProgramaCargas() {
       ...programa,
       programacion: programacionUI,
     });
-    setDiaActivo("Lunes");
+    setDiaActivo(diaVerActivo);
     setDialogVerAbierto(false);
     setDialogAbierto(true);
   };
@@ -1319,9 +1320,23 @@ export default function FuelProgramaCargas() {
                 )}
               </div>
             )}
-            <div className="px-6 py-4 bg-card border-t border-border flex justify-end">
-              <Button variant="outline" onClick={() => setDialogConsumoAbierto(false)} className="rounded-xl font-bold px-6 h-10">
+            <div className="px-6 py-4 bg-card border-t border-border flex justify-end gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => setDialogConsumoAbierto(false)} 
+                className="rounded-xl font-bold px-4 h-10 border-border/60"
+              >
                 Cerrar
+              </Button>
+              <Button 
+                onClick={() => {
+                  setDialogConsumoAbierto(false);
+                  navigate("/fuelviajes", { state: { scrollToId: viajeConsumoSeleccionado.id } });
+                }}
+                className="rounded-xl font-bold px-4 h-10 bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-500/20 group"
+              >
+                Detalles completos
+                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
             </div>
           </DialogContent>

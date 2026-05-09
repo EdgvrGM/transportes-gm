@@ -272,7 +272,7 @@ export default function ColaCarga() {
             </p>
           </div>
         ) : (
-          <div className="flex overflow-x-auto p-6 md:p-8 gap-5 hide-scrollbar snap-x">
+          <div className="flex overflow-x-auto p-6 md:p-8 pb-10 gap-5 snap-x scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent">
             {pendientes.map((viaje, i) => (
               <PendingCard
                 key={i}

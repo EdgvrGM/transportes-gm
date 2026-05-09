@@ -72,6 +72,18 @@ export default function FuelViajes() {
   const [viajeAEliminar, setViajeAEliminar] = useState(null);
   const [viajeEditando, setViajeEditando] = useState(null);
   const [dialogAbierto, setDialogAbierto] = useState(false);
+  const [idResaltado, setIdResaltado] = useState(stateData.scrollToId || null);
+  const [filtroIdDirecto, setFiltroIdDirecto] = useState(stateData.scrollToId || null);
+
+  // Limpiar resaltado (pero mantener el filtro si el usuario así lo desea)
+  React.useEffect(() => {
+    if (stateData.scrollToId) {
+      setFiltroIdDirecto(stateData.scrollToId);
+      setIdResaltado(stateData.scrollToId);
+      const timer = setTimeout(() => setIdResaltado(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [stateData.scrollToId]);
 
   const [formData, setFormData] = useState({
     fecha: "",
@@ -228,6 +240,11 @@ export default function FuelViajes() {
   });
 
   const viajesFiltrados = viajes.filter((viaje) => {
+    // SI HAY UN FILTRO DIRECTO POR ID, SOLO MOSTRAR ESE
+    if (filtroIdDirecto) {
+      return String(viaje.id) === String(filtroIdDirecto);
+    }
+
     let cumpleFiltros = true;
     const rutaPrincipal = viaje.ruta_ida || viaje.ruta || "";
     if (
@@ -586,9 +603,21 @@ export default function FuelViajes() {
 
         <Card className="border-none shadow-lg bg-card">
           <CardHeader className="border-b border-border">
-            <CardTitle className="text-xl font-bold text-foreground">
-              Historial de Viajes
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl font-bold text-foreground">
+                Historial de Viajes
+              </CardTitle>
+              {filtroIdDirecto && (
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  onClick={() => setFiltroIdDirecto(null)}
+                  className="rounded-xl font-bold bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/40 dark:text-indigo-300"
+                >
+                  Ver todos los viajes
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="p-6">
             {viajesFiltrados.length === 0 ? (
@@ -626,21 +655,27 @@ export default function FuelViajes() {
                   return (
                     <Card
                       key={viaje.id}
-                      className="border border-border bg-card hover:shadow-md transition-shadow"
+                      className={`border bg-card hover:shadow-md transition-all duration-300 ${
+                        String(viaje.id) === String(idResaltado)
+                          ? "border-indigo-500 ring-1 ring-indigo-500 shadow-lg shadow-indigo-500/20 bg-indigo-50/10 dark:bg-indigo-900/10 animate-in fade-in zoom-in duration-500"
+                          : "border-border hover:border-indigo-500/30"
+                      }`}
                     >
                       <CardContent className="p-4 md:p-6">
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 items-center">
                             {/* COL 1: FECHAS */}
-                            <div className="space-y-3">
-                              <div className="flex flex-wrap items-start gap-4">
-                                <div className="flex items-center gap-2">
-                                  <Calendar className="w-4 h-4 text-blue-500 dark:text-blue-400 flex-shrink-0" />
+                            <div className="space-y-4">
+                              <div className="flex flex-wrap items-start gap-3 lg:gap-5">
+                                <div className="flex items-center gap-2 lg:gap-3">
+                                  <div className="p-1.5 lg:p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                                    <Calendar className="w-4 h-4 lg:w-5 lg:h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                                  </div>
                                   <div>
-                                    <span className="block text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+                                    <span className="block text-[10px] lg:text-xs uppercase font-black text-muted-foreground tracking-widest">
                                       Salida
                                     </span>
-                                    <span className="text-sm font-semibold text-foreground">
+                                    <span className="text-sm lg:text-base font-black text-foreground whitespace-nowrap">
                                       {format(
                                         new Date(`${viaje.fecha}T12:00:00`),
                                         "dd MMM",
@@ -650,13 +685,15 @@ export default function FuelViajes() {
                                   </div>
                                 </div>
                                 {viaje.fecha_llegada && (
-                                  <div className="flex items-center gap-2">
-                                    <ArrowRight className="w-4 h-4 text-green-500 dark:text-green-400 flex-shrink-0" />
+                                  <div className="flex items-center gap-2 lg:gap-3">
+                                    <div className="p-1.5 lg:p-2 rounded-lg bg-green-50 dark:bg-green-900/20">
+                                      <ArrowRight className="w-4 h-4 lg:w-5 lg:h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+                                    </div>
                                     <div>
-                                      <span className="block text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+                                      <span className="block text-[10px] lg:text-xs uppercase font-black text-muted-foreground tracking-widest">
                                         Llegada
                                       </span>
-                                      <span className="text-sm font-semibold text-foreground">
+                                      <span className="text-sm lg:text-base font-black text-foreground whitespace-nowrap">
                                         {format(
                                           new Date(
                                             `${viaje.fecha_llegada}T12:00:00`,
@@ -669,22 +706,22 @@ export default function FuelViajes() {
                                   </div>
                                 )}
                               </div>
-                              <div className="pt-2 border-t border-border mt-2 space-y-2">
+                              <div className="pt-3 border-t border-border/60 mt-3 space-y-2 lg:space-y-3">
                                 {viaje.conductor_nombre && (
-                                  <div className="flex items-center gap-2">
-                                    <User className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                                    <span className="text-sm text-foreground">
+                                  <div className="flex items-center gap-2 lg:gap-3">
+                                    <User className="w-4 h-4 lg:w-5 lg:h-5 text-slate-400 flex-shrink-0" />
+                                    <span className="text-xs lg:text-sm font-bold text-foreground line-clamp-1">
                                       {viaje.conductor_nombre}
                                     </span>
                                   </div>
                                 )}
                                 {viaje.camion_nombre && (
-                                  <div className="flex items-center gap-2">
-                                    <Truck className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                                    <span className="text-sm text-foreground">
+                                  <div className="flex items-center gap-2 lg:gap-3">
+                                    <Truck className="w-4 h-4 lg:w-5 lg:h-5 text-slate-400 flex-shrink-0" />
+                                    <span className="text-xs lg:text-sm font-bold text-foreground line-clamp-1">
                                       {viaje.camion_nombre}{" "}
-                                      <span className="text-xs text-muted-foreground">
-                                        ({viaje.camion_placas})
+                                      <span className="hidden sm:inline text-[10px] lg:text-xs font-medium text-muted-foreground bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded ml-1 whitespace-nowrap">
+                                        {viaje.camion_placas}
                                       </span>
                                     </span>
                                   </div>
@@ -706,24 +743,24 @@ export default function FuelViajes() {
 
                             {/* COL 2: RUTAS */}
                             <div className="space-y-3">
-                              <div className="space-y-2">
+                              <div className="space-y-1.5">
                                 {getClienteDelViaje(viaje) && (
-                                  <div className="flex items-center gap-1.5 mb-1.5">
-                                    <Briefcase className="w-4 h-4 text-muted-foreground" />
-                                    <span className="text-[13px] font-black uppercase tracking-tight text-foreground">
+                                  <div className="flex items-center gap-2 mb-1 p-1.5 lg:p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 w-fit">
+                                    <Briefcase className="w-3 h-3 lg:w-4 lg:h-4 text-indigo-500" />
+                                    <span className="text-[11px] lg:text-sm font-black uppercase tracking-widest text-slate-800 dark:text-slate-100 line-clamp-1">
                                       {getClienteDelViaje(viaje)}
                                     </span>
                                   </div>
                                 )}
                                 <Badge
                                   variant="outline"
-                                  className={`w-fit text-[10px] px-1.5 py-0 uppercase font-bold tracking-wider mb-1 ${isFull ? "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800" : "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800"}`}
+                                  className={`w-fit text-[9px] lg:text-xs px-2 py-0.5 uppercase font-black tracking-widest mb-1 ${isFull ? "bg-purple-100 text-purple-700 border-purple-200" : "bg-blue-50 text-blue-600 border-blue-200"}`}
                                 >
                                   {tipoViaje}
                                 </Badge>
-                                <div className="flex items-start gap-2">
-                                  <MapPin className="w-4 h-4 text-blue-500 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-                                  <span className="text-sm text-foreground">
+                                <div className="flex items-start gap-2 lg:gap-3">
+                                  <MapPin className="w-4 h-4 lg:w-5 lg:h-5 text-red-500 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                                  <span className="text-sm lg:text-base font-bold text-foreground leading-tight line-clamp-2">
                                     {rutaPrincipal}
                                   </span>
                                 </div>
@@ -752,43 +789,53 @@ export default function FuelViajes() {
 
                             {/* COL 3: COSTOS Y KILÓMETROS */}
                             <div className="space-y-3">
-                              <div className="space-y-2">
-                                <div className="flex items-start justify-between">
-                                  <span className="text-xs text-muted-foreground mt-0.5">
+                              <div className="space-y-2.5">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] lg:text-xs font-bold text-muted-foreground uppercase">
                                     Kilómetros:
                                   </span>
-                                  <div className="text-right">
-                                    <span className="text-sm font-semibold text-foreground block">
-                                      {formatNumber(kmTotal, 0)} km
-                                    </span>
-                                  </div>
+                                  <span className="text-sm lg:text-base font-black text-foreground">
+                                    {formatNumber(kmTotal, 0)} <span className="text-[10px] lg:text-xs font-medium opacity-60">KM</span>
+                                  </span>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                  <span className="text-xs text-muted-foreground">
+                                  <span className="text-[10px] lg:text-xs font-bold text-muted-foreground uppercase">
                                     Litros:
                                   </span>
-                                  <span className="text-sm font-semibold text-foreground">
-                                    {formatNumber(litros, 0)} L
+                                  <span className="text-sm lg:text-base font-black text-foreground">
+                                    {formatNumber(litros, 0)} <span className="text-[10px] lg:text-xs font-medium opacity-60">L</span>
                                   </span>
                                 </div>
                                 {costoCombustible > 0 && (
                                   <div className="flex items-center justify-between">
-                                    <span className="text-xs text-muted-foreground">
+                                    <span className="text-[10px] lg:text-xs font-bold text-muted-foreground uppercase">
                                       Combustible:
                                     </span>
-                                    <span className="text-sm font-semibold text-foreground">
+                                    <span className="text-sm lg:text-base font-black text-foreground">
                                       ${formatCurrency(costoCombustible)}
                                     </span>
                                   </div>
                                 )}
                                 {costoCasetas > 0 && (
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-xs text-muted-foreground">
-                                      Casetas:
-                                    </span>
-                                    <span className="text-sm font-semibold text-foreground">
-                                      ${formatCurrency(costoCasetas)}
-                                    </span>
+                                  <div className="space-y-1.5 pt-2 border-t border-border/40 mt-1">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-[10px] lg:text-xs font-bold text-muted-foreground uppercase">
+                                        CASETAS:
+                                      </span>
+                                      <span className="text-sm lg:text-base font-black text-foreground">
+                                        ${formatCurrency(costoCasetas)}
+                                      </span>
+                                    </div>
+                                    <div className="flex flex-col items-end space-y-0.5">
+                                      <div className="flex items-center gap-1.5 lg:gap-2 px-1.5 lg:px-2 py-0.5 rounded bg-slate-50 dark:bg-slate-800/50 border border-border/40">
+                                        <span className="text-[9px] lg:text-[10px] font-bold text-muted-foreground uppercase">Ida:</span>
+                                        <span className="text-[10px] lg:text-[11px] font-black text-slate-700 dark:text-slate-300">${formatCurrency(viaje.casetas_ida || 0)}</span>
+                                      </div>
+                                      <div className="flex items-center gap-1.5 lg:gap-2 px-1.5 lg:px-2 py-0.5 rounded bg-slate-50 dark:bg-slate-800/50 border border-border/40">
+                                        <span className="text-[9px] lg:text-[10px] font-bold text-muted-foreground uppercase">Vuelta:</span>
+                                        <span className="text-[10px] lg:text-[11px] font-black text-slate-700 dark:text-slate-300">${formatCurrency(viaje.casetas_regreso || 0)}</span>
+                                      </div>
+                                    </div>
                                   </div>
                                 )}
                               </div>
