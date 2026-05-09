@@ -155,7 +155,7 @@ export default function ExpertoLogistica() {
       // Obtener viajes reales (consumos registrados)
       let viajesQuery = supabase
         .from("Viaje")
-        .select("id, fecha, conductor_nombre, camion_nombre, camion_placas, ruta_ida, ruta_regreso, kilometros_total, litros_combustible, km_por_litro, costo_combustible, casetas_ida, casetas_regreso, tipo_viaje, notas")
+        .select("id, viaje_id, fecha, conductor_nombre, camion_nombre, camion_placas, ruta_ida, ruta_regreso, kilometros_total, litros_combustible, km_por_litro, costo_combustible, casetas_ida, casetas_regreso, tipo_viaje, notas")
         .gte("fecha", `${FECHA_LIMITE_ARCHIVO}T00:00:00`)
         .order("fecha", { ascending: false });
 
@@ -180,7 +180,7 @@ export default function ExpertoLogistica() {
       // Traer mapeo de clientes desde viajes_registrados para identificar cuentas (ej. SOLAREVER)
       const { data: vRegistrados } = await supabase
         .from("viajes_registrados")
-        .select("fecha_viaje, conductor_id, camion_id, cliente:Cliente(nombre)")
+        .select("id, fecha_viaje, conductor_id, camion_id, cliente:Cliente(nombre)")
         .gte("fecha_viaje", FECHA_LIMITE_ARCHIVO);
 
       const { data: conductores } = await supabase.from("Conductor").select("id, nombre");
@@ -190,13 +190,23 @@ export default function ExpertoLogistica() {
         const fechaV = v.fecha?.split("T")[0];
         
         // Match con viajes_registrados para sacar el nombre del cliente
-        const reg = vRegistrados?.find(r => {
-          const cond = conductores.find(c => c.nombre === v.conductor_nombre);
-          const cam = camiones.find(c => c.nombre === v.camion_nombre);
-          return r.fecha_viaje === fechaV && 
-                 String(r.conductor_id) === String(cond?.id) && 
-                 String(r.camion_id) === String(cam?.id);
-        });
+        let reg = null;
+        
+        // 1. Intento por ID directo (vínculo oficial)
+        if (v.viaje_id) {
+          reg = vRegistrados?.find(r => String(r.id) === String(v.viaje_id));
+        }
+
+        // 2. Fallback por Fecha/Conductor/Camión si no hay vínculo directo
+        if (!reg) {
+          reg = vRegistrados?.find(r => {
+            const cond = conductores.find(c => c.nombre === v.conductor_nombre);
+            const cam = camiones.find(c => c.nombre === v.camion_nombre);
+            return r.fecha_viaje === fechaV && 
+                   String(r.conductor_id) === String(cond?.id) && 
+                   String(r.camion_id) === String(cam?.id);
+          });
+        }
 
         return {
           fecha: fechaV,
