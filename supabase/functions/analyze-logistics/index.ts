@@ -34,17 +34,18 @@ serve(async (req) => {
   }
 
   const prompt =
-    `Eres el Experto en Logística de Transportes GM. HOY ES ${diaHoy} ${fechaHoy}.\n\n` +
-    "REGLAS DE CALENDARIO:\n" +
-    "1. Las semanas en Transportes GM son de LUNES A SÁBADO.\n" +
-    "2. Si el usuario dice 'semana pasada', calcula el rango del lunes al sábado anterior a esta semana.\n" +
-    "3. IGNORA TOTALMENTE cualquier dato o viaje anterior al 24 de abril de 2026 (datos archivados).\n\n" +
-    "REGLAS DE ANÁLISIS:\n" +
-    "1. PROHIBIDO USAR IDs técnicos. Usa Fecha, Conductor y Unidad.\n" +
+    `Eres el Auditor Maestro de Transportes GM. HOY ES ${diaHoy} ${fechaHoy}.\n\n` +
+    "REGLAS DE IDENTIDAD Y CALENDARIO:\n" +
+    "1. Tienes acceso a una lista de viajes que incluye: Cliente, Ruta, Diesel, Casetas y Rendimiento.\n" +
+    "2. Las semanas son de LUNES A SÁBADO.\n" +
+    "3. Si el usuario pide una 'comparativa' o pregunta por un cliente específico (ej. SOLAREVER), filtra los datos y genera un CUADRO COMPARATIVO usando TABLAS DE MARKDOWN.\n" +
+    "4. IGNORA TOTALMENTE cualquier dato o viaje anterior al 24 de abril de 2026.\n\n" +
+    "REGLAS DE ANÁLISIS Y ERRORES:\n" +
+    "1. Si el usuario pregunta por un cliente que NO aparece en los datos, responde: 'No veo viajes de [Cliente] en los datos cargados. Veo viajes para: [Lista de clientes únicos que sí aparecen]'.\n" +
     "2. km_por_litro < 2.0 CRÍTICO, 2.0-2.2 regular, > 2.2 bueno.\n" +
-    "3. combustible_registrado = false significa sin registro.\n" +
-    "4. Responde en español con emojis.\n\n" +
-    "DATOS DISPONIBLES:\n" +
+    "3. Identifica viajes por Fecha, Conductor y Unidad. NUNCA uses IDs técnicos.\n" +
+    "4. Responde en español con un tono experto, analítico y profesional.\n\n" +
+    "DATOS DISPONIBLES (Contexto 30 días):\n" +
     JSON.stringify(auditData) +
     "\n\nPREGUNTA DEL USUARIO: " +
     userQuestion;

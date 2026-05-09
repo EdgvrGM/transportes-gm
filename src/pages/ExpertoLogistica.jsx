@@ -27,35 +27,70 @@ function MarkdownMessage({ content }) {
   const lines = content.split("\n");
   const elements = [];
   let listBuffer = [];
+  let tableBuffer = [];
 
   const flushList = () => {
     if (listBuffer.length > 0) {
       elements.push(
         <ul key={`list-${elements.length}`} className="space-y-1.5 my-2">
-          {listBuffer.map((item, i) => {
-            const isAlert = /⚠️|CRÍTICO|crítico|bajo|fuga/i.test(item);
-            const isGood = /✅|Bueno|bueno|excelente|ahorro/i.test(item);
-            return (
-              <li key={i} className={`flex items-start gap-2 text-sm px-3 py-2 rounded-xl ${
-                isAlert ? "bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/40 text-red-800 dark:text-red-300"
-                : isGood ? "bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800/40 text-green-800 dark:text-green-300"
-                : "bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/40"
-              }`}>
-                <span className="mt-0.5 shrink-0 text-base leading-none">
-                  {isAlert ? "🔴" : isGood ? "🟢" : "🔹"}
-                </span>
-                <span>{parseInline(item)}</span>
-              </li>
-            );
-          })}
+          {listBuffer.map((item, i) => (
+            <li key={i} className="flex items-start gap-2 text-sm px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/40">
+              <span className="mt-0.5 shrink-0 text-base leading-none text-indigo-500">🔹</span>
+              <span>{parseInline(item)}</span>
+            </li>
+          ))}
         </ul>
       );
       listBuffer = [];
     }
   };
 
+  const flushTable = () => {
+    if (tableBuffer.length > 0) {
+      const rows = tableBuffer.map(line => 
+        line.split("|").filter(cell => cell.trim() !== "").map(cell => cell.trim())
+      ).filter(row => row.length > 0);
+
+      if (rows.length > 1) {
+        elements.push(
+          <div key={`table-${elements.length}`} className="my-4 overflow-hidden border border-border rounded-xl shadow-sm overflow-x-auto">
+            <table className="w-full text-sm text-left border-collapse">
+              <thead className="bg-slate-50 dark:bg-slate-900 border-b border-border">
+                <tr>
+                  {rows[0].map((header, i) => (
+                    <th key={i} className="px-4 py-2.5 font-black text-xs uppercase tracking-wider text-muted-foreground">{header}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {rows.slice(1).filter(row => !row.every(cell => cell.includes("---"))).map((row, i) => (
+                  <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-colors">
+                    {row.map((cell, j) => (
+                      <td key={j} className="px-4 py-3 font-medium">{parseInline(cell)}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      }
+      tableBuffer = [];
+    }
+  };
+
   lines.forEach((line, i) => {
     const t = line.trim();
+    
+    // Tabla detect
+    if (t.startsWith("|") && t.endsWith("|")) {
+      flushList();
+      tableBuffer.push(t);
+      return;
+    } else {
+      flushTable();
+    }
+
     if (/^---+$/.test(t)) { flushList(); elements.push(<hr key={i} className="my-3 border-border" />); return; }
     if (/^#{1,3} /.test(t)) {
       flushList();
@@ -67,11 +102,13 @@ function MarkdownMessage({ content }) {
     }
     if (/^[*\-] /.test(t)) { listBuffer.push(t.replace(/^[\s*\-]+/, "")); return; }
     if (t === "") { flushList(); elements.push(<div key={i} className="h-2" />); return; }
+    
     flushList();
     elements.push(<p key={i} className="text-sm leading-relaxed mb-1">{parseInline(line)}</p>);
   });
 
   flushList();
+  flushTable();
   return <div>{elements}</div>;
 }
 
@@ -110,15 +147,24 @@ export default function ExpertoLogistica() {
   const { data: contexto, isLoading: cargandoContexto } = useQuery({
     queryKey: ["experto-contexto", semanaSeleccionada],
     queryFn: async () => {
+      // Calcular rango de 30 días para comparativas
+      const fechaLimite30 = new Date();
+      fechaLimite30.setDate(fechaLimite30.getDate() - 30);
+      const fechaISO30 = fechaLimite30.toISOString().split('T')[0];
+
       // Obtener viajes reales (consumos registrados)
       let viajesQuery = supabase
         .from("Viaje")
         .select("id, fecha, conductor_nombre, camion_nombre, camion_placas, ruta_ida, ruta_regreso, kilometros_total, litros_combustible, km_por_litro, costo_combustible, casetas_ida, casetas_regreso, tipo_viaje, notas")
         .gte("fecha", `${FECHA_LIMITE_ARCHIVO}T00:00:00`)
-        .order("fecha", { ascending: false })
-        .limit(100);
+        .order("fecha", { ascending: false });
 
-      // Si hay semana seleccionada, filtrar por fechas
+      // Si es "todo el historial", limitamos a los últimos 30 días para no saturar tokens
+      if (semanaSeleccionada === "all") {
+        viajesQuery = viajesQuery.gte("fecha", `${fechaISO30}T00:00:00`);
+      }
+
+      // Si hay semana seleccionada, filtrar por fechas específicas
       let programa = null;
       if (semanaSeleccionada !== "all") {
         programa = semanas.find(s => String(s.id) === String(semanaSeleccionada));
@@ -131,25 +177,44 @@ export default function ExpertoLogistica() {
 
       const { data: viajes } = await viajesQuery;
 
-      // Estadísticas globales de conductores
+      // Traer mapeo de clientes desde viajes_registrados para identificar cuentas (ej. SOLAREVER)
+      const { data: vRegistrados } = await supabase
+        .from("viajes_registrados")
+        .select("fecha_viaje, conductor_id, camion_id, cliente:Cliente(nombre)")
+        .gte("fecha_viaje", FECHA_LIMITE_ARCHIVO);
+
       const { data: conductores } = await supabase.from("Conductor").select("id, nombre");
       const { data: camiones } = await supabase.from("Camion").select("id, nombre, placas");
 
-      const viajesData = (viajes || []).map(v => ({
-        fecha: v.fecha?.split("T")[0],
-        conductor: v.conductor_nombre,
-        unidad: `${v.camion_nombre} (${v.camion_placas})`,
-        ruta: `${v.ruta_ida} → ${v.ruta_regreso || ""}`,
-        km: v.kilometros_total,
-        litros: v.litros_combustible,
-        km_por_litro: v.km_por_litro ? Number(v.km_por_litro).toFixed(2) : null,
-        costo_combustible: v.costo_combustible,
-        casetas: (v.casetas_ida || 0) + (v.casetas_regreso || 0),
-        costo_total: (v.costo_combustible || 0) + (v.casetas_ida || 0) + (v.casetas_regreso || 0),
-        tipo_viaje: v.tipo_viaje,
-        notas: v.notas,
-        alerta: v.km_por_litro && v.km_por_litro < 2.0 ? "Rendimiento crítico" : null,
-      }));
+      const viajesData = (viajes || []).map(v => {
+        const fechaV = v.fecha?.split("T")[0];
+        
+        // Match con viajes_registrados para sacar el nombre del cliente
+        const reg = vRegistrados?.find(r => {
+          const cond = conductores.find(c => c.nombre === v.conductor_nombre);
+          const cam = camiones.find(c => c.nombre === v.camion_nombre);
+          return r.fecha_viaje === fechaV && 
+                 String(r.conductor_id) === String(cond?.id) && 
+                 String(r.camion_id) === String(cam?.id);
+        });
+
+        return {
+          fecha: fechaV,
+          cliente: reg?.cliente?.nombre || "N/A",
+          conductor: v.conductor_nombre,
+          unidad: `${v.camion_nombre} (${v.camion_placas})`,
+          ruta: `${v.ruta_ida} → ${v.ruta_regreso || ""}`,
+          km: v.kilometros_total,
+          litros: v.litros_combustible,
+          km_por_litro: v.km_por_litro ? Number(v.km_por_litro).toFixed(2) : null,
+          costo_combustible: v.costo_combustible,
+          casetas: (v.casetas_ida || 0) + (v.casetas_regreso || 0),
+          costo_total: (v.costo_combustible || 0) + (v.casetas_ida || 0) + (v.casetas_regreso || 0),
+          tipo_viaje: v.tipo_viaje,
+          notas: v.notas,
+          alerta: v.km_por_litro && v.km_por_litro < 2.0 ? "Rendimiento crítico" : null,
+        };
+      });
 
       // Resumen calculado
       const conRendimiento = viajesData.filter(v => v.km_por_litro);
@@ -158,12 +223,13 @@ export default function ExpertoLogistica() {
         : "N/A";
 
       return {
-        periodo: programa ? `Semana: ${programa.titulo}` : "Todo el historial",
+        periodo: programa ? `Semana: ${programa.titulo}` : "Últimos 30 días (Historial)",
         resumen: {
           total_viajes: viajesData.length,
           promedio_rendimiento_km_l: promedio,
           alertas_criticas: viajesData.filter(v => v.alerta).length,
           costo_total_flota: viajesData.reduce((s, v) => s + (v.costo_total || 0), 0).toFixed(2),
+          clientes_detectados: [...new Set(viajesData.map(v => v.cliente))].filter(c => c !== "N/A"),
         },
         viajes: viajesData,
       };
