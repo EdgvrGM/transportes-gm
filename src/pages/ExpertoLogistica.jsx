@@ -209,18 +209,17 @@ export default function ExpertoLogistica() {
           reg = vRegistrados?.find(r => String(r.id) === String(v.viaje_id));
         }
 
-        // 2. Fallback por Fecha/Conductor/Camión si no hay vínculo directo
+        // 2. Fallback por Fecha/Conductor/Camión utilizando IDs directos
         if (!reg) {
           reg = vRegistrados?.find(r => {
-            const cond = conductores?.find(c => c.nombre === v.conductor_nombre);
-            const cam = camiones?.find(c => c.nombre === v.camion_nombre);
             return r.fecha_viaje === fechaV && 
-                   String(r.conductor_id) === String(cond?.id) && 
-                   String(r.camion_id) === String(cam?.id);
+                   String(r.conductor_id) === String(v.conductor_id) && 
+                   String(r.camion_id) === String(v.camion_id);
           });
         }
 
         const clienteObj = reg ? clientes?.find(c => String(c.id) === String(reg.cliente_id)) : null;
+        const litrosVal = parseFloat(v.litros_combustible || 0);
 
         return {
           fecha: fechaV,
@@ -229,7 +228,8 @@ export default function ExpertoLogistica() {
           unidad: `${v.camion_nombre} (${v.camion_placas})`,
           ruta: `${v.ruta_ida} → ${v.ruta_regreso || ""}`,
           km: v.kilometros_total,
-          litros: v.litros_combustible,
+          litros: litrosVal,
+          estado_combustible: litrosVal > 0 ? "Registrado" : "PENDIENTE (Registro Parcial)",
           km_por_litro: v.km_por_litro ? Number(v.km_por_litro).toFixed(2) : null,
           costo_combustible: v.costo_combustible,
           casetas: (v.casetas_ida || 0) + (v.casetas_regreso || 0),
@@ -248,6 +248,13 @@ export default function ExpertoLogistica() {
         const rem1 = remolques?.find(r => String(r.id) === String(pr.remolque_id));
         const rem2 = remolques?.find(r => String(r.id) === String(pr.remolque2_id));
 
+        // Verificar si existe en ejecución para dar contexto extra a la IA
+        const existeEnEjecucion = viajesData.find(v => 
+          v.fecha === pr.fecha_viaje && 
+          v.conductor === cond?.nombre && 
+          v.unidad.includes(cam?.placas || "---")
+        );
+
         return {
           fecha: pr.fecha_viaje,
           cliente: cli?.nombre || "N/A",
@@ -256,6 +263,9 @@ export default function ExpertoLogistica() {
           remolques: [rem1?.placas, rem2?.placas].filter(Boolean).join(" / ") || "Sencillo",
           destino: pr.destino,
           modalidad: pr.modalidad,
+          estado_registro: existeEnEjecucion 
+            ? (existeEnEjecucion.litros > 0 ? "Completado" : "Parcial (Falta Diesel)") 
+            : "No iniciado (Falta Registro)",
           completado: pr.combustible_registrado || false,
         };
       });
@@ -271,7 +281,8 @@ export default function ExpertoLogistica() {
         resumen: {
           total_viajes_ejecutados: viajesData.length,
           total_viajes_planeados: planeacionData.length,
-          viajes_pendientes_de_registro: planeacionData.filter(p => !p.completado).length,
+          viajes_pendientes_de_registro: planeacionData.filter(p => p.estado_registro !== "Completado").length,
+          lista_pendientes: planeacionData.filter(p => p.estado_registro !== "Completado"),
           promedio_rendimiento_km_l: promedio,
           alertas_criticas_en_ejecucion: viajesData.filter(v => v.alerta).length,
           costo_total_ejecutado: viajesData.reduce((s, v) => s + (v.costo_total || 0), 0).toFixed(2),

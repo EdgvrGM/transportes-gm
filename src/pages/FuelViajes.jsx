@@ -239,10 +239,36 @@ export default function FuelViajes() {
       if (error) throw new Error(error.message);
       return result;
     },
-    onSuccess: () => {
+    onSuccess: async (data, variables) => {
+      try {
+        // Sincronizar estado con viajes_registrados
+        const hasFuel = parseFloat(variables.data.litros_combustible || 0) > 0;
+        
+        // Match por fecha/conductor/camion (ya que Viaje no tiene viaje_id)
+        const fechaMatch = typeof variables.data.fecha === 'string' 
+          ? variables.data.fecha.split("T")[0] 
+          : variables.data.fecha;
+
+        await supabase
+          .from("viajes_registrados")
+          .update({ combustible_registrado: hasFuel })
+          .match({
+            fecha_viaje: fechaMatch,
+            conductor_id: variables.data.conductor_id,
+            camion_id: variables.data.camion_id
+          });
+      } catch (err) {
+        console.error("Error syncing status:", err);
+      }
+
       queryClient.invalidateQueries({ queryKey: ["viajes"] });
+      queryClient.invalidateQueries({ queryKey: ["viajesRegistrados"] });
       cerrarDialog();
     },
+    onError: (err) => {
+      console.error("Update Error:", err);
+      window.alert("Error al guardar: " + err.message);
+    }
   });
 
   const viajesFiltrados = viajes.filter((viaje) => {
@@ -309,9 +335,14 @@ export default function FuelViajes() {
     const rutasAdicionales = Array.isArray(viaje.rutas_adicionales)
       ? viaje.rutas_adicionales
       : [];
+    
+    // Normalizar fechas para los inputs tipo date (YYYY-MM-DD)
+    const fSalida = viaje.fecha ? viaje.fecha.split("T")[0] : "";
+    const fLlegada = viaje.fecha_llegada ? viaje.fecha_llegada.split("T")[0] : "";
+
     setFormData({
-      fecha: viaje.fecha,
-      fecha_llegada: viaje.fecha_llegada || "",
+      fecha: fSalida,
+      fecha_llegada: fLlegada,
       conductor_id: viaje.conductor_id ? String(viaje.conductor_id) : "",
       conductor_nombre: viaje.conductor_nombre || "",
       camion_id: viaje.camion_id ? String(viaje.camion_id) : "",
@@ -440,12 +471,18 @@ export default function FuelViajes() {
       casetasRegreso = 0;
     }
 
+    const safeParseInt = (val) => {
+      if (val === null || val === undefined || val === "") return null;
+      const parsed = parseInt(val, 10);
+      return isNaN(parsed) ? null : parsed;
+    };
+
     const datosViaje = {
       fecha: formData.fecha,
       fecha_llegada: formData.fecha_llegada || null,
-      conductor_id: formData.conductor_id ? formData.conductor_id : null,
+      conductor_id: safeParseInt(formData.conductor_id),
       conductor_nombre: formData.conductor_nombre,
-      camion_id: formData.camion_id ? formData.camion_id : null,
+      camion_id: safeParseInt(formData.camion_id),
       camion_nombre: formData.camion_nombre,
       camion_placas: formData.camion_placas,
       tipo_viaje: formData.tipo_viaje,
@@ -463,8 +500,8 @@ export default function FuelViajes() {
       costo_combustible: costoFuel,
       casetas_ida: casetasIda,
       casetas_regreso: casetasRegreso,
-      remolque_id: formData.remolque_id || null,
-      remolque2_id: formData.remolque2_id || null,
+      remolque_id: safeParseInt(formData.remolque_id),
+      remolque2_id: safeParseInt(formData.remolque2_id),
       notas: formData.notas,
     };
     if (viajeEditando)
