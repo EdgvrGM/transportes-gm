@@ -626,6 +626,15 @@ export default function FuelProgramaCargas() {
   };
 
   const handleRegistrarCombustible = (viaje) => {
+    const registrado = getRegisteredTrip(viaje, diaVerActivo);
+    
+    if (registrado) {
+      navigate(createPageUrl("FuelViajes"), {
+        state: { editId: registrado.id }
+      });
+      return;
+    }
+
     const diasMap = {
       "Lunes": 0, "Martes": 1, "Miércoles": 2, "Jueves": 3, "Viernes": 4, "Sábado": 5
     };

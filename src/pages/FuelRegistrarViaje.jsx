@@ -158,14 +158,14 @@ export default function FuelRegistrarViaje() {
       if (viajeRegistradoId) {
         await supabase
           .from("viajes_registrados")
-          .update({ combustible_registrado: true })
+          .update({ combustible_registrado: parseFloat(viaje.litros_combustible) > 0 })
           .eq("id", viajeRegistradoId);
       } else {
         // Soft Update: Si no hay ID directo, buscamos por coincidencia de datos
         // para asegurar que el dashboard se mantenga al día.
         await supabase
           .from("viajes_registrados")
-          .update({ combustible_registrado: true })
+          .update({ combustible_registrado: parseFloat(viaje.litros_combustible) > 0 })
           .match({
             fecha_viaje: viaje.fecha,
             conductor_id: viaje.conductor_id,
@@ -247,13 +247,11 @@ export default function FuelRegistrarViaje() {
       !viaje.conductor_id ||
       !viaje.camion_id ||
       !viaje.ruta_ida ||
-      !kmIda ||
+      viaje.kilometros_ida === "" ||
       isNaN(kmIda) ||
       !viaje.ruta_regreso ||
-      !kmRegreso ||
-      isNaN(kmRegreso) ||
-      !litros ||
-      isNaN(litros)
+      viaje.kilometros_regreso === "" ||
+      isNaN(kmRegreso)
     ) {
       setError("Por favor completa todos los campos obligatorios.");
       return;

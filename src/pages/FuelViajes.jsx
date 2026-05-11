@@ -85,6 +85,18 @@ export default function FuelViajes() {
     }
   }, [stateData.scrollToId]);
 
+  // Efecto para abrir edición automáticamente si viene del programa de cargas
+  React.useEffect(() => {
+    if (stateData.editId && viajes.length > 0) {
+      const v = viajes.find(x => String(x.id) === String(stateData.editId));
+      if (v) {
+        abrirDialogEditar(v);
+        // Limpiar el estado de navegación para evitar que se reabra al navegar internamente
+        window.history.replaceState({}, document.title);
+      }
+    }
+  }, [stateData.editId, viajes]);
+
   const [formData, setFormData] = useState({
     fecha: "",
     fecha_llegada: "",

@@ -155,13 +155,13 @@ export default function ExpertoLogistica() {
       // Obtener viajes reales (consumos registrados)
       let viajesQuery = supabase
         .from("Viaje")
-        .select("id, viaje_id, fecha, conductor_nombre, camion_nombre, camion_placas, ruta_ida, ruta_regreso, kilometros_total, litros_combustible, km_por_litro, costo_combustible, casetas_ida, casetas_regreso, tipo_viaje, notas")
-        .gte("fecha", `${FECHA_LIMITE_ARCHIVO}T00:00:00`)
+        .select("*")
+        .gte("fecha", FECHA_LIMITE_ARCHIVO)
         .order("fecha", { ascending: false });
 
       // Si es "todo el historial", limitamos a los últimos 30 días para no saturar tokens
       if (semanaSeleccionada === "all") {
-        viajesQuery = viajesQuery.gte("fecha", `${fechaISO30}T00:00:00`);
+        viajesQuery = viajesQuery.gte("fecha", fechaISO30);
       }
 
       // Si hay semana seleccionada, filtrar por fechas específicas
@@ -170,21 +170,33 @@ export default function ExpertoLogistica() {
         programa = semanas.find(s => String(s.id) === String(semanaSeleccionada));
         if (programa) {
           viajesQuery = viajesQuery
-            .gte("fecha", `${programa.fecha_inicio}T00:00:00`)
-            .lte("fecha", `${programa.fecha_fin}T23:59:59`);
+            .gte("fecha", programa.fecha_inicio)
+            .lte("fecha", programa.fecha_fin);
         }
       }
 
       const { data: viajes } = await viajesQuery;
 
-      // Traer mapeo de clientes desde viajes_registrados para identificar cuentas (ej. SOLAREVER)
-      const { data: vRegistrados } = await supabase
-        .from("viajes_registrados")
-        .select("id, fecha_viaje, conductor_id, camion_id, cliente:Cliente(nombre)")
-        .gte("fecha_viaje", FECHA_LIMITE_ARCHIVO);
-
       const { data: conductores } = await supabase.from("Conductor").select("id, nombre");
       const { data: camiones } = await supabase.from("Camion").select("id, nombre, placas");
+      const { data: clientes } = await supabase.from("Cliente").select("id, nombre");
+      const { data: remolques } = await supabase.from("Remolque").select("id, placas");
+
+      // Filtrar planeación por el mismo periodo
+      let planeacionQuery = supabase
+        .from("viajes_registrados")
+        .select("*")
+        .gte("fecha_viaje", FECHA_LIMITE_ARCHIVO);
+
+      if (semanaSeleccionada === "all") {
+        planeacionQuery = planeacionQuery.gte("fecha_viaje", fechaISO30);
+      } else if (programa) {
+        planeacionQuery = planeacionQuery
+          .gte("fecha_viaje", programa.fecha_inicio)
+          .lte("fecha_viaje", programa.fecha_fin);
+      }
+
+      const { data: vRegistrados } = await planeacionQuery;
 
       const viajesData = (viajes || []).map(v => {
         const fechaV = v.fecha?.split("T")[0];
@@ -200,17 +212,19 @@ export default function ExpertoLogistica() {
         // 2. Fallback por Fecha/Conductor/Camión si no hay vínculo directo
         if (!reg) {
           reg = vRegistrados?.find(r => {
-            const cond = conductores.find(c => c.nombre === v.conductor_nombre);
-            const cam = camiones.find(c => c.nombre === v.camion_nombre);
+            const cond = conductores?.find(c => c.nombre === v.conductor_nombre);
+            const cam = camiones?.find(c => c.nombre === v.camion_nombre);
             return r.fecha_viaje === fechaV && 
                    String(r.conductor_id) === String(cond?.id) && 
                    String(r.camion_id) === String(cam?.id);
           });
         }
 
+        const clienteObj = reg ? clientes?.find(c => String(c.id) === String(reg.cliente_id)) : null;
+
         return {
           fecha: fechaV,
-          cliente: reg?.cliente?.nombre || "N/A",
+          cliente: clienteObj?.nombre || "N/A",
           conductor: v.conductor_nombre,
           unidad: `${v.camion_nombre} (${v.camion_placas})`,
           ruta: `${v.ruta_ida} → ${v.ruta_regreso || ""}`,
@@ -226,6 +240,26 @@ export default function ExpertoLogistica() {
         };
       });
 
+      // Datos de Planeación (lo que se programó)
+      const planeacionData = (vRegistrados || []).map(pr => {
+        const cond = conductores?.find(c => String(c.id) === String(pr.conductor_id));
+        const cam = camiones?.find(c => String(c.id) === String(pr.camion_id));
+        const cli = clientes?.find(c => String(c.id) === String(pr.cliente_id));
+        const rem1 = remolques?.find(r => String(r.id) === String(pr.remolque_id));
+        const rem2 = remolques?.find(r => String(r.id) === String(pr.remolque2_id));
+
+        return {
+          fecha: pr.fecha_viaje,
+          cliente: cli?.nombre || "N/A",
+          conductor: cond?.nombre || "N/A",
+          unidad: cam ? `${cam.nombre} (${cam.placas})` : "N/A",
+          remolques: [rem1?.placas, rem2?.placas].filter(Boolean).join(" / ") || "Sencillo",
+          destino: pr.destino,
+          modalidad: pr.modalidad,
+          completado: pr.combustible_registrado || false,
+        };
+      });
+
       // Resumen calculado
       const conRendimiento = viajesData.filter(v => v.km_por_litro);
       const promedio = conRendimiento.length > 0
@@ -235,13 +269,16 @@ export default function ExpertoLogistica() {
       return {
         periodo: programa ? `Semana: ${programa.titulo}` : "Últimos 30 días (Historial)",
         resumen: {
-          total_viajes: viajesData.length,
+          total_viajes_ejecutados: viajesData.length,
+          total_viajes_planeados: planeacionData.length,
+          viajes_pendientes_de_registro: planeacionData.filter(p => !p.completado).length,
           promedio_rendimiento_km_l: promedio,
-          alertas_criticas: viajesData.filter(v => v.alerta).length,
-          costo_total_flota: viajesData.reduce((s, v) => s + (v.costo_total || 0), 0).toFixed(2),
-          clientes_detectados: [...new Set(viajesData.map(v => v.cliente))].filter(c => c !== "N/A"),
+          alertas_criticas_en_ejecucion: viajesData.filter(v => v.alerta).length,
+          costo_total_ejecutado: viajesData.reduce((s, v) => s + (v.costo_total || 0), 0).toFixed(2),
+          clientes_activos: [...new Set(viajesData.map(v => v.cliente))].filter(c => c !== "N/A"),
         },
-        viajes: viajesData,
+        ejecucion: viajesData,
+        planeacion: planeacionData,
       };
     },
     enabled: semanas.length > 0 || semanaSeleccionada === "all",
@@ -252,7 +289,7 @@ export default function ExpertoLogistica() {
     if (contexto && messages.length === 0) {
       setMessages([{
         role: "assistant",
-        content: `¡Hola! Soy el **Experto en Logística Transportes GM**. Tengo acceso a **${contexto.resumen.total_viajes} viajes** registrados (${contexto.periodo}).\n\nEl rendimiento promedio de la flota es **${contexto.resumen.promedio_rendimiento_km_l} km/L** y hay **${contexto.resumen.alertas_criticas} alertas críticas** activas.\n\n¿Qué te gustaría analizar hoy?`
+        content: `¡Hola! Soy el **Experto en Logística Transportes GM**. Tengo acceso a la planeación (${contexto.resumen.total_viajes_planeados} viajes) y ejecución (${contexto.resumen.total_viajes_ejecutados} consumos) de este periodo.\n\nEl rendimiento promedio es **${contexto.resumen.promedio_rendimiento_km_l} km/L** y quedan **${contexto.resumen.viajes_pendientes_de_registro} viajes pendientes** por registrar combustible.\n\n¿Qué te gustaría analizar hoy?`
       }]);
     }
   }, [contexto]);
