@@ -11,6 +11,11 @@ export default function RankingConductores({ viajes, conductores }) {
     viajes.forEach((v) => {
       const litros = parseFloat(v.litros_combustible) || 0;
       const km = parseFloat(v.kilometros_total || v.kilometros) || 0;
+      
+      // Solo incluir viajes de conductores activos
+      const conductor = conductores.find((c) => String(c.id) === String(v.conductor_id));
+      if (!conductor || conductor.activo === false) return;
+
       if (litros > 0 && km > 0) {
         if (!statsPorConductor[v.conductor_id]) {
           statsPorConductor[v.conductor_id] = { totalKm: 0, totalLitros: 0, viajesCount: 0 };
@@ -24,6 +29,10 @@ export default function RankingConductores({ viajes, conductores }) {
     const lista = Object.keys(statsPorConductor).map((id) => {
       const stats = statsPorConductor[id];
       const conductor = conductores.find((c) => String(c.id) === String(id));
+      
+      // Solo incluir si el conductor existe y está activo
+      if (!conductor || conductor.activo === false) return null;
+
       const eficiencia = stats.totalKm / stats.totalLitros;
       return {
         id,
@@ -31,7 +40,7 @@ export default function RankingConductores({ viajes, conductores }) {
         eficiencia,
         viajes: stats.viajesCount,
       };
-    });
+    }).filter(Boolean); // Eliminar los nulos (inactivos)
 
     // Sort by efficiency descending
     return lista.sort((a, b) => b.eficiencia - a.eficiencia);
@@ -40,7 +49,12 @@ export default function RankingConductores({ viajes, conductores }) {
   if (ranking.length === 0) return null;
 
   const top3 = ranking.slice(0, 3);
-  const bottom3 = ranking.length > 3 ? ranking.slice(-3).reverse() : [];
+  
+  // Solo mostrar choferes con menos de 2.1 de eficiencia en la sección de atención
+  const bottom3 = ranking
+    .filter(c => c.eficiencia < 2.1)
+    .sort((a, b) => a.eficiencia - b.eficiencia) // Menor rendimiento primero
+    .slice(0, 3);
 
   const getMedalColor = (index) => {
     if (index === 0) return "text-yellow-500 bg-yellow-100 dark:bg-yellow-900/30";

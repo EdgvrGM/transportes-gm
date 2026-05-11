@@ -4,7 +4,7 @@ import { supabase } from "@/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { format, parseISO, addDays } from "date-fns";
-import { Clock, CheckCircle2, Fuel, Truck, User, AlertCircle, MapPin } from "lucide-react";
+import { Clock, CheckCircle2, Fuel, Truck, User, AlertCircle, MapPin, Edit } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -47,12 +47,18 @@ function PendingCard({ viaje, conductor, camion, cliente, handleRegistrar }) {
     >
       <div className="bg-card dark:bg-card border border-border dark:border-border/50 rounded-[1.5rem] p-6 shadow-sm hover:shadow-xl relative overflow-hidden flex flex-col flex-1 transition-all">
         {/* Decorador Lateral */}
-        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-400 to-cyan-400 opacity-70 group-hover:opacity-100 transition-opacity" />
+        <div className={`absolute left-0 top-0 bottom-0 w-1 ${viaje.isPartial ? 'bg-gradient-to-b from-orange-400 to-amber-400' : 'bg-gradient-to-b from-blue-400 to-cyan-400'} opacity-70 group-hover:opacity-100 transition-opacity`} />
 
         {/* Etiqueta Día */}
         <div className="absolute top-0 right-0 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-bl-[1rem] border-b border-l border-blue-200 dark:border-blue-800/40 shadow-sm">
           {viaje.diaSemana}
         </div>
+
+        {viaje.isPartial && (
+          <div className="absolute top-8 right-0 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-l-md border border-orange-200 dark:border-orange-800/40 shadow-sm animate-pulse">
+            Incompleto
+          </div>
+        )}
 
         <div className="mb-5 pr-14 mt-1">
           <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
@@ -99,9 +105,17 @@ function PendingCard({ viaje, conductor, camion, cliente, handleRegistrar }) {
 
         <Button
           onClick={() => handleRegistrar(viaje)}
-          className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 gap-2 transition-all active:scale-95 text-xs uppercase tracking-wider"
+          className={`w-full h-12 ${viaje.isPartial ? 'bg-orange-600 hover:bg-orange-700' : 'bg-primary hover:bg-primary/90'} text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 gap-2 transition-all active:scale-95 text-xs uppercase tracking-wider`}
         >
-          <Fuel className="w-4 h-4" /> Registrar
+          {viaje.isPartial ? (
+            <>
+              <Edit className="w-4 h-4" /> Completar
+            </>
+          ) : (
+            <>
+              <Fuel className="w-4 h-4" /> Registrar
+            </>
+          )}
         </Button>
       </div>
     </div>
@@ -161,52 +175,102 @@ export default function ColaCarga() {
   const { pendientes, registrados, programaActivo } = useMemo(() => {
     if (!programas.length) return { pendientes: [], registrados: [], programaActivo: null };
 
-    const hoy = new Date();
-    let activo = programas[0];
-    for (const prog of programas) {
-      const inicio = parseISO(prog.fecha_inicio);
-      const fin = parseISO(prog.fecha_fin);
-      if (hoy >= inicio && hoy <= addDays(fin, 1)) {
-        activo = prog;
-        break;
+    // 1. Ordenar programas por fecha de inicio (más antiguo primero)
+    const programasOrdenados = [...programas].sort((a, b) => 
+      new Date(a.fecha_inicio) - new Date(b.fecha_inicio)
+    );
+
+    let finalPendientes = [];
+    let finalRegistrados = [];
+    let finalActivo = null;
+
+    // 2. Buscar la semana más antigua con pendientes
+    for (const prog of programasOrdenados) {
+      const fechaInicio = parseISO(prog.fecha_inicio);
+      const flatProgramados = [];
+
+      DIAS_SEMANA.forEach((dia, indexDia) => {
+        const viajesDelDia = prog.programacion[dia] || [];
+        const fechaViaje = addDays(fechaInicio, indexDia);
+        const fechaStr = format(fechaViaje, "yyyy-MM-dd");
+        viajesDelDia.forEach((v) => {
+          flatProgramados.push({ ...v, fecha: fechaStr, fechaObj: fechaViaje, diaSemana: dia });
+        });
+      });
+
+      const p = [];
+      const r = [];
+
+      flatProgramados.forEach((progViaje) => {
+        const matchingExecution = viajes.find((v) => {
+          const matchFecha = v.fecha && v.fecha.startsWith(progViaje.fecha);
+          const matchConductor = String(v.conductor_id) === String(progViaje.conductor);
+          const matchCamion = String(v.camion_id) === String(progViaje.camion);
+          return matchFecha && matchConductor && matchCamion;
+        });
+
+        if (matchingExecution) {
+          const hasFuel = parseFloat(matchingExecution.litros_combustible || 0) > 0;
+          const hasTolls = matchingExecution.casetas_ida !== null && matchingExecution.casetas_regreso !== null;
+          
+          if (hasFuel && hasTolls) {
+            r.push(progViaje);
+          } else {
+            p.push({ ...progViaje, isPartial: true, executionRecord: matchingExecution });
+          }
+        } else {
+          p.push({ ...progViaje, isPartial: false });
+        }
+      });
+
+      // Si encontramos una semana con pendientes, esta es nuestra prioridad
+      if (p.length > 0) {
+        finalPendientes = p;
+        finalRegistrados = r;
+        finalActivo = prog;
+        break; 
       }
     }
 
-    if (!activo) return { pendientes: [], registrados: [], programaActivo: null };
-
-    const fechaInicio = parseISO(activo.fecha_inicio);
-    const flatProgramados = [];
-
-    DIAS_SEMANA.forEach((dia, indexDia) => {
-      const viajesDelDia = activo.programacion[dia] || [];
-      const fechaViaje = addDays(fechaInicio, indexDia);
-      const fechaStr = format(fechaViaje, "yyyy-MM-dd");
-      viajesDelDia.forEach((v) => {
-        flatProgramados.push({ ...v, fecha: fechaStr, fechaObj: fechaViaje, diaSemana: dia });
-      });
-    });
-
-    const p = [];
-    const r = [];
-
-    flatProgramados.forEach((progViaje) => {
-      const isRegistered = viajes.some((v) => {
-        const matchFecha = v.fecha && v.fecha.startsWith(progViaje.fecha);
-        const matchConductor = String(v.conductor_id) === String(progViaje.conductor);
-        const matchCamion = String(v.camion_id) === String(progViaje.camion);
-        return matchFecha && matchConductor && matchCamion;
+    // 3. Fallback: Si todo está completo, mostrar la semana más reciente
+    if (!finalActivo && programas.length > 0) {
+      const masReciente = programasOrdenados[programasOrdenados.length - 1];
+      const fechaInicio = parseISO(masReciente.fecha_inicio);
+      const r = [];
+      
+      DIAS_SEMANA.forEach((dia, indexDia) => {
+        const viajesDelDia = masReciente.programacion[dia] || [];
+        viajesDelDia.forEach((v) => {
+          r.push(v);
+        });
       });
 
-      if (isRegistered) r.push(progViaje);
-      else p.push(progViaje);
-    });
+      return { 
+        pendientes: [], 
+        registrados: r, 
+        programaActivo: masReciente 
+      };
+    }
 
-    p.sort((a, b) => a.fechaObj - b.fechaObj);
+    if (finalActivo) {
+      finalPendientes.sort((a, b) => a.fechaObj - b.fechaObj);
+    }
 
-    return { pendientes: p, registrados: r, programaActivo: activo };
+    return { 
+      pendientes: finalPendientes, 
+      registrados: finalRegistrados, 
+      programaActivo: finalActivo 
+    };
   }, [programas, viajes]);
 
   const handleRegistrar = (viaje) => {
+    if (viaje.isPartial && viaje.executionRecord) {
+      navigate(createPageUrl("FuelViajes"), { 
+        state: { filtroIdDirecto: viaje.executionRecord.id } 
+      });
+      return;
+    }
+
     const conductor = getConductor(viaje.conductor);
     const camion = getCamion(viaje.camion);
 

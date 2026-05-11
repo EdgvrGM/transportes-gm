@@ -32,6 +32,8 @@ import {
 } from "@/components/ui/table";
 import { Plus, Edit, Truck, FileText, Loader2, Trash2 } from "lucide-react";
 
+const FECHA_LIMITE_ARCHIVO = '2026-04-24';
+
 export default function FuelCamiones() {
   const queryClient = useQueryClient();
   const [dialogAbierto, setDialogAbierto] = useState(false);
@@ -58,7 +60,10 @@ export default function FuelCamiones() {
   const { data: viajes = [] } = useQuery({
     queryKey: ["viajes"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("Viaje").select("*");
+      const { data, error } = await supabase
+        .from("Viaje")
+        .select("*")
+        .gte("fecha", FECHA_LIMITE_ARCHIVO);
       if (error) throw new Error(error.message);
       return data;
     },
@@ -144,10 +149,17 @@ export default function FuelCamiones() {
   };
 
   const obtenerEstadisticasCamion = (camionId) => {
-    const viajesCamion = viajes.filter((v) => v.camion_id === camionId);
+    // Solo tomar viajes con combustible registrado y después de la fecha límite
+    const viajesCamion = viajes.filter(
+      (v) => 
+        v.camion_id === camionId && 
+        (parseFloat(v.litros_combustible) || 0) > 0 &&
+        (parseFloat(v.kilometros_total || v.kilometros) || 0) > 0
+    );
+
     const totalViajes = viajesCamion.length;
     const totalKm = viajesCamion.reduce(
-      (sum, v) => sum + (v.kilometros_total || 0),
+      (sum, v) => sum + (v.kilometros_total || v.kilometros || 0),
       0,
     );
     const totalLitros = viajesCamion.reduce(

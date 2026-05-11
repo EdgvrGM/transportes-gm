@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { supabase } from "@/supabaseClient";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +10,7 @@ import {
   TrendingUp,
   Download,
   Loader2,
+  DollarSign
 } from "lucide-react";
 import { format, getISOWeek, getYear } from "date-fns";
 
@@ -19,7 +20,6 @@ import FiltrosViajes from "../components/fuel/FiltrosViajes";
 import GraficoEficiencia from "../components/fuel/GraficoEficiencia";
 import RankingConductores from "../components/fuel/RankingConductores";
 import AnomaliasCombustible from "../components/fuel/AnomaliasCombustible";
-import { DollarSign } from "lucide-react";
 
 const FECHA_LIMITE_ARCHIVO = '2026-04-24';
 
@@ -37,7 +37,8 @@ export default function ControlCombustible() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("Viaje")
-        .select("*").gte("fecha", FECHA_LIMITE_ARCHIVO)
+        .select("*")
+        .gte("fecha", FECHA_LIMITE_ARCHIVO)
         .order("fecha", { ascending: false });
       if (error) throw new Error(error.message);
       return data;
@@ -56,6 +57,9 @@ export default function ControlCombustible() {
   const viajesFiltrados = viajes.filter((viaje) => {
     let cumpleFiltros = true;
     const rutaPrincipal = viaje.ruta_ida || viaje.ruta || "";
+
+    // Filtro por Fecha de Archivo (Garantizar que no se vean viajes archivados)
+    if (viaje.fecha < FECHA_LIMITE_ARCHIVO) cumpleFiltros = false;
 
     if (
       periodoFiltro !== "todos" &&
@@ -101,18 +105,21 @@ export default function ControlCombustible() {
   };
 
   const calcularEstadisticas = () => {
-    const totalViajes = viajesFiltrados.length;
-    const totalKm = viajesFiltrados.reduce(
+    // Solo tomar viajes con combustible registrado para las métricas
+    const viajesCompletos = viajesFiltrados.filter(v => (parseFloat(v.litros_combustible) || 0) > 0);
+    
+    const totalViajes = viajesCompletos.length;
+    const totalKm = viajesCompletos.reduce(
       (sum, v) => sum + (v.kilometros_total || v.kilometros || 0),
       0,
     );
-    const totalLitros = viajesFiltrados.reduce(
+    const totalLitros = viajesCompletos.reduce(
       (sum, v) => sum + (v.litros_combustible || 0),
       0,
     );
     const promedioEficiencia = totalLitros > 0 ? totalKm / totalLitros : 0;
 
-    const totalCosto = viajesFiltrados.reduce(
+    const totalCosto = viajesCompletos.reduce(
       (sum, v) =>
         sum +
         (parseFloat(v.costo_combustible) || 0) +
@@ -134,7 +141,6 @@ export default function ControlCombustible() {
 
   const stats = calcularEstadisticas();
 
-  // Función corregida sin Math.round()
   const formatNumber = (num, decimals = 0) => {
     return Number(num).toLocaleString("en-US", {
       minimumFractionDigits: decimals,
@@ -153,7 +159,6 @@ export default function ControlCombustible() {
         const litros = viaje.litros_combustible || 0;
         const eficiencia = viaje.km_por_litro || 0;
 
-        // Costos
         const costoCombustible = viaje.costo_combustible || 0;
         const casetasIda = viaje.casetas_ida || 0;
         const casetasRegreso = viaje.casetas_regreso || 0;
@@ -161,10 +166,7 @@ export default function ControlCombustible() {
         const costoTotal = costoCombustible + totalCasetas;
 
         return {
-          "Fecha Salida": format(
-            new Date(`${viaje.fecha}T12:00:00`),
-            "dd/MM/yyyy",
-          ),
+          "Fecha Salida": format(new Date(`${viaje.fecha}T12:00:00`), "dd/MM/yyyy"),
           "Fecha Llegada": viaje.fecha_llegada
             ? format(new Date(`${viaje.fecha_llegada}T12:00:00`), "dd/MM/yyyy")
             : "-",
@@ -198,16 +200,11 @@ export default function ControlCombustible() {
         ),
       ].join("\n");
 
-      const blob = new Blob(["\ufeff" + csvContent], {
-        type: "text/csv;charset=utf-8;",
-      });
+      const blob = new Blob(["\ufeff" + csvContent], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
       const url = URL.createObjectURL(blob);
       link.setAttribute("href", url);
-      link.setAttribute(
-        "download",
-        `reporte_viajes_${format(new Date(), "yyyy-MM-dd")}.csv`,
-      );
+      link.setAttribute("download", `reporte_viajes_${format(new Date(), "yyyy-MM-dd")}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -312,24 +309,24 @@ export default function ControlCombustible() {
           />
         </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-              <RankingConductores 
-                viajes={viajesFiltrados} 
-                conductores={conductores} 
-              />
-              <GraficoEficiencia 
-                viajes={viajesFiltrados} 
-              />
-            </div>
-            <div className="space-y-6">
-              <AnomaliasCombustible 
-                viajes={viajesFiltrados} 
-              />
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <RankingConductores 
+              viajes={viajesFiltrados} 
+              conductores={conductores} 
+            />
+            <GraficoEficiencia 
+              viajes={viajesFiltrados} 
+            />
+          </div>
+          <div className="space-y-6">
+            <AnomaliasCombustible 
+              viajes={viajesFiltrados} 
+              conductores={conductores}
+            />
           </div>
         </div>
       </div>
+    </div>
   );
 }
-

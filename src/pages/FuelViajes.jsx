@@ -867,8 +867,16 @@ export default function FuelViajes() {
                                   <span className="text-[10px] lg:text-xs font-bold text-muted-foreground uppercase">
                                     Litros:
                                   </span>
-                                  <span className="text-sm lg:text-base font-black text-foreground">
-                                    {formatNumber(litros, 0)} <span className="text-[10px] lg:text-xs font-medium opacity-60">L</span>
+                                  <span className="text-sm lg:text-base font-black text-foreground text-right">
+                                    {litros > 0 ? (
+                                      <>
+                                        {formatNumber(litros, 0)} <span className="text-[10px] lg:text-xs font-medium opacity-60">L</span>
+                                      </>
+                                    ) : (
+                                      <span className="text-[9px] lg:text-[11px] font-black text-red-500 uppercase tracking-tighter bg-red-50 dark:bg-red-950/30 px-2 py-0.5 rounded-md border border-red-200 dark:border-red-900/50">
+                                        Sin consumo registrado
+                                      </span>
+                                    )}
                                   </span>
                                 </div>
                                 {costoCombustible > 0 && (
@@ -882,7 +890,7 @@ export default function FuelViajes() {
                                   </div>
                                 )}
                                 {costoCasetas > 0 && (
-                                  <div className="space-y-1.5 pt-2 border-t border-border/40 mt-1">
+                                  <div className="space-y-1.5 mt-1">
                                     <div className="flex items-center justify-between">
                                       <span className="text-[10px] lg:text-xs font-bold text-muted-foreground uppercase">
                                         CASETAS:

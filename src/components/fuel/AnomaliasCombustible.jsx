@@ -5,16 +5,21 @@ import { format, parseISO } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
-export default function AnomaliasCombustible({ viajes }) {
+export default function AnomaliasCombustible({ viajes, conductores }) {
   const navigate = useNavigate();
 
   // Find trips with very low efficiency (e.g., < 2.0 km/L)
   const anomalias = useMemo(() => {
     return viajes.filter((v) => {
       const eficiencia = parseFloat(v.km_por_litro) || 0;
+      
+      // Solo mostrar anomalías de conductores activos
+      const conductor = conductores?.find(c => String(c.id) === String(v.conductor_id));
+      if (!conductor || conductor.activo === false) return false;
+
       return eficiencia > 0 && eficiencia < 2.0;
     }).slice(0, 5); // Limit to top 5 recent anomalies
-  }, [viajes]);
+  }, [viajes, conductores]);
 
   if (anomalias.length === 0) return null;
 

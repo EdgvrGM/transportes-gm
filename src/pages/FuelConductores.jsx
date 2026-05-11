@@ -39,6 +39,8 @@ import {
 } from "@/components/ui/select";
 import { Plus, Edit, Phone, CreditCard, Loader2, Trash2, User } from "lucide-react";
 
+const FECHA_LIMITE_ARCHIVO = '2026-04-24';
+
 export default function FuelConductores() {
   const queryClient = useQueryClient();
   const [dialogAbierto, setDialogAbierto] = useState(false);
@@ -68,7 +70,10 @@ export default function FuelConductores() {
   const { data: viajes = [] } = useQuery({
     queryKey: ["viajes"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("Viaje").select("*");
+      const { data, error } = await supabase
+        .from("Viaje")
+        .select("*")
+        .gte("fecha", FECHA_LIMITE_ARCHIVO);
       if (error) throw new Error(error.message);
       return data;
     },
@@ -155,9 +160,14 @@ export default function FuelConductores() {
   };
 
   const obtenerEstadisticasConductor = (conductorId) => {
+    // Solo tomar viajes con combustible registrado y después de la fecha límite
     const viajesConductor = viajes.filter(
-      (v) => v.conductor_id === conductorId,
+      (v) => 
+        v.conductor_id === conductorId && 
+        (parseFloat(v.litros_combustible) || 0) > 0 &&
+        (parseFloat(v.kilometros_total || v.kilometros) || 0) > 0
     );
+
     const totalViajes = viajesConductor.length;
     const totalKm = viajesConductor.reduce(
       (sum, v) => sum + (v.kilometros_total || v.kilometros || 0),

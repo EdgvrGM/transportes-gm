@@ -18,15 +18,17 @@ export default function GraficoEficiencia({ viajes }) {
   const isDark = theme === "dark";
 
   const rutaStats = {};
-  viajes.forEach((viaje) => {
-    const rutaKey = viaje.ruta_ida || viaje.ruta || "Sin ruta";
-    const kmTotal = viaje.kilometros_total || viaje.kilometros || 0;
-    const litros = viaje.litros_combustible || 0;
-    if (!rutaStats[rutaKey])
-      rutaStats[rutaKey] = { totalKm: 0, totalLitros: 0 };
-    rutaStats[rutaKey].totalKm += kmTotal;
-    rutaStats[rutaKey].totalLitros += litros;
-  });
+  viajes
+    .filter((v) => (parseFloat(v.litros_combustible) || 0) > 0)
+    .forEach((viaje) => {
+      const rutaKey = viaje.ruta_ida || viaje.ruta || "Sin ruta";
+      const kmTotal = viaje.kilometros_total || viaje.kilometros || 0;
+      const litros = viaje.litros_combustible || 0;
+      if (!rutaStats[rutaKey])
+        rutaStats[rutaKey] = { totalKm: 0, totalLitros: 0 };
+      rutaStats[rutaKey].totalKm += kmTotal;
+      rutaStats[rutaKey].totalLitros += litros;
+    });
 
   const data = Object.entries(rutaStats)
     .map(([ruta, stats]) => ({
