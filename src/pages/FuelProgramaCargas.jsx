@@ -775,19 +775,27 @@ export default function FuelProgramaCargas() {
             </DialogHeader>
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               <div className="flex p-1 md:p-1.5 bg-card border border-border shadow-sm rounded-2xl overflow-x-auto hide-scrollbar shrink-0 touch-pan-x">
-                {DIAS_SEMANA.map((dia) => (
-                  <button
-                    key={dia}
-                    onClick={() => setDiaVerActivo(dia)}
-                    className={`flex-1 min-w-[70px] py-2.5 md:py-3 px-2 md:px-4 text-[10px] md:text-xs font-bold uppercase rounded-xl transition-all ${diaVerActivo === dia ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:bg-muted"}`}
-                  >
-                    <span className="hidden sm:inline">{dia}</span>
-                    <span className="sm:hidden">{dia.substring(0,3)}</span>{" "}
-                    <span className="ml-0.5 opacity-50">
-                      ({getViajesPorDia(dia).length})
-                    </span>
-                  </button>
-                ))}
+                {DIAS_SEMANA.map((dia, idx) => {
+                  const fechaDia = programaSeleccionado?.fecha_inicio 
+                    ? format(addDays(parseISO(programaSeleccionado.fecha_inicio), idx), "d")
+                    : "";
+                  const count = getViajesPorDia(dia).length;
+                  return (
+                    <button
+                      key={dia}
+                      onClick={() => setDiaVerActivo(dia)}
+                      className={`flex-1 min-w-[100px] py-2.5 md:py-3 px-2 rounded-xl transition-all flex flex-col items-center justify-center gap-0 ${diaVerActivo === dia ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:bg-muted"}`}
+                    >
+                      <span className="text-xs md:text-sm font-black uppercase leading-none">
+                        <span className="hidden sm:inline">{dia}</span>
+                        <span className="sm:hidden">{dia.substring(0,3)}</span> {fechaDia}
+                      </span>
+                      <span className={`text-[10px] md:text-xs font-bold opacity-80 -mt-1 leading-none ${diaVerActivo === dia ? "text-primary-foreground/90" : "text-muted-foreground"}`}>
+                        {count} {count === 1 ? "viaje" : "viajes"}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
               <div className="border border-border/80 bg-background dark:bg-card rounded-2xl overflow-hidden shadow-sm divide-y divide-border/60">
                 {getViajesPorDia(diaVerActivo).map(
@@ -978,19 +986,27 @@ export default function FuelProgramaCargas() {
               </div>
 
               <div className="flex p-1 md:p-1.5 bg-card border border-border shadow-sm rounded-2xl overflow-x-auto hide-scrollbar touch-pan-x">
-                {DIAS_SEMANA.map((dia) => (
-                  <button
-                    key={dia}
-                    onClick={() => setDiaActivo(dia)}
-                    className={`flex-1 min-w-[70px] py-2.5 md:py-3 px-2 md:px-4 text-[10px] md:text-xs font-bold uppercase rounded-xl transition-all ${diaActivo === dia ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:bg-muted"}`}
-                  >
-                    <span className="hidden sm:inline">{dia}</span>
-                    <span className="sm:hidden">{dia.substring(0,3)}</span>{" "}
-                    <span className="ml-0.5 opacity-50">
-                      ({formData.programacion[dia]?.length || 0})
-                    </span>
-                  </button>
-                ))}
+                {DIAS_SEMANA.map((dia, idx) => {
+                  const fechaDia = formData.fecha_inicio 
+                    ? format(addDays(parseISO(formData.fecha_inicio), idx), "d")
+                    : "";
+                  const count = formData.programacion[dia]?.length || 0;
+                  return (
+                    <button
+                      key={dia}
+                      onClick={() => setDiaActivo(dia)}
+                      className={`flex-1 min-w-[100px] py-2.5 md:py-3 px-2 rounded-xl transition-all flex flex-col items-center justify-center gap-0 ${diaActivo === dia ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:bg-muted"}`}
+                    >
+                      <span className="text-xs md:text-sm font-black uppercase leading-none">
+                        <span className="hidden sm:inline">{dia}</span>
+                        <span className="sm:hidden">{dia.substring(0,3)}</span> {fechaDia}
+                      </span>
+                      <span className={`text-[10px] md:text-xs font-bold opacity-80 -mt-1 leading-none ${diaActivo === dia ? "text-primary-foreground/90" : "text-muted-foreground"}`}>
+                        {count} {count === 1 ? "viaje" : "viajes"}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
 
               <div className="space-y-4">
