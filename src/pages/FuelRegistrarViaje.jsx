@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   ArrowLeft,
   Save,
@@ -62,6 +63,8 @@ export default function FuelRegistrarViaje() {
     costo_combustible: "",
     casetas_ida: "",
     casetas_regreso: "",
+    sinCasetas: false,
+    sinDiesel: false,
     notas: "",
   });
 
@@ -158,14 +161,14 @@ export default function FuelRegistrarViaje() {
       if (viajeRegistradoId) {
         await supabase
           .from("viajes_registrados")
-          .update({ combustible_registrado: parseFloat(viaje.litros_combustible) > 0 })
+          .update({ combustible_registrado: viaje.litros_combustible !== "" })
           .eq("id", viajeRegistradoId);
       } else {
         // Soft Update: Si no hay ID directo, buscamos por coincidencia de datos
         // para asegurar que el dashboard se mantenga al día.
         await supabase
           .from("viajes_registrados")
-          .update({ combustible_registrado: parseFloat(viaje.litros_combustible) > 0 })
+          .update({ combustible_registrado: viaje.litros_combustible !== "" })
           .match({
             fecha_viaje: viaje.fecha,
             conductor_id: viaje.conductor_id,
@@ -238,9 +241,8 @@ export default function FuelRegistrarViaje() {
   const handleSubmit = (e) => {
     e.preventDefault();
     setError(null);
-    const kmIda = parseFloat(viaje.kilometros_ida);
-    const kmRegreso = parseFloat(viaje.kilometros_regreso);
-    const litros = parseFloat(viaje.litros_combustible);
+    const kmIda = parseFloat(viaje.kilometros_ida) || 0;
+    const kmRegreso = parseFloat(viaje.kilometros_regreso) || 0;
 
     if (
       !viaje.fecha ||
@@ -263,6 +265,22 @@ export default function FuelRegistrarViaje() {
     );
     const kmTotal = kmIda + kmAdicionales + kmRegreso;
 
+    let litros = viaje.litros_combustible !== "" ? parseFloat(viaje.litros_combustible) : null;
+    let costoFuel = viaje.costo_combustible !== "" ? parseFloat(viaje.costo_combustible) : null;
+
+    if (viaje.sinDiesel) {
+      litros = 0;
+      costoFuel = 0;
+    }
+
+    let casetasIda = viaje.casetas_ida !== "" ? parseFloat(viaje.casetas_ida) : null;
+    let casetasRegreso = viaje.casetas_regreso !== "" ? parseFloat(viaje.casetas_regreso) : null;
+
+    if (viaje.sinCasetas) {
+      casetasIda = 0;
+      casetasRegreso = 0;
+    }
+
     const datosViaje = {
       fecha: `${viaje.fecha}T12:00:00`,
       fecha_llegada: viaje.fecha_llegada || null,
@@ -284,14 +302,10 @@ export default function FuelRegistrarViaje() {
       kilometros_regreso: kmRegreso,
       kilometros_total: kmTotal,
       litros_combustible: litros,
-      km_por_litro: litros > 0 ? kmTotal / litros : 0,
-      costo_combustible: viaje.costo_combustible
-        ? parseFloat(viaje.costo_combustible)
-        : null,
-      casetas_ida: viaje.casetas_ida ? parseFloat(viaje.casetas_ida) : null, // <-- NUEVO
-      casetas_regreso: viaje.casetas_regreso
-        ? parseFloat(viaje.casetas_regreso)
-        : null,
+      km_por_litro: (litros !== null && litros > 0) ? kmTotal / litros : 0,
+      costo_combustible: costoFuel,
+      casetas_ida: casetasIda,
+      casetas_regreso: casetasRegreso,
       notas: viaje.notas,
       // Se incluye como BIGINT (número entero)
       viaje_id: viajeRegistradoId ? parseInt(viajeRegistradoId, 10) : null,
@@ -816,48 +830,51 @@ export default function FuelRegistrarViaje() {
 
               {/* COMBUSTIBLE */}
               <div className="space-y-4 p-4 bg-green-50/50 dark:bg-green-900/10 rounded-lg border border-green-100 dark:border-green-900">
-                <div className="flex items-center gap-2 mb-2">
-                  <Fuel className="w-5 h-5 text-green-600 dark:text-green-400" />
-                  <h3 className="font-bold text-foreground">Consumo</h3>
-                  {kmTotales > 0 && (
-                    <span className="text-sm text-muted-foreground ml-2">
-                      (Total: {kmTotales.toFixed(1)} km)
-                    </span>
-                  )}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Fuel className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    <h3 className="font-bold text-foreground">Combustible</h3>
+                  </div>
+                  <div className="flex items-center gap-2 bg-background/50 px-3 py-1.5 rounded-lg border border-green-100 dark:border-green-900/50">
+                    <Checkbox 
+                      id="no-diesel" 
+                      checked={viaje.sinDiesel}
+                      onCheckedChange={(checked) => setViaje({ ...viaje, sinDiesel: !!checked, litros_combustible: !!checked ? 0 : viaje.litros_combustible, costo_combustible: !!checked ? 0 : viaje.costo_combustible })}
+                    />
+                    <Label htmlFor="no-diesel" className="text-xs font-bold cursor-pointer text-green-700 dark:text-green-400">
+                      Aún no ha cargado diesel
+                    </Label>
+                  </div>
                 </div>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-foreground font-semibold">
+                    <Label className="font-semibold text-foreground">
                       Litros
                     </Label>
                     <Input
                       type="number"
                       step="0.01"
-                      value={viaje.litros_combustible}
+                      value={viaje.sinDiesel ? "0" : viaje.litros_combustible}
                       onChange={(e) =>
-                        setViaje({
-                          ...viaje,
-                          litros_combustible: e.target.value,
-                        })
+                        setViaje({ ...viaje, litros_combustible: e.target.value })
                       }
-                      className="bg-background border-input"
+                      disabled={viaje.sinDiesel}
+                      className="bg-background border-input disabled:opacity-50"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-foreground font-semibold">
-                      Costo Combustible ($)
+                    <Label className="font-semibold text-foreground">
+                      Costo Total ($)
                     </Label>
                     <Input
                       type="number"
                       step="0.01"
-                      value={viaje.costo_combustible}
+                      value={viaje.sinDiesel ? "0" : viaje.costo_combustible}
                       onChange={(e) =>
-                        setViaje({
-                          ...viaje,
-                          costo_combustible: e.target.value,
-                        })
+                        setViaje({ ...viaje, costo_combustible: e.target.value })
                       }
-                      className="bg-background border-input"
+                      disabled={viaje.sinDiesel}
+                      className="bg-background border-input disabled:opacity-50"
                     />
                   </div>
                 </div>
@@ -880,9 +897,21 @@ export default function FuelRegistrarViaje() {
 
               {/* CASETAS (NUEVO BLOQUE) */}
               <div className="space-y-4 p-4 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-lg border border-indigo-100 dark:border-indigo-900">
-                <div className="flex items-center gap-2 mb-2">
-                  <Ticket className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                  <h3 className="font-bold text-foreground">Casetas</h3>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Ticket className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                    <h3 className="font-bold text-foreground">Casetas</h3>
+                  </div>
+                  <div className="flex items-center gap-2 bg-background/50 px-3 py-1.5 rounded-lg border border-indigo-100 dark:border-indigo-900/50">
+                    <Checkbox 
+                      id="no-casetas" 
+                      checked={viaje.sinCasetas}
+                      onCheckedChange={(checked) => setViaje({ ...viaje, sinCasetas: !!checked })}
+                    />
+                    <Label htmlFor="no-casetas" className="text-xs font-bold cursor-pointer text-indigo-700 dark:text-indigo-400">
+                      No pagó casetas
+                    </Label>
+                  </div>
                 </div>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -892,11 +921,12 @@ export default function FuelRegistrarViaje() {
                     <Input
                       type="number"
                       step="0.01"
-                      value={viaje.casetas_ida}
+                      value={viaje.sinCasetas ? "0" : viaje.casetas_ida}
                       onChange={(e) =>
                         setViaje({ ...viaje, casetas_ida: e.target.value })
                       }
-                      className="bg-background border-input"
+                      disabled={viaje.sinCasetas}
+                      className="bg-background border-input disabled:opacity-50"
                     />
                   </div>
                   <div className="space-y-2">
@@ -906,11 +936,12 @@ export default function FuelRegistrarViaje() {
                     <Input
                       type="number"
                       step="0.01"
-                      value={viaje.casetas_regreso}
+                      value={viaje.sinCasetas ? "0" : viaje.casetas_regreso}
                       onChange={(e) =>
                         setViaje({ ...viaje, casetas_regreso: e.target.value })
                       }
-                      className="bg-background border-input"
+                      disabled={viaje.sinCasetas}
+                      className="bg-background border-input disabled:opacity-50"
                     />
                   </div>
                 </div>

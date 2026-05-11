@@ -50,6 +50,7 @@ import {
   Brain,
   Download,
   ArrowRight,
+  Ticket,
 } from "lucide-react";
 import { format, addDays, parseISO, getISOWeek } from "date-fns";
 import { es } from "date-fns/locale";
@@ -883,38 +884,72 @@ export default function FuelProgramaCargas() {
                       </div>
 
                       {/* Fila Inferior: Botón Centrado */}
-                      <div className="flex justify-center pt-2">
-                        {(() => {
-                          const registeredViaje = getRegisteredTrip(viaje, diaVerActivo);
-                          if (registeredViaje) {
+                        <div className="flex justify-center pt-2">
+                          {(() => {
+                            const registeredViaje = getRegisteredTrip(viaje, diaVerActivo);
+                            
+                            if (registeredViaje) {
+                              const hasFuel = parseFloat(registeredViaje.litros_combustible || 0) > 0;
+                              const hasTolls = registeredViaje.casetas_ida !== null && registeredViaje.casetas_regreso !== null;
+
+                              if (hasFuel && hasTolls) {
+                                return (
+                                  <div className="flex gap-2 w-full justify-center">
+                                    <Button
+                                      variant="outline"
+                                      onClick={() => {
+                                        setViajeConsumoSeleccionado(registeredViaje);
+                                        setDialogConsumoAbierto(true);
+                                      }}
+                                      className="h-9 px-6 gap-2 border-green-200 text-green-700 bg-green-50/50 hover:bg-green-100 dark:border-green-900/30 dark:text-green-400 dark:bg-green-900/20 dark:hover:bg-green-900/40 rounded-xl font-black text-[10px] shadow-sm active:scale-95 transition-all"
+                                    >
+                                      <Eye className="w-3.5 h-3.5" />
+                                      <span>VER DETALLES COMPLETOS</span>
+                                    </Button>
+                                  </div>
+                                );
+                              }
+
+                              // Caso parcial: Falta combustible o casetas
+                              let btnLabel = "COMPLETAR REGISTRO";
+                              let btnIcon = <Edit className="w-3.5 h-3.5" />;
+                              let btnClass = "border-orange-200 text-orange-700 bg-orange-50/50 hover:bg-orange-100 dark:border-orange-900/30 dark:text-orange-400 dark:bg-orange-900/20";
+
+                              if (!hasFuel && hasTolls) {
+                                btnLabel = "REGISTRAR COMBUSTIBLE";
+                                btnIcon = <Fuel className="w-3.5 h-3.5" />;
+                                btnClass = "border-amber-200 text-amber-700 bg-amber-50/50 hover:bg-amber-100 dark:border-amber-900/30 dark:text-amber-400 dark:bg-amber-900/20";
+                              } else if (hasFuel && !hasTolls) {
+                                btnLabel = "REGISTRAR CASETAS";
+                                btnIcon = <Ticket className="w-3.5 h-3.5" />;
+                                btnClass = "border-indigo-200 text-indigo-700 bg-indigo-50/50 hover:bg-indigo-100 dark:border-indigo-900/30 dark:text-indigo-400 dark:bg-indigo-900/20";
+                              }
+
+                              return (
+                                <Button
+                                  variant="outline"
+                                  onClick={() => handleRegistrarCombustible(viaje)}
+                                  className={`h-9 px-6 gap-2 rounded-xl font-black text-[10px] shadow-sm active:scale-95 transition-all ${btnClass}`}
+                                >
+                                  {btnIcon}
+                                  <span>{btnLabel}</span>
+                                </Button>
+                              );
+                            }
+
+                            // No existe registro en la tabla Viaje
                             return (
-                                <div className="flex gap-2 w-full justify-center">
-                                  <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                      setViajeConsumoSeleccionado(registeredViaje);
-                                      setDialogConsumoAbierto(true);
-                                    }}
-                                    className="h-9 px-6 gap-2 border-green-200 text-green-700 bg-green-50/50 hover:bg-green-100 dark:border-green-900/30 dark:text-green-400 dark:bg-green-900/20 dark:hover:bg-green-900/40 rounded-xl font-black text-[10px] shadow-sm active:scale-95 transition-all"
-                                  >
-                                    <Eye className="w-3.5 h-3.5" />
-                                    <span>VER CONSUMO REGISTRADO</span>
-                                  </Button>
-                                </div>
+                              <Button
+                                variant="outline"
+                                onClick={() => handleRegistrarCombustible(viaje)}
+                                className="h-9 px-6 border-orange-200 text-orange-600 hover:bg-orange-50 dark:border-orange-900/30 dark:text-orange-400 dark:bg-orange-900/20 dark:hover:bg-orange-900/40 rounded-xl font-black text-[10px] gap-2 shadow-sm active:scale-95 transition-all"
+                              >
+                                <Plus className="w-4 h-4" />
+                                <span>REGISTRAR CONSUMOS DE COMBUSTIBLE Y CASETAS</span>
+                              </Button>
                             );
-                          }
-                          return (
-                            <Button
-                              variant="outline"
-                              onClick={() => handleRegistrarCombustible(viaje)}
-                              className="h-9 px-6 border-orange-200 text-orange-600 hover:bg-orange-50 dark:border-orange-900/30 dark:text-orange-400 dark:bg-orange-900/20 dark:hover:bg-orange-900/40 rounded-xl font-black text-[10px] gap-2 shadow-sm active:scale-95 transition-all"
-                            >
-                              <Fuel className="w-4 h-4" />
-                              <span>REGISTRAR COMBUSTIBLE Y GASTOS</span>
-                            </Button>
-                          );
-                        })()}
-                      </div>
+                          })()}
+                        </div>
                     </div>
                   );
                 }

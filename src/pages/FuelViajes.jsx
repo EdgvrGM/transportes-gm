@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/supabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -48,6 +49,7 @@ import {
   X,
   ArrowRight,
   Ticket,
+  Fuel,
   ArrowLeft,
   Layers,
   Briefcase,
@@ -85,17 +87,7 @@ export default function FuelViajes() {
     }
   }, [stateData.scrollToId]);
 
-  // Efecto para abrir edición automáticamente si viene del programa de cargas
-  React.useEffect(() => {
-    if (stateData.editId && viajes.length > 0) {
-      const v = viajes.find(x => String(x.id) === String(stateData.editId));
-      if (v) {
-        abrirDialogEditar(v);
-        // Limpiar el estado de navegación para evitar que se reabra al navegar internamente
-        window.history.replaceState({}, document.title);
-      }
-    }
-  }, [stateData.editId, viajes]);
+
 
   const [formData, setFormData] = useState({
     fecha: "",
@@ -115,6 +107,8 @@ export default function FuelViajes() {
     costo_combustible: "",
     casetas_ida: "",
     casetas_regreso: "",
+    sinCasetas: false,
+    sinDiesel: false,
     notas: "",
   });
 
@@ -329,10 +323,12 @@ export default function FuelViajes() {
       rutas_adicionales: rutasAdicionales,
       ruta_regreso: viaje.ruta_regreso || "",
       kilometros_regreso: viaje.kilometros_regreso || "",
-      litros_combustible: viaje.litros_combustible || "",
-      costo_combustible: viaje.costo_combustible || "",
-      casetas_ida: viaje.casetas_ida || "",
-      casetas_regreso: viaje.casetas_regreso || "",
+      litros_combustible: viaje.litros_combustible ?? "",
+      costo_combustible: viaje.costo_combustible ?? "",
+      sinDiesel: viaje.litros_combustible === 0,
+      casetas_ida: viaje.casetas_ida ?? "",
+      casetas_regreso: viaje.casetas_regreso ?? "",
+      sinCasetas: (viaje.casetas_ida === 0 && viaje.casetas_regreso === 0),
       remolque_id: viaje.remolque_id ? String(viaje.remolque_id) : "",
       remolque2_id: viaje.remolque2_id ? String(viaje.remolque2_id) : "",
       viaje_id: viaje.viaje_id || null,
@@ -340,6 +336,18 @@ export default function FuelViajes() {
     });
     setDialogAbierto(true);
   };
+
+  // Efecto para abrir edición automáticamente si viene del programa de cargas
+  const autoOpenedRef = useRef(false);
+  useEffect(() => {
+    if (stateData.editId && viajes.length > 0 && !autoOpenedRef.current) {
+      const v = viajes.find(x => String(x.id) === String(stateData.editId));
+      if (v) {
+        autoOpenedRef.current = true;
+        abrirDialogEditar(v);
+      }
+    }
+  }, [stateData.editId, viajes]);
 
   const cerrarDialog = () => {
     setDialogAbierto(false);
@@ -416,7 +424,21 @@ export default function FuelViajes() {
       0,
     );
     const kmTotal = kmIda + kmAdicionales + kmRegreso;
-    const litros = parseFloat(formData.litros_combustible) || 0;
+    let litros = formData.litros_combustible !== "" ? parseFloat(formData.litros_combustible) : null;
+    let costoFuel = formData.costo_combustible !== "" ? parseFloat(formData.costo_combustible) : null;
+
+    if (formData.sinDiesel) {
+      litros = 0;
+      costoFuel = 0;
+    }
+
+    let casetasIda = formData.casetas_ida !== "" ? parseFloat(formData.casetas_ida) : null;
+    let casetasRegreso = formData.casetas_regreso !== "" ? parseFloat(formData.casetas_regreso) : null;
+
+    if (formData.sinCasetas) {
+      casetasIda = 0;
+      casetasRegreso = 0;
+    }
 
     const datosViaje = {
       fecha: formData.fecha,
@@ -437,16 +459,10 @@ export default function FuelViajes() {
       kilometros_regreso: kmRegreso,
       kilometros_total: kmTotal,
       litros_combustible: litros,
-      km_por_litro: litros > 0 ? kmTotal / litros : 0,
-      costo_combustible: formData.costo_combustible
-        ? parseFloat(formData.costo_combustible)
-        : null,
-      casetas_ida: formData.casetas_ida
-        ? parseFloat(formData.casetas_ida)
-        : null,
-      casetas_regreso: formData.casetas_regreso
-        ? parseFloat(formData.casetas_regreso)
-        : null,
+      km_por_litro: (litros && litros > 0) ? kmTotal / litros : 0,
+      costo_combustible: costoFuel,
+      casetas_ida: casetasIda,
+      casetas_regreso: casetasRegreso,
       remolque_id: formData.remolque_id || null,
       remolque2_id: formData.remolque2_id || null,
       notas: formData.notas,
@@ -1239,30 +1255,43 @@ export default function FuelViajes() {
               </div>
 
               <div className="space-y-4 p-4 bg-green-50/50 dark:bg-green-900/10 rounded-lg border border-green-100 dark:border-green-900">
-                <h3 className="font-bold text-foreground">
-                  Consumo de Combustible
-                </h3>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Fuel className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    <h3 className="font-bold text-foreground">Combustible</h3>
+                  </div>
+                  <div className="flex items-center gap-2 bg-background/50 px-3 py-1.5 rounded-lg border border-green-100 dark:border-green-900/50">
+                    <Checkbox 
+                      id="edit-no-diesel" 
+                      checked={formData.sinDiesel}
+                      onCheckedChange={(checked) => setFormData({ ...formData, sinDiesel: !!checked, litros_combustible: !!checked ? 0 : formData.litros_combustible, costo_combustible: !!checked ? 0 : formData.costo_combustible })}
+                    />
+                    <Label htmlFor="edit-no-diesel" className="text-xs font-bold cursor-pointer text-green-700 dark:text-green-400">
+                      Aún no ha cargado diesel
+                    </Label>
+                  </div>
+                </div>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label
                       htmlFor="edit-litros"
                       className="font-semibold text-foreground"
                     >
-                      Litros <span className="text-red-500">*</span>
+                      Litros
                     </Label>
                     <Input
                       id="edit-litros"
                       type="number"
                       step="0.01"
-                      value={formData.litros_combustible}
+                      value={formData.sinDiesel ? "0" : formData.litros_combustible}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
                           litros_combustible: e.target.value,
                         })
                       }
-                      required
-                      className="bg-background border-input"
+                      disabled={formData.sinDiesel}
+                      className="bg-background border-input disabled:opacity-50"
                     />
                   </div>
                   <div className="space-y-2">
@@ -1276,14 +1305,15 @@ export default function FuelViajes() {
                       id="edit-costo"
                       type="number"
                       step="0.01"
-                      value={formData.costo_combustible}
+                      value={formData.sinDiesel ? "0" : formData.costo_combustible}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
                           costo_combustible: e.target.value,
                         })
                       }
-                      className="bg-background border-input"
+                      disabled={formData.sinDiesel}
+                      className="bg-background border-input disabled:opacity-50"
                     />
                   </div>
                 </div>
@@ -1291,9 +1321,21 @@ export default function FuelViajes() {
 
               {/* CASETAS */}
               <div className="space-y-4 p-4 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-lg border border-indigo-100 dark:border-indigo-900">
-                <div className="flex items-center gap-2 mb-2">
-                  <Ticket className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                  <h3 className="font-bold text-foreground">Casetas</h3>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Ticket className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                    <h3 className="font-bold text-foreground">Casetas</h3>
+                  </div>
+                  <div className="flex items-center gap-2 bg-background/50 px-3 py-1.5 rounded-lg border border-indigo-100 dark:border-indigo-900/50">
+                    <Checkbox 
+                      id="edit-no-casetas" 
+                      checked={formData.sinCasetas}
+                      onCheckedChange={(checked) => setFormData({ ...formData, sinCasetas: !!checked })}
+                    />
+                    <Label htmlFor="edit-no-casetas" className="text-xs font-bold cursor-pointer text-indigo-700 dark:text-indigo-400">
+                      No pagó casetas
+                    </Label>
+                  </div>
                 </div>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -1303,14 +1345,15 @@ export default function FuelViajes() {
                     <Input
                       type="number"
                       step="0.01"
-                      value={formData.casetas_ida}
+                      value={formData.sinCasetas ? "0" : formData.casetas_ida}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
                           casetas_ida: e.target.value,
                         })
                       }
-                      className="bg-background border-input"
+                      disabled={formData.sinCasetas}
+                      className="bg-background border-input disabled:opacity-50"
                     />
                   </div>
                   <div className="space-y-2">
@@ -1320,14 +1363,15 @@ export default function FuelViajes() {
                     <Input
                       type="number"
                       step="0.01"
-                      value={formData.casetas_regreso}
+                      value={formData.sinCasetas ? "0" : formData.casetas_regreso}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
                           casetas_regreso: e.target.value,
                         })
                       }
-                      className="bg-background border-input"
+                      disabled={formData.sinCasetas}
+                      className="bg-background border-input disabled:opacity-50"
                     />
                   </div>
                 </div>
