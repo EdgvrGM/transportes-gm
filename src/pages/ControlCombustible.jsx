@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { supabase } from "@/supabaseClient";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   Truck,
@@ -54,11 +53,10 @@ export default function ControlCombustible() {
     },
   });
 
-  const viajesFiltrados = viajes.filter((viaje) => {
+  const viajesFiltrados = useMemo(() => viajes.filter((viaje) => {
     let cumpleFiltros = true;
     const rutaPrincipal = viaje.ruta_ida || viaje.ruta || "";
 
-    // Filtro por Fecha de Archivo (Garantizar que no se vean viajes archivados)
     if (viaje.fecha < FECHA_LIMITE_ARCHIVO) cumpleFiltros = false;
 
     if (
@@ -94,7 +92,7 @@ export default function ControlCombustible() {
     }
 
     return cumpleFiltros;
-  });
+  }), [viajes, fechaInicio, fechaFin, conductorFiltro, rutaFiltro, periodoFiltro]);
 
   const limpiarFiltros = () => {
     setFechaInicio("");
@@ -104,10 +102,8 @@ export default function ControlCombustible() {
     setPeriodoFiltro("todos");
   };
 
-  const calcularEstadisticas = () => {
-    // Solo tomar viajes con combustible registrado para las métricas
+  const stats = useMemo(() => {
     const viajesCompletos = viajesFiltrados.filter(v => (parseFloat(v.litros_combustible) || 0) > 0);
-    
     const totalViajes = viajesCompletos.length;
     const totalKm = viajesCompletos.reduce(
       (sum, v) => sum + (v.kilometros_total || v.kilometros || 0),
@@ -118,7 +114,6 @@ export default function ControlCombustible() {
       0,
     );
     const promedioEficiencia = totalLitros > 0 ? totalKm / totalLitros : 0;
-
     const totalCosto = viajesCompletos.reduce(
       (sum, v) =>
         sum +
@@ -128,18 +123,8 @@ export default function ControlCombustible() {
       0,
     );
     const cpk = totalKm > 0 ? totalCosto / totalKm : 0;
-
-    return {
-      totalViajes,
-      totalKm,
-      totalLitros,
-      promedioEficiencia,
-      totalCosto,
-      cpk,
-    };
-  };
-
-  const stats = calcularEstadisticas();
+    return { totalViajes, totalKm, totalLitros, promedioEficiencia, totalCosto, cpk };
+  }, [viajesFiltrados]);
 
   const formatNumber = (num, decimals = 0) => {
     return Number(num).toLocaleString("en-US", {

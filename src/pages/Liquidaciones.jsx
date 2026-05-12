@@ -62,7 +62,7 @@ export default function Liquidaciones() {
     queryKey: ["programaCargas_liq"],
     queryFn: async () => {
       const { data } = await supabase.from("ProgramaCargas").select("*").order("fecha_inicio", { ascending: false });
-      return data || [];
+      return data || EMPTY_ARRAY;
     },
   });
 
@@ -70,7 +70,7 @@ export default function Liquidaciones() {
     queryKey: ["conductores_liq"],
     queryFn: async () => {
       const { data } = await supabase.from("Conductor").select("*").eq("estado", "activo").order("nombre");
-      return data || [];
+      return data || EMPTY_ARRAY;
     },
   });
 
@@ -122,13 +122,6 @@ export default function Liquidaciones() {
     enabled: !!fechaEfectivaInicio && !!fechaEfectivaFin,
   });
 
-  // Cálculos Derivados (Sin useEffect para evitar bucles infinitos)
-  const { porcentajeConductor } = useMemo(() => {
-    if (!conductorId || !conductores.length) return { porcentajeConductor: 16 };
-    const conductor = conductores.find((c) => String(c.id) === String(conductorId));
-    return { porcentajeConductor: parseFloat(conductor?.porcentaje_base) || 16.0 };
-  }, [conductorId, conductores]);
-
   // Efecto principal para CARGAR los viajes cuando cambia el contexto
   useEffect(() => {
     if (!infoSemana || !conductorId || !conductores.length) {
@@ -173,6 +166,9 @@ export default function Liquidaciones() {
     }
     return infoSemana?.rangoTexto || "";
   };
+
+  const formatCurrency = (num) =>
+    Number(num).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   // Manejadores
   const handleFleteChange = (index, value) => {
@@ -253,9 +249,9 @@ export default function Liquidaciones() {
         v.fecha,
         v.ruta,
         v.tipo,
-        `$${v.flete_bruto.toFixed(2)}`,
+        `$${formatCurrency(v.flete_bruto)}`,
         `${v.porcentaje}%`,
-        `$${v.comision.toFixed(2)}`
+        `$${formatCurrency(v.comision)}`
       ]),
       theme: 'grid',
       headStyles: { fillColor: [79, 70, 229] },
@@ -263,40 +259,47 @@ export default function Liquidaciones() {
 
     let finalY = doc.lastAutoTable.finalY + 10;
 
-    const diasAnticipos = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-    const rowsGastosAnticipos = [];
-    for (let i = 0; i < Math.max(gastos.length, 6); i++) {
-      const gasto = gastos[i] || { concepto: '', monto: 0 };
-      const dia = diasAnticipos[i] || '';
-      const montoAnt = dia ? anticipos[dia] : 0;
-      if (gasto.monto > 0 || montoAnt > 0 || gasto.concepto !== "") {
-        rowsGastosAnticipos.push([
-          gasto.concepto,
-          gasto.monto > 0 ? `$${gasto.monto.toFixed(2)}` : '',
-          dia,
-          montoAnt > 0 ? `$${montoAnt.toFixed(2)}` : ''
-        ]);
-      }
-    }
+    const rowsGastos = gastos
+      .filter(g => g.monto > 0 || g.concepto !== "")
+      .map(g => [g.concepto || '-', g.monto > 0 ? `$${formatCurrency(g.monto)}` : '']);
 
+    const diasAnticipos = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+    const rowsAnticipos = diasAnticipos
+      .filter(dia => (anticipos[dia] || 0) > 0)
+      .map(dia => [dia, `$${formatCurrency(anticipos[dia])}`]);
+
+    // Tabla Gastos — mitad izquierda
     autoTable(doc, {
       startY: finalY,
-      head: [['Concepto Gasto', 'Monto Gasto', 'Día Anticipo', 'Monto Anticipo']],
-      body: rowsGastosAnticipos,
+      margin: { left: 14, right: 109 },
+      head: [['Concepto Gasto', 'Monto']],
+      body: rowsGastos.length > 0 ? rowsGastos : [['Sin gastos registrados', '']],
       theme: 'grid',
       headStyles: { fillColor: [51, 65, 85] },
     });
+    const finalYGastos = doc.lastAutoTable.finalY;
 
-    finalY = doc.lastAutoTable.finalY + 15;
+    // Tabla Anticipos — mitad derecha, mismo Y de inicio
+    autoTable(doc, {
+      startY: finalY,
+      margin: { left: 109, right: 14 },
+      head: [['Día', 'Anticipo']],
+      body: rowsAnticipos.length > 0 ? rowsAnticipos : [['Sin anticipos', '']],
+      theme: 'grid',
+      headStyles: { fillColor: [51, 65, 85] },
+    });
+    const finalYAnticipos = doc.lastAutoTable.finalY;
+
+    finalY = Math.max(finalYGastos, finalYAnticipos) + 15;
 
     // Resumen
     doc.setFontSize(12);
-    doc.text(`Total Comisiones: $${totalComisiones.toFixed(2)}`, 130, finalY);
-    doc.text(`+ Total Gastos: $${totalGastos.toFixed(2)}`, 130, finalY + 6);
-    doc.text(`- Total Anticipos: $${totalAnticipos.toFixed(2)}`, 130, finalY + 12);
+    doc.text(`Total Comisiones: $${formatCurrency(totalComisiones)}`, 130, finalY);
+    doc.text(`+ Total Gastos: $${formatCurrency(totalGastos)}`, 130, finalY + 6);
+    doc.text(`- Total Anticipos: $${formatCurrency(totalAnticipos)}`, 130, finalY + 12);
     doc.setFontSize(14);
     doc.setFont(undefined, 'bold');
-    doc.text(`Sueldo Neto: $${sueldoNeto.toFixed(2)}`, 130, finalY + 22);
+    doc.text(`Sueldo Neto: $${formatCurrency(sueldoNeto)}`, 130, finalY + 22);
 
     // Firmas
     doc.setFontSize(10);
@@ -509,7 +512,7 @@ export default function Liquidaciones() {
                                 {v.porcentaje}%
                               </TableCell>
                               <TableCell className="text-right font-black text-green-600 dark:text-green-500 text-base">
-                                ${v.comision.toFixed(2)}
+                                ${formatCurrency(v.comision)}
                               </TableCell>
                             </TableRow>
                           ))}
@@ -600,21 +603,21 @@ export default function Liquidaciones() {
                   <div className="space-y-4">
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-slate-300">Total Comisiones</span>
-                      <span className="font-bold text-green-400">+ ${totalComisiones.toFixed(2)}</span>
+                      <span className="font-bold text-green-400">+ ${formatCurrency(totalComisiones)}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-slate-300">Total Gastos</span>
-                      <span className="font-bold text-green-400">+ ${totalGastos.toFixed(2)}</span>
+                      <span className="font-bold text-green-400">+ ${formatCurrency(totalGastos)}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-slate-300">Total Anticipos</span>
-                      <span className="font-bold text-red-400">- ${totalAnticipos.toFixed(2)}</span>
+                      <span className="font-bold text-red-400">- ${formatCurrency(totalAnticipos)}</span>
                     </div>
-                    
+
                     <div className="pt-4 border-t border-indigo-700/50">
                       <div className="flex justify-between items-end">
                         <span className="text-base font-bold text-white">Sueldo Neto</span>
-                        <span className="text-3xl font-black text-white">${sueldoNeto.toFixed(2)}</span>
+                        <span className="text-3xl font-black text-white">${formatCurrency(sueldoNeto)}</span>
                       </div>
                     </div>
                   </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/supabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -271,12 +271,10 @@ export default function FuelViajes() {
     }
   });
 
-  const viajesFiltrados = viajes.filter((viaje) => {
-    // SI HAY UN FILTRO DIRECTO POR ID, SOLO MOSTRAR ESE
+  const viajesFiltrados = useMemo(() => viajes.filter((viaje) => {
     if (filtroIdDirecto) {
       return String(viaje.id) === String(filtroIdDirecto);
     }
-
     let cumpleFiltros = true;
     const rutaPrincipal = viaje.ruta_ida || viaje.ruta || "";
     if (
@@ -295,10 +293,7 @@ export default function FuelViajes() {
       if (fechaInicio && viaje.fecha < fechaInicio) cumpleFiltros = false;
       if (fechaFin && viaje.fecha > fechaFin) cumpleFiltros = false;
     }
-    if (
-      conductorFiltro !== "todos" &&
-      String(viaje.conductor_id) !== conductorFiltro
-    )
+    if (conductorFiltro !== "todos" && String(viaje.conductor_id) !== conductorFiltro)
       cumpleFiltros = false;
     if (camionFiltro !== "todos" && String(viaje.camion_id) !== camionFiltro)
       cumpleFiltros = false;
@@ -307,13 +302,10 @@ export default function FuelViajes() {
       const clienteIdMatch = clientes.find(c => c.nombre === clienteNombre)?.id;
       if (String(clienteIdMatch) !== clienteFiltro) cumpleFiltros = false;
     }
-    if (
-      rutaFiltro &&
-      !rutaPrincipal.toLowerCase().includes(rutaFiltro.toLowerCase())
-    )
+    if (rutaFiltro && !rutaPrincipal.toLowerCase().includes(rutaFiltro.toLowerCase()))
       cumpleFiltros = false;
     return cumpleFiltros;
-  });
+  }), [viajes, filtroIdDirecto, periodoFiltro, fechaInicio, fechaFin, conductorFiltro, camionFiltro, clienteFiltro, rutaFiltro, clientes, viajesRegistrados]);
 
   const limpiarFiltros = () => {
     setFechaInicio("");
@@ -528,6 +520,8 @@ export default function FuelViajes() {
       maximumFractionDigits: decimals,
     });
 
+  const clienteDelFormData = getClienteDelViaje(formData);
+
   if (isLoading)
     return (
       <div className="flex items-center justify-center h-screen bg-background">
@@ -704,6 +698,7 @@ export default function FuelViajes() {
                     viaje.ruta_regreso && viaje.kilometros_regreso;
                   const tieneAdicionales = rutasAdicionales.length > 0;
                   const rutaPrincipal = viaje.ruta_ida || viaje.ruta || "-";
+                  const clienteDelViaje = getClienteDelViaje(viaje);
                   const kmTotal =
                     viaje.kilometros_total || viaje.kilometros || 0;
                   const kmIda = viaje.kilometros_ida || viaje.kilometros || 0;
@@ -809,11 +804,11 @@ export default function FuelViajes() {
                             {/* COL 2: RUTAS */}
                             <div className="space-y-3">
                               <div className="space-y-1.5">
-                                {getClienteDelViaje(viaje) && (
+                                {clienteDelViaje && (
                                   <div className="flex items-center gap-2 mb-1 p-1.5 lg:p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 w-fit">
                                     <Briefcase className="w-3 h-3 lg:w-4 lg:h-4 text-indigo-500" />
                                     <span className="text-[11px] lg:text-sm font-black uppercase tracking-widest text-slate-800 dark:text-slate-100 line-clamp-1">
-                                      {getClienteDelViaje(viaje)}
+                                      {clienteDelViaje}
                                     </span>
                                   </div>
                                 )}
@@ -970,12 +965,12 @@ export default function FuelViajes() {
               </DialogTitle>
             </DialogHeader>
              <form onSubmit={handleSubmit} className="space-y-6 mt-4">
-              {getClienteDelViaje(formData) && (
+              {clienteDelFormData && (
                 <div className="p-4 bg-slate-100/50 dark:bg-muted/30 border border-border rounded-xl flex items-center gap-3">
                   <Briefcase className="w-5 h-5 text-muted-foreground" />
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cliente Programado</p>
-                    <p className="font-bold text-lg text-foreground">{getClienteDelViaje(formData)}</p>
+                    <p className="font-bold text-lg text-foreground">{clienteDelFormData}</p>
                   </div>
                 </div>
               )}
