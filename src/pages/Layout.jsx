@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { supabase } from "@/supabaseClient";
@@ -20,6 +20,7 @@ import {
   Settings2,
   Fuel,
   Sparkles,
+  DollarSign,
 } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
 
@@ -91,12 +92,17 @@ export default function Layout({ children, currentPageName }) {
     "FuelCamiones",
     "FuelRemolques",
     "ExpertoLogistica",
+    "Liquidaciones",
+    "IAAuditorChat",
   ];
 
   const isPublicRoute = ["/", "/home", "/login"].includes(
     location.pathname.toLowerCase(),
   );
-  const isFuelSystem = currentPageName && systemPages.includes(currentPageName);
+  
+  const isFuelSystem = useMemo(() => {
+    return currentPageName && systemPages.includes(currentPageName);
+  }, [currentPageName, location.pathname]);
 
   if (isPublicRoute || !isFuelSystem) {
     return <>{children}</>;
@@ -191,6 +197,17 @@ export default function Layout({ children, currentPageName }) {
             >
               <CalendarDays className="w-5 h-5" />
               <span className="font-medium">Programa de Cargas</span>
+            </Link>
+
+            {/* BOTÓN: LIQUIDACIONES (Directo) */}
+            <Link
+              to={createPageUrl("Liquidaciones")}
+              className={navItemClass(
+                location.pathname === createPageUrl("Liquidaciones"),
+              )}
+            >
+              <DollarSign className="w-5 h-5" />
+              <span className="font-medium">Liquidaciones</span>
             </Link>
 
             {/* SECCIÓN: CONTROL DE COMBUSTIBLE (Desplegable) */}

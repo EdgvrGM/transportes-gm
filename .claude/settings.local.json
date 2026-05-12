@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\('jspdf:', p.dependencies['jspdf']\\); console.log\\('autotable:', p.dependencies['jspdf-autotable']\\);\")"
+    ]
+  }
+}

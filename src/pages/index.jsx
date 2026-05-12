@@ -20,6 +20,8 @@ import {
   useLocation,
 } from "react-router-dom";
 
+import Liquidaciones from "./Liquidaciones.jsx";
+
 // AGREGAMOS CLIENTES A LA LISTA DE PÁGINAS ACTIVAS
 const PAGES = {
   Home: Home,
@@ -32,9 +34,10 @@ const PAGES = {
   FuelViajes: FuelViajes,
   FuelProgramaCargas: FuelProgramaCargas,
   Login: Login,
-  Clientes: Clientes, // <-- ¡Este era el detalle que faltaba!
+  Clientes: Clientes,
   IAAuditorChat: IAAuditorChat,
   ExpertoLogistica: ExpertoLogistica,
+  Liquidaciones: Liquidaciones,
 };
 
 function _getCurrentPage(url) {
@@ -74,6 +77,7 @@ function PagesContent() {
           <Route path="/fuelviajes" element={<FuelViajes />} />
           <Route path="/fuelprogramacargas" element={<FuelProgramaCargas />} />
           <Route path="/clientes" element={<Clientes />} />
+          <Route path="/liquidaciones" element={<Liquidaciones />} />
           <Route path="/iaauditorchat" element={<IAAuditorChat />} />
           <Route path="/expertologistica" element={<ExpertoLogistica />} />
         </Route>
