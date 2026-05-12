@@ -377,28 +377,32 @@ export default function Liquidaciones() {
             <div className="space-y-2">
               <Label className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Semana del Programa</Label>
               <Select value={semanaId} onValueChange={setSemanaId}>
-                <SelectTrigger className="h-12 rounded-xl bg-background">
-                  <SelectValue placeholder="Seleccionar Semana" />
+                <SelectTrigger className="h-14 rounded-xl bg-background px-4">
+                  {infoSemana ? (
+                    <div className="text-left">
+                      <p className="font-bold text-sm text-foreground leading-tight">{infoSemana.titulo}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{infoSemana.rangoTexto}</p>
+                    </div>
+                  ) : (
+                    <SelectValue placeholder="Seleccionar semana..." />
+                  )}
                 </SelectTrigger>
                 <SelectContent>
                   {programas.map((p) => {
-                    // Calculamos el rango de pago para mostrarlo en el selector
                     const fechaFinProg = parseISO(p.fecha_fin);
                     let fCorte = fechaFinProg;
                     if (fechaFinProg.getDay() === 0) fCorte = subDays(fechaFinProg, 1);
                     else if (fechaFinProg.getDay() === 1) fCorte = subDays(fechaFinProg, 2);
-                    
+
                     const inicioPago = subDays(fCorte, 7);
                     const finPago = subDays(fCorte, 1);
                     const rangoLabel = `${format(inicioPago, "dd/MMM")} al ${format(finPago, "dd/MMM")}`;
 
                     return (
-                      <SelectItem key={p.id} value={String(p.id)}>
-                        <div className="flex flex-col">
-                          <span className="font-bold">{p.titulo}</span>
-                          <span className="text-[10px] text-muted-foreground uppercase">
-                            Nómina del {rangoLabel}
-                          </span>
+                      <SelectItem key={p.id} value={String(p.id)} className="py-3 cursor-pointer">
+                        <div className="text-left">
+                          <p className="font-bold text-sm text-foreground leading-tight">{p.titulo}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">Nómina: {rangoLabel}</p>
                         </div>
                       </SelectItem>
                     );
