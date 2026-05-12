@@ -265,8 +265,8 @@ export default function ColaCarga() {
 
   const handleRegistrar = (viaje) => {
     if (viaje.isPartial && viaje.executionRecord) {
-      navigate(createPageUrl("FuelViajes"), { 
-        state: { filtroIdDirecto: viaje.executionRecord.id } 
+      navigate(createPageUrl("FuelViajes"), {
+        state: { editId: viaje.executionRecord.id }
       });
       return;
     }

@@ -904,7 +904,7 @@ export default function FuelProgramaCargas() {
                                       className="h-9 px-6 gap-2 border-green-200 text-green-700 bg-green-50/50 hover:bg-green-100 dark:border-green-900/30 dark:text-green-400 dark:bg-green-900/20 dark:hover:bg-green-900/40 rounded-xl font-black text-[10px] shadow-sm active:scale-95 transition-all"
                                     >
                                       <Eye className="w-3.5 h-3.5" />
-                                      <span>VER DETALLES COMPLETOS</span>
+                                      <span>VER DETALLES DE CONSUMO</span>
                                     </Button>
                                   </div>
                                 );

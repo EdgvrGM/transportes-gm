@@ -167,8 +167,11 @@ export default function Liquidaciones() {
     return infoSemana?.rangoTexto || "";
   };
 
-  const formatCurrency = (num) =>
-    Number(num).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const formatCurrency = (num) => {
+    const n = Number(num) || 0;
+    const [integer, decimal] = n.toFixed(2).split('.');
+    return integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + decimal;
+  };
 
   // Manejadores
   const handleFleteChange = (index, value) => {
@@ -224,26 +227,34 @@ export default function Liquidaciones() {
     if (!conductor || !infoSemana?.fechaCorte) return;
 
     const doc = new jsPDF();
+    let logoBottomY = 10;
+
     if (logoRef.current) {
-      doc.addImage(logoRef.current, 'PNG', 14, 10, 40, 20);
+      const logoW = 42;
+      const logoH = Math.round(logoW * (logoRef.current.naturalHeight / logoRef.current.naturalWidth));
+      doc.addImage(logoRef.current, 'PNG', 14, 8, logoW, logoH);
+      logoBottomY = 8 + logoH;
     }
-    continuarPDF(doc, conductor);
+    continuarPDF(doc, conductor, logoBottomY);
   };
 
-  const continuarPDF = (doc, conductor) => {
+  const continuarPDF = (doc, conductor, logoBottomY = 28) => {
     const pageWidth = doc.internal.pageSize.width;
-    
-    doc.setFontSize(16);
-    doc.text("Liquidación de Operador", pageWidth / 2, 25, { align: "center" });
-    
-    doc.setFontSize(10);
-    doc.text(`Operador: ${conductor.nombre}`, 14, 40);
-    doc.text(`Periodo: ${getRangoFechasTexto()}`, 14, 46);
-    doc.text(`Fecha Emisión: ${format(new Date(), "dd/MM/yyyy HH:mm")}`, 14, 52);
+
+    doc.setFontSize(22);
+    doc.setFont(undefined, 'bold');
+    doc.text("Liquidación de Operador", pageWidth / 2, 22, { align: "center" });
+    doc.setFont(undefined, 'normal');
+
+    const infoY = Math.max(logoBottomY + 6, 36);
+    doc.setFontSize(12);
+    doc.text(`Operador: ${conductor.nombre}`, 14, infoY);
+    doc.text(`Periodo: ${getRangoFechasTexto()}`, 14, infoY + 7);
+    doc.text(`Fecha Emisión: ${format(new Date(), "dd/MM/yyyy HH:mm")}`, 14, infoY + 14);
 
     // Tabla Viajes
     autoTable(doc, {
-      startY: 60,
+      startY: infoY + 22,
       head: [['Fecha', 'Ruta', 'Tipo', 'Flete Bruto', '% Aplicado', 'Comisión']],
       body: viajesDetalle.map(v => [
         v.fecha,
