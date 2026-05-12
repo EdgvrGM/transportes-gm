@@ -21,6 +21,7 @@ import {
   Fuel,
   Sparkles,
   DollarSign,
+  ShieldCheck,
 } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
 
@@ -94,6 +95,7 @@ export default function Layout({ children, currentPageName }) {
     "ExpertoLogistica",
     "Liquidaciones",
     "IAAuditorChat",
+    "DocumentacionLegal",
   ];
 
   const isPublicRoute = ["/", "/home", "/login"].includes(
@@ -208,6 +210,17 @@ export default function Layout({ children, currentPageName }) {
             >
               <DollarSign className="w-5 h-5" />
               <span className="font-medium">Liquidaciones</span>
+            </Link>
+
+            {/* BOTÓN: DOCUMENTACIÓN LEGAL (Directo) */}
+            <Link
+              to={createPageUrl("DocumentacionLegal")}
+              className={navItemClass(
+                location.pathname === createPageUrl("DocumentacionLegal"),
+              )}
+            >
+              <ShieldCheck className="w-5 h-5" />
+              <span className="font-medium">Documentación Legal</span>
             </Link>
 
             {/* SECCIÓN: CONTROL DE COMBUSTIBLE (Desplegable) */}

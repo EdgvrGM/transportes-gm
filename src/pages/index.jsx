@@ -23,6 +23,7 @@ import {
 } from "react-router-dom";
 
 import Liquidaciones from "./Liquidaciones.jsx";
+import DocumentacionLegal from "./DocumentacionLegal.jsx";
 
 // AGREGAMOS CLIENTES A LA LISTA DE PÁGINAS ACTIVAS
 const PAGES = {
@@ -40,6 +41,7 @@ const PAGES = {
   IAAuditorChat: IAAuditorChat,
   ExpertoLogistica: ExpertoLogistica,
   Liquidaciones: Liquidaciones,
+  DocumentacionLegal: DocumentacionLegal,
 };
 
 function _getCurrentPage(url) {
@@ -91,6 +93,7 @@ function PagesContent() {
           <Route path="/fuelprogramacargas" element={<FuelProgramaCargas />} />
           <Route path="/clientes" element={<Clientes />} />
           <Route path="/liquidaciones" element={<Liquidaciones />} />
+          <Route path="/documentacionlegal" element={<DocumentacionLegal />} />
           <Route path="/iaauditorchat" element={<IAAuditorChat />} />
           <Route path="/expertologistica" element={<ExpertoLogistica />} />
         </Route>
