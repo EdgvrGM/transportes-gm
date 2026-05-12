@@ -12,4 +12,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Crea y exporta una única instancia del cliente de Supabase.
 // Puedes importar esta variable 'supabase' en cualquier componente o página de tu app
 // para interactuar con tu backend de Supabase.
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    storage: window.sessionStorage,
+    persistSession: true,
+  },
+})

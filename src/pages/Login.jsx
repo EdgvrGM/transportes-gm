@@ -32,11 +32,10 @@ export default function Login() {
         password: password,
       });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      navigate("/controlCombustible");
+      sessionStorage.setItem("showSplash", "1");
+      navigate("/controlcombustible");
     } catch (error) {
       setError("Credenciales inválidas. Por favor, inténtalo de nuevo.");
     } finally {
@@ -48,15 +47,12 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-background p-4 transition-colors duration-300">
       <Card className="w-full max-w-md shadow-2xl border-none bg-card">
         <CardHeader className="text-center">
-          <div className="flex justify-center items-center mb-4">
-            {/* CAMBIO: Fondo transparente en modo oscuro (se fusiona con la tarjeta) */}
-            <div className="w-16 h-16 bg-white dark:bg-transparent rounded-xl flex items-center justify-center shadow-lg border border-slate-200 dark:border-border transition-colors">
-              <img
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f16cb7f5621b8175468c2c/13d31cc08_LOGO.png"
-                alt="Transportes GM"
-                className="w-full h-full object-contain p-2 transition-all"
-              />
-            </div>
+          <div className="flex justify-center items-center mb-0 -mt-2">
+            <img
+              src="/img/LOGO.PNG"
+              alt="Transportes GM"
+              className="w-56 object-contain"
+            />
           </div>
           <CardTitle className="text-2xl font-bold text-foreground">
             Iniciar Sesión

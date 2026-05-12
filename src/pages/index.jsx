@@ -1,5 +1,7 @@
+import { useLayoutEffect, useState } from "react";
 import Layout from "./Layout.jsx";
 import Home from "./Home";
+import SplashScreen from "@/components/SplashScreen";
 import Unidades from "./Unidades";
 import ControlCombustible from "./ControlCombustible.jsx";
 import FuelRegistrarViaje from "./FuelRegistrarViaje";
@@ -57,8 +59,19 @@ function _getCurrentPage(url) {
 function PagesContent() {
   const location = useLocation();
   const currentPage = _getCurrentPage(location.pathname);
+  const [showSplash, setShowSplash] = useState(false);
+
+  useLayoutEffect(() => {
+    const flag = sessionStorage.getItem("showSplash");
+    if (flag) {
+      sessionStorage.removeItem("showSplash");
+      setShowSplash(true);
+    }
+  }, [location.pathname]);
 
   return (
+    <>
+    {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
     <Layout currentPageName={currentPage}>
       <Routes>
         {/* Rutas Públicas */}
@@ -83,6 +96,7 @@ function PagesContent() {
         </Route>
       </Routes>
     </Layout>
+    </>
   );
 }
 
