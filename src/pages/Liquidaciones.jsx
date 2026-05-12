@@ -253,6 +253,7 @@ export default function Liquidaciones() {
     doc.text(`Fecha Emisión: ${format(new Date(), "dd/MM/yyyy HH:mm")}`, 14, infoY + 14);
 
     // Tabla Viajes
+    const totalFleteBruto = viajesDetalle.reduce((sum, v) => sum + (parseFloat(v.flete_bruto) || 0), 0);
     autoTable(doc, {
       startY: infoY + 22,
       head: [['Fecha', 'Ruta', 'Tipo', 'Flete Bruto', '% Aplicado', 'Comisión']],
@@ -264,8 +265,12 @@ export default function Liquidaciones() {
         `${v.porcentaje}%`,
         `$${formatCurrency(v.comision)}`
       ]),
+      foot: [['', '', 'TOTAL', `$${formatCurrency(totalFleteBruto)}`, '', `$${formatCurrency(totalComisiones)}`]],
       theme: 'grid',
-      headStyles: { fillColor: [79, 70, 229] },
+      headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255] },
+      styles: { fontSize: 11, textColor: [20, 20, 20] },
+      footStyles: { fillColor: [237, 233, 254], fontStyle: 'bold', textColor: [55, 48, 163], fontSize: 11 },
+      showFoot: 'lastPage',
     });
 
     let finalY = doc.lastAutoTable.finalY + 10;
@@ -285,8 +290,11 @@ export default function Liquidaciones() {
       margin: { left: 14, right: 109 },
       head: [['Concepto Gasto', 'Monto']],
       body: rowsGastos.length > 0 ? rowsGastos : [['Sin gastos registrados', '']],
+      foot: rowsGastos.length > 0 ? [['TOTAL', `$${formatCurrency(totalGastos)}`]] : [],
       theme: 'grid',
-      headStyles: { fillColor: [51, 65, 85] },
+      headStyles: { fillColor: [51, 65, 85], textColor: [255, 255, 255] },
+      styles: { fontSize: 11, textColor: [20, 20, 20] },
+      footStyles: { fillColor: [241, 245, 249], fontStyle: 'bold', textColor: [30, 41, 59], fontSize: 11 },
     });
     const finalYGastos = doc.lastAutoTable.finalY;
 
@@ -296,21 +304,25 @@ export default function Liquidaciones() {
       margin: { left: 109, right: 14 },
       head: [['Día', 'Anticipo']],
       body: rowsAnticipos.length > 0 ? rowsAnticipos : [['Sin anticipos', '']],
+      foot: rowsAnticipos.length > 0 ? [['TOTAL', `$${formatCurrency(totalAnticipos)}`]] : [],
       theme: 'grid',
-      headStyles: { fillColor: [51, 65, 85] },
+      headStyles: { fillColor: [51, 65, 85], textColor: [255, 255, 255] },
+      styles: { fontSize: 11, textColor: [20, 20, 20] },
+      footStyles: { fillColor: [241, 245, 249], fontStyle: 'bold', textColor: [30, 41, 59], fontSize: 11 },
     });
     const finalYAnticipos = doc.lastAutoTable.finalY;
 
     finalY = Math.max(finalYGastos, finalYAnticipos) + 15;
 
     // Resumen
+    const totalComisionGastos = totalComisiones + totalGastos;
     doc.setFontSize(12);
-    doc.text(`Total Comisiones: $${formatCurrency(totalComisiones)}`, 130, finalY);
-    doc.text(`+ Total Gastos: $${formatCurrency(totalGastos)}`, 130, finalY + 6);
-    doc.text(`- Total Anticipos: $${formatCurrency(totalAnticipos)}`, 130, finalY + 12);
+    doc.setFont(undefined, 'normal');
+    doc.text(`Total Comisión + Gastos: $${formatCurrency(totalComisionGastos)}`, 130, finalY);
+    doc.text(`Total de Anticipos: $${formatCurrency(totalAnticipos)}`, 130, finalY + 7);
     doc.setFontSize(14);
     doc.setFont(undefined, 'bold');
-    doc.text(`Sueldo Neto: $${formatCurrency(sueldoNeto)}`, 130, finalY + 22);
+    doc.text(`Sueldo Neto: $${formatCurrency(sueldoNeto)}`, 130, finalY + 18);
 
     // Firmas
     doc.setFontSize(10);
