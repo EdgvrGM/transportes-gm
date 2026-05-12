@@ -23,7 +23,6 @@ import AnomaliasCombustible from "../components/fuel/AnomaliasCombustible";
 const FECHA_LIMITE_ARCHIVO = '2026-04-24';
 
 export default function ControlCombustible() {
-  const navigate = useNavigate();
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
   const [conductorFiltro, setConductorFiltro] = useState("todos");
