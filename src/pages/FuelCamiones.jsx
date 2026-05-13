@@ -39,6 +39,7 @@ export default function FuelCamiones() {
   const [dialogAbierto, setDialogAbierto] = useState(false);
   const [camionEditando, setCamionEditando] = useState(null);
   const [camionAEliminar, setCamionAEliminar] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
   const [formData, setFormData] = useState({
     nombre: "",
     placas: "",
@@ -102,12 +103,53 @@ export default function FuelCamiones() {
 
   const eliminarMutation = useMutation({
     mutationFn: async (id) => {
+      // Verificar si tiene viajes activos (post-archivo)
+      const { data: viajesActivos } = await supabase
+        .from("Viaje")
+        .select("id")
+        .eq("camion_id", id)
+        .gte("fecha", FECHA_LIMITE_ARCHIVO)
+        .limit(1);
+
+      if (viajesActivos?.length > 0) {
+        throw new Error("TIENE_VIAJES_ACTIVOS");
+      }
+
+      // Sin viajes activos — desligar registros históricos para poder eliminar
+      await supabase.from("Viaje").update({ camion_id: null }).eq("camion_id", id);
+
       const { error } = await supabase.from("Camion").delete().eq("id", id);
       if (error) throw new Error(error.message);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["camiones"] });
       setCamionAEliminar(null);
+      setDeleteError(null);
+    },
+    onError: (err) => {
+      if (err.message === "TIENE_VIAJES_ACTIVOS") {
+        setDeleteError("FK");
+      } else {
+        setDeleteError(err.message || "No se pudo eliminar el camión.");
+      }
+    },
+  });
+
+  const desactivarMutation = useMutation({
+    mutationFn: async (id) => {
+      const { error } = await supabase
+        .from("Camion")
+        .update({ estado: "inactivo" })
+        .eq("id", id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["camiones"] });
+      setCamionAEliminar(null);
+      setDeleteError(null);
+    },
+    onError: (err) => {
+      setDeleteError(err.message || "No se pudo desactivar el camión.");
     },
   });
 
@@ -139,6 +181,7 @@ export default function FuelCamiones() {
   };
 
   const confirmarEliminar = (camion) => {
+    setDeleteError(null);
     setCamionAEliminar(camion);
   };
 
@@ -438,7 +481,7 @@ export default function FuelCamiones() {
 
         <AlertDialog
           open={!!camionAEliminar}
-          onOpenChange={() => setCamionAEliminar(null)}
+          onOpenChange={() => { setCamionAEliminar(null); setDeleteError(null); }}
         >
           <AlertDialogContent className="bg-card border-border text-foreground">
             <AlertDialogHeader>
@@ -450,25 +493,58 @@ export default function FuelCamiones() {
                 camión no se eliminarán, pero quedarán sin camión asignado.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel className="bg-background hover:bg-muted">
-                Cancelar
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleEliminar}
-                className="bg-red-600 hover:bg-red-700"
-                disabled={eliminarMutation.isPending}
-              >
-                {eliminarMutation.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Eliminando...
-                  </>
-                ) : (
-                  "Eliminar"
+            {deleteError === "FK" ? (
+              <div className="px-1 py-2 space-y-3">
+                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-3">
+                  <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                    Este camión tiene viajes registrados y no puede eliminarse.
+                  </p>
+                  <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                    Puedes marcarlo como inactivo para que no aparezca en las listas activas.
+                  </p>
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <AlertDialogCancel className="bg-background hover:bg-muted">
+                    Cancelar
+                  </AlertDialogCancel>
+                  <Button
+                    onClick={() => desactivarMutation.mutate(camionAEliminar.id)}
+                    className="bg-amber-500 hover:bg-amber-600 text-white"
+                    disabled={desactivarMutation.isPending}
+                  >
+                    {desactivarMutation.isPending ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Desactivando...</>
+                    ) : (
+                      "Marcar como Inactivo"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <>
+                {deleteError && (
+                  <p className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-lg">
+                    {deleteError}
+                  </p>
                 )}
-              </AlertDialogAction>
-            </AlertDialogFooter>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="bg-background hover:bg-muted" disabled={eliminarMutation.isPending}>
+                    Cancelar
+                  </AlertDialogCancel>
+                  <Button
+                    onClick={handleEliminar}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                    disabled={eliminarMutation.isPending}
+                  >
+                    {eliminarMutation.isPending ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Eliminando...</>
+                    ) : (
+                      "Eliminar"
+                    )}
+                  </Button>
+                </AlertDialogFooter>
+              </>
+            )}
           </AlertDialogContent>
         </AlertDialog>
       </div>

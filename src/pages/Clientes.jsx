@@ -46,6 +46,7 @@ export default function Clientes() {
   const [dialogAbierto, setDialogAbierto] = useState(false);
   const [clienteAEliminar, setClienteAEliminar] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
   const [formData, setFormData] = useState({ id: null, nombre: "", rfc: "" });
 
   // Obtener Clientes
@@ -87,12 +88,26 @@ export default function Clientes() {
   // Eliminar Cliente
   const eliminarMutation = useMutation({
     mutationFn: async (id) => {
-      const { error } = await supabase.from("Cliente").delete().eq("id", id);
+      const { data, error } = await supabase
+        .from("Cliente")
+        .delete()
+        .eq("id", id)
+        .select("id");
       if (error) throw error;
+      if (!data || data.length === 0) throw new Error("No se pudo eliminar el cliente. Es posible que tenga viajes asociados.");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clientes"] });
       setClienteAEliminar(null);
+      setDeleteError(null);
+    },
+    onError: (err) => {
+      const msg = err.message || "";
+      if (msg.includes("foreign key") || msg.includes("NO_SE_ELIMINO")) {
+        setDeleteError("Este cliente tiene viajes asignados y no puede eliminarse mientras tenga registros activos.");
+      } else {
+        setDeleteError(msg || "No se pudo eliminar el cliente.");
+      }
     },
   });
 
@@ -307,7 +322,7 @@ export default function Clientes() {
         {/* MODAL ELIMINAR */}
         <AlertDialog
           open={!!clienteAEliminar}
-          onOpenChange={() => setClienteAEliminar(null)}
+          onOpenChange={() => { setClienteAEliminar(null); setDeleteError(null); }}
         >
           <AlertDialogContent className="rounded-[2rem] border-border bg-card">
             <AlertDialogHeader>
@@ -318,16 +333,26 @@ export default function Clientes() {
                 Esta acción no se puede deshacer.
               </AlertDialogDescription>
             </AlertDialogHeader>
+            {deleteError && (
+              <p className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-xl">
+                {deleteError}
+              </p>
+            )}
             <AlertDialogFooter className="gap-3 mt-4">
-              <AlertDialogCancel className="rounded-xl border border-border font-bold">
+              <AlertDialogCancel className="rounded-xl border border-border font-bold" disabled={eliminarMutation.isPending}>
                 Cancelar
               </AlertDialogCancel>
-              <AlertDialogAction
+              <Button
                 onClick={() => eliminarMutation.mutate(clienteAEliminar)}
                 className="bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold shadow-md"
+                disabled={eliminarMutation.isPending}
               >
-                Eliminar
-              </AlertDialogAction>
+                {eliminarMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  "Eliminar"
+                )}
+              </Button>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

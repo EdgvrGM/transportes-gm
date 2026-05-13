@@ -40,11 +40,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Plus, Edit, Trash2, Package } from "lucide-react";
 import { TrailerIcon } from "./Layout";
 
+const FECHA_LIMITE_ARCHIVO = '2026-04-24';
+
 export default function FuelRemolques() {
   const queryClient = useQueryClient();
   const [dialogAbierto, setDialogAbierto] = useState(false);
   const [remolqueAEliminar, setRemolqueAEliminar] = useState(null);
-  const [errorMsg, setErrorMsg] = useState(null); // <-- NUEVO ESTADO PARA ERRORES
+  const [errorMsg, setErrorMsg] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
 
   const [formData, setFormData] = useState({ id: null, placas: "", tipo: "Caja Seca" });
 
@@ -88,12 +91,35 @@ export default function FuelRemolques() {
 
   const eliminarMutation = useMutation({
     mutationFn: async (id) => {
+      // Verificar si tiene viajes activos (post-archivo)
+      const { data: viajesActivos } = await supabase
+        .from("Viaje")
+        .select("id")
+        .eq("remolque_id", id)
+        .gte("fecha", FECHA_LIMITE_ARCHIVO)
+        .limit(1);
+
+      if (viajesActivos?.length > 0) {
+        throw new Error("TIENE_VIAJES_ACTIVOS");
+      }
+
+      // Sin viajes activos — desligar registros históricos para poder eliminar
+      await supabase.from("Viaje").update({ remolque_id: null }).eq("remolque_id", id);
+
       const { error } = await supabase.from("Remolque").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["remolques"] });
       setRemolqueAEliminar(null);
+      setDeleteError(null);
+    },
+    onError: (err) => {
+      if (err.message === "TIENE_VIAJES_ACTIVOS") {
+        setDeleteError("Este remolque tiene viajes activos y no puede eliminarse.");
+      } else {
+        setDeleteError(err.message || "No se pudo eliminar el remolque.");
+      }
     },
   });
 
@@ -316,7 +342,7 @@ export default function FuelRemolques() {
         {/* MODAL ELIMINAR */}
         <AlertDialog
           open={!!remolqueAEliminar}
-          onOpenChange={() => setRemolqueAEliminar(null)}
+          onOpenChange={() => { setRemolqueAEliminar(null); setDeleteError(null); }}
         >
           <AlertDialogContent className="bg-card border-border">
             <AlertDialogHeader>
@@ -327,16 +353,26 @@ export default function FuelRemolques() {
                 Se eliminará este remolque permanentemente.
               </AlertDialogDescription>
             </AlertDialogHeader>
+            {deleteError && (
+              <p className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-lg">
+                {deleteError}
+              </p>
+            )}
             <AlertDialogFooter>
-              <AlertDialogCancel className="bg-background">
+              <AlertDialogCancel className="bg-background" disabled={eliminarMutation.isPending}>
                 Cancelar
               </AlertDialogCancel>
-              <AlertDialogAction
+              <Button
                 onClick={() => eliminarMutation.mutate(remolqueAEliminar)}
-                className="bg-red-600"
+                className="bg-red-600 hover:bg-red-700 text-white"
+                disabled={eliminarMutation.isPending}
               >
-                Eliminar
-              </AlertDialogAction>
+                {eliminarMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  "Eliminar"
+                )}
+              </Button>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
