@@ -46,10 +46,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 function getEstadoVencimiento(fechaStr) {
   if (!fechaStr) return "sin_registro";
-  const dias = differenceInDays(parseISO(fechaStr), new Date());
-  if (dias < 0) return "vencido";
-  if (dias <= 30) return "por_vencer";
-  return "vigente";
+  try {
+    const date = parseISO(fechaStr);
+    if (isNaN(date.getTime())) return "sin_registro";
+    const dias = differenceInDays(date, new Date());
+    if (dias < 0) return "vencido";
+    if (dias <= 30) return "por_vencer";
+    return "vigente";
+  } catch (e) {
+    return "sin_registro";
+  }
 }
 
 function getBadgeClasses(estado) {
@@ -66,16 +72,23 @@ function getBadgeClasses(estado) {
 }
 
 function getBadgeLabel(estado, fechaStr) {
-  if (estado === "sin_registro") return "Sin registro";
-  if (estado === "vencido") {
-    const dias = Math.abs(differenceInDays(parseISO(fechaStr), new Date()));
-    return `Vencido hace ${dias}d`;
+  if (estado === "sin_registro" || !fechaStr) return "Sin registro";
+  try {
+    const date = parseISO(fechaStr);
+    if (isNaN(date.getTime())) return "Sin registro";
+
+    if (estado === "vencido") {
+      const dias = Math.abs(differenceInDays(date, new Date()));
+      return `Vencido hace ${dias}d`;
+    }
+    if (estado === "por_vencer") {
+      const dias = differenceInDays(date, new Date());
+      return `Vence en ${dias}d`;
+    }
+    return format(date, "dd/MM/yyyy");
+  } catch (e) {
+    return "Sin registro";
   }
-  if (estado === "por_vencer") {
-    const dias = differenceInDays(parseISO(fechaStr), new Date());
-    return `Vence en ${dias}d`;
-  }
-  return format(parseISO(fechaStr), "dd/MM/yyyy");
 }
 
 function StatusBadge({ fechaStr }) {
@@ -190,8 +203,8 @@ function EditDialog({ open, onClose, record, fields, tableName, idField, nameLab
 function SummaryCards({ allDocs }) {
   const counts = useMemo(() => {
     let vencidos = 0, por_vencer = 0, vigentes = 0, sin_registro = 0;
-    allDocs.forEach((doc) => {
-      doc.fechas.forEach((f) => {
+    (allDocs || []).forEach((doc) => {
+      (doc.fechas || []).forEach((f) => {
         const estado = getEstadoVencimiento(f);
         if (estado === "vencido") vencidos++;
         else if (estado === "por_vencer") por_vencer++;
@@ -312,14 +325,14 @@ function ConductoresTab() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.length === 0 && (
+            {(filtered || []).length === 0 && (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
                   Sin conductores registrados
                 </TableCell>
               </TableRow>
             )}
-            {filtered.map((c) => (
+            {(filtered || []).map((c) => (
               <TableRow key={c.id} className={c.estado !== "activo" ? "opacity-50" : ""}>
                 <TableCell className="font-medium">
                   {c.nombre}
@@ -414,14 +427,14 @@ function CamionesTab() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {camiones.length === 0 && (
+            {(camiones || []).length === 0 && (
               <TableRow>
                 <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                   Sin camiones registrados
                 </TableCell>
               </TableRow>
             )}
-            {camiones.map((cam) => (
+            {(camiones || []).map((cam) => (
               <TableRow key={cam.id}>
                 <TableCell>
                   <p className="font-medium">{cam.nombre}</p>
@@ -515,14 +528,14 @@ function RemolquesTab() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {remolques.length === 0 && (
+            {(remolques || []).length === 0 && (
               <TableRow>
                 <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
                   Sin remolques registrados
                 </TableCell>
               </TableRow>
             )}
-            {remolques.map((r) => (
+            {(remolques || []).map((r) => (
               <TableRow key={r.id}>
                 <TableCell>
                   <p className="font-medium">{r.placas}</p>
@@ -662,9 +675,9 @@ export default function DocumentacionLegal() {
 
   const allDocs = useMemo(() => {
     const docs = [];
-    conductores.forEach((c) => docs.push({ fechas: [c.venc_licencia, c.venc_apto_medico] }));
-    camiones.forEach((c) => docs.push({ fechas: [c.venc_fisicomecanica, c.venc_contaminantes, c.venc_poliza_seguro] }));
-    remolques.forEach((r) => docs.push({ fechas: [r.venc_fisicomecanica] }));
+    (conductores || []).forEach((c) => docs.push({ fechas: [c.venc_licencia, c.venc_apto_medico] }));
+    (camiones || []).forEach((c) => docs.push({ fechas: [c.venc_fisicomecanica, c.venc_contaminantes, c.venc_poliza_seguro] }));
+    (remolques || []).forEach((r) => docs.push({ fechas: [r.venc_fisicomecanica] }));
     return docs;
   }, [conductores, camiones, remolques]);
 
