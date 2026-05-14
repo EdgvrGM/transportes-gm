@@ -58,6 +58,8 @@ export default function Home() {
   const [activeSection, setActiveSection] = useState("inicio");
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
 
+  const videoRef = useRef(null);
+
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
@@ -67,6 +69,12 @@ export default function Home() {
 
   const websiteInfo = staticWebsiteInfo;
   const isLoading = false;
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.play().catch(() => {});
+  }, []);
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -414,11 +422,14 @@ export default function Home() {
       >
         <div className="absolute inset-0 z-0">
           <video
+            ref={videoRef}
             autoPlay
             muted
             loop
             playsInline
+            preload="auto"
             className="w-full h-full object-cover"
+            style={{ willChange: 'transform' }}
           >
             <source src="/vid/loop.mp4" type="video/mp4" />
           </video>

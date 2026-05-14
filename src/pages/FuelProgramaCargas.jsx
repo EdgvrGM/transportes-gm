@@ -217,7 +217,7 @@ export default function FuelProgramaCargas() {
   const { data: conductores = [] } = useQuery({
     queryKey: ["conductores"],
     queryFn: async () => {
-      const { data } = await supabase.from("Conductor").select("*");
+      const { data } = await supabase.from("Conductor").select("*").eq("estado", "activo");
       return data || [];
     },
   });

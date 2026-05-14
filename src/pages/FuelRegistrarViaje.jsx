@@ -93,7 +93,7 @@ export default function FuelRegistrarViaje() {
   const { data: conductores = [] } = useQuery({
     queryKey: ["conductores"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("Conductor").select("*");
+      const { data, error } = await supabase.from("Conductor").select("*").eq("estado", "activo");
       if (error) throw new Error(error.message);
       return data;
     },
