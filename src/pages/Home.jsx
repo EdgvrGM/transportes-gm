@@ -419,6 +419,7 @@ export default function Home() {
       <section
         id="inicio"
         className="pt-20 min-h-screen flex items-center relative overflow-hidden"
+        style={{ position: 'relative', zIndex: 2 }}
       >
         <div className="absolute inset-0 z-0">
           <video
@@ -436,7 +437,7 @@ export default function Home() {
           <div
             className="absolute inset-0"
             style={{
-              background: `linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.8) 100%)`,
+              background: `linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.85) 100%)`,
             }}
           />
         </div>
@@ -448,7 +449,7 @@ export default function Home() {
           zIndex: 2,
         }}>
           <Antigravity
-            count={350}
+            count={250}
             magnetRadius={10}
             ringRadius={9}
             waveSpeed={0.12}
@@ -557,7 +558,8 @@ export default function Home() {
       {/* Services Section */}
       <section
         id="servicios"
-        className="py-24 bg-gray-50/50 relative overflow-hidden"
+        className="py-24 relative overflow-hidden"
+        style={{ position: 'relative', zIndex: 1, background: 'rgba(249,250,251,0.55)' }}
       >
         {/* Floating background elements */}
         <div
@@ -677,7 +679,7 @@ export default function Home() {
       </section>
 
       {/* About Section */}
-      <section id="nosotros" className="py-24 bg-white">
+      <section id="nosotros" className="py-24" style={{ position: 'relative', zIndex: 1, background: 'rgba(255,255,255,0.6)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <motion.div
@@ -754,7 +756,7 @@ export default function Home() {
       </section>
 
       {/* Value Proposition Section */}
-      <section className="py-24 bg-white relative overflow-hidden">
+      <section className="py-24 relative overflow-hidden" style={{ position: 'relative', zIndex: 1, background: 'rgba(255,255,255,0.6)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -873,7 +875,7 @@ export default function Home() {
       </section>
 
       {/* Clients Section */}
-      <section className="py-24 bg-gray-50/30 relative overflow-hidden">
+      <section className="py-24 relative overflow-hidden" style={{ position: 'relative', zIndex: 1, background: 'rgba(249,250,251,0.55)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -927,7 +929,7 @@ export default function Home() {
       </section>
 
       {/* Quote Section */}
-      <section id="cotizar" className="py-24 bg-white">
+      <section id="cotizar" className="py-24" style={{ position: 'relative', zIndex: 1, background: 'rgba(255,255,255,0.6)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1074,7 +1076,8 @@ export default function Home() {
       {/* Contact Section */}
       <section
         id="contacto"
-        className="py-24 bg-gradient-to-b from-gray-50 to-white"
+        className="py-24"
+        style={{ position: 'relative', zIndex: 1, background: 'rgba(249,250,251,0.55)' }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -1353,6 +1356,7 @@ export default function Home() {
           </div>
         </a>
       </motion.div>
+
     </div>
   );
 }
