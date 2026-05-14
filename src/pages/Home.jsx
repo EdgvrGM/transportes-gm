@@ -19,12 +19,13 @@ import {
   MessageSquare,
   Settings,
 } from "lucide-react";
-import { motion, useMotionValue, useSpring } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import SplitText from "@/components/SplitText";
 import TextType from "@/components/TextType";
 import Antigravity from "@/components/Antigravity";
+import LogoLoop from "@/components/LogoLoop";
 
 const staticWebsiteInfo = {
   company_name: "Transportes GM",
@@ -57,6 +58,7 @@ export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("inicio");
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
+  const [scrolled, setScrolled] = useState(false);
 
   const videoRef = useRef(null);
 
@@ -139,8 +141,10 @@ export default function Home() {
     const handleScroll = () => {
       if (window.scrollY > 100) {
         setShowScrollIndicator(false);
+        setScrolled(true);
       } else {
         setShowScrollIndicator(true);
+        setScrolled(false);
       }
     };
 
@@ -167,6 +171,15 @@ export default function Home() {
     "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f1a8df21531359b12e1164/24b4ddaa7_Cliente4.png",
     "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f1a8df21531359b12e1164/9f64daa60_Cliente5.png",
     "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f1a8df21531359b12e1164/9f9a6c33d_Cliente6.png",
+  ];
+
+  const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f1a8df21531359b12e1164/2dfaaffb2_LOGO.png";
+  const WHATSAPP_URL = `https://wa.me/523131911815?text=Hola, me gustaría solicitar una cotización`;
+  const NAV_LINKS = [
+    { id: 'inicio',    label: 'Inicio' },
+    { id: 'servicios', label: 'Servicios' },
+    { id: 'nosotros',  label: 'Nosotros' },
+    { id: 'contacto',  label: 'Contacto' },
   ];
 
   return (
@@ -335,84 +348,195 @@ export default function Home() {
       `}</style>
 
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 transition-all duration-500 bg-gray-900/90 backdrop-blur-md border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-24">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-3 cursor-pointer"
-              onClick={() => handleNavigation("inicio")}
-            >
-              <img
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f1a8df21531359b12e1164/2dfaaffb2_LOGO.png"
-                alt="Transportes GM Logo"
-                className="h-16 md:h-20 w-auto transition-transform hover:scale-105"
-              />
-            </motion.div>
+      <nav className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-4 px-4 transition-all duration-500">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            width: '100%',
+            maxWidth: '900px',
+            padding: '10px 16px 10px 16px',
+            borderRadius: '50px',
+            border: '0.5px solid rgba(255,255,255,0.12)',
+            background: scrolled
+              ? 'rgba(10,10,10,0.95)'
+              : 'rgba(10,10,10,0.75)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            transition: 'background 0.4s ease',
+          }}
+        >
+          {/* Logo */}
+          <motion.button
+            onClick={() => handleNavigation('inicio')}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          >
+            <img src={LOGO_URL} alt="Transportes GM" style={{ height: '36px', width: 'auto' }} />
+          </motion.button>
 
-            {/* Desktop Menu */}
-            <div className="hidden lg:flex items-center gap-10">
-              {["inicio", "servicios", "nosotros", "contacto"].map(
-                (section) => (
-                  <button
-                    key={section}
-                    onClick={() => handleNavigation(section)}
-                    className={`nav-button text-xs font-black uppercase tracking-widest transition-all ${
-                      activeSection === section
-                        ? "text-yellow-400"
-                        : "text-gray-300 hover:text-white"
-                    }`}
-                  >
-                    {section}
-                  </button>
-                ),
-              )}
-
-              <Button
-                onClick={() => handleNavigation("cotizar")}
-                className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-black uppercase tracking-tighter text-xs px-6 py-2 rounded-lg transition-all shadow-lg shadow-yellow-400/20"
+          {/* Desktop links */}
+          <div className="hidden lg:flex items-center gap-6">
+            {NAV_LINKS.map((link) => (
+              <button
+                key={link.id}
+                onClick={() => handleNavigation(link.id)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  letterSpacing: '0.14em',
+                  textTransform: 'uppercase',
+                  color: activeSection === link.id ? '#EAB308' : 'rgba(255,255,255,0.45)',
+                  transition: 'color 0.2s ease',
+                  padding: '4px 0',
+                  position: 'relative',
+                }}
               >
-                Cotizar
-              </Button>
-            </div>
+                {link.label}
+                {activeSection === link.id && (
+                  <motion.div
+                    layoutId="pill-nav-indicator"
+                    style={{
+                      position: 'absolute',
+                      bottom: '-2px',
+                      left: 0,
+                      right: 0,
+                      height: '1.5px',
+                      background: '#EAB308',
+                      borderRadius: '2px',
+                    }}
+                  />
+                )}
+              </button>
+            ))}
+          </div>
 
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden p-3 text-white bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
+          {/* CTA + mobile toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {/* Desktop CTA */}
+            <motion.a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.97 }}
+              className="hidden lg:block"
+              style={{
+                background: '#EAB308',
+                color: '#0A0A0A',
+                fontSize: '11px',
+                fontWeight: 800,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                padding: '8px 20px',
+                borderRadius: '50px',
+                textDecoration: 'none',
+                whiteSpace: 'nowrap',
+              }}
             >
-              {isMenuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
+              Cotizar
+            </motion.a>
+
+            {/* Mobile toggle */}
+            <button
+              className="lg:hidden"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              style={{
+                background: 'rgba(255,255,255,0.08)',
+                border: '0.5px solid rgba(255,255,255,0.12)',
+                borderRadius: '50px',
+                padding: '7px 10px',
+                cursor: 'pointer',
+                color: '#CCCCCC',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              {isMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="md:hidden bg-gray-800 border-t border-gray-700"
-          >
-            <div className="px-4 py-4 space-y-3">
-              {["inicio", "servicios", "nosotros", "contacto"].map(
-                (section) => (
+        {/* Mobile drawer — debajo del pill */}
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              style={{
+                position: 'absolute',
+                top: 'calc(100% + 8px)',
+                left: '16px',
+                right: '16px',
+                maxWidth: '900px',
+                margin: '0 auto',
+                background: 'rgba(10,10,10,0.97)',
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)',
+                border: '0.5px solid rgba(255,255,255,0.1)',
+                borderRadius: '20px',
+                padding: '16px',
+                zIndex: 49,
+              }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {NAV_LINKS.map((link) => (
                   <button
-                    key={section}
-                    onClick={() => handleNavigation(section)}
-                    className="block w-full text-left px-4 py-2 rounded-lg hover:bg-gray-700 capitalize text-gray-300 hover:text-yellow-400"
+                    key={link.id}
+                    onClick={() => handleNavigation(link.id)}
+                    style={{
+                      background: activeSection === link.id ? 'rgba(234,179,8,0.1)' : 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                      color: activeSection === link.id ? '#EAB308' : 'rgba(255,255,255,0.5)',
+                      transition: 'all 0.2s ease',
+                    }}
                   >
-                    {section}
+                    {link.label}
                   </button>
-                ),
-              )}
-            </div>
-          </motion.div>
-        )}
+                ))}
+                <a
+                  href={WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'block',
+                    textAlign: 'center',
+                    background: '#EAB308',
+                    color: '#0A0A0A',
+                    fontSize: '12px',
+                    fontWeight: 800,
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    padding: '12px 16px',
+                    borderRadius: '12px',
+                    textDecoration: 'none',
+                    marginTop: '8px',
+                  }}
+                >
+                  Cotizar por WhatsApp
+                </a>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
       {/* Hero Section */}
@@ -896,34 +1020,43 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <div className="relative">
-            <div className="absolute left-0 top-0 bottom-0 w-40 bg-gradient-to-r from-gray-50/50 to-transparent z-10" />
-            <div className="absolute right-0 top-0 bottom-0 w-40 bg-gradient-to-l from-gray-50/50 to-transparent z-10" />
-
-            <div className="overflow-hidden">
-              <div
-                className="flex gap-12 items-center animate-scroll py-8"
-                style={{ width: "max-content" }}
-              >
-                {[...Array(4)].map((_, setIndex) => (
-                  <React.Fragment key={`set-${setIndex}`}>
-                    {clientLogos.map((logo, index) => (
-                      <div
-                        key={`logo-${setIndex}-${index}`}
-                        className="flex-shrink-0 w-56 h-32 bg-white rounded-[2rem] flex items-center justify-center hover:bg-white transition-all duration-500 hover:scale-110 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] border border-gray-100 p-8 group"
-                      >
-                        <img
-                          src={logo}
-                          alt={`Cliente ${index + 1}`}
-                          className="max-w-full max-h-full object-contain grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500"
-                          loading="lazy"
-                        />
-                      </div>
-                    ))}
-                  </React.Fragment>
-                ))}
-              </div>
-            </div>
+          <div style={{ height: '160px', position: 'relative', overflow: 'hidden' }}>
+            <LogoLoop
+              logos={clientLogos.map((url, i) => ({
+                src: url,
+                alt: `Cliente ${i + 1}`,
+              }))}
+              speed={60}
+              direction="left"
+              logoHeight={75}
+              gap={120}
+              hoverSpeed={15}
+              scaleOnHover
+              fadeOut
+              fadeOutColor="#f9fafb"
+              renderItem={(item) => (
+                <div style={{
+                  width: '150px',
+                  height: '75px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <img
+                    src={item.src}
+                    alt={item.alt}
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '100%',
+                      objectFit: 'contain',
+                    }}
+                    loading="lazy"
+                    draggable={false}
+                  />
+                </div>
+              )}
+              ariaLabel="Empresas clientes de Transportes GM"
+            />
           </div>
         </div>
       </section>
@@ -948,7 +1081,7 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 gap-8 max-w-xl mx-auto">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -1024,48 +1157,6 @@ export default function Home() {
                       <ChevronRight className="w-5 h-5 ml-2" />
                     </Button>
                   </a>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-            >
-              <Card className="h-full border-0 shadow-2xl overflow-hidden">
-                <div
-                  className="h-3"
-                  style={{
-                    background: `linear-gradient(90deg, ${secondaryColor}, ${primaryColor})`,
-                  }}
-                />
-                <CardContent className="p-8">
-                  <div className="text-center mb-8">
-                    <div
-                      className="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center"
-                      style={{
-                        background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
-                      }}
-                    >
-                      <Mail className="w-10 h-10 text-gray-900" />
-                    </div>
-                    <h3
-                      className="text-3xl font-bold mb-4"
-                      style={{ color: darkColor }}
-                    >
-                      Cotiza por Email
-                    </h3>
-                    <p className="text-gray-600 text-lg leading-relaxed">
-                      Envíanos tus datos y nos pondremos en contacto contigo a
-                      la brevedad.
-                    </p>
-                  </div>
-
-                  <QuoteForm
-                    primaryColor={primaryColor}
-                    secondaryColor={secondaryColor}
-                  />
                 </CardContent>
               </Card>
             </motion.div>

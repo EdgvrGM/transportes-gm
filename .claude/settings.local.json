@@ -8,7 +8,8 @@
       "Bash(ffprobe -v quiet -print_format json -show_streams -show_format \"C:\\\\Users\\\\Joker\\\\Documents\\\\dev\\\\Version 1.1\\\\transportes-gm\\\\public\\\\vid\\\\loop.mp4\")",
       "Bash(where ffprobe *)",
       "Bash(where ffmpeg *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(Test-Path *)"
     ]
   }
 }
