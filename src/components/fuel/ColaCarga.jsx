@@ -206,7 +206,9 @@ export default function ColaCarga() {
           const matchFecha = v.fecha && v.fecha.startsWith(progViaje.fecha);
           const matchConductor = String(v.conductor_id) === String(progViaje.conductor);
           const matchCamion = String(v.camion_id) === String(progViaje.camion);
-          return matchFecha && matchConductor && matchCamion;
+          const matchRemolque = !progViaje.remolque || !v.remolque_id ||
+            String(v.remolque_id) === String(progViaje.remolque);
+          return matchFecha && matchConductor && matchCamion && matchRemolque;
         });
 
         if (matchingExecution) {

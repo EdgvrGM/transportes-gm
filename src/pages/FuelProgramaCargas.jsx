@@ -675,7 +675,9 @@ export default function FuelProgramaCargas() {
       const matchFecha = v.fecha && v.fecha.startsWith(fechaStr);
       const matchConductor = String(v.conductor_id) === String(viajeProgramado.conductor);
       const matchCamion = String(v.camion_id) === String(viajeProgramado.camion);
-      return matchFecha && matchConductor && matchCamion;
+      const matchRemolque = !viajeProgramado.remolque || !v.remolque_id ||
+        String(v.remolque_id) === String(viajeProgramado.remolque);
+      return matchFecha && matchConductor && matchCamion && matchRemolque;
     });
   };
 
