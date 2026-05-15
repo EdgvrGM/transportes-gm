@@ -9,7 +9,10 @@
       "Bash(where ffprobe *)",
       "Bash(where ffmpeg *)",
       "Bash(npm run *)",
-      "Bash(Test-Path *)"
+      "Bash(Test-Path *)",
+      "Skill(ui-ux-pro-max)",
+      "Bash(python skills/ui-ux-pro-max/scripts/search.py \"logistics transport cargo freight industrial professional dark\" --design-system -p \"Transportes GM\" -f markdown)",
+      "PowerShell(py *)"
     ]
   }
 }

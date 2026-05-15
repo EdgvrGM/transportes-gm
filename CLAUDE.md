@@ -29,6 +29,10 @@ Trip Registry: Detailed tracking of routes (outbound, additional stops, return),
 
 Logistics Expert (AI): An advanced chatbot that analyzes operational data to detect anomalies and generate comparative reports.
 
+Settlement Module (Liquidaciones): Automates weekly driver settlement calculation: (Commissions + Driver Expenses) - Weekly Advances. Includes PDF generation of professional settlement receipts with the company's logo. Supports both automatic date ranges (derived from ProgramaCargas) and custom date ranges.
+
+Legal Documentation (DocumentacionLegal): Compliance tracking for driver licenses and vehicle documentation. Displays expiration status (valid, expiring soon, expired, no record) with color-coded badges. Supports inline editing of expiration dates for conductores, camiones, and remolques, organized by tabs.
+
 4. Current Business Rules
 Data Archiving: To maintain high performance, the system only processes and displays active data registered after April 24, 2026.
 
@@ -47,11 +51,9 @@ Settlement Range: Saturday of the previous week through Friday of the current we
 Delayed Payment: Trips scheduled on the actual payday (Saturday) are automatically moved to the following week's settlement.
 
 5. Next Steps
-Settlement Module: Finalize Liquidaciones.jsx to automate the calculation: (Commissions + Driver Expenses) - Weekly Advances.
+PDF Improvement: Refine the Liquidaciones PDF format to match the company's existing physical receipt format more closely.
 
-PDF Generation: Automate professional settlement receipts based on the company's existing physical format.
-
-Compliance Tracking: Implement expiration alerts for driver licenses and vehicle documentation.
+Compliance Alerts: Add push notifications or dashboard alerts when a document is about to expire (e.g., within 30 days).
 
 6. Key Data Structures
 Viaje: Real fuel consumption and toll data.
@@ -61,6 +63,8 @@ viajes_registrados: Trip planning linked to the Loading Program and Clients.
 Conductor: Driver profiles including porcentaje_base for payroll calculations.
 
 Liquidaciones: Historical record of completed settlements and payments.
+
+ProgramaCargas: Weekly loading program used as the basis for settlement date ranges.
 
 
 ## Commands
@@ -91,7 +95,13 @@ The app has two distinct zones defined in [`src/pages/index.jsx`](src/pages/inde
 - **Public zone** (`/`, `/home`, `/unidades`, `/login`): renders without the sidebar shell.
 - **Protected zone** (everything else): wrapped in `<ProtectedRoute>`, which checks `supabase.auth.getSession()` and redirects to `/login` if unauthenticated.
 
-[`src/pages/Layout.jsx`](src/pages/Layout.jsx) decides whether to render the sidebar by checking if `currentPageName` is in `systemPages`. Public routes pass `children` through directly with no shell.
+[`src/pages/Layout.jsx`](src/pages/Layout.jsx) decides whether to render the sidebar by checking if `currentPageName` is in `systemPages`. Routes not in `systemPages` pass `children` through directly with no shell.
+
+`systemPages` currently includes: `ControlCombustible`, `FuelProgramaCargas`, `FuelRegistrarViaje`, `FuelViajes`, `Clientes`, `FuelConductores`, `FuelCamiones`, `FuelRemolques`, `ExpertoLogistica`, `Liquidaciones`, `IAAuditorChat`, `DocumentacionLegal`.
+
+### Splash screen
+
+A `SplashScreen` component is triggered via `sessionStorage.getItem("showSplash")` on route change. Set `sessionStorage.setItem("showSplash", "1")` before navigating to display it on the next page load.
 
 ### Data layer
 
@@ -117,7 +127,11 @@ Use `createPageUrl(pageName)` from `@/utils` to generate route paths (lowercases
 
 ### PDF export
 
-`Liquidaciones` uses `jsPDF` + `jspdf-autotable` for weekly driver settlement PDFs. The `Liquidaciones` page also uses `useMutation` to persist settlement records to Supabase.
+`Liquidaciones` uses `jsPDF` + `jspdf-autotable` for weekly driver settlement PDFs. The logo is preloaded via a `useRef` on mount (`/img/LOGO.PNG`). The `Liquidaciones` page also uses `useMutation` to persist settlement records to Supabase.
+
+### Legal Documentation
+
+`DocumentacionLegal` tracks expiration dates for conductores (licencia, apto médico), camiones (tarjeta de circulación, verificación, seguro, revista), and remolques (placa, seguro). Status is computed client-side with `differenceInDays` from `date-fns`. Inline editing uses a Dialog from shadcn/ui and upserts to the corresponding Supabase table.
 
 ### UI components
 

@@ -19,9 +19,10 @@ import {
   MessageSquare,
   Settings,
 } from "lucide-react";
-import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useSpring, useInView } from "framer-motion";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import LiquidButton from "@/components/LiquidButton";
 import SplitText from "@/components/SplitText";
 import TextType from "@/components/TextType";
 import Antigravity from "@/components/Antigravity";
@@ -422,28 +423,21 @@ export default function Home() {
           {/* CTA + mobile toggle */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             {/* Desktop CTA */}
-            <motion.a
+            <LiquidButton
               href={WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.97 }}
-              className="hidden lg:block"
+              variant="nav"
+              className="hidden lg:inline-flex text-[11px] tracking-[0.1em] uppercase px-5 py-2 rounded-full"
               style={{
                 background: '#EAB308',
                 color: '#0A0A0A',
-                fontSize: '11px',
-                fontWeight: 800,
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                padding: '8px 20px',
-                borderRadius: '50px',
                 textDecoration: 'none',
                 whiteSpace: 'nowrap',
               }}
             >
               Cotizar
-            </motion.a>
+            </LiquidButton>
 
             {/* Mobile toggle */}
             <button
@@ -626,35 +620,29 @@ export default function Home() {
                 style={{ display: 'block', textAlign: 'center' }}
               />
               <div className="flex flex-col sm:flex-row justify-center gap-6">
-                <Button
-                  size="lg"
+                <LiquidButton
                   onClick={() => handleNavigation("servicios")}
-                  className="btn-primary text-xl w-full sm:w-[280px] py-8 font-black shadow-2xl text-gray-900 rounded-2xl"
+                  icon={<ChevronRight className="w-6 h-6" />}
+                  className="text-xl w-full sm:w-[280px] py-8 px-8 rounded-2xl shadow-2xl"
                   style={{
                     background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
                     pointerEvents: 'all',
                   }}
                 >
                   Nuestros Servicios
-                  <ChevronRight className="w-6 h-6 ml-2" />
-                </Button>
+                </LiquidButton>
 
-                <a
+                <LiquidButton
                   href={`https://wa.me/${websiteInfo?.contact?.phone?.replace(/\D/g, "") || "523131911815"}?text=Hola, me gustaría solicitar una cotización`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full sm:w-[280px]"
+                  variant="outline"
+                  icon={<Phone className="w-6 h-6" />}
+                  className="text-xl w-full sm:w-[280px] py-8 px-8 rounded-2xl backdrop-blur-md bg-white/10"
                   style={{ pointerEvents: 'all' }}
                 >
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="btn-secondary text-xl w-full py-8 font-black border-2 border-white text-white hover:bg-white hover:text-gray-900 transition-all rounded-2xl backdrop-blur-md bg-white/10"
-                  >
-                    Cotizar por WhatsApp
-                    <Phone className="w-6 h-6 ml-2" />
-                  </Button>
-                </a>
+                  Cotizar por WhatsApp
+                </LiquidButton>
               </div>
             </motion.div>
           </div>
@@ -787,88 +775,69 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center"
           >
-            <Button
-              size="lg"
+            <LiquidButton
               onClick={() => scrollToSection("cotizar")}
-              className="btn-primary text-lg px-12 py-7 font-bold shadow-2xl text-gray-900 rounded-xl"
-              style={{
-                background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
-              }}
+              icon={<ChevronRight className="w-5 h-5" />}
+              className="text-lg px-12 py-7 rounded-xl shadow-2xl"
+              style={{ background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})` }}
             >
               Iniciar Cotización
-              <ChevronRight className="w-5 h-5 ml-2" />
-            </Button>
+            </LiquidButton>
           </motion.div>
         </div>
       </section>
 
       {/* About Section */}
-      <section id="nosotros" className="py-24" style={{ position: 'relative', zIndex: 1, background: 'rgba(255,255,255,0.6)' }}>
+      <section id="nosotros" className="py-24" style={{ background: 'rgba(255,255,255,0.6)', position: 'relative', zIndex: 1 }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mb-16">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-1 bg-yellow-400 rounded-full" />
+              <span className="text-yellow-600 font-bold uppercase tracking-widest text-sm">Quiénes somos</span>
+            </div>
+            <h2 className="text-4xl md:text-6xl font-black leading-tight max-w-4xl" style={{ color: darkColor }}>
+              Comprometidos con la{" "}
+              <span className="text-yellow-500">Excelencia</span> Logística
+            </h2>
+          </motion.div>
+
+          {/* Content Grid */}
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="relative"
-            >
-              <div className="absolute -inset-4 bg-yellow-400/10 rounded-[3rem] -rotate-3 blur-2xl"></div>
+            {/* Image */}
+            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="relative">
+              <div className="absolute -inset-4 bg-yellow-400/10 rounded-[3rem] -rotate-3 blur-2xl" />
               <img
                 src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f1a8df21531359b12e1164/276431c4f_cam.png"
-                alt="Sobre nosotros"
-                className="relative rounded-[2rem] shadow-2xl border-8 border-white"
+                alt="Flota de Transportes GM"
+                className="relative rounded-[2rem] shadow-2xl border-8 border-white w-full object-cover"
                 loading="lazy"
               />
+              {/* Floating badge */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.4 }}
+                className="absolute -bottom-6 -right-4 bg-yellow-400 text-gray-900 rounded-2xl px-5 py-4 shadow-2xl"
+              >
+                <span className="text-4xl font-black leading-none block">+15</span>
+                <span className="text-xs font-black uppercase tracking-widest">Años activos</span>
+              </motion.div>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-10 h-1 bg-yellow-400 rounded-full"></div>
-                <span className="text-yellow-600 font-bold uppercase tracking-widest text-sm">
-                  Trayectoria
-                </span>
-              </div>
-              <h2
-                className="text-4xl md:text-6xl font-black mb-8 leading-tight"
-                style={{ color: darkColor }}
-              >
-                Comprometidos con la Excelencia Logística
-              </h2>
-              <p className="text-xl text-gray-600 mb-10 leading-relaxed font-medium">
-                Somos una empresa familiar mexicana con 15 años de experiencia,
-                dedicada a ofrecer soluciones de transporte de carga local y
-                foráneo con los más altos estándares de la industria.
+            {/* Text */}
+            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
+              <p className="text-xl text-gray-600 leading-relaxed mb-6">
+                Somos una empresa familiar mexicana especializada en transporte de carga desde el Puerto de Manzanillo hacia los principales centros de distribución del país.
               </p>
-
-              <div className="grid grid-cols-2 gap-6 mb-10">
-                <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100">
-                  <h4 className="text-3xl font-black text-gray-900 mb-1">
-                    +15
-                  </h4>
-                  <p className="text-sm text-gray-500 font-bold uppercase">
-                    Años de Exp.
-                  </p>
-                </div>
-                <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100">
-                  <h4 className="text-3xl font-black text-gray-900 mb-1">
-                    100%
-                  </h4>
-                  <p className="text-sm text-gray-500 font-bold uppercase">
-                    Mexicanos
-                  </p>
-                </div>
-              </div>
-
+              <p className="text-lg text-gray-500 leading-relaxed mb-10">
+                Con flota propia y operadores con amplia experiencia en el corredor del Pacífico, garantizamos entregas puntuales, trazabilidad total y la comunicación continua que tu operación logística necesita.
+              </p>
               <Link
                 to={createPageUrl("Unidades")}
-                className="btn-primary font-bold text-gray-900 shadow-xl text-lg px-10 py-6 inline-flex items-center justify-center rounded-xl"
-                style={{
-                  background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
-                }}
+                className="inline-flex items-center justify-center font-bold text-gray-900 shadow-xl text-base px-8 py-4 rounded-xl transition-all duration-300 hover:-translate-y-1"
+                style={{ background: 'linear-gradient(135deg, #EAB308, #F59E0B)' }}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Explorar nuestra flota
@@ -880,118 +849,92 @@ export default function Home() {
       </section>
 
       {/* Value Proposition Section */}
-      <section className="py-24 relative overflow-hidden" style={{ position: 'relative', zIndex: 1, background: 'rgba(255,255,255,0.6)' }}>
+      <section className="py-24 relative overflow-hidden" style={{ background: 'rgba(249,250,251,0.55)', position: 'relative', zIndex: 1 }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-20"
-          >
-            <h2
-              className="text-4xl md:text-6xl font-black mb-4 tracking-tight"
-              style={{ color: darkColor }}
-            >
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-10 h-1 bg-yellow-400 rounded-full" />
+              <span className="text-yellow-600 font-bold uppercase tracking-widest text-sm">Ventajas</span>
+              <div className="w-10 h-1 bg-yellow-400 rounded-full" />
+            </div>
+            <h2 className="text-4xl md:text-6xl font-black mb-4 tracking-tight" style={{ color: darkColor }}>
               ¿Por qué elegirnos?
             </h2>
-            <div className="w-24 h-1.5 bg-yellow-400 mx-auto rounded-full mb-6"></div>
+            <div className="w-24 h-1.5 bg-yellow-400 mx-auto rounded-full mb-6" />
             <p className="text-xl text-gray-600 max-w-3xl mx-auto font-medium">
-              Nuestra filosofía de trabajo se basa en cuatro pilares
-              fundamentales que garantizan el éxito de su logística.
+              Cuatro pilares que garantizan el éxito de su operación logística.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-5">
             {[
               {
                 icon: Clock,
                 label: "Puntualidad y Seguridad",
-                description:
-                  "Entregas en tiempo récord bajo los más estrictos protocolos de monitoreo y seguridad 24/7.",
-                color: "bg-blue-500",
-                shadow: "shadow-blue-200",
+                description: "Entregas en tiempo récord bajo los más estrictos protocolos de monitoreo y seguridad 24/7.",
               },
               {
                 icon: MessageSquare,
                 label: "Comunicación Constante",
-                description:
-                  "Mantenemos a nuestros clientes informados en tiempo real sobre el estatus de sus embarques.",
-                color: "bg-purple-500",
-                shadow: "shadow-purple-200",
+                description: "Mantenemos a nuestros clientes informados en tiempo real sobre el estatus de sus embarques.",
               },
               {
                 icon: Settings,
                 label: "Flexibilidad y Adaptación",
-                description:
-                  "Diseñamos rutas y esquemas de transporte a la medida exacta de sus requerimientos.",
-                color: "bg-orange-500",
-                shadow: "shadow-orange-200",
+                description: "Diseñamos rutas y esquemas de transporte a la medida exacta de sus requerimientos.",
               },
               {
                 icon: Award,
                 label: "Profesionalismo",
-                description:
-                  "Personal altamente capacitado y certificado para manejar cualquier tipo de carga.",
-                color: "bg-green-500",
-                shadow: "shadow-green-200",
+                description: "Personal altamente capacitado y certificado para manejar cualquier tipo de carga.",
               },
             ].map((item, index) => (
               <motion.div
                 key={item.label}
-                onMouseMove={(e) => {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  const x = e.clientX - rect.left;
-                  const y = e.clientY - rect.top;
-                  e.currentTarget.style.setProperty("--x", `${x}px`);
-                  e.currentTarget.style.setProperty("--y", `${y}px`);
-                }}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="spotlight-card group p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100 hover:bg-white hover:shadow-2xl transition-all duration-500 cursor-default"
+                className="group relative p-8 rounded-3xl overflow-hidden cursor-default transition-all duration-300 bg-white border border-gray-100 hover:shadow-xl hover:border-yellow-200"
               >
-                <div className="flex items-start gap-6 relative z-20">
+                {/* Background number */}
+                <span
+                  className="absolute top-4 right-6 text-9xl font-black leading-none select-none pointer-events-none"
+                  style={{ color: 'rgba(0,0,0,0.03)' }}
+                >
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+
+                <div className="relative z-10 flex items-start gap-6">
                   <div
-                    className={`w-20 h-20 rounded-[1.5rem] ${item.color} flex-shrink-0 flex items-center justify-center text-white shadow-2xl transition-transform group-hover:scale-110 group-hover:rotate-3`}
+                    className="flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110"
+                    style={{ background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.25)' }}
                   >
-                    <item.icon className="w-10 h-10" />
+                    <item.icon className="w-7 h-7 text-yellow-500" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-gray-900 mb-3">
-                      {item.label}
-                    </h3>
-                    <p className="text-gray-600 leading-relaxed font-medium">
-                      {item.description}
-                    </p>
+                    <h3 className="text-xl font-black text-gray-900 mb-3">{item.label}</h3>
+                    <p className="text-gray-600 leading-relaxed font-medium">{item.description}</p>
                   </div>
                 </div>
               </motion.div>
             ))}
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="mt-20 text-center"
-          >
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="mt-16 text-center">
             <div className="inline-block p-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl shadow-2xl">
               <div className="bg-white px-10 py-8 rounded-[0.9rem]">
                 <p className="text-xl text-gray-800 mb-6 font-black">
                   ¿Listo para experimentar la diferencia GM?
                 </p>
-                <Button
-                  size="lg"
+                <LiquidButton
                   onClick={() => scrollToSection("cotizar")}
-                  className="btn-primary text-lg px-12 py-7 font-bold text-gray-900 rounded-xl"
-                  style={{
-                    background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
-                  }}
+                  icon={<ChevronRight className="w-5 h-5" />}
+                  className="text-base px-10 py-6 rounded-xl"
+                  style={{ background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})` }}
                 >
                   Solicitar Cotización Ahora
-                  <ChevronRight className="w-5 h-5 ml-2" />
-                </Button>
+                </LiquidButton>
               </div>
             </div>
           </motion.div>
@@ -1337,95 +1280,193 @@ export default function Home() {
             <p className="text-lg text-gray-600 mb-6">
               ¿Listo para comenzar? Solicita tu cotización personalizada
             </p>
-            <Button
-              size="lg"
+            <LiquidButton
               onClick={() => scrollToSection("cotizar")}
-              className="btn-primary text-lg px-10 py-6 font-semibold shadow-2xl text-gray-900"
-              style={{
-                background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
-              }}
+              icon={<ChevronRight className="w-5 h-5" />}
+              className="text-lg px-10 py-6 rounded-xl shadow-2xl"
+              style={{ background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})` }}
             >
               Solicitar Cotización
-              <ChevronRight className="w-5 h-5 ml-2" />
-            </Button>
+            </LiquidButton>
           </motion.div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-12 text-white bg-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-8 mb-8">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <img
-                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f1a8df21531359b12e1164/2dfaaffb2_LOGO.png"
-                  alt="Transportes GM Logo"
-                  className="h-12 w-auto"
-                />
-              </div>
-              <p className="text-gray-400 leading-relaxed mb-6">
-                {websiteInfo?.tagline ||
-                  "Tu socio confiable en transporte de carga"}
-              </p>
+      <footer className="bg-[#0A0A0A] text-white">
 
+        {/* CTA Strip */}
+        <div className="border-b border-white/5">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="flex flex-col md:flex-row items-center justify-between gap-6"
+            >
               <div>
-                <h4 className="text-lg font-bold mb-4 text-yellow-400">
-                  Enlaces Rápidos
-                </h4>
-                <div className="space-y-2">
-                  {["Inicio", "Servicios", "Nosotros", "Contacto"].map(
-                    (link) => (
-                      <button
-                        key={link}
-                        onClick={() => handleNavigation(link.toLowerCase())}
-                        className="block text-gray-400 hover:text-yellow-400 transition-colors"
-                      >
-                        {link}
-                      </button>
-                    ),
-                  )}
-                  <Link
-                    to={createPageUrl("Unidades")}
-                    className="block text-gray-400 hover:text-yellow-400 transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Unidades
-                  </Link>
-                </div>
+                <h3 className="text-3xl md:text-4xl font-black text-white tracking-tight">
+                  ¿Listo para mover tu carga?
+                </h3>
+                <p className="text-gray-400 mt-2 text-lg">
+                  Contáctanos hoy y recibe una cotización personalizada en minutos.
+                </p>
               </div>
-            </div>
+              <LiquidButton
+                href={WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                icon={<Phone className="w-5 h-5" />}
+                className="flex-shrink-0 px-8 py-4 rounded-2xl"
+                style={{ background: 'linear-gradient(135deg, #EAB308, #F59E0B)' }}
+              >
+                Cotizar por WhatsApp
+              </LiquidButton>
+            </motion.div>
+          </div>
+        </div>
 
-            <div>
-              <h4 className="text-lg font-bold mb-4 text-yellow-400">
+        {/* Main grid */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+
+            {/* Col 1: Logo + contacto */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0 }}
+            >
+              <img
+                src={LOGO_URL}
+                alt="Transportes GM"
+                className="h-12 w-auto mb-4"
+              />
+              <p className="text-gray-400 text-sm leading-relaxed mb-6">
+                Empresa familiar mexicana especializada en transporte de carga desde el Puerto de Manzanillo hacia los principales centros de distribución del país.
+              </p>
+              <div className="space-y-3">
+                <a
+                  href="tel:+523131911815"
+                  className="flex items-center gap-3 text-gray-400 hover:text-yellow-400 transition-colors duration-300 cursor-pointer text-sm"
+                >
+                  <Phone className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+                  +52 313 191 1815
+                </a>
+                <a
+                  href="mailto:ventas@transportesgm.mx"
+                  className="flex items-center gap-3 text-gray-400 hover:text-yellow-400 transition-colors duration-300 cursor-pointer text-sm"
+                >
+                  <Mail className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+                  ventas@transportesgm.mx
+                </a>
+              </div>
+            </motion.div>
+
+            {/* Col 2: Navegación */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+            >
+              <h4 className="text-xs font-black uppercase tracking-widest text-yellow-400 mb-5">
+                Navegación
+              </h4>
+              <nav className="space-y-3">
+                {[
+                  { label: "Inicio",    id: "inicio" },
+                  { label: "Servicios", id: "servicios" },
+                  { label: "Nosotros",  id: "nosotros" },
+                  { label: "Contacto",  id: "contacto" },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => handleNavigation(item.id)}
+                    className="block text-gray-400 hover:text-white transition-colors duration-300 cursor-pointer text-sm"
+                  >
+                    {item.label}
+                  </button>
+                ))}
+                <Link
+                  to={createPageUrl("Unidades")}
+                  className="block text-gray-400 hover:text-white transition-colors duration-300 cursor-pointer text-sm"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Unidades
+                </Link>
+              </nav>
+            </motion.div>
+
+            {/* Col 3: Servicios */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+            >
+              <h4 className="text-xs font-black uppercase tracking-widest text-yellow-400 mb-5">
+                Servicios
+              </h4>
+              <ul className="space-y-3">
+                {[
+                  "Transporte en Caja Seca",
+                  "Arrastre Contenedor 20'",
+                  "Arrastre Contenedor 40'",
+                  "Configuración Full",
+                  "Cobertura Nacional",
+                ].map((service) => (
+                  <li key={service} className="flex items-center gap-2.5 text-gray-400 text-sm">
+                    <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 flex-shrink-0" />
+                    {service}
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+
+            {/* Col 4: Mapa */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+            >
+              <h4 className="text-xs font-black uppercase tracking-widest text-yellow-400 mb-5">
                 Nuestra Ubicación
               </h4>
-              <div className="rounded-xl overflow-hidden shadow-lg border border-gray-700">
+              <div className="rounded-xl overflow-hidden border border-white/10 mb-3">
                 <iframe
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d35895.799631122114!2d-103.89870435843876!3d18.915152858014416!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x843ab659e3ad4c75%3A0xf75a2010d124c583!2sTecom%C3%A1n%2C%20Colima!5e1!3m2!1sen!2smx!4v1777427674859!5m2!1sen!2smx"
                   width="100%"
-                  height="250"
+                  height="160"
                   style={{ border: 0 }}
                   allowFullScreen=""
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                   title="Ubicación Transportes GM"
-                ></iframe>
+                />
               </div>
-              <p className="text-sm text-gray-400 mt-3 flex items-start gap-2">
+              <p className="text-gray-400 text-xs leading-relaxed flex items-start gap-2">
                 <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-yellow-400" />
-                Tecoman, Colima, Mexico. 28110
+                Av. Marciano Cabrera 321, Tepeyac, Tecomán, Colima, 28110
               </p>
-            </div>
-          </div>
+            </motion.div>
 
-          <div className="border-t border-gray-800 pt-8 text-center text-gray-400">
-            <p>
-              © {new Date().getFullYear()} Transportes GM. Todos los derechos
-              reservados.
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="border-t border-white/5">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="text-gray-500 text-sm">
+              © {new Date().getFullYear()} Transportes GM. Todos los derechos reservados.
+            </p>
+            <p className="text-gray-600 text-xs">
+              Tecomán, Colima, México
             </p>
           </div>
         </div>
+
       </footer>
 
       {/* Floating WhatsApp Button */}
@@ -1449,6 +1490,46 @@ export default function Home() {
       </motion.div>
 
     </div>
+  );
+}
+
+function StatCounter({ value, suffix = "", prefix = "", label, delay = 0 }) {
+  const ref = useRef(null);
+  const [displayValue, setDisplayValue] = useState(0);
+  const isInView = useInView(ref, { once: true, amount: 0.5 });
+
+  useEffect(() => {
+    if (!isInView) return;
+    const timeout = setTimeout(() => {
+      const duration = 1800;
+      const startTime = Date.now();
+      const tick = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        setDisplayValue(Math.floor(eased * value));
+        if (progress < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }, delay * 1000);
+    return () => clearTimeout(timeout);
+  }, [isInView, value, delay]);
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay }}
+      className="text-center p-6 rounded-2xl"
+      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+    >
+      <div className="text-4xl md:text-5xl font-black text-white mb-1">
+        {prefix}{displayValue}{suffix}
+      </div>
+      <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.35)' }}>{label}</p>
+    </motion.div>
   );
 }
 
