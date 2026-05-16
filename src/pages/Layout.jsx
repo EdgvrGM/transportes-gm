@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { supabase } from "@/supabaseClient";
@@ -13,7 +13,6 @@ import {
   Menu,
   X,
   CalendarDays,
-  Package,
   Briefcase,
   ChevronDown,
   ChevronRight,

@@ -1,4 +1,3 @@
-import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -13,6 +12,9 @@ import { FileText, MapPin, Gauge, ArrowLeftRight, Route } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
+/**
+ * @param {{ viajes: object[] }} props
+ */
 export default function TablaViajes({ viajes }) {
   const getEficienciaColor = (kmPorLitro) => {
     if (kmPorLitro > 2.25)

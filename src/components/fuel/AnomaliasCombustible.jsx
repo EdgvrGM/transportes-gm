@@ -1,10 +1,13 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AlertTriangle, Fuel, ArrowRight } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
+/**
+ * @param {{ viajes: object[], conductores: object[] }} props
+ */
 export default function AnomaliasCombustible({ viajes, conductores }) {
   const navigate = useNavigate();
 

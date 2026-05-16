@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,7 @@ export default function Login() {
 
       sessionStorage.setItem("showSplash", "1");
       navigate("/controlcombustible");
-    } catch (error) {
+    } catch (_error) {
       setError("Credenciales inválidas. Por favor, inténtalo de nuevo.");
     } finally {
       setLoading(false);

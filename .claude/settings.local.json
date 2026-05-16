@@ -12,7 +12,14 @@
       "Bash(Test-Path *)",
       "Skill(ui-ux-pro-max)",
       "Bash(python skills/ui-ux-pro-max/scripts/search.py \"logistics transport cargo freight industrial professional dark\" --design-system -p \"Transportes GM\" -f markdown)",
-      "PowerShell(py *)"
+      "PowerShell(py *)",
+      "Bash(Remove-Item \"C:\\\\Users\\\\Joker\\\\Documents\\\\dev\\\\Version 1.1\\\\transportes-gm\\\\check_db_v2.cjs\")",
+      "Bash(Remove-Item \"C:\\\\Users\\\\Joker\\\\Documents\\\\dev\\\\Version 1.1\\\\transportes-gm\\\\check_db_v3.cjs\")",
+      "PowerShell(Remove-Item *)",
+      "Bash(Select-String -Pattern \"error|warning\")",
+      "Bash(Measure-Object -Line)",
+      "Bash(grep -v \"^--$\")",
+      "Bash(npx eslint *)"
     ]
   }
 }

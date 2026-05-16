@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/supabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -156,7 +156,7 @@ export default function FuelRegistrarViaje() {
       }
       return { result, usabaViajeId: true };
     },
-    onSuccess: async ({ result, usabaViajeId }) => {
+    onSuccess: async () => {
       // Cierre del Ciclo: Actualizar tabla de viajes_registrados
       if (viajeRegistradoId) {
         await supabase
@@ -179,9 +179,8 @@ export default function FuelRegistrarViaje() {
       queryClient.invalidateQueries({ queryKey: ["viajes_registrados"] });
       navigate(createPageUrl("ControlCombustible"));
     },
-    onError: (err) => {
+    onError: (_err) => {
       setError("Error al registrar el viaje.");
-      console.error("Error creating trip:", err);
     },
   });
 
@@ -839,7 +838,7 @@ export default function FuelRegistrarViaje() {
                     <Checkbox 
                       id="no-diesel" 
                       checked={viaje.sinDiesel}
-                      onCheckedChange={(checked) => setViaje({ ...viaje, sinDiesel: !!checked, litros_combustible: !!checked ? 0 : viaje.litros_combustible, costo_combustible: !!checked ? 0 : viaje.costo_combustible })}
+                      onCheckedChange={(checked) => setViaje({ ...viaje, sinDiesel: !!checked, litros_combustible: checked ? 0 : viaje.litros_combustible, costo_combustible: checked ? 0 : viaje.costo_combustible })}
                     />
                     <Label htmlFor="no-diesel" className="text-xs font-bold cursor-pointer text-green-700 dark:text-green-400">
                       Aún no ha cargado diesel

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/supabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -415,7 +414,6 @@ export default function FuelConductores() {
                   {mostrarInactivos && conductores
                     .filter((c) => c.estado !== "activo")
                     .map((conductor) => {
-                      const stats = obtenerEstadisticasConductor(conductor.id);
                       return (
                         <TableRow key={conductor.id} className="group relative border-l-4 border-transparent hover:border-red-600 bg-red-50/5 dark:bg-red-900/5 hover:bg-red-50/20 dark:hover:bg-red-900/10 transition-all duration-300 border-b border-border/40 last:border-0 opacity-80">
                           <TableCell className="py-3 pl-8">

@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
-import { supabase } from "@/supabaseClient";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -9,17 +8,14 @@ import {
   Truck,
   Package,
   Clock,
-  Shield,
   Award,
-  Users,
   ChevronRight,
   Menu,
   X,
-  Gauge,
   MessageSquare,
   Settings,
 } from "lucide-react";
-import { motion, AnimatePresence, useMotionValue, useSpring, useInView } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import LiquidButton from "@/components/LiquidButton";
@@ -27,6 +23,7 @@ import SplitText from "@/components/SplitText";
 import TextType from "@/components/TextType";
 import Antigravity from "@/components/Antigravity";
 import LogoLoop from "@/components/LogoLoop";
+import "@/styles/home.css";
 
 const staticWebsiteInfo = {
   company_name: "Transportes GM",
@@ -66,12 +63,7 @@ export default function Home() {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
-  const springConfig = { damping: 25, stiffness: 150 };
-  const smoothX = useSpring(mouseX, springConfig);
-  const smoothY = useSpring(mouseY, springConfig);
-
   const websiteInfo = staticWebsiteInfo;
-  const isLoading = false;
 
   useEffect(() => {
     const video = videoRef.current;
@@ -111,8 +103,6 @@ export default function Home() {
 
   useEffect(() => {
     const sections = ["inicio", "servicios", "nosotros", "contacto", "cotizar"];
-    const observers = [];
-
     const observerOptions = {
       root: null,
       rootMargin: "-20% 0px -70% 0px",
@@ -186,168 +176,6 @@ export default function Home() {
   return (
     /* CAMBIO: Se agrega la clase 'force-light' para bloquear el modo oscuro en esta página */
     <div className="force-light min-h-screen bg-white text-slate-900">
-      <style>{`
-        :root {
-          --primary-color: ${primaryColor};
-          --secondary-color: ${secondaryColor};
-          --accent-color: ${accentColor};
-          --dark-color: ${darkColor};
-        }
-        
-        .btn-primary {
-          position: relative;
-          overflow: hidden;
-          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .btn-primary::before {
-          content: '';
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 0;
-          height: 0;
-          border-radius: 50%;
-          background: rgba(255, 255, 255, 0.2);
-          transform: translate(-50%, -50%);
-          transition: width 0.6s, height 0.6s;
-        }
-        
-        .btn-primary:hover::before {
-          width: 300px;
-          height: 300px;
-        }
-        
-        .btn-primary:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 25px 50px -12px rgba(234, 179, 8, 0.4);
-        }
-        
-        .btn-secondary:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 25px 50px -12px rgba(255, 255, 255, 0.2);
-        }
-
-        .nav-button {
-          position: relative;
-          transition: all 0.3s ease;
-        }
-
-        .nav-button::before {
-          content: '';
-          position: absolute;
-          bottom: -2px;
-          left: 50%;
-          width: 0;
-          height: 2px;
-          background: ${primaryColor};
-          transform: translateX(-50%);
-          transition: width 0.3s ease;
-        }
-        
-        .nav-button:hover::before {
-          width: 100%;
-        }
-
-        @keyframes scroll {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(calc(-100% / 4)); }
-        }
-
-        .animate-scroll {
-          animation: scroll 40s linear infinite;
-        }
-        
-        .animate-scroll:hover {
-          animation-play-state: paused;
-        }
-
-        .spotlight-card {
-          position: relative;
-          overflow: hidden;
-        }
-
-        .spotlight-card::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(800px circle at var(--x) var(--y), rgba(234, 179, 8, 0.1), transparent 40%);
-          opacity: 0;
-          transition: opacity 0.3s;
-          pointer-events: none;
-          z-index: 10;
-        }
-
-        .spotlight-card:hover::before {
-          opacity: 1;
-        }
-
-        @keyframes float {
-          0% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(5deg); }
-          100% { transform: translateY(0px) rotate(0deg); }
-        }
-
-        .floating-shape {
-          animation: float 6s ease-in-out infinite;
-        }
-
-        .scroll-indicator {
-  position: absolute;
-  bottom: 30px;
-  left: 0;               /* Define el inicio en el borde izquierdo */
-  right: 0;              /* Define el final en el borde derecho */
-  margin-left: auto;     /* Equilibra el espacio a la izquierda[cite: 1] */
-  margin-right: auto;    /* Equilibra el espacio a la derecha[cite: 1] */
-  width: fit-content;    /* Ajusta el contenedor al tamaño real del icono[cite: 1] */
-  display: flex;
-  flex-direction: column;
-  align-items: center;   /* Centra internamente el texto y el ratón[cite: 1] */
-  gap: 8px;
-  color: white;
-  z-index: 20;
-  opacity: 0.8;
-  pointer-events: none;  /* Evita interferencias con clics en el video o botones[cite: 1] */
-}
-
-        .mouse {
-          width: 26px;
-          height: 42px;
-          border: 2px solid white;
-          border-radius: 20px;
-          position: relative;
-        }
-
-        .wheel {
-          width: 4px;
-          height: 8px;
-          background: white;
-          border-radius: 2px;
-          position: absolute;
-          top: 8px;
-          left: 50%;
-          transform: translateX(-50%);
-          animation: scroll-wheel 2s infinite;
-        }
-
-        @keyframes scroll-wheel {
-          0% { top: 8px; opacity: 1; }
-          100% { top: 25px; opacity: 0; }
-        }
-
-        .floating-whatsapp {
-          position: fixed;
-          bottom: 30px;
-          right: 30px;
-          z-index: 100;
-          transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .floating-whatsapp:hover {
-          transform: scale(1.1);
-        }
-      `}</style>
-
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-4 px-4 transition-all duration-500">
         <motion.div
@@ -421,7 +249,7 @@ export default function Home() {
           </div>
 
           {/* CTA + mobile toggle */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div className="flex items-center gap-2.5">
             {/* Desktop CTA */}
             <LiquidButton
               href={WHATSAPP_URL}
@@ -483,7 +311,7 @@ export default function Home() {
                 zIndex: 49,
               }}
             >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div className="flex flex-col gap-1">
                 {NAV_LINKS.map((link) => (
                   <button
                     key={link.id}
@@ -537,7 +365,7 @@ export default function Home() {
       <section
         id="inicio"
         className="pt-20 min-h-screen flex items-center relative overflow-hidden"
-        style={{ position: 'relative', zIndex: 2 }}
+        style={{ zIndex: 2 }}
       >
         <div className="absolute inset-0 z-0">
           <video
@@ -633,7 +461,7 @@ export default function Home() {
                 </LiquidButton>
 
                 <LiquidButton
-                  href={`https://wa.me/${websiteInfo?.contact?.phone?.replace(/\D/g, "") || "523131911815"}?text=Hola, me gustaría solicitar una cotización`}
+                  href={WHATSAPP_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   variant="outline"
@@ -1081,10 +909,7 @@ export default function Home() {
                   </div>
 
                   <a
-                    href={`https://wa.me/${
-                      websiteInfo?.contact?.phone?.replace(/\D/g, "") ||
-                      "525512345678"
-                    }?text=Hola, me gustaría solicitar una cotización`}
+                    href={WHATSAPP_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block"
@@ -1477,7 +1302,7 @@ export default function Home() {
         className="floating-whatsapp"
       >
         <a
-          href={`https://wa.me/${websiteInfo?.contact?.phone?.replace(/\D/g, "") || "523131911815"}?text=Hola, me gustaría solicitar una cotización`}
+          href={WHATSAPP_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="block group relative"
@@ -1493,223 +1318,4 @@ export default function Home() {
   );
 }
 
-function StatCounter({ value, suffix = "", prefix = "", label, delay = 0 }) {
-  const ref = useRef(null);
-  const [displayValue, setDisplayValue] = useState(0);
-  const isInView = useInView(ref, { once: true, amount: 0.5 });
 
-  useEffect(() => {
-    if (!isInView) return;
-    const timeout = setTimeout(() => {
-      const duration = 1800;
-      const startTime = Date.now();
-      const tick = () => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        setDisplayValue(Math.floor(eased * value));
-        if (progress < 1) requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
-    }, delay * 1000);
-    return () => clearTimeout(timeout);
-  }, [isInView, value, delay]);
-
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay }}
-      className="text-center p-6 rounded-2xl"
-      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
-    >
-      <div className="text-4xl md:text-5xl font-black text-white mb-1">
-        {prefix}{displayValue}{suffix}
-      </div>
-      <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.35)' }}>{label}</p>
-    </motion.div>
-  );
-}
-
-function QuoteForm({ primaryColor, secondaryColor }) {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    company: "",
-    message: "",
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState(null);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setSubmitStatus(null);
-
-    try {
-      // Para enviar emails, Supabase usa Edge Functions.
-      // Esta es una llamada de ejemplo a una función que podrías crear llamada 'contact-form'
-      const { error } = await supabase.functions.invoke("contact-form", {
-        body: formData,
-      });
-
-      if (error) throw error;
-
-      setSubmitStatus("success");
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        company: "",
-        message: "",
-      });
-    } catch (error) {
-      console.error("Error sending quote:", error);
-      setSubmitStatus("error");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-gray-700 ml-1">
-            Nombre completo *
-          </label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Ej. Juan Pérez"
-            required
-            className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-yellow-500 focus:ring-4 focus:ring-yellow-100 outline-none transition-all bg-gray-50/50"
-          />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-gray-700 ml-1">
-            Email *
-          </label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="correo@empresa.com"
-            required
-            className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-yellow-500 focus:ring-4 focus:ring-yellow-100 outline-none transition-all bg-gray-50/50"
-          />
-        </div>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-gray-700 ml-1">
-            Teléfono *
-          </label>
-          <input
-            type="tel"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            placeholder="10 dígitos"
-            required
-            className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-yellow-500 focus:ring-4 focus:ring-yellow-100 outline-none transition-all bg-gray-50/50"
-          />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-gray-700 ml-1">
-            Empresa (opcional)
-          </label>
-          <input
-            type="text"
-            name="company"
-            value={formData.company}
-            onChange={handleChange}
-            placeholder="Nombre de tu empresa"
-            className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-yellow-500 focus:ring-4 focus:ring-yellow-100 outline-none transition-all bg-gray-50/50"
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-bold text-gray-700 ml-1">
-          Tu mensaje *
-        </label>
-        <textarea
-          name="message"
-          value={formData.message}
-          onChange={handleChange}
-          placeholder="Cuéntanos sobre tus necesidades de transporte..."
-          required
-          rows="5"
-          className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-yellow-500 focus:ring-4 focus:ring-yellow-100 outline-none transition-all bg-gray-50/50 resize-none"
-        />
-      </div>
-
-      {submitStatus === "success" && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-800 flex items-center gap-3"
-        >
-          <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white flex-shrink-0">
-            <Award className="w-5 h-5" />
-          </div>
-          <p className="font-medium">
-            ¡Cotización enviada con éxito! Te contactaremos pronto.
-          </p>
-        </motion.div>
-      )}
-
-      {submitStatus === "error" && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-800 flex items-center gap-3"
-        >
-          <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white flex-shrink-0">
-            <X className="w-5 h-5" />
-          </div>
-          <p className="font-medium">
-            Error al enviar. Por favor, llámanos directamente.
-          </p>
-        </motion.div>
-      )}
-
-      <Button
-        type="submit"
-        size="lg"
-        disabled={isSubmitting}
-        className="btn-submit w-full text-lg py-7 font-black text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl"
-        style={{
-          background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
-        }}
-      >
-        {isSubmitting ? (
-          <>
-            <div className="w-6 h-6 border-3 border-gray-900 border-t-transparent rounded-full animate-spin mr-3" />
-            Procesando...
-          </>
-        ) : (
-          <>
-            Enviar Solicitud
-            <ChevronRight className="w-6 h-6 ml-2" />
-          </>
-        )}
-      </Button>
-    </form>
-  );
-}

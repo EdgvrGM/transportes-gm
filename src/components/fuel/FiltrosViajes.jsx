@@ -1,4 +1,3 @@
-import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Filter, X, Calendar } from "lucide-react";
 
+// TODO: agregar JSDoc de props
 export default function FiltrosViajes({
   fechaInicio,
   setFechaInicio,

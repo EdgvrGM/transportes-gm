@@ -1,4 +1,3 @@
-import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   LineChart,
@@ -13,6 +12,9 @@ import {
 import { TrendingUp } from "lucide-react";
 import { useTheme } from "@/components/theme-provider"; // <--- Importar Theme
 
+/**
+ * @param {{ viajes: object[] }} props
+ */
 export default function GraficoConsumo({ viajes }) {
   const { theme } = useTheme(); // <--- Usar Theme
   const isDark = theme === "dark";

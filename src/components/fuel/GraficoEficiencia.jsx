@@ -1,4 +1,3 @@
-import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   BarChart,
@@ -13,6 +12,9 @@ import {
 import { Activity } from "lucide-react";
 import { useTheme } from "@/components/theme-provider"; // <--- Importar Theme
 
+/**
+ * @param {{ viajes: object[] }} props
+ */
 export default function GraficoEficiencia({ viajes }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";

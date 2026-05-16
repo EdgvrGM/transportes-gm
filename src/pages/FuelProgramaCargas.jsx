@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/supabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -42,13 +42,9 @@ import {
   MapPin,
   User,
   Truck,
-  Package,
   Briefcase,
   Eye,
   Fuel,
-  CheckCircle2,
-  Brain,
-  Download,
   ArrowRight,
   Ticket,
 } from "lucide-react";
@@ -322,8 +318,7 @@ export default function FuelProgramaCargas() {
   const guardarMutation = useMutation({
     onMutate: () => setErrorMsg(null),
     mutationFn: async (datos) => {
-      try {
-        // 1. Upsert en ProgramaCargas
+      // 1. Upsert en ProgramaCargas
         const payload = {
           titulo: datos.titulo,
           fecha_inicio: datos.fecha_inicio,
@@ -437,9 +432,6 @@ export default function FuelProgramaCargas() {
             throw upsertError;
           }
         }
-      } catch (err) {
-        throw err;
-      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["programaCargas"] });

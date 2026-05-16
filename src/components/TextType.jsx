@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState, createElement, useMemo, useCallback } from 'react';
 import { gsap } from 'gsap';
 
+/**
+ * @param {{ text: string | string[], as?: string, typingSpeed?: number, loop?: boolean, showCursor?: boolean, cursorCharacter?: string, startOnVisible?: boolean }} props
+ */
 const TextType = ({
   text,
   as: Component = 'div',

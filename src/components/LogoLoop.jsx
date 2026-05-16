@@ -115,6 +115,9 @@ const useAnimationLoop = (trackRef, targetVelocity, seqWidth, seqHeight, isHover
   }, [targetVelocity, seqWidth, seqHeight, isHovered, hoverSpeed, isVertical, trackRef]);
 };
 
+/**
+ * @param {{ logos: Array<object>, speed?: number, direction?: 'left'|'right'|'up'|'down', width?: string|number, logoHeight?: number, gap?: number, pauseOnHover?: boolean, fadeOut?: boolean, renderItem?: Function }} props
+ */
 export const LogoLoop = memo(
   ({
     logos,

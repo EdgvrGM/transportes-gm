@@ -1,8 +1,7 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/supabaseClient";
 import { differenceInDays, format, parseISO } from "date-fns";
-import { es } from "date-fns/locale";
 import {
   ShieldCheck,
   AlertTriangle,
@@ -18,7 +17,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import {
   Tabs,
   TabsContent,
@@ -40,7 +38,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -53,7 +51,7 @@ function getEstadoVencimiento(fechaStr) {
     if (dias < 0) return "vencido";
     if (dias <= 30) return "por_vencer";
     return "vigente";
-  } catch (e) {
+  } catch (_e) {
     return "sin_registro";
   }
 }
@@ -86,7 +84,7 @@ function getBadgeLabel(estado, fechaStr) {
       return `Vence en ${dias}d`;
     }
     return format(date, "dd/MM/yyyy");
-  } catch (e) {
+  } catch (_e) {
     return "Sin registro";
   }
 }
@@ -112,7 +110,7 @@ function EditDialog({ open, onClose, record, fields, tableName, idField, nameLab
   const queryClient = useQueryClient();
   const [values, setValues] = useState({});
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (record) {
       const initial = {};
       fields.forEach((f) => {

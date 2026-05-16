@@ -5,6 +5,9 @@ const ThemeProviderContext = createContext({
   setTheme: () => null,
 });
 
+/**
+ * @param {{ children: React.ReactNode, defaultTheme?: 'light' | 'dark' | 'system', storageKey?: string }} props
+ */
 // OJO AQUÍ: Asegúrate de tener "...props" después de storageKey
 export function ThemeProvider({
   children,

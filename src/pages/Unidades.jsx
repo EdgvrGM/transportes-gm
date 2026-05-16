@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { supabase } from "@/supabaseClient"; // Cambiado a supabase
+import { supabase } from "@/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft, Truck, Calendar, CreditCard } from "lucide-react";
+import { ArrowLeft, Truck, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Unidades() {
@@ -22,7 +21,6 @@ export default function Unidades() {
       const { data, error } = await supabase.from("Unidad").select("*");
 
       if (error) {
-        console.error("Error cargando unidades:", error);
         throw new Error(error.message);
       }
 

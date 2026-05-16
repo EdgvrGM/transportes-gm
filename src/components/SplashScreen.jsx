@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 const MENSAJES = [
@@ -7,6 +7,9 @@ const MENSAJES = [
   "Preparando tu espacio de trabajo...",
 ];
 
+/**
+ * @param {{ onComplete: Function }} props
+ */
 export default function SplashScreen({ onComplete }) {
   const [msgIndex, setMsgIndex] = useState(0);
   const [listo, setListo] = useState(false);

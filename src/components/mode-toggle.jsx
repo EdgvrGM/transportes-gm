@@ -1,8 +1,8 @@
-import React from "react";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme-provider";
 
+/** Botón de alternancia de tema claro/oscuro. Sin props. */
 export function ModeToggle() {
   const { theme, setTheme } = useTheme();
 

@@ -61,6 +61,9 @@ const fragment = /* glsl */`
   }
 `;
 
+/**
+ * @param {{ particleCount?: number, particleSpread?: number, speed?: number, particleColors?: string[], moveParticlesOnHover?: boolean, alphaParticles?: boolean, particleBaseSize?: number, cameraDistance?: number, disableRotation?: boolean }} props
+ */
 const Particles = ({
   particleCount = 200,
   particleSpread = 10,

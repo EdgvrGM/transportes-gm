@@ -12,7 +12,7 @@ import FuelViajes from "./FuelViajes";
 import FuelProgramaCargas from "./FuelProgramaCargas";
 import Login from "./Login.jsx";
 import ProtectedRoute from "./ProtectedRoute.jsx";
-import Clientes from "./Clientes"; // <-- Importado correctamente
+import Clientes from "./Clientes";
 import IAAuditorChat from "./IAAuditorChat.jsx";
 import ExpertoLogistica from "./ExpertoLogistica.jsx";
 import {
@@ -25,7 +25,6 @@ import {
 import Liquidaciones from "./Liquidaciones.jsx";
 import DocumentacionLegal from "./DocumentacionLegal.jsx";
 
-// AGREGAMOS CLIENTES A LA LISTA DE PÁGINAS ACTIVAS
 const PAGES = {
   Home: Home,
   Unidades: Unidades,

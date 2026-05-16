@@ -1,7 +1,9 @@
-import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
 
+/**
+ * @param {{ title: string, value: string|number, subtitle?: string, icon: React.ElementType, gradient: string, trend?: { value: string, label: string, positive: boolean } }} props
+ */
 export default function StatsCard({
   title,
   value,

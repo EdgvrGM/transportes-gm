@@ -6,6 +6,9 @@ const MAGNETIC_SPRING = { damping: 20, stiffness: 300, mass: 0.5 };
 const ICON_SPRING     = { type: "spring", stiffness: 450, damping: 12 };
 const SWEEP_EASE      = { duration: 0.38, ease: [0.4, 0, 0.2, 1] };
 
+/**
+ * @param {{ children: React.ReactNode, icon?: React.ReactNode, variant?: 'primary' | 'outline', onClick?: Function, href?: string, className?: string }} props
+ */
 export default function MagneticButton({
   children,
   icon,

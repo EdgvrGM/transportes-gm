@@ -1,7 +1,10 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Trophy, AlertTriangle, TrendingUp, TrendingDown, User } from "lucide-react";
+import { Trophy, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
 
+/**
+ * @param {{ viajes: object[], conductores: object[] }} props
+ */
 export default function RankingConductores({ viajes, conductores }) {
   const ranking = useMemo(() => {
     if (!viajes.length || !conductores.length) return [];

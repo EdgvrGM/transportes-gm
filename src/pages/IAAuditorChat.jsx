@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -74,8 +74,8 @@ function MarkdownMessage({ content }) {
       elements.push(<p key={i} className={cls}>{parseInline(text)}</p>);
       return;
     }
-    if (/^[*\-] /.test(t)) {
-      listBuffer.push(t.replace(/^[\s*\-]+/, ""));
+    if (/^[*-] /.test(t)) {
+      listBuffer.push(t.replace(/^[\s*-]+/, ""));
       return;
     }
     if (t === "") {
@@ -228,8 +228,7 @@ export default function IAAuditorChat() {
       if (error) throw error;
       
       setMessages(prev => [...prev, { role: "assistant", content: data.text }]);
-    } catch (err) {
-      console.error(err);
+    } catch (_err) {
       setMessages(prev => [...prev, { role: "assistant", content: "Ocurrió un error al consultar a la IA. Verifica que la Edge Function esté desplegada y configurada correctamente." }]);
     } finally {
       setIsTyping(false);

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/supabaseClient";
 import { useNavigate } from "react-router-dom";
@@ -122,6 +122,7 @@ function PendingCard({ viaje, conductor, camion, cliente, handleRegistrar }) {
   );
 }
 
+/** Cola de viajes pendientes de registro derivada del ProgramaCargas activo. Sin props. */
 export default function ColaCarga() {
   const navigate = useNavigate();
 

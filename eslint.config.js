@@ -5,7 +5,7 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 
 export default [
-  { ignores: ['dist'] },
+  { ignores: ['dist', 'scratch/**'] },
   {
     files: ['**/*.{js,jsx}'],
     languageOptions: {
@@ -33,6 +33,32 @@ export default [
         'warn',
         { allowConstantExport: true },
       ],
+      'no-unused-vars': ['error', {
+        argsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_',
+        ignoreRestSiblings: true,
+      }],
+    },
+  },
+  // shadcn/ui auto-generated — prop-types not required
+  {
+    files: ['src/components/ui/**/*.{js,jsx}'],
+    rules: {
+      'react/prop-types': 'off',
+    },
+  },
+  // Pages define internal sub-components — prop-types not required
+  {
+    files: ['src/pages/**/*.{js,jsx}'],
+    rules: {
+      'react/prop-types': 'off',
+    },
+  },
+  // Node.js config files
+  {
+    files: ['*.config.{js,cjs}', '*.cjs'],
+    languageOptions: {
+      globals: globals.node,
     },
   },
 ]

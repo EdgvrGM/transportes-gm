@@ -3,6 +3,9 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 
+/**
+ * @param {{ count?: number, magnetRadius?: number, ringRadius?: number, waveSpeed?: number, color?: string, autoAnimate?: boolean, particleShape?: string }} props
+ */
 const AntigravityInner = ({
   count = 300,
   magnetRadius = 10,
@@ -139,6 +142,7 @@ const AntigravityInner = ({
   );
 };
 
+/** Envuelve AntigravityInner en un Canvas de react-three-fiber. Sin props propias; todas se pasan a AntigravityInner. */
 const Antigravity = (props) => (
   <Canvas
     camera={{ position: [0, 0, 50], fov: 35 }}

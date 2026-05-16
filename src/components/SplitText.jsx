@@ -6,6 +6,9 @@ import { useGSAP } from '@gsap/react';
 
 gsap.registerPlugin(ScrollTrigger, GSAPSplitText, useGSAP);
 
+/**
+ * @param {{ text: string, className?: string, delay?: number, duration?: number, ease?: string, splitType?: string, from?: object, to?: object, threshold?: number, rootMargin?: string, tag?: string }} props
+ */
 const SplitText = ({
   text,
   className = '',

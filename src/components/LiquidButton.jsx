@@ -2,6 +2,9 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
+/**
+ * @param {{ children: React.ReactNode, icon?: React.ReactNode, variant?: 'primary' | 'outline' | 'nav', onClick?: Function, href?: string, className?: string }} props
+ */
 export default function LiquidButton({
   children,
   icon,

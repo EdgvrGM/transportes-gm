@@ -136,3 +136,18 @@ Use `createPageUrl(pageName)` from `@/utils` to generate route paths (lowercases
 ### UI components
 
 `src/components/ui/` contains shadcn/ui components — do not modify these manually; regenerate via the shadcn CLI if needed. Domain-specific components live in `src/components/fuel/`.
+
+## Sistema de Colores (Tokens Tailwind)
+
+El proyecto usa tokens de color personalizados definidos en `tailwind.config.js`
+bajo `theme.extend.colors`. Úsalos con clases Tailwind estándar:
+
+| Token          | Valor                    | Uso                        | Clase ejemplo       |
+|----------------|--------------------------|----------------------------|---------------------|
+| `gm-primary`   | `#EAB308`                | Amarillo principal/brand   | `bg-gm-primary`     |
+| `gm-dark`      | `#0A0A0A`                | Fondo oscuro principal     | `bg-gm-dark`        |
+| `gm-surface`   | `#1F2937`                | Fondo de cards/paneles     | `bg-gm-surface`     |
+| `gm-muted`     | `rgba(255,255,255,0.45)` | Texto secundario/apagado   | `text-gm-muted`     |
+
+Estos tokens permiten reemplazar valores hexadecimales hardcodeados por clases
+semánticas reutilizables en todo el proyecto.

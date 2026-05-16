@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -100,7 +100,7 @@ function MarkdownMessage({ content }) {
       elements.push(<p key={i} className={cls}>{parseInline(text)}</p>);
       return;
     }
-    if (/^[*\-] /.test(t)) { listBuffer.push(t.replace(/^[\s*\-]+/, "")); return; }
+    if (/^[*-] /.test(t)) { listBuffer.push(t.replace(/^[\s*-]+/, "")); return; }
     if (t === "") { flushList(); elements.push(<div key={i} className="h-2" />); return; }
     
     flushList();
@@ -330,7 +330,7 @@ export default function ExpertoLogistica() {
       });
       if (error) throw error;
       setMessages(prev => [...prev, { role: "assistant", content: data.text || "Sin respuesta." }]);
-    } catch (e) {
+    } catch (_e) {
       setMessages(prev => [...prev, { role: "assistant", content: "⚠️ Ocurrió un error al consultar al experto. Por favor intenta de nuevo." }]);
     } finally {
       setIsTyping(false);

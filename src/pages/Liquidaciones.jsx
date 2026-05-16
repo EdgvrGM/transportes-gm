@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { supabase } from "@/supabaseClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { format, parseISO, subDays } from "date-fns";
@@ -58,7 +58,7 @@ export default function Liquidaciones() {
   const [rangoCustom, setRangoCustom] = useState({ activo: false, inicio: "", fin: "" });
 
   // Consultas
-  const { data: programas = EMPTY_ARRAY, isLoading: loadingProgramas } = useQuery({
+  const { data: programas = EMPTY_ARRAY } = useQuery({
     queryKey: ["programaCargas_liq"],
     queryFn: async () => {
       const { data } = await supabase.from("ProgramaCargas").select("*").order("fecha_inicio", { ascending: false });
@@ -108,7 +108,7 @@ export default function Liquidaciones() {
   const fechaEfectivaInicio = rangoCustom.activo && rangoCustom.inicio ? rangoCustom.inicio : infoSemana?.inicioPago;
   const fechaEfectivaFin = rangoCustom.activo && rangoCustom.fin ? rangoCustom.fin : infoSemana?.finPago;
 
-  const { data: viajesDelRango = EMPTY_ARRAY, isLoading: loadingViajes } = useQuery({
+  const { data: viajesDelRango = EMPTY_ARRAY } = useQuery({
     queryKey: ["viajes_liq", fechaEfectivaInicio, fechaEfectivaFin],
     queryFn: async () => {
       if (!fechaEfectivaInicio || !fechaEfectivaFin) return EMPTY_ARRAY;

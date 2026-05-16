@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/supabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -50,7 +50,6 @@ import {
   ArrowRight,
   Ticket,
   Fuel,
-  ArrowLeft,
   Layers,
   Briefcase,
 } from "lucide-react";
@@ -78,7 +77,7 @@ export default function FuelViajes() {
   const [filtroIdDirecto, setFiltroIdDirecto] = useState(stateData.scrollToId || null);
 
   // Limpiar resaltado (pero mantener el filtro si el usuario así lo desea)
-  React.useEffect(() => {
+  useEffect(() => {
     if (stateData.scrollToId) {
       setFiltroIdDirecto(stateData.scrollToId);
       setIdResaltado(stateData.scrollToId);
@@ -257,8 +256,8 @@ export default function FuelViajes() {
             conductor_id: variables.data.conductor_id,
             camion_id: variables.data.camion_id
           });
-      } catch (err) {
-        console.error("Error syncing status:", err);
+      } catch (_err) {
+        // Sync failure is non-critical; viajes query is still invalidated below
       }
 
       queryClient.invalidateQueries({ queryKey: ["viajes"] });
@@ -266,7 +265,6 @@ export default function FuelViajes() {
       cerrarDialog();
     },
     onError: (err) => {
-      console.error("Update Error:", err);
       window.alert("Error al guardar: " + err.message);
     }
   });
@@ -701,8 +699,6 @@ export default function FuelViajes() {
                   const clienteDelViaje = getClienteDelViaje(viaje);
                   const kmTotal =
                     viaje.kilometros_total || viaje.kilometros || 0;
-                  const kmIda = viaje.kilometros_ida || viaje.kilometros || 0;
-                  const kmRegreso = viaje.kilometros_regreso || 0;
                   const litros = viaje.litros_combustible || 0;
                   const eficiencia = viaje.km_por_litro || 0;
                   const tipoViaje = viaje.tipo_viaje || "Sencillo";
@@ -1304,7 +1300,7 @@ export default function FuelViajes() {
                     <Checkbox 
                       id="edit-no-diesel" 
                       checked={formData.sinDiesel}
-                      onCheckedChange={(checked) => setFormData({ ...formData, sinDiesel: !!checked, litros_combustible: !!checked ? 0 : formData.litros_combustible, costo_combustible: !!checked ? 0 : formData.costo_combustible })}
+                      onCheckedChange={(checked) => setFormData({ ...formData, sinDiesel: !!checked, litros_combustible: checked ? 0 : formData.litros_combustible, costo_combustible: checked ? 0 : formData.costo_combustible })}
                     />
                     <Label htmlFor="edit-no-diesel" className="text-xs font-bold cursor-pointer text-green-700 dark:text-green-400">
                       Aún no ha cargado diesel
