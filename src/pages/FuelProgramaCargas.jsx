@@ -171,6 +171,8 @@ export default function FuelProgramaCargas() {
   const [dialogAbierto, setDialogAbierto] = useState(false);
   const [dialogVerAbierto, setDialogVerAbierto] = useState(false);
   const [semanaAEliminar, setSemanaAEliminar] = useState(null);
+  const [viajeAEliminar, setViajeAEliminar] = useState(null); // { index, dia }
+  const [confirmarNuevaSemana, setConfirmarNuevaSemana] = useState(false);
   const [programaSeleccionado, setProgramaSeleccionado] = useState(null);
   const [diaActivo, setDiaActivo] = useState("Lunes");
   const [diaVerActivo, setDiaVerActivo] = useState("Lunes");
@@ -575,13 +577,13 @@ export default function FuelProgramaCargas() {
     });
   };
 
-  const eliminarViaje = (index) => {
-    const nuevosViajes = formData.programacion[diaActivo].filter(
+  const eliminarViaje = (index, dia = diaActivo) => {
+    const nuevosViajes = formData.programacion[dia].filter(
       (_, i) => i !== index,
     );
     setFormData({
       ...formData,
-      programacion: { ...formData.programacion, [diaActivo]: nuevosViajes },
+      programacion: { ...formData.programacion, [dia]: nuevosViajes },
     });
   };
 
@@ -722,7 +724,7 @@ export default function FuelProgramaCargas() {
             </p>
           </div>
           <Button
-            onClick={abrirDialogNueva}
+            onClick={() => setConfirmarNuevaSemana(true)}
             className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl gap-2 px-6 h-12 rounded-xl font-bold"
           >
             <Plus className="w-5 h-5" /> Nueva Semana
@@ -1068,7 +1070,7 @@ export default function FuelProgramaCargas() {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full"
-                          onClick={() => eliminarViaje(index)}
+                          onClick={() => setViajeAEliminar({ index, dia: diaActivo })}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -1234,7 +1236,7 @@ export default function FuelProgramaCargas() {
                           variant="ghost"
                           size="icon"
                           className="h-10 w-10 text-slate-400 hover:text-red-600 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-900/10 dark:hover:bg-red-900/30"
-                          onClick={() => eliminarViaje(index)}
+                          onClick={() => setViajeAEliminar({ index, dia: diaActivo })}
                         >
                           <Trash2 className="w-5 h-5" />
                         </Button>
@@ -1304,6 +1306,71 @@ export default function FuelProgramaCargas() {
                 className="bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold shadow-md h-12"
               >
                 Eliminar Definitivamente
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* --- CONFIRM ELIMINAR VIAJE --- */}
+        <AlertDialog
+          open={viajeAEliminar !== null}
+          onOpenChange={() => setViajeAEliminar(null)}
+        >
+          <AlertDialogContent className="rounded-[2rem] border-border bg-card shadow-2xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-2xl font-black">
+                ¿Eliminar este viaje?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="font-medium text-base text-muted-foreground">
+                Se eliminará el viaje #{viajeAEliminar !== null ? viajeAEliminar.index + 1 : ""} del día{" "}
+                <span className="font-bold text-foreground">{viajeAEliminar?.dia}</span>.
+                Recuerda guardar la semana para confirmar el cambio.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="gap-3 mt-4">
+              <AlertDialogCancel className="rounded-xl border border-border font-bold h-12">
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  eliminarViaje(viajeAEliminar.index, viajeAEliminar.dia);
+                  setViajeAEliminar(null);
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold shadow-md h-12"
+              >
+                Eliminar Viaje
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* --- CONFIRM NUEVA SEMANA --- */}
+        <AlertDialog
+          open={confirmarNuevaSemana}
+          onOpenChange={setConfirmarNuevaSemana}
+        >
+          <AlertDialogContent className="rounded-[2rem] border-border bg-card shadow-2xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-2xl font-black">
+                ¿Crear nueva semana?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="font-medium text-base text-muted-foreground">
+                Se abrirá el formulario para registrar una nueva semana de programación.
+                Asegúrate de haber guardado cualquier cambio pendiente antes de continuar.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="gap-3 mt-4">
+              <AlertDialogCancel className="rounded-xl border border-border font-bold h-12">
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  setConfirmarNuevaSemana(false);
+                  abrirDialogNueva();
+                }}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold shadow-md h-12"
+              >
+                Crear Semana
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
