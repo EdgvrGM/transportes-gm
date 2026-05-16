@@ -56,6 +56,8 @@ export default function Liquidaciones() {
     Lunes: 0, Martes: 0, Miércoles: 0, Jueves: 0, Viernes: 0, Sábado: 0
   });
   const [rangoCustom, setRangoCustom] = useState({ activo: false, inicio: "", fin: "" });
+  const [conceptosExtrasViajes, setConceptosExtrasViajes] = useState([]);
+  const [anticiposExtras, setAnticiposExtras] = useState([]);
 
   // Consultas
   const { data: programas = EMPTY_ARRAY } = useQuery({
@@ -116,7 +118,8 @@ export default function Liquidaciones() {
         .from("Viaje")
         .select("*")
         .gte("fecha", fechaEfectivaInicio)
-        .lte("fecha", fechaEfectivaFin);
+        .lte("fecha", fechaEfectivaFin)
+        .order("fecha", { ascending: true });
       return data || EMPTY_ARRAY;
     },
     enabled: !!fechaEfectivaInicio && !!fechaEfectivaFin,
@@ -153,6 +156,8 @@ export default function Liquidaciones() {
     setViajesDetalle(nuevosViajes);
     setGastos([]);
     setAnticipos({ Lunes: 0, Martes: 0, Miércoles: 0, Jueves: 0, Viernes: 0, Sábado: 0 });
+    setConceptosExtrasViajes([]);
+    setAnticiposExtras([]);
 
   }, [infoSemana, conductorId, conductores, viajesDelRango]);
 
@@ -190,14 +195,34 @@ export default function Liquidaciones() {
   };
   const eliminarGasto = (index) => setGastos(gastos.filter((_, i) => i !== index));
 
+  const agregarConceptoExtraViaje = () => setConceptosExtrasViajes([...conceptosExtrasViajes, { fecha: "", concepto: "", monto: 0 }]);
+  const actualizarConceptoExtraViaje = (index, field, value) => {
+    const updated = [...conceptosExtrasViajes];
+    updated[index][field] = field === 'monto' ? (parseFloat(value) || 0) : value;
+    setConceptosExtrasViajes(updated);
+  };
+  const eliminarConceptoExtraViaje = (index) => setConceptosExtrasViajes(conceptosExtrasViajes.filter((_, i) => i !== index));
+
+  const agregarAnticipoExtra = () => setAnticiposExtras([...anticiposExtras, { concepto: "", monto: 0 }]);
+  const actualizarAnticipoExtra = (index, field, value) => {
+    const updated = [...anticiposExtras];
+    updated[index][field] = field === 'monto' ? (parseFloat(value) || 0) : value;
+    setAnticiposExtras(updated);
+  };
+  const eliminarAnticipoExtra = (index) => setAnticiposExtras(anticiposExtras.filter((_, i) => i !== index));
+
   const handleAnticipoChange = (dia, value) => {
     setAnticipos({ ...anticipos, [dia]: parseFloat(value) || 0 });
   };
 
   // Cálculos Totales
-  const totalComisiones = viajesDetalle.reduce((sum, v) => sum + v.comision, 0);
+  const totalComisionesViajes = viajesDetalle.reduce((sum, v) => sum + v.comision, 0);
+  const totalConceptosExtrasViajes = conceptosExtrasViajes.reduce((sum, c) => sum + c.monto, 0);
+  const totalComisiones = totalComisionesViajes + totalConceptosExtrasViajes;
   const totalGastos = gastos.reduce((sum, g) => sum + g.monto, 0);
-  const totalAnticipos = Object.values(anticipos).reduce((sum, val) => sum + val, 0);
+  const totalAnticiposDias = Object.values(anticipos).reduce((sum, val) => sum + val, 0);
+  const totalAnticiposExtras = anticiposExtras.reduce((sum, a) => sum + a.monto, 0);
+  const totalAnticipos = totalAnticiposDias + totalAnticiposExtras;
   const sueldoNeto = (totalComisiones + totalGastos) - totalAnticipos;
 
   const guardarLiquidacion = useMutation({
@@ -254,17 +279,16 @@ export default function Liquidaciones() {
 
     // Tabla Viajes
     const totalFleteBruto = viajesDetalle.reduce((sum, v) => sum + (parseFloat(v.flete_bruto) || 0), 0);
+    const rowsExtrasViajesConceptos = conceptosExtrasViajes
+      .filter(c => c.monto > 0 || c.concepto !== "")
+      .map(c => [c.fecha || '-', c.concepto || '-', 'EXTRA', '', '', `$${formatCurrency(c.monto)}`]);
     autoTable(doc, {
       startY: infoY + 22,
       head: [['Fecha', 'Ruta', 'Tipo', 'Flete Bruto', '% Aplicado', 'Comisión']],
-      body: viajesDetalle.map(v => [
-        v.fecha,
-        v.ruta,
-        v.tipo,
-        `$${formatCurrency(v.flete_bruto)}`,
-        `${v.porcentaje}%`,
-        `$${formatCurrency(v.comision)}`
-      ]),
+      body: [
+        ...viajesDetalle.map(v => [v.fecha, v.ruta, v.tipo, `$${formatCurrency(v.flete_bruto)}`, `${v.porcentaje}%`, `$${formatCurrency(v.comision)}`]),
+        ...rowsExtrasViajesConceptos,
+      ],
       foot: [['', '', 'TOTAL', `$${formatCurrency(totalFleteBruto)}`, '', `$${formatCurrency(totalComisiones)}`]],
       theme: 'grid',
       headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255] },
@@ -280,9 +304,10 @@ export default function Liquidaciones() {
       .map(g => [g.concepto || '-', g.monto > 0 ? `$${formatCurrency(g.monto)}` : '']);
 
     const diasAnticipos = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-    const rowsAnticipos = diasAnticipos
-      .filter(dia => (anticipos[dia] || 0) > 0)
-      .map(dia => [dia, `$${formatCurrency(anticipos[dia])}`]);
+    const rowsAnticipos = [
+      ...diasAnticipos.filter(dia => (anticipos[dia] || 0) > 0).map(dia => [dia, `$${formatCurrency(anticipos[dia])}`]),
+      ...anticiposExtras.filter(a => a.monto > 0 || a.concepto !== "").map(a => [a.concepto || '-', `$${formatCurrency(a.monto)}`]),
+    ];
 
     // Tabla Gastos — mitad izquierda
     autoTable(doc, {
@@ -447,25 +472,35 @@ export default function Liquidaciones() {
                       </CardTitle>
                       <CardDescription className="capitalize mt-1">{getRangoFechasTexto()}</CardDescription>
                     </div>
-                    {!rangoCustom.activo ? (
+                    <div className="flex items-center gap-2 shrink-0">
+                      {!rangoCustom.activo ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setRangoCustom({ activo: true, inicio: infoSemana?.inicioPago || "", fin: infoSemana?.finPago || "" })}
+                          className="rounded-xl gap-1.5 text-xs"
+                        >
+                          <CalendarRange className="w-3.5 h-3.5" /> Ajustar rango
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setRangoCustom({ activo: false, inicio: "", fin: "" })}
+                          className="rounded-xl gap-1.5 text-xs text-amber-700 hover:text-amber-800 hover:bg-amber-50 dark:text-amber-400"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" /> Restablecer
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setRangoCustom({ activo: true, inicio: infoSemana?.inicioPago || "", fin: infoSemana?.finPago || "" })}
-                        className="shrink-0 rounded-xl gap-1.5 text-xs"
+                        onClick={agregarConceptoExtraViaje}
+                        className="rounded-xl gap-1.5 text-xs"
                       >
-                        <CalendarRange className="w-3.5 h-3.5" /> Ajustar rango
+                        <Plus className="w-3.5 h-3.5" /> Concepto extra
                       </Button>
-                    ) : (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setRangoCustom({ activo: false, inicio: "", fin: "" })}
-                        className="shrink-0 rounded-xl gap-1.5 text-xs text-amber-700 hover:text-amber-800 hover:bg-amber-50 dark:text-amber-400"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5" /> Restablecer
-                      </Button>
-                    )}
+                    </div>
                   </div>
                   {rangoCustom.activo && (
                     <div className="mt-3 flex flex-wrap items-center gap-3 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800/40">
@@ -499,6 +534,7 @@ export default function Liquidaciones() {
                   ) : (
                     <div className="overflow-x-auto">
                       <Table>
+
                         <TableHeader className="bg-muted/30">
                           <TableRow>
                             <TableHead className="font-bold uppercase text-[10px] tracking-wider">Fecha / Ruta</TableHead>
@@ -545,6 +581,40 @@ export default function Liquidaciones() {
                           ))}
                         </TableBody>
                       </Table>
+                    </div>
+                  )}
+                  {conceptosExtrasViajes.length > 0 && (
+                    <div className="border-t border-border/50 p-4 space-y-2">
+                      {conceptosExtrasViajes.map((item, i) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <Input
+                            type="date"
+                            value={item.fecha}
+                            onChange={(e) => actualizarConceptoExtraViaje(i, 'fecha', e.target.value)}
+                            className="w-36 shrink-0 rounded-lg bg-background h-9"
+                          />
+                          <Input
+                            placeholder="Concepto (Ej. Bono)"
+                            value={item.concepto}
+                            onChange={(e) => actualizarConceptoExtraViaje(i, 'concepto', e.target.value)}
+                            className="flex-1 rounded-lg bg-background h-9"
+                          />
+                          <div className="relative w-32 shrink-0">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                            <Input
+                              type="number"
+                              min="0"
+                              placeholder="0.00"
+                              value={item.monto || ""}
+                              onChange={(e) => actualizarConceptoExtraViaje(i, 'monto', e.target.value)}
+                              className="pl-7 text-right rounded-lg bg-background h-9"
+                            />
+                          </div>
+                          <Button variant="ghost" size="icon" onClick={() => eliminarConceptoExtraViaje(i)} className="text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0 h-9 w-9">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </CardContent>
@@ -598,10 +668,13 @@ export default function Liquidaciones() {
             <div className="space-y-6">
               
               <Card className="shadow-lg border-border bg-card rounded-[1.5rem] overflow-hidden">
-                <CardHeader className="bg-slate-50 dark:bg-zinc-900/50 border-b border-border/50">
+                <CardHeader className="bg-slate-50 dark:bg-zinc-900/50 border-b border-border/50 flex flex-row items-center justify-between pb-4">
                   <CardTitle className="flex items-center gap-2 text-orange-600 dark:text-orange-500">
                     <DollarSign className="w-5 h-5" /> Anticipos
                   </CardTitle>
+                  <Button variant="outline" size="sm" onClick={agregarAnticipoExtra} className="rounded-xl gap-1 h-7 text-xs">
+                    <Plus className="w-3 h-3" /> Concepto extra
+                  </Button>
                 </CardHeader>
                 <CardContent className="p-4 space-y-3">
                   {Object.keys(anticipos).map(dia => (
@@ -609,16 +682,44 @@ export default function Liquidaciones() {
                       <Label className="font-bold text-muted-foreground w-20">{dia}</Label>
                       <div className="relative flex-1">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-                        <Input 
-                          type="number" 
+                        <Input
+                          type="number"
                           min="0"
-                          value={anticipos[dia] || ""} 
+                          value={anticipos[dia] || ""}
                           onChange={(e) => handleAnticipoChange(dia, e.target.value)}
                           className="pl-7 text-right rounded-lg bg-background font-medium"
                         />
                       </div>
                     </div>
                   ))}
+                  {anticiposExtras.length > 0 && (
+                    <div className="pt-2 border-t border-border/50 space-y-2">
+                      {anticiposExtras.map((item, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <Input
+                            placeholder="Concepto"
+                            value={item.concepto}
+                            onChange={(e) => actualizarAnticipoExtra(i, 'concepto', e.target.value)}
+                            className="flex-1 rounded-lg bg-background h-9 text-sm"
+                          />
+                          <div className="relative w-24 shrink-0">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                            <Input
+                              type="number"
+                              min="0"
+                              placeholder="0.00"
+                              value={item.monto || ""}
+                              onChange={(e) => actualizarAnticipoExtra(i, 'monto', e.target.value)}
+                              className="pl-7 text-right rounded-lg bg-background h-9"
+                            />
+                          </div>
+                          <Button variant="ghost" size="icon" onClick={() => eliminarAnticipoExtra(i)} className="text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0 h-9 w-9">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
