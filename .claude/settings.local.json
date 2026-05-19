@@ -19,7 +19,8 @@
       "Bash(Select-String -Pattern \"error|warning\")",
       "Bash(Measure-Object -Line)",
       "Bash(grep -v \"^--$\")",
-      "Bash(npx eslint *)"
+      "Bash(npx eslint *)",
+      "Bash(npm install *)"
     ]
   }
 }

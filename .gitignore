@@ -7,12 +7,18 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencias
 node_modules
+
+# Build
 dist
 dist-ssr
-*.local
 
-# Editor directories and files
+# Variables de entorno
+.env
+.env.*
+
+# Editor
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -23,6 +29,16 @@ dist-ssr
 *.sln
 *.sw?
 
-.env
+# Archivos locales
+*.local
 
-CLAUDE.md
+# Base de datos (migraciones locales)
+*.sql
+
+# Documentación interna / prompts
+*.md
+!README.md
+
+# Supabase local
+supabase/.temp
+supabase/config.toml

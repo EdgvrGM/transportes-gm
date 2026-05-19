@@ -24,6 +24,7 @@ import {
 
 import Liquidaciones from "./Liquidaciones.jsx";
 import DocumentacionLegal from "./DocumentacionLegal.jsx";
+import RastreoGPS from "./RastreoGPS.jsx";
 
 const PAGES = {
   Home: Home,
@@ -41,6 +42,7 @@ const PAGES = {
   ExpertoLogistica: ExpertoLogistica,
   Liquidaciones: Liquidaciones,
   DocumentacionLegal: DocumentacionLegal,
+  RastreoGPS: RastreoGPS,
 };
 
 function _getCurrentPage(url) {
@@ -93,6 +95,7 @@ function PagesContent() {
           <Route path="/clientes" element={<Clientes />} />
           <Route path="/liquidaciones" element={<Liquidaciones />} />
           <Route path="/documentacionlegal" element={<DocumentacionLegal />} />
+          <Route path="/rastreogps" element={<RastreoGPS />} />
           <Route path="/iaauditorchat" element={<IAAuditorChat />} />
           <Route path="/expertologistica" element={<ExpertoLogistica />} />
         </Route>

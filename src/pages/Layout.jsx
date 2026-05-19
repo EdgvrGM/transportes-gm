@@ -21,6 +21,7 @@ import {
   Sparkles,
   DollarSign,
   ShieldCheck,
+  Navigation,
 } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
 
@@ -95,6 +96,7 @@ export default function Layout({ children, currentPageName }) {
     "Liquidaciones",
     "IAAuditorChat",
     "DocumentacionLegal",
+    "RastreoGPS",
   ];
 
   const isPublicRoute = ["/", "/home", "/login"].includes(
@@ -220,6 +222,17 @@ export default function Layout({ children, currentPageName }) {
             >
               <ShieldCheck className="w-5 h-5" />
               <span className="font-medium">Documentación Legal</span>
+            </Link>
+
+            {/* BOTÓN: RASTREO GPS (Directo) */}
+            <Link
+              to={createPageUrl("RastreoGPS")}
+              className={navItemClass(
+                location.pathname === createPageUrl("RastreoGPS"),
+              )}
+            >
+              <Navigation className="w-5 h-5" />
+              <span className="font-medium">Rastreo GPS</span>
             </Link>
 
             {/* SECCIÓN: CONTROL DE COMBUSTIBLE (Desplegable) */}
