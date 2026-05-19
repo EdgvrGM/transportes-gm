@@ -35,9 +35,10 @@ dist-ssr
 # Base de datos (migraciones locales)
 *.sql
 
-# Documentación interna / prompts
-*.md
-!README.md
+# Documentación interna
+/CLAUDE.md
+/scratch/
+scratch/
 
 # Supabase local
 supabase/.temp
