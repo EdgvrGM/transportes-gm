@@ -5,6 +5,7 @@ import MapaGPS from "@/components/gps/MapaGPS";
 import ModalConfiguracion from "@/components/gps/ModalConfiguracion";
 import HistorialGPS from "@/components/gps/HistorialGPS";
 import AlertasGPS from "@/components/gps/AlertasGPS";
+import ReportesGPS from "@/components/gps/ReportesGPS";
 import { MapPin, Navigation, Bell, Settings, RefreshCw, Settings2 } from "lucide-react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -163,12 +164,7 @@ export default function RastreoGPS() {
             <AlertasGPS />
           )}
           {activeTab === "reportes" && (
-            <div className="w-full h-full flex items-center justify-center bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-400">
-              <div className="text-center">
-                <Settings className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                <p className="text-sm">Sección "Reportes" disponible en una fase futura</p>
-              </div>
-            </div>
+            <ReportesGPS />
           )}
         </div>
       </div>
