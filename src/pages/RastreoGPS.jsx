@@ -8,17 +8,10 @@ import AlertasGPS from "@/components/gps/AlertasGPS";
 import ReportesGPS from "@/components/gps/ReportesGPS";
 import { MapPin, Navigation, Bell, Settings, RefreshCw, Settings2 } from "lucide-react";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const WIALON_PROXY_URL = "https://wialon-proxy.transportesgm.workers.dev";
 
 async function fetchPositions() {
-  const res = await fetch(
-    `${SUPABASE_URL}/functions/v1/wialon-proxy?action=positions`,
-    {
-      headers: {
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-      },
-    }
-  );
+  const res = await fetch(`${WIALON_PROXY_URL}?action=positions`);
   if (!res.ok) throw new Error("Error al obtener posiciones");
   return res.json();
 }

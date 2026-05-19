@@ -30,9 +30,13 @@ const truckIcon = (activo) =>
 function FitBounds({ positions }) {
   const map = useMap();
   useEffect(() => {
-    if (positions.length > 0) {
-      const bounds = L.latLngBounds(positions.map((p) => [p.lat, p.lng]));
+    const validas = positions.filter((p) => p.lat !== 0 && p.lng !== 0);
+    if (validas.length > 0) {
+      const bounds = L.latLngBounds(validas.map((p) => [p.lat, p.lng]));
       map.fitBounds(bounds, { padding: [50, 50] });
+    } else {
+      // Centro por defecto: México
+      map.setView([23.6345, -102.5528], 5);
     }
   }, [positions.length]);
   return null;

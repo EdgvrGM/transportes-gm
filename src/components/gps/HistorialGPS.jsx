@@ -14,7 +14,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Search, Loader2, Clock, Gauge, Route } from "lucide-react";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const WIALON_PROXY_URL = "https://wialon-proxy.transportesgm.workers.dev";
 
 // Fix iconos Leaflet + Vite
 import icon from "leaflet/dist/images/marker-icon.png";
@@ -43,8 +43,7 @@ async function fetchHistory({ unitId, from, to }) {
   const fromTs = Math.floor(new Date(from + "T00:00:00").getTime() / 1000);
   const toTs   = Math.floor(new Date(to   + "T23:59:59").getTime() / 1000);
   const res = await fetch(
-    `${SUPABASE_URL}/functions/v1/wialon-proxy?action=history&unit=${unitId}&from=${fromTs}&to=${toTs}`,
-    { headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` } }
+    `${WIALON_PROXY_URL}?action=history&unit=${unitId}&from=${fromTs}&to=${toTs}`
   );
   if (!res.ok) throw new Error("Error al obtener historial");
   return res.json();

@@ -10,12 +10,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Settings, Loader2, Check, Truck } from "lucide-react";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const WIALON_PROXY_URL = "https://wialon-proxy.transportesgm.workers.dev";
 
 async function fetchWialonUnits() {
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/wialon-proxy?action=units`, {
-    headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` },
-  });
+  const res = await fetch(`${WIALON_PROXY_URL}?action=units`);
   if (!res.ok) throw new Error("Error al obtener unidades Wialon");
   return res.json();
 }
