@@ -47,6 +47,17 @@ import {
   Fuel,
   ArrowRight,
   Ticket,
+  CheckCircle2,
+  Clock,
+  Camera,
+  X,
+  ImagePlus,
+  Upload,
+  FileCheck,
+  FileX,
+  ZoomIn,
+  Info,
+  ImageIcon,
 } from "lucide-react";
 import { format, addDays, parseISO, getISOWeek } from "date-fns";
 import { es } from "date-fns/locale";
@@ -178,6 +189,14 @@ export default function FuelProgramaCargas() {
   const [diaVerActivo, setDiaVerActivo] = useState("Lunes");
   const [dialogConsumoAbierto, setDialogConsumoAbierto] = useState(false);
   const [viajeConsumoSeleccionado, setViajeConsumoSeleccionado] = useState(null);
+  const [dialogEvidenciaAbierto, setDialogEvidenciaAbierto] = useState(false);
+  const [viajeEvidenciaSeleccionado, setViajeEvidenciaSeleccionado] = useState(null);
+  const [nuevaRemision, setNuevaRemision] = useState({ num_remision: "", notas: "", entregada: false });
+  const [galeriaAbierta, setGaleriaAbierta] = useState({}); // { id_remision: true/false }
+  const [fotoVisor, setFotoVisor] = useState(null); // URL de la foto en pantalla completa
+  const [fotoCargando, setFotoCargando] = useState(null); // id_remision que está cargando
+  const [evidenciaAEliminar, setEvidenciaAEliminar] = useState(null);
+  const [fotoAEliminar, setFotoAEliminar] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [formData, setFormData] = useState({
     id: null,
@@ -240,7 +259,7 @@ export default function FuelProgramaCargas() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("viajes_registrados")
-        .select("*")
+        .select("*, Evidencia(*)")
         .eq("programa_id", programaSeleccionado.id);
       if (error) throw new Error(error.message);
 
@@ -457,6 +476,131 @@ export default function FuelProgramaCargas() {
       setDialogVerAbierto(false);
     },
   });
+
+  const agregarEvidenciaMutation = useMutation({
+    mutationFn: async (datos) => {
+      const { data, error } = await supabase
+        .from("Evidencia")
+        .insert([{
+          viaje_id: datos.viaje_id,
+          num_remision: datos.num_remision,
+          entregada: datos.entregada,
+          fecha_entrega: datos.entregada ? new Date().toISOString() : null,
+          notas: datos.notas
+        }])
+        .select();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["viajesRegistrados"] });
+      setNuevaRemision({ num_remision: "", notas: "", entregada: false });
+    },
+  });
+
+  const toggleEvidenciaMutation = useMutation({
+    mutationFn: async (evidencia) => {
+      const { data, error } = await supabase
+        .from("Evidencia")
+        .update({
+          entregada: !evidencia.entregada,
+          fecha_entrega: !evidencia.entregada ? new Date().toISOString() : null,
+        })
+        .eq("id", evidencia.id)
+        .select();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["viajesRegistrados"] });
+    },
+  });
+
+  const eliminarEvidenciaMutation = useMutation({
+    mutationFn: async (id) => {
+      const { error } = await supabase
+        .from("Evidencia")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["viajesRegistrados"] });
+    },
+  });
+
+  const subirFotoEvidenciaMutation = useMutation({
+    mutationFn: async ({ evidenciaId, viajeId, file, currentFotosUrls }) => {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${evidenciaId}_${Date.now()}.${fileExt}`;
+      const filePath = `evidencias/${viajeId}/${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('evidencias')
+        .upload(filePath, file, { cacheControl: '3600', upsert: false });
+        
+      if (uploadError) throw uploadError;
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('evidencias')
+        .getPublicUrl(filePath);
+        
+      const newFotosUrls = [...(currentFotosUrls || []), publicUrl];
+      
+      const { data, error: updateError } = await supabase
+        .from('Evidencia')
+        .update({ fotos_urls: newFotosUrls })
+        .eq('id', evidenciaId)
+        .select();
+        
+      if (updateError) throw updateError;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["viajesRegistrados"] });
+      setFotoCargando(null);
+    },
+    onError: (err) => {
+      alert("Error al subir foto: " + err.message);
+      setFotoCargando(null);
+    }
+  });
+
+  const eliminarFotoEvidenciaMutation = useMutation({
+    mutationFn: async ({ evidenciaId, currentFotosUrls, urlToRemove }) => {
+       const urlParts = urlToRemove.split('/');
+       const fileName = urlParts.pop();
+       const viajeId = urlParts.pop();
+       const pathToRemove = `evidencias/${viajeId}/${fileName}`;
+       
+       await supabase.storage.from('evidencias').remove([pathToRemove]);
+
+       const newFotosUrls = currentFotosUrls.filter(u => u !== urlToRemove);
+       const { error } = await supabase
+         .from('Evidencia')
+         .update({ fotos_urls: newFotosUrls })
+         .eq('id', evidenciaId);
+       if (error) throw error;
+    },
+    onSuccess: () => {
+       queryClient.invalidateQueries({ queryKey: ["viajesRegistrados"] });
+       setFotoAEliminar(null);
+    }
+  });
+
+  const handleAbrirGestorEvidencias = (viaje) => {
+    setViajeEvidenciaSeleccionado(viaje);
+    setNuevaRemision({ num_remision: "", notas: "", entregada: false });
+    setDialogEvidenciaAbierto(true);
+  };
+
+  const handleGuardarRemision = () => {
+    if (!nuevaRemision.num_remision || !viajeEvidenciaSeleccionado) return;
+    agregarEvidenciaMutation.mutate({
+      viaje_id: viajeEvidenciaSeleccionado.id,
+      ...nuevaRemision
+    });
+  };
 
   const abrirDialogNueva = () => {
     setErrorMsg(null);
@@ -694,6 +838,7 @@ export default function FuelProgramaCargas() {
         destino: v.destino,
         modalidad: v.modalidad || "Sencillo",
         esRegistrado: true,
+        evidencias: v.Evidencia || [],
       }));
   };
 
@@ -879,9 +1024,30 @@ export default function FuelProgramaCargas() {
                         </div>
                       </div>
 
-                      {/* Fila Inferior: Botón Centrado */}
-                        <div className="flex justify-center pt-2">
-                          {(() => {
+                      {/* Fila Inferior: Botón Centrado y Badge Evidencias */}
+                        <div className="relative flex justify-center items-center pt-2 border-t border-border/40 mt-2 min-h-[3rem]">
+                          <div className="absolute left-0 flex items-center gap-2">
+                            {(() => {
+                              const tieneEvidencias = viaje.evidencias?.length > 0;
+                              const todasEntregadas = tieneEvidencias && viaje.evidencias.some(e => e.entregada);
+                              
+                              return (
+                                <button
+                                  onClick={() => handleAbrirGestorEvidencias(viaje)}
+                                  className={`inline-flex items-center px-3 py-1.5 rounded-lg text-[10px] font-black transition-all hover:scale-105 shadow-sm border ${
+                                    todasEntregadas
+                                      ? "bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-800"
+                                      : "bg-red-50 text-red-600 border-red-200 hover:bg-red-100 dark:bg-red-900/40 dark:text-red-400 dark:border-red-800"
+                                  }`}
+                                >
+                                  {todasEntregadas ? <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> : <Clock className="w-3.5 h-3.5 mr-1.5" />}
+                                  {todasEntregadas ? "EVIDENCIA: ENTREGADA" : "EVIDENCIA: SIN ENTREGAR"}
+                                </button>
+                              );
+                            })()}
+                          </div>
+                          <div className="flex items-center gap-2 z-10">
+                            {(() => {
                             const registeredViaje = getRegisteredTrip(viaje, diaVerActivo);
                             
                             if (registeredViaje) {
@@ -943,8 +1109,9 @@ export default function FuelProgramaCargas() {
                                 <Plus className="w-4 h-4" />
                                 <span>REGISTRAR CONSUMOS DE COMBUSTIBLE Y CASETAS</span>
                               </Button>
-                            );
-                          })()}
+                              );
+                            })()}
+                          </div>
                         </div>
                     </div>
                   );
@@ -1460,6 +1627,303 @@ export default function FuelProgramaCargas() {
                 <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog Gestión de Evidencias Rediseñado */}
+        <Dialog open={dialogEvidenciaAbierto} onOpenChange={(open) => {
+          setDialogEvidenciaAbierto(open);
+          if(!open) { setGaleriaAbierta({}); setFotoVisor(null); }
+        }}>
+          <DialogContent className="sm:max-w-[600px] rounded-[1.5rem] p-0 overflow-hidden bg-slate-50 dark:bg-zinc-950 border-border shadow-2xl">
+            {(() => {
+              const viajeDb = viajeEvidenciaSeleccionado ? viajesRegistrados.find(v => v.id === viajeEvidenciaSeleccionado.id) : null;
+              const evidenciasActualizadas = viajeDb ? (viajeDb.Evidencia || []) : (viajeEvidenciaSeleccionado?.evidencias || []);
+              
+              return (
+                <>
+                  <DialogHeader className="px-6 py-6 bg-card border-b border-border shadow-sm z-10 relative">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <DialogTitle className="text-2xl font-black text-foreground flex items-center gap-3">
+                          <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl">
+                            <Ticket className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                          </div>
+                          Expediente de Remisiones
+                        </DialogTitle>
+                        <DialogDescription className="text-sm font-bold text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-2">
+                          <Briefcase className="w-4 h-4" />
+                          {viajeEvidenciaSeleccionado ? getClienteName(viajeEvidenciaSeleccionado.cliente) : ""}
+                          <span className="mx-1 opacity-50">/</span>
+                          <MapPin className="w-4 h-4" />
+                          {viajeEvidenciaSeleccionado?.destino || "Sin Destino"}
+                        </DialogDescription>
+                      </div>
+                    </div>
+                  </DialogHeader>
+
+                  <div className="p-6 space-y-8 max-h-[70vh] overflow-y-auto hide-scrollbar">
+                    
+                    {/* Tarjeta de Registro Rápido */}
+                    <div className="bg-white dark:bg-zinc-900 p-5 rounded-[1.5rem] border border-border shadow-sm relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+                      <h4 className="text-xs font-black uppercase text-slate-500 tracking-widest mb-4 flex items-center gap-2">
+                        <Plus className="w-4 h-4 text-primary" /> Registrar Nueva
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-start">
+                        <div className="sm:col-span-4 space-y-1.5">
+                          <Label className="text-[10px] font-bold text-slate-400 uppercase">Número</Label>
+                          <Input
+                            placeholder="Ej. REM-001"
+                            value={nuevaRemision.num_remision}
+                            onChange={(e) => setNuevaRemision({...nuevaRemision, num_remision: e.target.value})}
+                            className="h-10 rounded-xl border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 font-bold"
+                          />
+                        </div>
+                        <div className="sm:col-span-5 space-y-1.5">
+                          <Label className="text-[10px] font-bold text-slate-400 uppercase">Observaciones</Label>
+                          <Input
+                            placeholder="Opcional..."
+                            value={nuevaRemision.notas}
+                            onChange={(e) => setNuevaRemision({...nuevaRemision, notas: e.target.value})}
+                            className="h-10 rounded-xl border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950"
+                          />
+                        </div>
+                        <div className="sm:col-span-3 flex flex-col justify-end pt-5">
+                           <Button 
+                            onClick={handleGuardarRemision} 
+                            disabled={!nuevaRemision.num_remision || agregarEvidenciaMutation.isPending}
+                            className="w-full h-10 rounded-xl font-black shadow-md shadow-primary/20 active:scale-95 transition-all"
+                          >
+                            {agregarEvidenciaMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Guardar"}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Lista de Remisiones */}
+                    <div className="space-y-4">
+                      <h4 className="text-xs font-black uppercase text-slate-500 tracking-widest flex items-center gap-2">
+                        <FileCheck className="w-4 h-4 text-emerald-500" /> Archivo Digital
+                      </h4>
+                      
+                      {evidenciasActualizadas.length === 0 ? (
+                        <div className="py-10 flex flex-col items-center justify-center text-center bg-transparent border-2 border-dashed border-slate-200 dark:border-zinc-800 rounded-[1.5rem]">
+                          <div className="w-16 h-16 bg-slate-100 dark:bg-zinc-900 rounded-full flex items-center justify-center mb-3">
+                            <FileX className="w-8 h-8 text-slate-300 dark:text-zinc-700" />
+                          </div>
+                          <p className="text-sm font-bold text-slate-500">Expediente vacío</p>
+                          <p className="text-xs text-slate-400 mt-1">Registra la primera remisión arriba</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {evidenciasActualizadas.map((ev) => {
+                            const isOpen = galeriaAbierta[ev.id];
+                            const fotos = ev.fotos_urls || [];
+                            
+                            return (
+                              <div key={ev.id} className="bg-white dark:bg-zinc-900 rounded-[1.5rem] border border-border shadow-sm overflow-hidden transition-all hover:shadow-md hover:border-slate-300 dark:hover:border-zinc-700 group">
+                                <div className="p-4 sm:p-5 flex flex-col sm:flex-row justify-between gap-4 sm:items-center">
+                                  {/* Info */}
+                                  <div className="flex items-center gap-4 w-full sm:w-auto">
+                                    <button
+                                      onClick={() => toggleEvidenciaMutation.mutate(ev)}
+                                      disabled={toggleEvidenciaMutation.isPending}
+                                      className={`w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center shadow-sm transition-all hover:scale-105 active:scale-95 ${
+                                        ev.entregada 
+                                          ? "bg-emerald-50 text-emerald-600 border border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-900/50" 
+                                          : "bg-amber-50 text-amber-600 border border-amber-100 dark:bg-amber-900/20 dark:border-amber-900/50"
+                                      }`}
+                                      title="Haz clic para cambiar el estado"
+                                    >
+                                      {ev.entregada ? <CheckCircle2 className="w-6 h-6" /> : <Clock className="w-6 h-6" />}
+                                    </button>
+                                    <div className="space-y-1 flex-1">
+                                      <div className="flex flex-wrap items-center gap-2">
+                                        <h5 className="font-black text-xl text-slate-800 dark:text-slate-100 leading-none">
+                                          {ev.num_remision}
+                                        </h5>
+                                        <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest leading-none ${
+                                          ev.entregada 
+                                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' 
+                                            : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'
+                                        }`}>
+                                          {ev.entregada ? 'Entregada' : 'Pendiente'}
+                                        </span>
+                                      </div>
+                                      {ev.notas && <p className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5"><Info className="w-3.5 h-3.5 shrink-0" /> <span className="truncate max-w-[200px] sm:max-w-[300px]">{ev.notas}</span></p>}
+                                    </div>
+                                  </div>
+
+                                  {/* Botones Acción */}
+                                  <div className="flex flex-wrap sm:flex-nowrap items-center justify-end gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+
+                                    <button
+                                      onClick={() => setGaleriaAbierta(prev => ({...prev, [ev.id]: !prev[ev.id]}))}
+                                      className={`flex-1 sm:flex-none px-4 h-10 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                                        fotos.length > 0 
+                                          ? (isOpen ? "bg-blue-600 text-white shadow-md shadow-blue-500/20" : "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40")
+                                          : (isOpen ? "bg-slate-800 text-white dark:bg-slate-200 dark:text-slate-900" : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-zinc-800 dark:text-slate-300 dark:hover:bg-zinc-700")
+                                      }`}
+                                    >
+                                      {fotos.length > 0 ? <ImageIcon className="w-4 h-4" /> : <Camera className="w-4 h-4" />}
+                                      Fotos ({fotos.length})
+                                    </button>
+                                    
+                                    <button
+                                      onClick={() => setEvidenciaAEliminar(ev.id)}
+                                      disabled={eliminarEvidenciaMutation.isPending}
+                                      className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                      title="Eliminar remisión"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* Galería Expansible */}
+                                {isOpen && (
+                                  <div className="border-t border-slate-100 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-950/50 p-5 animate-in slide-in-from-top-2 duration-200">
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                      {/* Fotos existentes */}
+                                      {fotos.map((url, i) => (
+                                        <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-slate-200 dark:border-zinc-800 group/foto bg-slate-200 dark:bg-zinc-800">
+                                          <img src={url} alt={`Evidencia ${i}`} className="w-full h-full object-cover" />
+                                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/foto:opacity-100 transition-opacity flex items-center justify-center gap-2 backdrop-blur-sm">
+                                            <button 
+                                              onClick={() => setFotoVisor(url)}
+                                              className="p-2 bg-white/20 hover:bg-white/40 rounded-lg text-white backdrop-blur-md transition-colors"
+                                            >
+                                              <ZoomIn className="w-5 h-5" />
+                                            </button>
+                                            <button 
+                                              onClick={() => setFotoAEliminar({ evidenciaId: ev.id, currentFotosUrls: fotos, urlToRemove: url })}
+                                              className="p-2 bg-red-500/80 hover:bg-red-600 rounded-lg text-white backdrop-blur-md transition-colors"
+                                            >
+                                              <Trash2 className="w-5 h-5" />
+                                            </button>
+                                          </div>
+                                        </div>
+                                      ))}
+
+                                      {/* Botón Añadir Foto */}
+                                      <div className="relative aspect-square rounded-xl border-2 border-dashed border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-900 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors flex flex-col items-center justify-center cursor-pointer overflow-hidden group/add">
+                                        {fotoCargando === ev.id ? (
+                                          <div className="flex flex-col items-center gap-2 text-primary">
+                                            <Loader2 className="w-6 h-6 animate-spin" />
+                                            <span className="text-[10px] font-black tracking-widest uppercase">Subiendo</span>
+                                          </div>
+                                        ) : (
+                                          <>
+                                            <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-zinc-800 flex items-center justify-center mb-2 group-hover/add:scale-110 transition-transform">
+                                              <Upload className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+                                            </div>
+                                            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Añadir Foto</span>
+                                          </>
+                                        )}
+                                        <input 
+                                          type="file" 
+                                          accept="image/*" 
+                                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                          disabled={fotoCargando === ev.id}
+                                          onChange={(e) => {
+                                            const file = e.target.files[0];
+                                            if(!file) return;
+                                            setFotoCargando(ev.id);
+                                            subirFotoEvidenciaMutation.mutate({
+                                              evidenciaId: ev.id,
+                                              viajeId: viajeEvidenciaSeleccionado.id,
+                                              file: file,
+                                              currentFotosUrls: fotos
+                                            });
+                                            e.target.value = null;
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Visor de Fotos Fullscreen */}
+                  {fotoVisor && (
+                    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center">
+                      <button 
+                        onClick={() => setFotoVisor(null)}
+                        className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md transition-colors"
+                      >
+                        <X className="w-6 h-6" />
+                      </button>
+                      <img src={fotoVisor} className="max-w-[90vw] max-h-[90vh] object-contain rounded-xl shadow-2xl" alt="Evidencia en pantalla completa" />
+                    </div>
+                  )}
+
+                  <div className="px-6 py-4 bg-muted/10 border-t border-border flex justify-end">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setDialogEvidenciaAbierto(false)} 
+                      className="rounded-xl font-bold px-8 h-11 border-border/60 hover:bg-slate-100 dark:hover:bg-zinc-800"
+                    >
+                      Terminar
+                    </Button>
+                  </div>
+
+                  {/* AlertDialog Eliminar Remisión */}
+                  <AlertDialog open={!!evidenciaAEliminar} onOpenChange={() => setEvidenciaAEliminar(null)}>
+                    <AlertDialogContent className="rounded-[1.5rem]">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>¿Estás seguro de eliminar esta remisión?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Esta acción no se puede deshacer. Se borrará la remisión del expediente y cualquier foto asociada ya no se mostrará.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={() => {
+                            eliminarEvidenciaMutation.mutate(evidenciaAEliminar);
+                            setEvidenciaAEliminar(null);
+                          }}
+                          className="bg-red-600 hover:bg-red-700 text-white rounded-xl"
+                        >
+                          Sí, Eliminar
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
+                  {/* AlertDialog Eliminar Foto */}
+                  <AlertDialog open={!!fotoAEliminar} onOpenChange={() => setFotoAEliminar(null)}>
+                    <AlertDialogContent className="rounded-[1.5rem]">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>¿Estás seguro de eliminar esta foto?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Esta foto será eliminada permanentemente del archivo digital de la remisión.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={() => {
+                            eliminarFotoEvidenciaMutation.mutate(fotoAEliminar);
+                          }}
+                          className="bg-red-600 hover:bg-red-700 text-white rounded-xl"
+                        >
+                          {eliminarFotoEvidenciaMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                          Sí, Eliminar
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </>
+              );
+            })()}
           </DialogContent>
         </Dialog>
       </div>
