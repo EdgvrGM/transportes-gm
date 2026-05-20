@@ -1,6 +1,6 @@
-import { useRef } from "react";
+import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { X, Gauge, Clock, Navigation, Satellite, MapPin, Loader2 } from "lucide-react";
+import { X, Gauge, Clock, Navigation, Satellite, MapPin, Loader2, Copy, Check } from "lucide-react";
 
 const WIALON_PROXY_URL = "https://wialon-proxy.transportesgm.workers.dev";
 const WIALON_IMG_BASE  = "https://hst-api.wialon.com";
@@ -13,6 +13,16 @@ function tiempoDesde(ts) {
 }
 
 export default function TooltipUnidad({ unidad, onClose, onMouseEnter, onMouseLeave, style }) {
+  const [copied, setCopied] = useState(false);
+
+  const copiarCoordenadas = () => {
+    const texto = `${unidad.lat.toFixed(4)}, ${unidad.lng.toFixed(4)}`;
+    navigator.clipboard.writeText(texto).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
   const { data: detalle, isLoading } = useQuery({
     queryKey: ["gps-details", unidad.id],
     queryFn: async () => {
@@ -65,9 +75,19 @@ export default function TooltipUnidad({ unidad, onClose, onMouseEnter, onMouseLe
       ) : detalle?.direccion ? (
         <div className="flex items-start gap-2 px-3 py-2 border-b border-slate-100 dark:border-slate-700">
           <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
-          <p className="text-xs text-slate-600 dark:text-slate-400 leading-snug line-clamp-2">
+          <p className="text-xs text-slate-600 dark:text-slate-400 leading-snug line-clamp-2 flex-1">
             {detalle.direccion}
           </p>
+          <button
+            onClick={copiarCoordenadas}
+            title={copied ? "Copiado" : "Copiar coordenadas"}
+            className="shrink-0 p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+          >
+            {copied
+              ? <Check className="w-3.5 h-3.5 text-green-500" />
+              : <Copy className="w-3.5 h-3.5" />
+            }
+          </button>
         </div>
       ) : null}
 
