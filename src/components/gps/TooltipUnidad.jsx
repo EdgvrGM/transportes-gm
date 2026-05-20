@@ -1,0 +1,129 @@
+import { useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { X, Gauge, Clock, Navigation, Satellite, MapPin, Loader2 } from "lucide-react";
+
+const WIALON_PROXY_URL = "https://wialon-proxy.transportesgm.workers.dev";
+const WIALON_IMG_BASE  = "https://hst-api.wialon.com";
+
+function tiempoDesde(ts) {
+  const diff = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
+  if (diff < 60)   return `hace ${diff}s`;
+  if (diff < 3600) return `hace ${Math.floor(diff / 60)} min`;
+  return `hace ${Math.floor(diff / 3600)}h ${Math.floor((diff % 3600) / 60)}min`;
+}
+
+export default function TooltipUnidad({ unidad, onClose, onMouseEnter, onMouseLeave, style }) {
+  const { data: detalle, isLoading } = useQuery({
+    queryKey: ["gps-details", unidad.id],
+    queryFn: async () => {
+      const res = await fetch(`${WIALON_PROXY_URL}?action=details&unit=${unidad.id}`);
+      if (!res.ok) throw new Error("Error al obtener detalles");
+      return res.json();
+    },
+    staleTime: 30000,
+  });
+
+  return (
+    <div
+      style={{ position: "fixed", zIndex: 9999, pointerEvents: "auto", ...style }}
+      className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 w-80 overflow-hidden"
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      {/* Header */}
+      <div className="flex items-center gap-3 p-3 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+        <div className="w-10 h-10 flex items-center justify-center shrink-0">
+          {unidad.uri
+            ? <img src={`${WIALON_IMG_BASE}${unidad.uri}`} style={{ width: 36, height: 36, objectFit: "contain" }} />
+            : <span style={{ fontSize: 24 }}>🚚</span>
+          }
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate uppercase">
+            {unidad.nombre}
+          </p>
+          <p className="text-xs text-slate-400">
+            {tiempoDesde(unidad.ultima_actualizacion)} · {new Date(unidad.ultima_actualizacion).toLocaleTimeString("es-MX")}
+          </p>
+        </div>
+
+        <button
+          onClick={onClose}
+          className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors shrink-0"
+        >
+          <X className="w-4 h-4 text-slate-400" />
+        </button>
+      </div>
+
+      {/* Dirección */}
+      {isLoading ? (
+        <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-50 dark:border-slate-700">
+          <Loader2 className="w-3.5 h-3.5 text-slate-400 animate-spin shrink-0" />
+          <span className="text-xs text-slate-400">Obteniendo dirección...</span>
+        </div>
+      ) : detalle?.direccion ? (
+        <div className="flex items-start gap-2 px-3 py-2 border-b border-slate-100 dark:border-slate-700">
+          <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+          <p className="text-xs text-slate-600 dark:text-slate-400 leading-snug line-clamp-2">
+            {detalle.direccion}
+          </p>
+        </div>
+      ) : null}
+
+      {/* Stats en grid */}
+      <div className="grid grid-cols-2 gap-0 border-b border-slate-100 dark:border-slate-700">
+        <div className="flex items-center gap-2 p-3 border-r border-slate-100 dark:border-slate-700">
+          <Gauge className="w-4 h-4 text-slate-400 shrink-0" />
+          <div>
+            <p className="text-xs text-slate-400">Velocidad</p>
+            <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{unidad.velocidad} km/h</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 p-3">
+          <Navigation className="w-4 h-4 text-slate-400 shrink-0" />
+          <div>
+            <p className="text-xs text-slate-400">Odómetro</p>
+            <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+              {detalle?.odometro != null
+                ? `${detalle.odometro.toLocaleString("es-MX")} km`
+                : "—"}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 p-3 border-r border-t border-slate-100 dark:border-slate-700">
+          <Clock className="w-4 h-4 text-slate-400 shrink-0" />
+          <div>
+            <p className="text-xs text-slate-400">Horas motor</p>
+            <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+              {detalle?.horas_motor != null ? `${detalle.horas_motor} h` : "—"}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 p-3 border-t border-slate-100 dark:border-slate-700">
+          <Satellite className="w-4 h-4 text-slate-400 shrink-0" />
+          <div>
+            <p className="text-xs text-slate-400">Satélites</p>
+            <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+              {unidad.satelites ?? detalle?.satelites ?? "—"}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Estado */}
+      <div className="flex items-center gap-2 px-3 py-2">
+        <span
+          className="w-2.5 h-2.5 rounded-full shrink-0"
+          style={{ background: unidad.motor ? "#22c55e" : "#94a3b8" }}
+        />
+        <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
+          {unidad.motor ? "Motor encendido · En movimiento" : "Motor apagado · Detenido"}
+        </span>
+      </div>
+    </div>
+  );
+}

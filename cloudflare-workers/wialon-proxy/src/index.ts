@@ -28,6 +28,10 @@ function getMockPositions() {
       velocidad: speed,
       rumbo: Math.round((Math.sin(t) + 1) * 180),
       motor: speed > 5,
+      satelites: 8,
+      uri: null,
+      odometro: null,
+      horas_motor: null,
       ultima_actualizacion: new Date().toISOString(),
     };
   });
@@ -63,7 +67,7 @@ async function wialonGetUnitsBasic(eid: string) {
       sortType: "sys_name",
     },
     force: 1,
-    flags: 1 | 1024, // 1 (nombre/id) + 1024 (última posición en item.pos)
+    flags: 1 | 16 | 1024 | 4096 | 8192, // base + icono + última posición + contadores + sensores
     from: 0,
     to: 0,
   }, eid);
@@ -75,18 +79,51 @@ async function wialonGetUnitsBasic(eid: string) {
   return items;
 }
 
-function parsearPosicion(item: Record<string, unknown>) {
-  const pos = item.pos as Record<string, number> | null;
+async function getAddress(lat: number, lng: number): Promise<string> {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=es`,
+      { headers: { "User-Agent": "TransportesGM-ERP/1.0" } }
+    );
+    const data = await res.json() as Record<string, unknown>;
+    return (data.display_name as string) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+async function parsearPosicionCompleta(item: Record<string, unknown>, includeAddress = false) {
+  const pos      = item.pos  as Record<string, number> | null;
+  const sensores = (item.sens as Record<string, Record<string, unknown>>) ?? {};
+
+  const sensoresArr = Object.values(sensores).map((s) => ({
+    id:     s.id,
+    nombre: s.n as string,
+    tipo:   s.t as string,
+    unidad: s.m as string,
+  }));
+
+  let direccion = "";
+  if (includeAddress && pos && pos.y !== 0 && pos.x !== 0) {
+    direccion = await getAddress(pos.y, pos.x);
+  }
+
   return {
-    id:     item.id,
-    nombre: item.nm,
-    lat:    pos?.y ?? 0,
-    lng:    pos?.x ?? 0,
+    id:        item.id,
+    nombre:    item.nm,
+    lat:       pos?.y ?? 0,
+    lng:       pos?.x ?? 0,
     velocidad: pos?.s ?? 0,
     rumbo:     pos?.c ?? 0,
     motor:     (pos?.s ?? 0) > 2,
+    satelites: pos?.sc ?? 0,
+    uri:       (item.uri as string) ?? null,
+    odometro:  typeof item.cnm === "number" ? Math.round(item.cnm / 1000) : null,
+    horas_motor: typeof item.cneh === "number" ? (item.cneh / 3600).toFixed(1) : null,
+    sensores:  sensoresArr,
+    direccion,
     ultima_actualizacion: pos?.t
-      ? new Date(pos.t * 1000).toISOString()
+      ? new Date((pos.t as number) * 1000).toISOString()
       : new Date().toISOString(),
   };
 }
@@ -96,10 +133,11 @@ async function wialonGetHistory(eid: string, unitId: string, from: number, to: n
     itemId: parseInt(unitId),
     timeFrom: from,
     timeTo: to,
-    flags: 0x0001,
+    flags: 0x0000,
     flagsMask: 0xFF00,
-    loadCount: 0xFFFFFFFF,
+    loadCount: 10000,
   }, eid);
+  console.log("History response:", JSON.stringify(data).substring(0, 300));
   if (data.error) throw new Error(`Wialon history error: ${data.error}`);
 
   const unitData = await wialonPost("core/search_item", {
@@ -171,9 +209,44 @@ export default {
         });
       }
 
+      if (action === "details") {
+        const unitId = parseInt(url.searchParams.get("unit") || "0");
+        if (!unitId) {
+          return new Response(JSON.stringify({ error: "unit requerido" }), {
+            status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const data = await wialonPost("core/search_item", {
+          id: unitId,
+          flags: 1 | 16 | 1024 | 4096 | 8192,
+        }, eid);
+
+        const item = data.item as Record<string, unknown>;
+        if (!item) {
+          return new Response(JSON.stringify({ error: "unidad no encontrada" }), {
+            status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const detalle = await parsearPosicionCompleta(item, true);
+        return new Response(JSON.stringify(detalle), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       // action: positions (default)
+      const excludeParam = url.searchParams.get("exclude") || "";
+      const excludeIds   = excludeParam
+        ? excludeParam.split(",").map(Number)
+        : [];
+
       const items     = await wialonGetUnitsBasic(eid);
-      const positions = items.map(parsearPosicion);
+      const positions = await Promise.all(
+        items
+          .filter((item) => !excludeIds.includes(item.id as number))
+          .map((item) => parsearPosicionCompleta(item, false))
+      );
       return new Response(JSON.stringify(positions), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
