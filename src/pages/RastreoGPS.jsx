@@ -8,6 +8,13 @@ import AlertasGPS from "@/components/gps/AlertasGPS";
 import ReportesGPS from "@/components/gps/ReportesGPS";
 import CompartidosGPS from "@/components/gps/CompartidosGPS";
 import { MapPin, Navigation, Bell, Settings, RefreshCw, Settings2, Share2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const WIALON_PROXY_URL = "https://wialon-proxy.transportesgm.workers.dev";
 const WIALON_IMG_BASE  = "https://hst-api.wialon.com";
@@ -133,7 +140,7 @@ export default function RastreoGPS() {
       {/* Barra única: tabs + controles */}
       <div className="h-10 flex items-stretch bg-card border-b border-border shrink-0">
         {/* Tabs */}
-        <div className="flex items-stretch">
+        <div className="flex items-stretch overflow-x-auto select-none max-w-[calc(100%-120px)] md:max-w-none touch-pan-x [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none]">
           {tabs.map((t) => {
             const Icon = t.icon;
             const active = activeTab === t.id;
@@ -141,21 +148,21 @@ export default function RastreoGPS() {
               <button
                 key={t.id}
                 onClick={() => setActiveTab(t.id)}
-                className={`flex items-center gap-1.5 px-4 text-sm transition-colors relative border-b-2 ${
+                className={`flex items-center gap-1.5 px-4 text-sm transition-colors relative border-b-2 shrink-0 ${
                   active
                     ? "border-gm-primary text-yellow-500 font-medium"
                     : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <div className="relative">
+                <div className="relative shrink-0">
                   <Icon className="w-3.5 h-3.5" />
                   {t.badge > 0 && (
-                    <span className={`absolute -top-1.5 -right-1.5 w-3.5 h-3.5 ${t.badgeColor ?? "bg-red-500"} text-white text-[9px] font-bold rounded-full flex items-center justify-center`}>
+                    <span className={`absolute -top-1.5 -right-1.5 w-3.5 h-3.5 ${t.badgeColor ?? "bg-red-500"} text-white text-[9px] font-bold rounded-full flex items-center justify-center shrink-0`}>
                       {t.badge > 9 ? "9+" : t.badge}
                     </span>
                   )}
                 </div>
-                <span className="hidden sm:inline">{t.label}</span>
+                <span className="shrink-0">{t.label}</span>
               </button>
             );
           })}
@@ -196,9 +203,9 @@ export default function RastreoGPS() {
       </div>
 
       {/* Cuerpo: panel lateral + mapa siempre montado */}
-      <div className="flex-1 flex min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row w-full min-h-0 overflow-hidden">
         {/* Panel lateral — contenido según tab */}
-        <div className="w-64 shrink-0 border-r border-border overflow-y-auto bg-card hidden md:flex md:flex-col">
+        <div className="w-full h-[35vh] md:w-64 md:h-full shrink-0 border-t md:border-t-0 md:border-r border-border overflow-y-auto bg-card flex flex-col order-last md:order-first">
           {activeTab === "envivo" && (
             <>
               <div className="p-3 border-b border-border shrink-0">
