@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { supabase } from "@/supabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -58,6 +58,7 @@ import {
   ZoomIn,
   Info,
   ImageIcon,
+  RotateCcw,
 } from "lucide-react";
 import { format, addDays, parseISO, getISOWeek } from "date-fns";
 import { es } from "date-fns/locale";
@@ -175,6 +176,117 @@ const ProgramCard = ({ prog, onVer, totalViajes }) => {
     </div>
   );
 };
+
+function VisorImagen({ url, onClose }) {
+  const [scale, setScale] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
+  const dragStart = useRef(null);
+  const containerNodeRef = useRef(null);
+  const scaleRef = useRef(scale);
+  const offsetRef = useRef(offset);
+
+  useEffect(() => { scaleRef.current = scale; }, [scale]);
+  useEffect(() => { offsetRef.current = offset; }, [offset]);
+
+  const containerRef = useCallback((node) => {
+    if (!node) return;
+    const handleWheel = (e) => {
+      e.preventDefault();
+      const rect = node.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const currentScale = scaleRef.current;
+      const currentOffset = offsetRef.current;
+      const delta = e.deltaY < 0 ? 0.15 : -0.15;
+      const newScale = Math.min(Math.max(currentScale + delta, 0.5), 5);
+      const scaleRatio = newScale / currentScale;
+      setOffset({
+        x: mouseX - scaleRatio * (mouseX - centerX - currentOffset.x) - centerX,
+        y: mouseY - scaleRatio * (mouseY - centerY - currentOffset.y) - centerY,
+      });
+      setScale(newScale);
+    };
+    node.addEventListener("wheel", handleWheel, { passive: false });
+    containerNodeRef.current = node;
+  }, []);
+
+  const handleMouseDown = (e) => {
+    setDragging(true);
+    dragStart.current = { x: e.clientX - offset.x, y: e.clientY - offset.y };
+  };
+
+  const handleMouseMove = (e) => {
+    if (!dragging || !dragStart.current) return;
+    setOffset({ x: e.clientX - dragStart.current.x, y: e.clientY - dragStart.current.y });
+  };
+
+  const handleMouseUp = () => setDragging(false);
+
+  const resetear = () => {
+    setScale(1);
+    setOffset({ x: 0, y: 0 });
+  };
+
+  const handleClose = () => {
+    resetear();
+    onClose();
+  };
+
+  return (
+    <Dialog open={!!url} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 overflow-hidden select-none">
+        <div className="absolute top-2 right-10 z-10 flex gap-1">
+          <button
+            onClick={() => setScale((s) => Math.min(s + 0.25, 5))}
+            className="w-7 h-7 rounded bg-black/50 text-white text-sm hover:bg-black/70 flex items-center justify-center"
+          >+</button>
+          <button
+            onClick={() => setScale((s) => Math.max(s - 0.25, 0.5))}
+            className="w-7 h-7 rounded bg-black/50 text-white text-sm hover:bg-black/70 flex items-center justify-center"
+          >−</button>
+          <button
+            onClick={resetear}
+            title="Restablecer"
+            className="w-7 h-7 rounded bg-black/50 text-white hover:bg-black/70 flex items-center justify-center"
+          >
+            <RotateCcw className="w-3 h-3" />
+          </button>
+        </div>
+
+        <div
+          ref={containerRef}
+          className="w-full h-[85vh] flex items-center justify-center overflow-hidden bg-black/80"
+          style={{ cursor: dragging ? "grabbing" : "grab" }}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+        >
+          <img
+            src={url ?? ""}
+            alt="Remisión"
+            draggable={false}
+            style={{
+              transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
+              transition: dragging ? "none" : "transform 0.1s ease",
+              maxWidth: "100%",
+              maxHeight: "100%",
+              objectFit: "contain",
+              pointerEvents: "none",
+            }}
+          />
+        </div>
+
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 text-white text-xs px-2 py-1 rounded pointer-events-none">
+          {Math.round(scale * 100)}%
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export default function FuelProgramaCargas() {
   const queryClient = useQueryClient();
@@ -1025,8 +1137,8 @@ export default function FuelProgramaCargas() {
                       </div>
 
                       {/* Fila Inferior: Botón Centrado y Badge Evidencias */}
-                        <div className="relative flex justify-center items-center pt-2 border-t border-border/40 mt-2 min-h-[3rem]">
-                          <div className="absolute left-0 flex items-center gap-2">
+                        <div className="relative flex flex-col md:flex-row justify-center items-center pt-4 md:pt-2 border-t border-border/40 mt-2 gap-3 min-h-[3rem]">
+                          <div className="md:absolute md:left-0 flex items-center justify-center w-full md:w-auto gap-2">
                             {(() => {
                               const tieneEvidencias = viaje.evidencias?.length > 0;
                               const todasEntregadas = tieneEvidencias && viaje.evidencias.some(e => e.entregada);
@@ -1046,7 +1158,7 @@ export default function FuelProgramaCargas() {
                               );
                             })()}
                           </div>
-                          <div className="flex items-center gap-2 z-10">
+                          <div className="flex items-center justify-center w-full md:w-auto gap-2 z-10">
                             {(() => {
                             const registeredViaje = getRegisteredTrip(viaje, diaVerActivo);
                             
@@ -1063,7 +1175,7 @@ export default function FuelProgramaCargas() {
                                         setViajeConsumoSeleccionado(registeredViaje);
                                         setDialogConsumoAbierto(true);
                                       }}
-                                      className="h-9 px-6 gap-2 border-green-200 text-green-700 bg-green-50/50 hover:bg-green-100 dark:border-green-900/30 dark:text-green-400 dark:bg-green-900/20 dark:hover:bg-green-900/40 rounded-xl font-black text-[10px] shadow-sm active:scale-95 transition-all"
+                                      className="min-h-[2.25rem] h-auto py-2 px-4 md:px-6 gap-2 border-green-200 text-green-700 bg-green-50/50 hover:bg-green-100 dark:border-green-900/30 dark:text-green-400 dark:bg-green-900/20 dark:hover:bg-green-900/40 rounded-xl font-black text-[10px] shadow-sm active:scale-95 transition-all text-center whitespace-normal"
                                     >
                                       <Eye className="w-3.5 h-3.5" />
                                       <span>VER DETALLES DE CONSUMO</span>
@@ -1091,7 +1203,7 @@ export default function FuelProgramaCargas() {
                                 <Button
                                   variant="outline"
                                   onClick={() => handleRegistrarCombustible(viaje)}
-                                  className={`h-9 px-6 gap-2 rounded-xl font-black text-[10px] shadow-sm active:scale-95 transition-all ${btnClass}`}
+                                  className={`min-h-[2.25rem] h-auto py-2 px-4 md:px-6 gap-2 rounded-xl font-black text-[10px] shadow-sm active:scale-95 transition-all text-center whitespace-normal ${btnClass}`}
                                 >
                                   {btnIcon}
                                   <span>{btnLabel}</span>
@@ -1104,7 +1216,7 @@ export default function FuelProgramaCargas() {
                               <Button
                                 variant="outline"
                                 onClick={() => handleRegistrarCombustible(viaje)}
-                                className="h-9 px-6 border-orange-200 text-orange-600 hover:bg-orange-50 dark:border-orange-900/30 dark:text-orange-400 dark:bg-orange-900/20 dark:hover:bg-orange-900/40 rounded-xl font-black text-[10px] gap-2 shadow-sm active:scale-95 transition-all"
+                                className="min-h-[2.25rem] h-auto py-2 px-4 md:px-6 border-orange-200 text-orange-600 hover:bg-orange-50 dark:border-orange-900/30 dark:text-orange-400 dark:bg-orange-900/20 dark:hover:bg-orange-900/40 rounded-xl font-black text-[10px] gap-2 shadow-sm active:scale-95 transition-all text-center whitespace-normal"
                               >
                                 <Plus className="w-4 h-4" />
                                 <span>REGISTRAR CONSUMOS DE COMBUSTIBLE Y CASETAS</span>
@@ -1852,15 +1964,7 @@ export default function FuelProgramaCargas() {
                   </div>
                   
                   {/* Visor de Fotos Fullscreen */}
-                  <Dialog open={!!fotoVisor} onOpenChange={() => setFotoVisor(null)}>
-                    <DialogContent className="max-w-[90vw] w-fit p-3">
-                      <img
-                        src={fotoVisor ?? ""}
-                        alt="Evidencia en pantalla completa"
-                        className="max-w-[85vw] max-h-[85vh] object-contain rounded-xl block"
-                      />
-                    </DialogContent>
-                  </Dialog>
+                  <VisorImagen url={fotoVisor} onClose={() => setFotoVisor(null)} />
 
                   <div className="px-6 py-4 bg-muted/10 border-t border-border flex justify-end">
                     <Button 
