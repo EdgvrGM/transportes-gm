@@ -9,7 +9,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'img/LOGO.PNG'],
+      includeAssets: ['favicon.ico', 'img/icono-pwa.png'],
       workbox: {
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024
       },
@@ -21,23 +21,25 @@ export default defineConfig({
         background_color: '#0f172a',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/',
+        start_url: '/login',
         icons: [
           {
-            src: '/img/LOGO.PNG',
+            src: '/img/icono-pwa.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: '/img/LOGO.PNG',
-            sizes: '512x512',
-            type: 'image/png'
-          },
-          {
-            src: '/img/LOGO.PNG',
+            src: '/img/icono-pwa.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'any'
+          },
+          {
+            src: '/img/icono-pwa.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
           }
         ]
       }
