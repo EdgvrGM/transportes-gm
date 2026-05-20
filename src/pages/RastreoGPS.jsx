@@ -118,6 +118,7 @@ export default function RastreoGPS() {
   const [puntoReproduccion, setPuntoReproduccion] = useState(null);
   const [reproduciendo, setReproduciendo] = useState(false);
   const [iconoUnidad, setIconoUnidad] = useState(null);
+  const [unidadEnfocada, setUnidadEnfocada] = useState(null);
 
   const tabs = [
     { id: "envivo",       label: "En vivo",      icon: Navigation },
@@ -213,7 +214,7 @@ export default function RastreoGPS() {
                   return (
                     <button
                       key={p.id}
-                      onClick={() => setSelectedUnit(p)}
+                      onClick={() => { setSelectedUnit(p); setUnidadEnfocada(p); }}
                       className={`w-full text-left p-3 border-b border-border/50 hover:bg-accent transition-colors shrink-0 ${
                         selectedUnit?.id === p.id ? "bg-gm-primary/10" : ""
                       }`}
@@ -281,6 +282,8 @@ export default function RastreoGPS() {
             reproduciendo={reproduciendo}
             iconoUnidad={iconoUnidad}
             tabActivo={activeTab}
+            unidadEnfocada={unidadEnfocada}
+            onEnfocado={() => setUnidadEnfocada(null)}
           />
         </div>
       </div>

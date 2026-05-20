@@ -128,6 +128,16 @@ function BoundsController({ positions, histLatlngs, tabActivo }) {
   return null;
 }
 
+function EnfocarUnidad({ unidad, onEnfocado }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!unidad || (unidad.lat === 0 && unidad.lng === 0)) return;
+    map.flyTo([unidad.lat, unidad.lng], 14, { animate: true, duration: 1 });
+    onEnfocado();
+  }, [unidad]);
+  return null;
+}
+
 function SeguimientoAuto({ punto, reproduciendo }) {
   const map = useMap();
   useEffect(() => {
@@ -149,6 +159,8 @@ export default function MapaGPS({
   reproduciendo = false,
   iconoUnidad = null,
   tabActivo = "envivo",
+  unidadEnfocada = null,
+  onEnfocado,
 }) {
   const primera = positions.find((p) => p.lat !== 0 && p.lng !== 0);
   const center  = primera ? [primera.lat, primera.lng] : [19.2433, -103.7250];
@@ -194,6 +206,7 @@ export default function MapaGPS({
 
         <BoundsController positions={positions} histLatlngs={histLatlngs} tabActivo={tabActivo} />
         <SeguimientoAuto punto={puntoActivo} reproduciendo={reproduciendo} />
+        <EnfocarUnidad unidad={unidadEnfocada} onEnfocado={onEnfocado} />
 
         {/* ── Capa 1: Marcadores en vivo — siempre visibles ── */}
         {positions.map((p) => (
