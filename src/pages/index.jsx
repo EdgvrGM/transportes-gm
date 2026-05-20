@@ -25,6 +25,7 @@ import {
 import Liquidaciones from "./Liquidaciones.jsx";
 import DocumentacionLegal from "./DocumentacionLegal.jsx";
 import RastreoGPS from "./RastreoGPS.jsx";
+import RastreoPublico from "./RastreoPublico.jsx";
 
 const PAGES = {
   Home: Home,
@@ -82,6 +83,7 @@ function PagesContent() {
         <Route path="/home" element={<Home />} />
         <Route path="/unidades" element={<Unidades />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/rastreo/:token" element={<RastreoPublico />} />
 
         {/* Rutas Protegidas del Sistema de Combustible */}
         <Route element={<ProtectedRoute />}>
