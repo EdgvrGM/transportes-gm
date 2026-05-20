@@ -1787,8 +1787,8 @@ export default function FuelProgramaCargas() {
                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                       {/* Fotos existentes */}
                                       {fotos.map((url, i) => (
-                                        <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-slate-200 dark:border-zinc-800 group/foto bg-slate-200 dark:bg-zinc-800">
-                                          <img src={url} alt={`Evidencia ${i}`} className="w-full h-full object-cover" />
+                                        <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-slate-200 dark:border-zinc-800 group/foto bg-black">
+                                          <img src={url} alt={`Evidencia ${i}`} className="w-full h-full object-contain" />
                                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/foto:opacity-100 transition-opacity flex items-center justify-center gap-2 backdrop-blur-sm">
                                             <button 
                                               onClick={() => setFotoVisor(url)}
@@ -1852,17 +1852,15 @@ export default function FuelProgramaCargas() {
                   </div>
                   
                   {/* Visor de Fotos Fullscreen */}
-                  {fotoVisor && (
-                    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center">
-                      <button 
-                        onClick={() => setFotoVisor(null)}
-                        className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md transition-colors"
-                      >
-                        <X className="w-6 h-6" />
-                      </button>
-                      <img src={fotoVisor} className="max-w-[90vw] max-h-[90vh] object-contain rounded-xl shadow-2xl" alt="Evidencia en pantalla completa" />
-                    </div>
-                  )}
+                  <Dialog open={!!fotoVisor} onOpenChange={() => setFotoVisor(null)}>
+                    <DialogContent className="max-w-[90vw] w-fit p-3">
+                      <img
+                        src={fotoVisor ?? ""}
+                        alt="Evidencia en pantalla completa"
+                        className="max-w-[85vw] max-h-[85vh] object-contain rounded-xl block"
+                      />
+                    </DialogContent>
+                  </Dialog>
 
                   <div className="px-6 py-4 bg-muted/10 border-t border-border flex justify-end">
                     <Button 
