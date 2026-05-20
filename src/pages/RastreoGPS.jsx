@@ -100,6 +100,11 @@ export default function RastreoGPS() {
     return map;
   }, [unidadesGPS]);
 
+  const [historialPuntos, setHistorialPuntos] = useState([]);
+  const [puntoReproduccion, setPuntoReproduccion] = useState(null);
+  const [reproduciendo, setReproduciendo] = useState(false);
+  const [iconoUnidad, setIconoUnidad] = useState(null);
+
   const tabs = [
     { id: "envivo",    label: "En vivo",   icon: Navigation },
     { id: "historial", label: "Historial", icon: MapPin },
@@ -174,89 +179,93 @@ export default function RastreoGPS() {
         </div>
       </div>
 
-      {/* Cuerpo: panel lateral + mapa */}
-      <div className="flex-1 flex gap-0 min-h-0">
-        {/* Panel lateral de unidades */}
-        <div className="w-64 bg-card border-r border-border overflow-y-auto hidden md:block shrink-0">
-          <div className="p-3 border-b border-border">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Unidades
-            </h3>
-          </div>
-          {isLoading ? (
-            <div className="p-4 text-sm text-muted-foreground">Cargando...</div>
-          ) : (
-            positions.map((p) => {
-              const camion = vinculaciones[p.id];
-              return (
-                <button
-                  key={p.id}
-                  onClick={() => setSelectedUnit(p)}
-                  className={`w-full text-left p-3 border-b border-border/50 hover:bg-accent transition-colors ${
-                    selectedUnit?.id === p.id ? "bg-gm-primary/10" : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    {/* Icono de Wialon */}
-                    <div className="w-8 h-8 shrink-0 flex items-center justify-center">
-                      {p.uri
-                        ? <img
-                            src={`${WIALON_IMG_BASE}${p.uri}`}
-                            style={{ width: 28, height: 28, objectFit: "contain" }}
-                            onError={(e) => { e.target.style.display = "none"; }}
-                          />
-                        : <span style={{ fontSize: 20 }}>🚚</span>
-                      }
-                    </div>
-
-                    {/* Semáforo de estado */}
-                    <span
-                      className="w-2 h-2 rounded-full shrink-0"
-                      style={{ background: p.motor ? "#22c55e" : "#94a3b8" }}
-                    />
-
-                    {/* Nombre y placa */}
-                    <div className="min-w-0">
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-sm font-bold text-foreground truncate uppercase">
-                          {camion ? camion.nombre : p.nombre.split(" ")[0]}
-                        </span>
-                        {camion?.placas && (
-                          <span className="text-sm font-bold text-muted-foreground shrink-0">
-                            {camion.placas}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-0.5">
-                        {p.velocidad} km/h · {p.motor ? "En movimiento" : "Detenido"}
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              );
-            })
-          )}
-        </div>
-
-        {/* Mapa / contenido del tab activo */}
-        <div className="flex-1 min-h-0 overflow-hidden">
+      {/* Cuerpo: panel lateral + mapa siempre montado */}
+      <div className="flex-1 flex min-h-0 overflow-hidden">
+        {/* Panel lateral — contenido según tab */}
+        <div className="w-64 shrink-0 border-r border-border overflow-y-auto bg-card hidden md:flex md:flex-col">
           {activeTab === "envivo" && (
-            <MapaGPS
-              positions={positions}
-              vinculaciones={vinculaciones}
-              onMarkerClick={setSelectedUnit}
-              historialRastro={historialRastro}
-            />
+            <>
+              <div className="p-3 border-b border-border shrink-0">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Unidades
+                </h3>
+              </div>
+              {isLoading ? (
+                <div className="p-4 text-sm text-muted-foreground">Cargando...</div>
+              ) : (
+                positions.map((p) => {
+                  const camion = vinculaciones[p.id];
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => setSelectedUnit(p)}
+                      className={`w-full text-left p-3 border-b border-border/50 hover:bg-accent transition-colors shrink-0 ${
+                        selectedUnit?.id === p.id ? "bg-gm-primary/10" : ""
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 shrink-0 flex items-center justify-center">
+                          {p.uri
+                            ? <img
+                                src={`${WIALON_IMG_BASE}${p.uri}`}
+                                style={{ width: 28, height: 28, objectFit: "contain" }}
+                                onError={(e) => { e.target.style.display = "none"; }}
+                              />
+                            : <span style={{ fontSize: 20 }}>🚚</span>
+                          }
+                        </div>
+                        <span
+                          className="w-2 h-2 rounded-full shrink-0"
+                          style={{ background: p.motor ? "#22c55e" : "#94a3b8" }}
+                        />
+                        <div className="min-w-0">
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="text-sm font-bold text-foreground truncate uppercase">
+                              {camion ? camion.nombre : p.nombre.split(" ")[0]}
+                            </span>
+                            {camion?.placas && (
+                              <span className="text-sm font-bold text-muted-foreground shrink-0">
+                                {camion.placas}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            {p.velocidad} km/h · {p.motor ? "En movimiento" : "Detenido"}
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })
+              )}
+            </>
           )}
           {activeTab === "historial" && (
-            <HistorialGPS vinculaciones={vinculaciones} />
+            <HistorialGPS
+              positions={positions}
+              onHistorialCargado={setHistorialPuntos}
+              onPuntoActivo={setPuntoReproduccion}
+              onReproduciendo={setReproduciendo}
+              onIconoUnidad={setIconoUnidad}
+            />
           )}
-          {activeTab === "alertas" && (
-            <AlertasGPS />
-          )}
-          {activeTab === "reportes" && (
-            <ReportesGPS />
-          )}
+          {activeTab === "alertas" && <AlertasGPS />}
+          {activeTab === "reportes" && <ReportesGPS />}
+        </div>
+
+        {/* Mapa siempre montado */}
+        <div className="flex-1 overflow-hidden" style={{ zIndex: 0 }}>
+          <MapaGPS
+            positions={positions}
+            vinculaciones={vinculaciones}
+            onMarkerClick={setSelectedUnit}
+            historialRastro={historialRastro}
+            historialPuntos={historialPuntos}
+            puntoReproduccion={puntoReproduccion}
+            reproduciendo={reproduciendo}
+            iconoUnidad={iconoUnidad}
+            tabActivo={activeTab}
+          />
         </div>
       </div>
 

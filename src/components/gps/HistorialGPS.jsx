@@ -1,47 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/supabaseClient";
 import {
-  MapContainer,
-  TileLayer,
-  Polyline,
-  Marker,
-  Popup,
-  LayersControl,
-  CircleMarker,
-} from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-import { Search, Loader2, Clock, Gauge, Route } from "lucide-react";
+  Search, Loader2,
+  ChevronsLeft, ChevronLeft, Play, Pause, ChevronRight, ChevronsRight, X,
+} from "lucide-react";
 
 const WIALON_PROXY_URL = "https://wialon-proxy.transportesgm.workers.dev";
 
-// Fix iconos Leaflet + Vite
-import icon from "leaflet/dist/images/marker-icon.png";
-import iconShadow from "leaflet/dist/images/marker-shadow.png";
-const DefaultIcon = L.icon({ iconUrl: icon, shadowUrl: iconShadow, iconSize: [25, 41], iconAnchor: [12, 41] });
-L.Marker.prototype.options.icon = DefaultIcon;
-
-const startIcon = L.divIcon({
-  className: "",
-  html: `<div style="width:28px;height:28px;border-radius:50%;background:#22c55e;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:13px;">🚦</div>`,
-  iconSize: [28, 28],
-  iconAnchor: [14, 14],
-});
-
-const endIcon = L.divIcon({
-  className: "",
-  html: `<div style="width:28px;height:28px;border-radius:50%;background:#EAB308;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:13px;">🏁</div>`,
-  iconSize: [28, 28],
-  iconAnchor: [14, 14],
-});
-
-const today = new Date().toISOString().split("T")[0];
+const today     = new Date().toISOString().split("T")[0];
 const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
 
-async function fetchHistory({ unitId, from, to }) {
-  const fromTs = Math.floor(new Date(from + "T00:00:00").getTime() / 1000);
-  const toTs   = Math.floor(new Date(to   + "T23:59:59").getTime() / 1000);
+function toDatetimeLocal(date, time) {
+  return `${date}T${time}`;
+}
+
+async function fetchHistory({ unitId, fromDt, toDt }) {
+  const fromTs = Math.floor(new Date(fromDt).getTime() / 1000);
+  const toTs   = Math.floor(new Date(toDt).getTime() / 1000);
   const res = await fetch(
     `${WIALON_PROXY_URL}?action=history&unit=${unitId}&from=${fromTs}&to=${toTs}`
   );
@@ -58,69 +34,163 @@ async function fetchUnidades() {
   return data || [];
 }
 
-function calcStats(points) {
-  if (!points || points.length === 0) return null;
-  const velocidades = points.map((p) => p.velocidad);
-  const maxVel = Math.max(...velocidades);
-  const avgVel = Math.round(velocidades.reduce((a, b) => a + b, 0) / velocidades.length);
-  let distKm = 0;
-  for (let i = 1; i < points.length; i++) {
-    const dLat = points[i].lat - points[i - 1].lat;
-    const dLng = points[i].lng - points[i - 1].lng;
-    distKm += Math.sqrt(dLat * dLat + dLng * dLng) * 111;
-  }
-  const durMin = Math.round(
-    (new Date(points[points.length - 1].timestamp) - new Date(points[0].timestamp)) / 60000
-  );
-  return { maxVel, avgVel, distKm: distKm.toFixed(1), durMin };
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-export default function HistorialGPS() {
-  const [unitId, setUnitId] = useState("");
-  const [from, setFrom] = useState(yesterday);
-  const [to, setTo]     = useState(today);
-  const [buscar, setBuscar] = useState(false);
+export default function HistorialGPS({ positions = [], onHistorialCargado, onPuntoActivo, onReproduciendo, onIconoUnidad }) {
+  const [unitId,     setUnitId]     = useState("");
+  const [fromDt,     setFromDt]     = useState(toDatetimeLocal(today, "00:00"));
+  const [toDt,       setToDt]       = useState(toDatetimeLocal(today, "23:59"));
+  const [fetchCount, setFetchCount] = useState(0);
 
   const { data: unidades = [] } = useQuery({
     queryKey: ["unidades-gps-historial"],
     queryFn: fetchUnidades,
   });
 
-  const { data: historial, isLoading } = useQuery({
-    queryKey: ["gps-history", unitId, from, to],
-    queryFn: () => fetchHistory({ unitId, from, to }),
-    enabled: buscar && !!unitId,
+  const { data: historial, isFetching } = useQuery({
+    queryKey: ["gps-history", unitId, fromDt, toDt, fetchCount],
+    queryFn: () => fetchHistory({ unitId, fromDt, toDt }),
+    enabled: fetchCount > 0,
   });
 
-  // Resetear buscar una vez que la query termina (TanStack Query v5 no tiene onSettled en useQuery)
+  // Sincronizar ícono Wialon de la unidad seleccionada
   useEffect(() => {
-    if (!isLoading && buscar) setBuscar(false);
-  }, [isLoading]);
+    const uri = positions.find((p) => String(p.id) === String(unitId))?.uri ?? null;
+    onIconoUnidad?.(uri);
+  }, [unitId, positions]);
 
-  const points  = historial?.points || [];
-  const stats   = calcStats(points);
-  const latlngs = points.map((p) => [p.lat, p.lng]);
-  const center  = latlngs.length > 0
-    ? latlngs[Math.floor(latlngs.length / 2)]
-    : [19.2433, -103.7250];
+  const [puntosLocales, setPuntosLocales] = useState([]);
+  const [playbackIdx,   setPlaybackIdx]   = useState(0);
+  const [isPlaying,     setIsPlaying]     = useState(false);
+  const [velocidad,     setVelocidad]     = useState(1);
+  const playIntervalRef = useRef(null);
+
+  // Sincronizar puntos locales cuando llegan datos del servidor
+  useEffect(() => {
+    const pts = historial?.points || [];
+    setPuntosLocales(pts);
+    onHistorialCargado?.(pts);
+    setPlaybackIdx(0);
+    setIsPlaying(false);
+    onPuntoActivo?.(null);
+  }, [historial]);
+
+  // Sincronizar estado de reproducción con el padre
+  useEffect(() => {
+    onReproduciendo?.(isPlaying);
+  }, [isPlaying]);
+
+  // Ticker de reproducción
+  const totalPoints = puntosLocales.length;
+  useEffect(() => {
+    if (!isPlaying) {
+      clearInterval(playIntervalRef.current);
+      return;
+    }
+    playIntervalRef.current = setInterval(() => {
+      setPlaybackIdx((prev) => {
+        const next = prev + 1;
+        if (next >= totalPoints) {
+          setIsPlaying(false);
+          onPuntoActivo?.(null);
+          return prev;
+        }
+        onPuntoActivo?.(next);
+        return next;
+      });
+    }, Math.round(100 / velocidad));
+    return () => clearInterval(playIntervalRef.current);
+  }, [isPlaying, totalPoints, velocidad]);
+
+  const points = puntosLocales;
+
+  const distTotal = useMemo(() => {
+    let d = 0;
+    for (let i = 1; i < points.length; i++) {
+      d += haversineKm(points[i - 1].lat, points[i - 1].lng, points[i].lat, points[i].lng);
+    }
+    return d.toFixed(1);
+  }, [points]);
+
+  // Rangos rápidos
+  const setHoy = () => {
+    setFromDt(toDatetimeLocal(today, "00:00"));
+    setToDt(toDatetimeLocal(today, "23:59"));
+  };
+  const setAyer = () => {
+    setFromDt(toDatetimeLocal(yesterday, "00:00"));
+    setToDt(toDatetimeLocal(yesterday, "23:59"));
+  };
+  const setSemana = () => {
+    const d = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0];
+    setFromDt(toDatetimeLocal(d, "00:00"));
+    setToDt(toDatetimeLocal(today, "23:59"));
+  };
+  const setMes = () => {
+    const d = new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
+    setFromDt(toDatetimeLocal(d, "00:00"));
+    setToDt(toDatetimeLocal(today, "23:59"));
+  };
+
+  const handleClear = () => {
+    clearInterval(playIntervalRef.current);
+    setPuntosLocales([]);
+    setPlaybackIdx(0);
+    setIsPlaying(false);
+    onHistorialCargado?.([]);
+    onPuntoActivo?.(null);
+  };
+
+  const mostrarRecorrido = () => {
+    clearInterval(playIntervalRef.current);
+    setPuntosLocales([]);
+    setPlaybackIdx(0);
+    setIsPlaying(false);
+    setFetchCount((c) => c + 1);
+  };
+
+  const handlePlay = () => {
+    if (playbackIdx >= totalPoints - 1) setPlaybackIdx(0);
+    setIsPlaying((p) => !p);
+  };
 
   const getNombreUnidad = (u) =>
     u.Camion ? `${u.Camion.nombre} (${u.wialon_nombre})` : u.wialon_nombre;
 
+  const unidadSeleccionada = unidades.find((u) => String(u.wialon_unit_id) === String(unitId));
+  const nombreUnidad = unidadSeleccionada ? getNombreUnidad(unidadSeleccionada) : "";
+  const fechaRuta = points.length > 0
+    ? new Date(points[0].timestamp).toLocaleDateString("es-MX")
+    : null;
+
+  const btnQuick = "flex-1 py-1 text-xs font-medium rounded border border-border text-muted-foreground hover:bg-accent hover:text-foreground transition-colors";
+  const ctrlBtn  = "p-1 text-muted-foreground hover:text-foreground transition-colors rounded disabled:opacity-40";
+
   return (
-    <div className="flex flex-col h-full gap-4">
-      {/* Controles de búsqueda */}
-      <div className="flex flex-wrap gap-3 items-end bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-        <div className="flex flex-col gap-1 flex-1 min-w-[180px]">
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+    <div className="flex flex-col h-full text-sm">
+      {/* ── Controles de búsqueda ── */}
+      <div className="p-3 border-b border-border space-y-3">
+        {/* Unidad */}
+        <div>
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide block mb-1">
             Unidad
           </label>
           <select
             value={unitId}
             onChange={(e) => setUnitId(e.target.value)}
-            className="text-sm border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            className="w-full text-xs border border-border rounded-lg px-2 py-1.5 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-yellow-400"
           >
-            <option value="">Seleccionar unidad...</option>
+            <option value="">Seleccionar...</option>
             {unidades.map((u) => (
               <option key={u.wialon_unit_id} value={u.wialon_unit_id}>
                 {getNombreUnidad(u)}
@@ -129,211 +199,159 @@ export default function HistorialGPS() {
           </select>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-            Desde
-          </label>
-          <input
-            type="date"
-            value={from}
-            max={to}
-            onChange={(e) => setFrom(e.target.value)}
-            className="text-sm border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-          />
+        {/* Botones rápidos */}
+        <div className="flex gap-1">
+          <button className={btnQuick} onClick={setHoy}>Hoy</button>
+          <button className={btnQuick} onClick={setAyer}>Ayer</button>
+          <button className={btnQuick} onClick={setSemana}>7d</button>
+          <button className={btnQuick} onClick={setMes}>30d</button>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-            Hasta
-          </label>
-          <input
-            type="date"
-            value={to}
-            min={from}
-            max={today}
-            onChange={(e) => setTo(e.target.value)}
-            className="text-sm border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-          />
+        {/* Datetime local inputs */}
+        <div className="space-y-1.5">
+          <div>
+            <label className="text-xs text-muted-foreground block mb-0.5">De</label>
+            <input
+              type="datetime-local"
+              value={fromDt}
+              onChange={(e) => setFromDt(e.target.value)}
+              className="w-full text-xs border border-border rounded-lg px-2 py-1.5 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground block mb-0.5">A</label>
+            <input
+              type="datetime-local"
+              value={toDt}
+              onChange={(e) => setToDt(e.target.value)}
+              className="w-full text-xs border border-border rounded-lg px-2 py-1.5 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            />
+          </div>
         </div>
 
+        {/* Botón buscar */}
         <button
-          onClick={() => setBuscar(true)}
-          disabled={!unitId || isLoading}
-          className="flex items-center gap-2 px-5 py-2 rounded-lg bg-yellow-400 hover:bg-yellow-500 disabled:bg-slate-200 disabled:text-slate-400 text-slate-900 text-sm font-semibold transition-colors"
+          onClick={mostrarRecorrido}
+          disabled={!unitId || isFetching}
+          className="w-full flex items-center justify-center gap-2 py-1.5 rounded-lg bg-yellow-400 hover:bg-yellow-500 disabled:bg-muted disabled:text-muted-foreground text-slate-900 text-xs font-semibold transition-colors"
         >
-          {isLoading
-            ? <Loader2 className="w-4 h-4 animate-spin" />
-            : <Search className="w-4 h-4" />}
-          Ver ruta
+          {isFetching ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
+          Mostrar recorrido
         </button>
       </div>
 
-      {/* Cuerpo: mapa + stats */}
-      <div className="flex-1 flex gap-4 min-h-0">
-        {/* Mapa de ruta — wrapper con stacking context aislado */}
-        <div className="flex-1 min-h-0" style={{ position: "relative", zIndex: 0 }}>
-          <MapContainer
-            center={center}
-            zoom={latlngs.length > 0 ? 10 : 8}
-            style={{ width: "100%", height: "100%", borderRadius: "12px" }}
-            scrollWheelZoom={true}
-            key={JSON.stringify(center)}
-          >
-            <LayersControl position="topright">
-              <LayersControl.BaseLayer checked name="Calles (OSM)">
-                <TileLayer
-                  attribution='&copy; OpenStreetMap'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-              </LayersControl.BaseLayer>
-              <LayersControl.BaseLayer name="Satélite">
-                <TileLayer
-                  attribution='&copy; Esri'
-                  url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                />
-              </LayersControl.BaseLayer>
-              <LayersControl.BaseLayer name="Oscuro">
-                <TileLayer
-                  attribution='&copy; CARTO'
-                  url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                />
-              </LayersControl.BaseLayer>
-            </LayersControl>
-
-            {latlngs.length > 1 && (
-              <>
-                <Polyline
-                  positions={latlngs}
-                  pathOptions={{ color: "#EAB308", weight: 4, opacity: 0.85 }}
-                />
-
-                {points
-                  .filter((_, i) => i % 5 === 0 && i !== 0 && i !== points.length - 1)
-                  .map((p, i) => (
-                    <CircleMarker
-                      key={i}
-                      center={[p.lat, p.lng]}
-                      radius={5}
-                      pathOptions={{ color: "#EAB308", fillColor: "#fff", fillOpacity: 1, weight: 2 }}
-                    >
-                      <Popup>
-                        <div style={{ fontSize: "12px" }}>
-                          {p.velocidad} km/h<br />
-                          <span style={{ color: "#888" }}>
-                            {new Date(p.timestamp).toLocaleTimeString("es-MX")}
-                          </span>
-                        </div>
-                      </Popup>
-                    </CircleMarker>
-                  ))}
-
-                <Marker position={latlngs[0]} icon={startIcon}>
-                  <Popup>
-                    <strong>Inicio</strong><br />
-                    {new Date(points[0].timestamp).toLocaleString("es-MX")}
-                  </Popup>
-                </Marker>
-
-                <Marker position={latlngs[latlngs.length - 1]} icon={endIcon}>
-                  <Popup>
-                    <strong>Fin</strong><br />
-                    {new Date(points[points.length - 1].timestamp).toLocaleString("es-MX")}
-                  </Popup>
-                </Marker>
-              </>
-            )}
-
-            {latlngs.length === 0 && !isLoading && (
-              <div
-                style={{
-                  position: "absolute", top: "50%", left: "50%",
-                  transform: "translate(-50%,-50%)", zIndex: 1000,
-                  background: "rgba(255,255,255,0.9)", padding: "16px 24px",
-                  borderRadius: "12px", textAlign: "center",
-                  fontSize: "14px", color: "#64748b",
-                }}
-              >
-                {unitId
-                  ? "Sin datos para el periodo seleccionado"
-                  : "Selecciona una unidad para ver su ruta"}
-              </div>
-            )}
-          </MapContainer>
-        </div>
-
-        {/* Panel de estadísticas */}
-        {stats && (
-          <div className="w-64 flex-col gap-3 hidden md:flex">
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
-                Resumen de ruta
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
-                    <Route className="w-4 h-4 text-yellow-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400">Distancia</p>
-                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{stats.distKm} km</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                    <Clock className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400">Duración</p>
-                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                      {Math.floor(stats.durMin / 60)}h {stats.durMin % 60}m
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                    <Gauge className="w-4 h-4 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400">Vel. máxima</p>
-                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{stats.maxVel} km/h</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                    <Gauge className="w-4 h-4 text-slate-500" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400">Vel. promedio</p>
-                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{stats.avgVel} km/h</p>
-                  </div>
-                </div>
+      {/* ── Resultado ── */}
+      {points.length > 0 && (
+        <div className="flex-1 overflow-y-auto">
+          {/* Fila de resultado */}
+          <div className="p-3 border-b border-border">
+            <div className="flex items-start gap-2">
+              <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0 mt-1.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-foreground truncate">{nombreUnidad}</p>
+                <p className="text-xs text-muted-foreground">{fechaRuta} · {distTotal} km</p>
               </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-4 flex-1 overflow-y-auto">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
-                Registros
-              </h3>
-              <div className="space-y-1">
-                {points.filter((_, i) => i % 5 === 0).map((p, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-slate-800"
-                  >
-                    <span className="text-xs text-slate-400">
-                      {new Date(p.timestamp).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}
-                    </span>
-                    <span className={`text-xs font-medium ${p.velocidad > 80 ? "text-red-500" : "text-slate-700 dark:text-slate-300"}`}>
-                      {p.velocidad} km/h
-                    </span>
-                    <span className="text-xs">{p.motor ? "🟢" : "⚪"}</span>
-                  </div>
-                ))}
-              </div>
+            {/* Slider */}
+            <input
+              type="range"
+              min={0}
+              max={Math.max(0, totalPoints - 1)}
+              value={playbackIdx}
+              onChange={(e) => {
+                const idx = Number(e.target.value);
+                setPlaybackIdx(idx);
+                onPuntoActivo?.(idx);
+              }}
+              className="w-full accent-yellow-400 mt-2"
+            />
+
+            {/* Info del punto actual */}
+            {points[playbackIdx] && (
+              <p className="text-xs text-muted-foreground text-center mt-0.5">
+                Punto {playbackIdx + 1} / {totalPoints}
+                {" · "}
+                {new Date(points[playbackIdx].timestamp).toLocaleTimeString("es-MX")}
+                {" · "}
+                <span className={points[playbackIdx].velocidad > 80 ? "text-red-500 font-medium" : ""}>
+                  {points[playbackIdx].velocidad} km/h
+                </span>
+              </p>
+            )}
+
+            {/* Controles de reproducción */}
+            <div className="flex items-center justify-center gap-1 mt-2">
+              <button
+                className={ctrlBtn}
+                onClick={() => { setPlaybackIdx(0); onPuntoActivo?.(0); }}
+                title="Inicio"
+              >
+                <ChevronsLeft className="w-4 h-4" />
+              </button>
+              <button
+                className={ctrlBtn}
+                onClick={() => { const i = Math.max(0, playbackIdx - 10); setPlaybackIdx(i); onPuntoActivo?.(i); }}
+                title="Retroceder 10"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                className="p-1.5 rounded-lg bg-yellow-400/20 text-yellow-600 hover:bg-yellow-400/30 transition-colors"
+                onClick={handlePlay}
+                title={isPlaying ? "Pausar" : "Reproducir"}
+              >
+                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+              </button>
+              <button
+                className={ctrlBtn}
+                onClick={() => { const i = Math.min(totalPoints - 1, playbackIdx + 10); setPlaybackIdx(i); onPuntoActivo?.(i); }}
+                title="Avanzar 10"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+              <button
+                className={ctrlBtn}
+                onClick={() => { const i = totalPoints - 1; setPlaybackIdx(i); onPuntoActivo?.(i); }}
+                title="Final"
+              >
+                <ChevronsRight className="w-4 h-4" />
+              </button>
+              <button
+                className={`${ctrlBtn} ml-1`}
+                onClick={handleClear}
+                title="Limpiar ruta"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Selector de velocidad */}
+            <div className="flex items-center justify-center gap-1 mt-2">
+              {[1, 2, 5].map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setVelocidad(v)}
+                  className={`px-2 py-0.5 text-xs rounded font-medium transition-colors border ${
+                    velocidad === v
+                      ? "bg-gm-primary/20 text-yellow-600 border-gm-primary/40"
+                      : "text-muted-foreground hover:text-foreground border-border"
+                  }`}
+                >
+                  {v}x
+                </button>
+              ))}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Placeholder vacío */}
+      {points.length === 0 && !isFetching && (
+        <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground px-4 text-center">
+          {unitId ? "Sin datos para el período seleccionado" : "Selecciona una unidad y un intervalo"}
+        </div>
+      )}
     </div>
   );
 }
