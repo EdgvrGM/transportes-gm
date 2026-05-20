@@ -1,6 +1,11 @@
 {
   "rewrites": [
     {
+      "source": "/rastreo/:token",
+      "missing": [{ "type": "query", "key": "_spa" }],
+      "destination": "/api/rastreo/:token"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

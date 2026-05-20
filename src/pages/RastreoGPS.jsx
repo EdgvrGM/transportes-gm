@@ -6,7 +6,8 @@ import ModalConfiguracion from "@/components/gps/ModalConfiguracion";
 import HistorialGPS from "@/components/gps/HistorialGPS";
 import AlertasGPS from "@/components/gps/AlertasGPS";
 import ReportesGPS from "@/components/gps/ReportesGPS";
-import { MapPin, Navigation, Bell, Settings, RefreshCw, Settings2 } from "lucide-react";
+import CompartidosGPS from "@/components/gps/CompartidosGPS";
+import { MapPin, Navigation, Bell, Settings, RefreshCw, Settings2, Share2 } from "lucide-react";
 
 const WIALON_PROXY_URL = "https://wialon-proxy.transportesgm.workers.dev";
 const WIALON_IMG_BASE  = "https://hst-api.wialon.com";
@@ -91,6 +92,19 @@ export default function RastreoGPS() {
     refetchInterval: 30000,
   });
 
+  // Conteo de links compartidos activos para el badge del tab
+  const { data: conteoCompartidos = 0 } = useQuery({
+    queryKey: ["rastreo-compartido-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("RastreoCompartido")
+        .select("*", { count: "exact", head: true })
+        .gt("expires_at", new Date().toISOString());
+      return count ?? 0;
+    },
+    refetchInterval: 60000,
+  });
+
   // Mapa rápido: wialon_unit_id → { nombre, placas }
   const vinculaciones = useMemo(() => {
     const map = {};
@@ -106,10 +120,11 @@ export default function RastreoGPS() {
   const [iconoUnidad, setIconoUnidad] = useState(null);
 
   const tabs = [
-    { id: "envivo",    label: "En vivo",   icon: Navigation },
-    { id: "historial", label: "Historial", icon: MapPin },
-    { id: "alertas",   label: "Alertas",   icon: Bell, badge: alertasNoLeidas },
-    { id: "reportes",  label: "Reportes",  icon: Settings },
+    { id: "envivo",       label: "En vivo",      icon: Navigation },
+    { id: "historial",    label: "Historial",    icon: MapPin },
+    { id: "alertas",      label: "Alertas",      icon: Bell,    badge: alertasNoLeidas,   badgeColor: "bg-red-500" },
+    { id: "reportes",     label: "Reportes",     icon: Settings },
+    { id: "compartidos",  label: "Compartidos",  icon: Share2,  badge: conteoCompartidos, badgeColor: "bg-green-600" },
   ];
 
   return (
@@ -134,7 +149,7 @@ export default function RastreoGPS() {
                 <div className="relative">
                   <Icon className="w-3.5 h-3.5" />
                   {t.badge > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                    <span className={`absolute -top-1.5 -right-1.5 w-3.5 h-3.5 ${t.badgeColor ?? "bg-red-500"} text-white text-[9px] font-bold rounded-full flex items-center justify-center`}>
                       {t.badge > 9 ? "9+" : t.badge}
                     </span>
                   )}
@@ -251,6 +266,7 @@ export default function RastreoGPS() {
           )}
           {activeTab === "alertas" && <AlertasGPS />}
           {activeTab === "reportes" && <ReportesGPS />}
+          {activeTab === "compartidos" && <CompartidosGPS positions={positions} />}
         </div>
 
         {/* Mapa siempre montado */}

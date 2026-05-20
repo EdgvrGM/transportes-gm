@@ -20,7 +20,10 @@
       "Bash(Measure-Object -Line)",
       "Bash(grep -v \"^--$\")",
       "Bash(npx eslint *)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\Joker\\\\Documents\\\\dev\\\\Version 1.1\\\\transportes-gm\\\\api\\\\rastreo\")",
+      "Bash(Out-Null)",
+      "Bash(Write-Output \"ok\")"
     ]
   }
 }

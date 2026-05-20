@@ -155,6 +155,9 @@ export default function MapaGPS({
 
   const [tooltip, setTooltip] = useState(null);
   const closeTimerRef = useRef(null);
+  const hoverTimerRef = useRef(null);
+
+  useEffect(() => () => clearTimeout(hoverTimerRef.current), []);
 
   const handleTooltipMouseEnter = useCallback(() => {
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
@@ -192,57 +195,57 @@ export default function MapaGPS({
         <BoundsController positions={positions} histLatlngs={histLatlngs} tabActivo={tabActivo} />
         <SeguimientoAuto punto={puntoActivo} reproduciendo={reproduciendo} />
 
-        {/* ── Modo En Vivo ── */}
-        {tabActivo === "envivo" && (
-          <>
-            {positions.map((p) => (
-              <RastroUnidad key={`rastro-${p.id}`} historialPos={historialRastro[p.id]} />
-            ))}
-            {positions.map((p) => {
-              if (p.lat === 0 && p.lng === 0) return null;
-              const camion = vinculaciones[p.id];
-              return (
-                <Marker
-                  key={p.id}
-                  position={[p.lat, p.lng]}
-                  icon={createUnitIcon(p.uri, p.rumbo, p.motor, p.nombre)}
-                  eventHandlers={{
-                    click: () => onMarkerClick?.(p),
-                    mouseover: (e) => {
-                      setTooltip((prev) => {
-                        if (prev?.unidad?.id === p.id) return prev;
-                        const point = e.containerPoint;
-                        const rect  = e.target._map.getContainer().getBoundingClientRect();
-                        return { unidad: p, x: rect.left + point.x, y: rect.top + point.y };
-                      });
-                    },
-                    mouseout: () => {
-                      closeTimerRef.current = setTimeout(() => setTooltip(null), 300);
-                    },
-                  }}
-                >
-                  <Popup>
-                    <div style={{ fontSize: "13px", lineHeight: 1.6, minWidth: "160px" }}>
-                      <strong>{camion ? camion.nombre : p.nombre}</strong>
-                      {camion?.placas && (
-                        <><br /><span style={{ color: "#555", fontFamily: "monospace", fontSize: "11px" }}>{camion.placas}</span></>
-                      )}
-                      <br />
-                      Velocidad: {p.velocidad} km/h<br />
-                      Rumbo: {p.rumbo}°<br />
-                      Estado: {p.motor ? "🟢 En movimiento" : "⚪ Detenido"}<br />
-                      <span style={{ color: "#888", fontSize: "11px" }}>
-                        {new Date(p.ultima_actualizacion).toLocaleTimeString("es-MX")}
-                      </span>
-                    </div>
-                  </Popup>
-                </Marker>
-              );
-            })}
-          </>
-        )}
+        {/* ── Capa 1: Marcadores en vivo — siempre visibles ── */}
+        {positions.map((p) => (
+          <RastroUnidad key={`rastro-${p.id}`} historialPos={historialRastro[p.id]} />
+        ))}
+        {positions.map((p) => {
+          if (p.lat === 0 && p.lng === 0) return null;
+          const camion = vinculaciones[p.id];
+          return (
+            <Marker
+              key={p.id}
+              position={[p.lat, p.lng]}
+              icon={createUnitIcon(p.uri, p.rumbo, p.motor, p.nombre)}
+              eventHandlers={{
+                click: () => onMarkerClick?.(p),
+                mouseover: (e) => {
+                  clearTimeout(hoverTimerRef.current);
+                  const point = e.containerPoint;
+                  const rect  = e.target._map.getContainer().getBoundingClientRect();
+                  hoverTimerRef.current = setTimeout(() => {
+                    setTooltip((prev) => {
+                      if (prev?.unidad?.id === p.id) return prev;
+                      return { unidad: p, x: rect.left + point.x, y: rect.top + point.y };
+                    });
+                  }, 500);
+                },
+                mouseout: () => {
+                  clearTimeout(hoverTimerRef.current);
+                  closeTimerRef.current = setTimeout(() => setTooltip(null), 300);
+                },
+              }}
+            >
+              <Popup>
+                <div style={{ fontSize: "13px", lineHeight: 1.6, minWidth: "160px" }}>
+                  <strong>{camion ? camion.nombre : p.nombre}</strong>
+                  {camion?.placas && (
+                    <><br /><span style={{ color: "#555", fontFamily: "monospace", fontSize: "11px" }}>{camion.placas}</span></>
+                  )}
+                  <br />
+                  Velocidad: {p.velocidad} km/h<br />
+                  Rumbo: {p.rumbo}°<br />
+                  Estado: {p.motor ? "🟢 En movimiento" : "⚪ Detenido"}<br />
+                  <span style={{ color: "#888", fontSize: "11px" }}>
+                    {new Date(p.ultima_actualizacion).toLocaleTimeString("es-MX")}
+                  </span>
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
 
-        {/* ── Modo Historial ── */}
+        {/* ── Capa 2: Ruta del historial — superpuesta cuando hay datos ── */}
         {tabActivo === "historial" && histLatlngs.length > 1 && (
           <>
             {/* Polylines: split cuando hay punto activo, segmentadas si no */}
@@ -348,7 +351,7 @@ export default function MapaGPS({
       </MapContainer>
 
       {/* Tooltip de unidad en vivo */}
-      {tooltip && tabActivo === "envivo" && (
+      {tooltip && (
         <TooltipUnidad
           unidad={tooltip.unidad}
           onClose={() => setTooltip(null)}
