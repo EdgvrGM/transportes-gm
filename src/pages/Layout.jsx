@@ -22,6 +22,7 @@ import {
   DollarSign,
   ShieldCheck,
   Navigation,
+  Wrench,
 } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
 
@@ -97,6 +98,7 @@ export default function Layout({ children, currentPageName }) {
     "IAAuditorChat",
     "DocumentacionLegal",
     "RastreoGPS",
+    "Mantenimiento",
   ];
 
   const isPublicRoute = ["/", "/home", "/login"].includes(
@@ -233,6 +235,17 @@ export default function Layout({ children, currentPageName }) {
             >
               <Navigation className="w-5 h-5" />
               <span className="font-medium">Rastreo GPS</span>
+            </Link>
+
+            {/* BOTÓN: MANTENIMIENTO (Directo) */}
+            <Link
+              to={createPageUrl("Mantenimiento")}
+              className={navItemClass(
+                location.pathname === createPageUrl("Mantenimiento"),
+              )}
+            >
+              <Wrench className="w-5 h-5" />
+              <span className="font-medium">Mantenimiento</span>
             </Link>
 
             {/* SECCIÓN: CONTROL DE COMBUSTIBLE (Desplegable) */}

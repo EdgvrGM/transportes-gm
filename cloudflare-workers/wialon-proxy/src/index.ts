@@ -93,8 +93,19 @@ async function getAddress(lat: number, lng: number): Promise<string> {
 }
 
 async function parsearPosicionCompleta(item: Record<string, unknown>, includeAddress = false) {
+  if ((item.nm as string)?.includes("37BE2D")) {
+    console.log("VOLVO DEBUG:", JSON.stringify({
+      cnm: item.cnm,
+      cneh: item.cneh,
+      sens: item.sens,
+      prms: item.prms,
+    }));
+  }
+
   const pos      = item.pos  as Record<string, number> | null;
   const sensores = (item.sens as Record<string, Record<string, unknown>>) ?? {};
+  const lmsg     = item.lmsg as Record<string, unknown> | null | undefined;
+  const params   = (lmsg?.p as Record<string, number>) ?? {};
 
   const sensoresArr = Object.values(sensores).map((s) => ({
     id:     s.id,
@@ -108,6 +119,15 @@ async function parsearPosicionCompleta(item: Record<string, unknown>, includeAdd
     direccion = await getAddress(pos.y, pos.x);
   }
 
+  const odometro = typeof item.cnm === "number" ? Math.round(item.cnm) : null;
+
+  // lmsg.p.engine_hours viene en segundos → dividir entre 3600 para horas
+  // Fallback: cneh ya viene en horas, sin conversión
+  const engineRaw = typeof params.engine_hours === "number" ? params.engine_hours : null;
+  const horas_motor = engineRaw != null
+    ? parseFloat((engineRaw / 3600).toFixed(2))
+    : typeof item.cneh === "number" ? parseFloat(item.cneh.toFixed(2)) : null;
+
   return {
     id:        item.id,
     nombre:    item.nm,
@@ -118,13 +138,11 @@ async function parsearPosicionCompleta(item: Record<string, unknown>, includeAdd
     motor:     (pos?.s ?? 0) > 2,
     satelites: pos?.sc ?? 0,
     uri:       (item.uri as string) ?? null,
-    odometro:  typeof item.cnm === "number" ? Math.round(item.cnm / 1000) : null,
-    horas_motor: typeof item.cneh === "number" ? (item.cneh / 3600).toFixed(1) : null,
+    odometro,
+    horas_motor,
     sensores:  sensoresArr,
     direccion,
-    ultima_actualizacion: pos?.t
-      ? new Date((pos.t as number) * 1000).toISOString()
-      : new Date().toISOString(),
+    ultima_actualizacion: pos?.t ?? Math.floor(Date.now() / 1000),
   };
 }
 
