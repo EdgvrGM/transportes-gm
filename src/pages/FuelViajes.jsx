@@ -44,9 +44,7 @@ import {
   Truck,
   Trash2,
   Edit,
-  Plus,
   Save,
-  X,
   ArrowRight,
   Ticket,
   Fuel,
@@ -56,8 +54,50 @@ import {
 import { format, getISOWeek, getYear } from "date-fns";
 import { es } from "date-fns/locale";
 import FiltrosViajes from "@/components/fuel/FiltrosViajes";
+import { MapContainer, TileLayer, Polyline, CircleMarker, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 
 const FECHA_LIMITE_ARCHIVO = '2026-04-24';
+
+function FitBounds({ points }) {
+  const map = useMap();
+  const fitted = useRef(false);
+  useEffect(() => {
+    if (points.length < 2 || fitted.current) return;
+    const bounds = points.map(p => [p.lat, p.lng]);
+    map.fitBounds(bounds, { padding: [24, 24], animate: true });
+    fitted.current = true;
+  }, [points]);
+  return null;
+}
+
+function SeguirPunto({ punto }) {
+  const map = useMap();
+  const prevPunto = useRef(null);
+  useEffect(() => {
+    if (!punto) return;
+    if (
+      prevPunto.current &&
+      prevPunto.current.lat === punto.lat &&
+      prevPunto.current.lng === punto.lng
+    ) return;
+    prevPunto.current = punto;
+    map.panTo([punto.lat, punto.lng], { animate: true, duration: 0.3 });
+  }, [punto]);
+  return null;
+}
+
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
 export default function FuelViajes() {
   const location = useLocation();
@@ -76,7 +116,6 @@ export default function FuelViajes() {
   const [idResaltado, setIdResaltado] = useState(stateData.scrollToId || null);
   const [filtroIdDirecto, setFiltroIdDirecto] = useState(stateData.scrollToId || null);
 
-  // Limpiar resaltado (pero mantener el filtro si el usuario así lo desea)
   useEffect(() => {
     if (stateData.scrollToId) {
       setFiltroIdDirecto(stateData.scrollToId);
@@ -86,8 +125,7 @@ export default function FuelViajes() {
     }
   }, [stateData.scrollToId]);
 
-
-
+  // CAMBIO 1: formData sin campos de rutas separadas
   const [formData, setFormData] = useState({
     fecha: "",
     fecha_llegada: "",
@@ -98,10 +136,8 @@ export default function FuelViajes() {
     camion_placas: "",
     tipo_viaje: "Sencillo",
     ruta_ida: "",
-    kilometros_ida: "",
-    rutas_adicionales: [],
-    ruta_regreso: "",
-    kilometros_regreso: "",
+    kilometros_total: "",
+    km_gps: false,
     litros_combustible: "",
     costo_combustible: "",
     casetas_ida: "",
@@ -110,6 +146,123 @@ export default function FuelViajes() {
     sinDiesel: false,
     notas: "",
   });
+
+  // CAMBIO 6: estados GPS
+  const [gpsPoints, setGpsPoints]       = useState([]);
+  const [gpsStatus, setGpsStatus]       = useState("idle");
+  // idle | loading | success | no_data | sin_gps | error
+  const [sliderInicio, setSliderInicio] = useState(0);
+  const [sliderFin, setSliderFin]       = useState(0);
+  const [kmTramo, setKmTramo]           = useState(null);
+  const [sliderActivo, setSliderActivo] = useState(null);
+  // "inicio" | "fin" | null
+
+  const frecuenciaGps = useMemo(() => {
+    if (gpsPoints.length < 2) return null;
+    let totalSegundos = 0;
+    let segmentos = 0;
+    for (let i = 1; i < Math.min(gpsPoints.length, 20); i++) {
+      const diff = new Date(gpsPoints[i].timestamp) -
+                   new Date(gpsPoints[i - 1].timestamp);
+      if (diff > 0 && diff < 600000) {
+        totalSegundos += diff / 1000;
+        segmentos++;
+      }
+    }
+    if (segmentos === 0) return null;
+    return Math.round(totalSegundos / segmentos);
+  }, [gpsPoints]);
+
+  const puntoActivo = useMemo(() => {
+    if (sliderActivo === "inicio") return gpsPoints[sliderInicio] ?? null;
+    if (sliderActivo === "fin")    return gpsPoints[sliderFin]    ?? null;
+    return null;
+  }, [sliderActivo, sliderInicio, sliderFin, gpsPoints]);
+
+  const tramoPoints = useMemo(() => {
+    if (gpsPoints.length < 2) return [];
+    return gpsPoints.slice(sliderInicio, sliderFin + 1);
+  }, [gpsPoints, sliderInicio, sliderFin]);
+
+  useEffect(() => {
+    if (tramoPoints.length < 2) {
+      setKmTramo(null);
+      return;
+    }
+    let dist = 0;
+    for (let i = 1; i < tramoPoints.length; i++) {
+      dist += haversineKm(
+        tramoPoints[i - 1].lat, tramoPoints[i - 1].lng,
+        tramoPoints[i].lat,     tramoPoints[i].lng
+      );
+    }
+    setKmTramo(Math.round(dist));
+  }, [tramoPoints]);
+
+  const fetchGpsPoints = async () => {
+    if (!formData.camion_id || !formData.fecha || !formData.fecha_llegada) return;
+
+    setGpsStatus("loading");
+    setGpsPoints([]);
+    setKmTramo(null);
+    setFormData(prev => ({ ...prev, km_gps: false }));
+
+    try {
+      const { data: unidadGPS } = await supabase
+        .from("UnidadGPS")
+        .select("wialon_unit_id")
+        .eq("camion_id", formData.camion_id)
+        .eq("activo", true)
+        .single();
+
+      if (!unidadGPS) throw new Error("sin_gps");
+
+      const fromTs = Math.floor(
+        new Date(formData.fecha + "T00:00:00").getTime() / 1000
+      );
+      const toTs = Math.floor(
+        new Date(formData.fecha_llegada + "T23:59:59").getTime() / 1000
+      );
+
+      const res = await fetch(
+        `https://wialon-proxy.transportesgm.workers.dev?action=history` +
+        `&unit=${unidadGPS.wialon_unit_id}&from=${fromTs}&to=${toTs}`
+      );
+      if (!res.ok) throw new Error("fetch_error");
+
+      const data = await res.json();
+      const points = data.points || [];
+
+      if (points.length < 2) {
+        setGpsStatus("no_data");
+        return;
+      }
+
+      setGpsPoints(points);
+      setSliderInicio(0);
+      setSliderFin(points.length - 1);
+      setGpsStatus("success");
+
+    } catch (err) {
+      setGpsStatus(err.message === "sin_gps" ? "sin_gps" : "error");
+    }
+  };
+
+  const confirmarTramo = () => {
+    if (kmTramo === null) return;
+    setFormData(prev => ({
+      ...prev,
+      kilometros_total: kmTramo,
+      km_gps: true,
+    }));
+  };
+
+  // Auto-trigger GPS cuando camian_id, fecha y fecha_llegada están listos
+  useEffect(() => {
+    if (dialogAbierto && formData.camion_id && formData.fecha && formData.fecha_llegada) {
+      fetchGpsPoints();
+    }
+  }, [formData.camion_id, formData.fecha, formData.fecha_llegada]);
 
   const { data: viajes = [], isLoading } = useQuery({
     queryKey: ["viajes"],
@@ -175,14 +328,10 @@ export default function FuelViajes() {
 
   const getClienteDelViaje = (viaje) => {
     if (!viaje) return null;
-    
-    // 1. Intento por ID directo (el más preciso)
     let vr = null;
     if (viaje.viaje_id) {
       vr = viajesRegistrados.find((v) => String(v.id) === String(viaje.viaje_id));
     }
-    
-    // 2. Intento por Validación Inteligente (Misma que Programa de Cargas)
     if (!vr) {
       const fechaBusqueda = viaje.fecha ? viaje.fecha.split("T")[0] : "";
       vr = viajesRegistrados.find((v) => {
@@ -192,7 +341,6 @@ export default function FuelViajes() {
         return matchFecha && matchConductor && matchCamion;
       });
     }
-
     if (!vr) return null;
     const cliente = clientes.find((c) => String(c.id) === String(vr.cliente_id));
     return cliente ? cliente.nombre : null;
@@ -240,14 +388,10 @@ export default function FuelViajes() {
     },
     onSuccess: async (data, variables) => {
       try {
-        // Sincronizar estado con viajes_registrados
         const hasFuel = parseFloat(variables.data.litros_combustible || 0) > 0;
-        
-        // Match por fecha/conductor/camion (ya que Viaje no tiene viaje_id)
-        const fechaMatch = typeof variables.data.fecha === 'string' 
-          ? variables.data.fecha.split("T")[0] 
+        const fechaMatch = typeof variables.data.fecha === 'string'
+          ? variables.data.fecha.split("T")[0]
           : variables.data.fecha;
-
         await supabase
           .from("viajes_registrados")
           .update({ combustible_registrado: hasFuel })
@@ -257,9 +401,8 @@ export default function FuelViajes() {
             camion_id: variables.data.camion_id
           });
       } catch (_err) {
-        // Sync failure is non-critical; viajes query is still invalidated below
+        // Sync failure is non-critical
       }
-
       queryClient.invalidateQueries({ queryKey: ["viajes"] });
       queryClient.invalidateQueries({ queryKey: ["viajesRegistrados"] });
       cerrarDialog();
@@ -320,15 +463,19 @@ export default function FuelViajes() {
     if (viajeAEliminar) eliminarMutation.mutate(viajeAEliminar.id);
   };
 
+  // CAMBIO 2 + reset GPS al abrir
   const abrirDialogEditar = (viaje) => {
     setViajeEditando(viaje);
-    const rutasAdicionales = Array.isArray(viaje.rutas_adicionales)
-      ? viaje.rutas_adicionales
-      : [];
-    
-    // Normalizar fechas para los inputs tipo date (YYYY-MM-DD)
     const fSalida = viaje.fecha ? viaje.fecha.split("T")[0] : "";
     const fLlegada = viaje.fecha_llegada ? viaje.fecha_llegada.split("T")[0] : "";
+
+    // Resetear estado GPS antes de abrir
+    setGpsPoints([]);
+    setGpsStatus("idle");
+    setSliderInicio(0);
+    setSliderFin(0);
+    setKmTramo(null);
+    setSliderActivo(null);
 
     setFormData({
       fecha: fSalida,
@@ -340,10 +487,9 @@ export default function FuelViajes() {
       camion_placas: viaje.camion_placas || "",
       tipo_viaje: viaje.tipo_viaje || "Sencillo",
       ruta_ida: viaje.ruta_ida || viaje.ruta || "",
-      kilometros_ida: viaje.kilometros_ida || viaje.kilometros || "",
-      rutas_adicionales: rutasAdicionales,
-      ruta_regreso: viaje.ruta_regreso || "",
-      kilometros_regreso: viaje.kilometros_regreso || "",
+      // CAMBIO 2: nuevo formato km
+      kilometros_total: viaje.kilometros_total || viaje.kilometros || "",
+      km_gps: viaje.km_gps || false,
       litros_combustible: viaje.litros_combustible ?? "",
       costo_combustible: viaje.costo_combustible ?? "",
       sinDiesel: viaje.litros_combustible === 0,
@@ -358,7 +504,6 @@ export default function FuelViajes() {
     setDialogAbierto(true);
   };
 
-  // Efecto para abrir edición automáticamente si viene del programa de cargas
   const autoOpenedRef = useRef(false);
   useEffect(() => {
     if (stateData.editId && viajes.length > 0 && !autoOpenedRef.current) {
@@ -370,9 +515,12 @@ export default function FuelViajes() {
     }
   }, [stateData.editId, viajes]);
 
+  // CAMBIO 3: cerrarDialog sin campos de rutas separadas
   const cerrarDialog = () => {
     setDialogAbierto(false);
     setViajeEditando(null);
+    setGpsPoints([]);
+    setGpsStatus("idle");
     setFormData({
       fecha: "",
       fecha_llegada: "",
@@ -383,10 +531,8 @@ export default function FuelViajes() {
       camion_placas: "",
       tipo_viaje: "Sencillo",
       ruta_ida: "",
-      kilometros_ida: "",
-      rutas_adicionales: [],
-      ruta_regreso: "",
-      kilometros_regreso: "",
+      kilometros_total: "",
+      km_gps: false,
       litros_combustible: "",
       costo_combustible: "",
       casetas_ida: "",
@@ -415,36 +561,12 @@ export default function FuelViajes() {
       camion_placas: camion?.placas || "",
     }));
   };
-  const agregarRutaAdicional = () =>
-    setFormData((prev) => ({
-      ...prev,
-      rutas_adicionales: [
-        ...prev.rutas_adicionales,
-        { ruta: "", kilometros: "" },
-      ],
-    }));
-  const eliminarRutaAdicional = (index) =>
-    setFormData((prev) => ({
-      ...prev,
-      rutas_adicionales: prev.rutas_adicionales.filter((_, i) => i !== index),
-    }));
-  const actualizarRutaAdicional = (index, campo, valor) => {
-    const nuevasRutas = [...formData.rutas_adicionales];
-    if (nuevasRutas[index]) {
-      nuevasRutas[index][campo] = valor;
-      setFormData((prev) => ({ ...prev, rutas_adicionales: nuevasRutas }));
-    }
-  };
 
+  // CAMBIO 4: handleSubmit sin km separados
   const handleSubmit = (e) => {
     e.preventDefault();
-    const kmIda = parseFloat(formData.kilometros_ida) || 0;
-    const kmRegreso = parseFloat(formData.kilometros_regreso) || 0;
-    const kmAdicionales = formData.rutas_adicionales.reduce(
-      (sum, ruta) => sum + parseFloat(ruta.kilometros || 0),
-      0,
-    );
-    const kmTotal = kmIda + kmAdicionales + kmRegreso;
+    const kmTotal = parseFloat(formData.kilometros_total) || 0;
+
     let litros = formData.litros_combustible !== "" ? parseFloat(formData.litros_combustible) : null;
     let costoFuel = formData.costo_combustible !== "" ? parseFloat(formData.costo_combustible) : null;
 
@@ -477,16 +599,10 @@ export default function FuelViajes() {
       camion_placas: formData.camion_placas,
       tipo_viaje: formData.tipo_viaje,
       ruta_ida: formData.ruta_ida,
-      kilometros_ida: kmIda,
-      rutas_adicionales: formData.rutas_adicionales.map((r) => ({
-        ruta: r.ruta,
-        kilometros: parseFloat(r.kilometros || 0),
-      })),
-      ruta_regreso: formData.ruta_regreso,
-      kilometros_regreso: kmRegreso,
       kilometros_total: kmTotal,
-      litros_combustible: litros,
+      km_gps: formData.km_gps,
       km_por_litro: (litros && litros > 0) ? kmTotal / litros : 0,
+      litros_combustible: litros,
       costo_combustible: costoFuel,
       casetas_ida: casetasIda,
       casetas_regreso: casetasRegreso,
@@ -506,7 +622,6 @@ export default function FuelViajes() {
     return "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800";
   };
 
-  // Funciones corregidas sin usar Math.round()
   const formatCurrency = (amount) =>
     Number(amount).toLocaleString("en-US", {
       minimumFractionDigits: 0,
@@ -562,7 +677,7 @@ export default function FuelViajes() {
           />
         </div>
 
-        {/* TARJETAS RESUMEN ARRIBA */}
+        {/* TARJETAS RESUMEN */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
           <Card className="border-none shadow-lg bg-card">
             <CardContent className="p-6">
@@ -571,12 +686,8 @@ export default function FuelViajes() {
                   <FileText className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground font-medium">
-                    Total Viajes
-                  </p>
-                  <p className="text-2xl font-bold text-foreground">
-                    {formatNumber(viajesFiltrados.length, 0)}
-                  </p>
+                  <p className="text-sm text-muted-foreground font-medium">Total Viajes</p>
+                  <p className="text-2xl font-bold text-foreground">{formatNumber(viajesFiltrados.length, 0)}</p>
                 </div>
               </div>
             </CardContent>
@@ -588,17 +699,9 @@ export default function FuelViajes() {
                   <MapPin className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground font-medium">
-                    Kilómetros
-                  </p>
+                  <p className="text-sm text-muted-foreground font-medium">Kilómetros</p>
                   <p className="text-2xl font-bold text-foreground">
-                    {formatNumber(
-                      viajesFiltrados.reduce(
-                        (sum, v) => sum + (v.kilometros_total || 0),
-                        0,
-                      ),
-                      0,
-                    )}
+                    {formatNumber(viajesFiltrados.reduce((sum, v) => sum + (v.kilometros_total || 0), 0), 0)}
                   </p>
                 </div>
               </div>
@@ -611,17 +714,9 @@ export default function FuelViajes() {
                   <Gauge className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground font-medium">
-                    Litros
-                  </p>
+                  <p className="text-sm text-muted-foreground font-medium">Litros</p>
                   <p className="text-2xl font-bold text-foreground">
-                    {formatNumber(
-                      viajesFiltrados.reduce(
-                        (sum, v) => sum + (v.litros_combustible || 0),
-                        0,
-                      ),
-                      0,
-                    )}
+                    {formatNumber(viajesFiltrados.reduce((sum, v) => sum + (v.litros_combustible || 0), 0), 0)}
                   </p>
                 </div>
               </div>
@@ -634,22 +729,12 @@ export default function FuelViajes() {
                   <Gauge className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground font-medium">
-                    Promedio
-                  </p>
+                  <p className="text-sm text-muted-foreground font-medium">Promedio</p>
                   <p className="text-2xl font-bold text-foreground">
                     {(() => {
-                      const totalKm = viajesFiltrados.reduce(
-                        (sum, v) => sum + (v.kilometros_total || 0),
-                        0,
-                      );
-                      const totalLitros = viajesFiltrados.reduce(
-                        (sum, v) => sum + (v.litros_combustible || 0),
-                        0,
-                      );
-                      return totalLitros > 0
-                        ? formatNumber(totalKm / totalLitros, 2)
-                        : "0.00";
+                      const totalKm = viajesFiltrados.reduce((sum, v) => sum + (v.kilometros_total || 0), 0);
+                      const totalLitros = viajesFiltrados.reduce((sum, v) => sum + (v.litros_combustible || 0), 0);
+                      return totalLitros > 0 ? formatNumber(totalKm / totalLitros, 2) : "0.00";
                     })()}
                   </p>
                 </div>
@@ -665,9 +750,9 @@ export default function FuelViajes() {
                 Historial de Viajes
               </CardTitle>
               {filtroIdDirecto && (
-                <Button 
-                  variant="secondary" 
-                  size="sm" 
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={() => setFiltroIdDirecto(null)}
                   className="rounded-xl font-bold bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/40 dark:text-indigo-300"
                 >
@@ -687,26 +772,18 @@ export default function FuelViajes() {
             ) : (
               <div className="space-y-4">
                 {viajesFiltrados.map((viaje) => {
-                  const rutasAdicionales = Array.isArray(
-                    viaje.rutas_adicionales,
-                  )
-                    ? viaje.rutas_adicionales
-                    : [];
-                  const tieneRegreso =
-                    viaje.ruta_regreso && viaje.kilometros_regreso;
+                  const rutasAdicionales = Array.isArray(viaje.rutas_adicionales) ? viaje.rutas_adicionales : [];
+                  const tieneRegreso = viaje.ruta_regreso && viaje.kilometros_regreso;
                   const tieneAdicionales = rutasAdicionales.length > 0;
                   const rutaPrincipal = viaje.ruta_ida || viaje.ruta || "-";
                   const clienteDelViaje = getClienteDelViaje(viaje);
-                  const kmTotal =
-                    viaje.kilometros_total || viaje.kilometros || 0;
+                  const kmTotal = viaje.kilometros_total || viaje.kilometros || 0;
                   const litros = viaje.litros_combustible || 0;
                   const eficiencia = viaje.km_por_litro || 0;
                   const tipoViaje = viaje.tipo_viaje || "Sencillo";
                   const isFull = tipoViaje === "FULL";
-
                   const costoCombustible = viaje.costo_combustible || 0;
-                  const costoCasetas =
-                    (viaje.casetas_ida || 0) + (viaje.casetas_regreso || 0);
+                  const costoCasetas = (viaje.casetas_ida || 0) + (viaje.casetas_regreso || 0);
 
                   return (
                     <Card
@@ -728,15 +805,9 @@ export default function FuelViajes() {
                                     <Calendar className="w-4 h-4 lg:w-5 lg:h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
                                   </div>
                                   <div>
-                                    <span className="block text-[10px] lg:text-xs uppercase font-black text-muted-foreground tracking-widest">
-                                      Salida
-                                    </span>
+                                    <span className="block text-[10px] lg:text-xs uppercase font-black text-muted-foreground tracking-widest">Salida</span>
                                     <span className="text-sm lg:text-base font-black text-foreground whitespace-nowrap">
-                                      {format(
-                                        new Date(`${viaje.fecha}T12:00:00`),
-                                        "dd MMM",
-                                        { locale: es },
-                                      )}
+                                      {format(new Date(`${viaje.fecha}T12:00:00`), "dd MMM", { locale: es })}
                                     </span>
                                   </div>
                                 </div>
@@ -746,17 +817,9 @@ export default function FuelViajes() {
                                       <ArrowRight className="w-4 h-4 lg:w-5 lg:h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
                                     </div>
                                     <div>
-                                      <span className="block text-[10px] lg:text-xs uppercase font-black text-muted-foreground tracking-widest">
-                                        Llegada
-                                      </span>
+                                      <span className="block text-[10px] lg:text-xs uppercase font-black text-muted-foreground tracking-widest">Llegada</span>
                                       <span className="text-sm lg:text-base font-black text-foreground whitespace-nowrap">
-                                        {format(
-                                          new Date(
-                                            `${viaje.fecha_llegada}T12:00:00`,
-                                          ),
-                                          "dd MMM",
-                                          { locale: es },
-                                        )}
+                                        {format(new Date(`${viaje.fecha_llegada}T12:00:00`), "dd MMM", { locale: es })}
                                       </span>
                                     </div>
                                   </div>
@@ -766,9 +829,7 @@ export default function FuelViajes() {
                                 {viaje.conductor_nombre && (
                                   <div className="flex items-center gap-2 lg:gap-3">
                                     <User className="w-4 h-4 lg:w-5 lg:h-5 text-slate-400 flex-shrink-0" />
-                                    <span className="text-xs lg:text-sm font-bold text-foreground line-clamp-1">
-                                      {viaje.conductor_nombre}
-                                    </span>
+                                    <span className="text-xs lg:text-sm font-bold text-foreground line-clamp-1">{viaje.conductor_nombre}</span>
                                   </div>
                                 )}
                                 {viaje.camion_nombre && (
@@ -803,9 +864,7 @@ export default function FuelViajes() {
                                 {clienteDelViaje && (
                                   <div className="flex items-center gap-2 mb-1 p-1.5 lg:p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 w-fit">
                                     <Briefcase className="w-3 h-3 lg:w-4 lg:h-4 text-indigo-500" />
-                                    <span className="text-[11px] lg:text-sm font-black uppercase tracking-widest text-slate-800 dark:text-slate-100 line-clamp-1">
-                                      {clienteDelViaje}
-                                    </span>
+                                    <span className="text-[11px] lg:text-sm font-black uppercase tracking-widest text-slate-800 dark:text-slate-100 line-clamp-1">{clienteDelViaje}</span>
                                   </div>
                                 )}
                                 <Badge
@@ -816,28 +875,18 @@ export default function FuelViajes() {
                                 </Badge>
                                 <div className="flex items-start gap-2 lg:gap-3">
                                   <MapPin className="w-4 h-4 lg:w-5 lg:h-5 text-red-500 dark:text-red-400 mt-0.5 flex-shrink-0" />
-                                  <span className="text-sm lg:text-base font-bold text-foreground leading-tight line-clamp-2">
-                                    {rutaPrincipal}
-                                  </span>
+                                  <span className="text-sm lg:text-base font-bold text-foreground leading-tight line-clamp-2">{rutaPrincipal}</span>
                                 </div>
-                                {tieneAdicionales &&
-                                  rutasAdicionales.map((rutaAd, idx) => (
-                                    <div
-                                      key={idx}
-                                      className="flex items-start gap-2 ml-6"
-                                    >
-                                      <Route className="w-3 h-3 text-purple-500 dark:text-purple-400 mt-0.5 flex-shrink-0" />
-                                      <span className="text-sm text-muted-foreground">
-                                        {rutaAd.ruta}
-                                      </span>
-                                    </div>
-                                  ))}
+                                {tieneAdicionales && rutasAdicionales.map((rutaAd, idx) => (
+                                  <div key={idx} className="flex items-start gap-2 ml-6">
+                                    <Route className="w-3 h-3 text-purple-500 dark:text-purple-400 mt-0.5 flex-shrink-0" />
+                                    <span className="text-sm text-muted-foreground">{rutaAd.ruta}</span>
+                                  </div>
+                                ))}
                                 {tieneRegreso && (
                                   <div className="flex items-start gap-2">
                                     <ArrowLeftRight className="w-4 h-4 text-orange-500 dark:text-orange-400 mt-0.5 flex-shrink-0" />
-                                    <span className="text-sm text-foreground">
-                                      {viaje.ruta_regreso}
-                                    </span>
+                                    <span className="text-sm text-foreground">{viaje.ruta_regreso}</span>
                                   </div>
                                 )}
                               </div>
@@ -847,22 +896,16 @@ export default function FuelViajes() {
                             <div className="space-y-3">
                               <div className="space-y-2.5">
                                 <div className="flex items-center justify-between">
-                                  <span className="text-[10px] lg:text-xs font-bold text-muted-foreground uppercase">
-                                    Kilómetros:
-                                  </span>
+                                  <span className="text-[10px] lg:text-xs font-bold text-muted-foreground uppercase">Kilómetros:</span>
                                   <span className="text-sm lg:text-base font-black text-foreground">
                                     {formatNumber(kmTotal, 0)} <span className="text-[10px] lg:text-xs font-medium opacity-60">KM</span>
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                  <span className="text-[10px] lg:text-xs font-bold text-muted-foreground uppercase">
-                                    Litros:
-                                  </span>
+                                  <span className="text-[10px] lg:text-xs font-bold text-muted-foreground uppercase">Litros:</span>
                                   <span className="text-sm lg:text-base font-black text-foreground text-right">
                                     {litros > 0 ? (
-                                      <>
-                                        {formatNumber(litros, 0)} <span className="text-[10px] lg:text-xs font-medium opacity-60">L</span>
-                                      </>
+                                      <>{formatNumber(litros, 0)} <span className="text-[10px] lg:text-xs font-medium opacity-60">L</span></>
                                     ) : (
                                       <span className="text-[9px] lg:text-[11px] font-black text-red-500 uppercase tracking-tighter bg-red-50 dark:bg-red-950/30 px-2 py-0.5 rounded-md border border-red-200 dark:border-red-900/50">
                                         Sin consumo registrado
@@ -872,23 +915,15 @@ export default function FuelViajes() {
                                 </div>
                                 {costoCombustible > 0 && (
                                   <div className="flex items-center justify-between">
-                                    <span className="text-[10px] lg:text-xs font-bold text-muted-foreground uppercase">
-                                      Combustible:
-                                    </span>
-                                    <span className="text-sm lg:text-base font-black text-foreground">
-                                      ${formatCurrency(costoCombustible)}
-                                    </span>
+                                    <span className="text-[10px] lg:text-xs font-bold text-muted-foreground uppercase">Combustible:</span>
+                                    <span className="text-sm lg:text-base font-black text-foreground">${formatCurrency(costoCombustible)}</span>
                                   </div>
                                 )}
                                 {costoCasetas > 0 && (
                                   <div className="space-y-1.5 mt-1">
                                     <div className="flex items-center justify-between">
-                                      <span className="text-[10px] lg:text-xs font-bold text-muted-foreground uppercase">
-                                        CASETAS:
-                                      </span>
-                                      <span className="text-sm lg:text-base font-black text-foreground">
-                                        ${formatCurrency(costoCasetas)}
-                                      </span>
+                                      <span className="text-[10px] lg:text-xs font-bold text-muted-foreground uppercase">CASETAS:</span>
+                                      <span className="text-sm lg:text-base font-black text-foreground">${formatCurrency(costoCasetas)}</span>
                                     </div>
                                     <div className="flex flex-col items-end space-y-0.5">
                                       <div className="flex items-center gap-1.5 lg:gap-2 px-1.5 lg:px-2 py-0.5 rounded bg-slate-50 dark:bg-slate-800/50 border border-border/40">
@@ -916,9 +951,7 @@ export default function FuelViajes() {
                                   {formatNumber(eficiencia, 2)} km/L
                                 </Badge>
                                 {viaje.notas && (
-                                  <p className="text-xs text-muted-foreground text-center mt-2 line-clamp-2">
-                                    {viaje.notas}
-                                  </p>
+                                  <p className="text-xs text-muted-foreground text-center mt-2 line-clamp-2">{viaje.notas}</p>
                                 )}
                               </div>
                             </div>
@@ -953,6 +986,7 @@ export default function FuelViajes() {
           </CardContent>
         </Card>
 
+        {/* CAMBIO 7: Dialog de edición con selector GPS */}
         <Dialog open={dialogAbierto} onOpenChange={cerrarDialog}>
           <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto bg-card border-border">
             <DialogHeader>
@@ -960,7 +994,7 @@ export default function FuelViajes() {
                 Editar Viaje
               </DialogTitle>
             </DialogHeader>
-             <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+            <form onSubmit={handleSubmit} className="space-y-6 mt-4">
               {clienteDelFormData && (
                 <div className="p-4 bg-slate-100/50 dark:bg-muted/30 border border-border rounded-xl flex items-center gap-3">
                   <Briefcase className="w-5 h-5 text-muted-foreground" />
@@ -972,10 +1006,7 @@ export default function FuelViajes() {
               )}
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="edit-fecha"
-                    className="font-semibold text-foreground"
-                  >
+                  <Label htmlFor="edit-fecha" className="font-semibold text-foreground">
                     Salida <span className="text-red-500">*</span>
                   </Label>
                   <div className="relative group/date cursor-pointer" onClick={(e) => e.currentTarget.querySelector('input')?.showPicker()}>
@@ -984,19 +1015,14 @@ export default function FuelViajes() {
                       id="edit-fecha"
                       type="date"
                       value={formData.fecha}
-                      onChange={(e) =>
-                        setFormData({ ...formData, fecha: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, fecha: e.target.value })}
                       required
                       className="pl-10 bg-background border-input cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="edit-fecha-llegada"
-                    className="font-semibold text-foreground"
-                  >
+                  <Label htmlFor="edit-fecha-llegada" className="font-semibold text-foreground">
                     Llegada
                   </Label>
                   <div className="relative group/date cursor-pointer" onClick={(e) => e.currentTarget.querySelector('input')?.showPicker()}>
@@ -1005,58 +1031,37 @@ export default function FuelViajes() {
                       id="edit-fecha-llegada"
                       type="date"
                       value={formData.fecha_llegada}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          fecha_llegada: e.target.value,
-                        })
-                      }
+                      onChange={(e) => setFormData({ ...formData, fecha_llegada: e.target.value })}
                       className="pl-10 bg-background border-input cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="edit-conductor"
-                    className="font-semibold text-foreground"
-                  >
+                  <Label htmlFor="edit-conductor" className="font-semibold text-foreground">
                     Conductor
                   </Label>
-                  <Select
-                    value={formData.conductor_id}
-                    onValueChange={handleConductorChange}
-                  >
+                  <Select value={formData.conductor_id} onValueChange={handleConductorChange}>
                     <SelectTrigger className="bg-background border-input">
                       <SelectValue placeholder="Seleccionar" />
                     </SelectTrigger>
                     <SelectContent>
                       {conductores.map((c) => (
-                        <SelectItem key={c.id} value={String(c.id)}>
-                          {c.nombre}
-                        </SelectItem>
+                        <SelectItem key={c.id} value={String(c.id)}>{c.nombre}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="edit-camion"
-                    className="font-semibold text-foreground"
-                  >
+                  <Label htmlFor="edit-camion" className="font-semibold text-foreground">
                     Camión
                   </Label>
-                  <Select
-                    value={formData.camion_id}
-                    onValueChange={handleCamionChange}
-                  >
+                  <Select value={formData.camion_id} onValueChange={handleCamionChange}>
                     <SelectTrigger className="bg-background border-input">
                       <SelectValue placeholder="Seleccionar" />
                     </SelectTrigger>
                     <SelectContent>
                       {camiones.map((c) => (
-                        <SelectItem key={c.id} value={String(c.id)}>
-                          {c.nombre} - {c.placas}
-                        </SelectItem>
+                        <SelectItem key={c.id} value={String(c.id)}>{c.nombre} - {c.placas}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -1067,9 +1072,7 @@ export default function FuelViajes() {
                   </Label>
                   <Select
                     value={formData.tipo_viaje}
-                    onValueChange={(val) =>
-                      setFormData({ ...formData, tipo_viaje: val })
-                    }
+                    onValueChange={(val) => setFormData({ ...formData, tipo_viaje: val })}
                     required
                   >
                     <SelectTrigger className="bg-background border-input">
@@ -1083,9 +1086,7 @@ export default function FuelViajes() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="font-semibold text-foreground">
-                    Remolque 1
-                  </Label>
+                  <Label className="font-semibold text-foreground">Remolque 1</Label>
                   <Select
                     value={formData.remolque_id}
                     onValueChange={(val) => setFormData({ ...formData, remolque_id: val })}
@@ -1108,9 +1109,7 @@ export default function FuelViajes() {
 
                 {formData.tipo_viaje === "FULL" && (
                   <div className="space-y-2">
-                    <Label className="font-semibold text-foreground">
-                      Remolque 2
-                    </Label>
+                    <Label className="font-semibold text-foreground">Remolque 2</Label>
                     <Select
                       value={formData.remolque2_id}
                       onValueChange={(val) => setFormData({ ...formData, remolque2_id: val })}
@@ -1133,161 +1132,238 @@ export default function FuelViajes() {
                 )}
               </div>
 
+              {/* CAMBIO 7: sección de ruta unificada con selector GPS */}
               <div className="space-y-4 p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-900">
-                <h3 className="font-bold text-foreground">Ruta de Ida</h3>
+                <div className="flex items-center gap-2 mb-2">
+                  <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <h3 className="font-bold text-foreground">Ruta del viaje</h3>
+                </div>
+
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label
-                      htmlFor="edit-ruta-ida"
-                      className="font-semibold text-foreground"
-                    >
+                    <Label htmlFor="edit-ruta-ida" className="font-semibold text-foreground">
                       Ruta <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="edit-ruta-ida"
                       value={formData.ruta_ida}
-                      onChange={(e) =>
-                        setFormData({ ...formData, ruta_ida: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, ruta_ida: e.target.value })}
                       required
                       className="bg-background border-input"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label
-                      htmlFor="edit-km-ida"
-                      className="font-semibold text-foreground"
-                    >
-                      Kilómetros <span className="text-red-500">*</span>
+                    <Label className="font-semibold text-foreground">
+                      Kilómetros totales del viaje <span className="text-red-500">*</span>
                     </Label>
-                    <Input
-                      id="edit-km-ida"
-                      type="number"
-                      step="0.1"
-                      value={formData.kilometros_ida}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          kilometros_ida: e.target.value,
-                        })
-                      }
-                      required
-                      className="bg-background border-input"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4 p-4 bg-purple-50/50 dark:bg-purple-900/10 rounded-lg border border-purple-100 dark:border-purple-900">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-foreground">
-                    Rutas Adicionales
-                  </h3>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={agregarRutaAdicional}
-                    className="gap-2 bg-background hover:bg-muted"
-                  >
-                    <Plus className="w-4 h-4" /> Agregar Ruta
-                  </Button>
-                </div>
-                {Array.isArray(formData.rutas_adicionales) &&
-                  formData.rutas_adicionales.length > 0 && (
-                    <div className="space-y-3">
-                      {formData.rutas_adicionales.map((ruta, index) => (
-                        <div
-                          key={index}
-                          className="grid md:grid-cols-[1fr_auto_auto] gap-3 p-3 bg-background/50 rounded-lg border border-border"
-                        >
-                          <Input
-                            placeholder="Ej: Ciudad B - Ciudad C"
-                            value={ruta.ruta || ""}
-                            onChange={(e) =>
-                              actualizarRutaAdicional(
-                                index,
-                                "ruta",
-                                e.target.value,
-                              )
-                            }
-                            className="bg-background border-input"
-                          />
-                          <Input
-                            type="number"
-                            step="0.1"
-                            placeholder="km"
-                            value={ruta.kilometros || ""}
-                            onChange={(e) =>
-                              actualizarRutaAdicional(
-                                index,
-                                "kilometros",
-                                e.target.value,
-                              )
-                            }
-                            className="w-32 bg-background border-input"
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => eliminarRutaAdicional(index)}
-                            className="hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-400"
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ))}
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        step="1"
+                        value={formData.kilometros_total}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          kilometros_total: e.target.value,
+                          km_gps: false,
+                        }))}
+                        required
+                        placeholder="km"
+                        className={`bg-background border-input flex-1 ${
+                          formData.km_gps
+                            ? "border-green-500 bg-green-50/50 dark:bg-green-900/10"
+                            : ""
+                        }`}
+                      />
+                      {formData.km_gps && (
+                        <span className="flex items-center gap-1 text-xs text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-md border border-green-200 dark:border-green-800 whitespace-nowrap">
+                          <span>📡</span> GPS
+                        </span>
+                      )}
                     </div>
-                  )}
-              </div>
-
-              <div className="space-y-4 p-4 bg-orange-50/50 dark:bg-orange-900/10 rounded-lg border border-orange-100 dark:border-orange-900">
-                <h3 className="font-bold text-foreground">Ruta de Regreso</h3>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="edit-ruta-regreso"
-                      className="font-semibold text-foreground"
-                    >
-                      Ruta <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="edit-ruta-regreso"
-                      value={formData.ruta_regreso}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          ruta_regreso: e.target.value,
-                        })
-                      }
-                      required
-                      className="bg-background border-input"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="edit-km-regreso"
-                      className="font-semibold text-foreground"
-                    >
-                      Kilómetros <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="edit-km-regreso"
-                      type="number"
-                      step="0.1"
-                      value={formData.kilometros_regreso}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          kilometros_regreso: e.target.value,
-                        })
-                      }
-                      required
-                      className="bg-background border-input"
-                    />
                   </div>
                 </div>
+
+                {gpsStatus === "loading" && (
+                  <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Obteniendo recorrido GPS...
+                  </div>
+                )}
+                {gpsStatus === "sin_gps" && (
+                  <p className="mt-3 text-xs text-amber-600 dark:text-amber-400">
+                    Esta unidad no tiene GPS vinculado — ingresa los km manualmente
+                  </p>
+                )}
+                {gpsStatus === "no_data" && (
+                  <p className="mt-3 text-xs text-amber-600 dark:text-amber-400">
+                    Sin datos GPS para este rango de fechas — ingresa los km manualmente
+                  </p>
+                )}
+                {gpsStatus === "error" && (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    No se pudo conectar con GPS — ingresa los km manualmente
+                  </p>
+                )}
+
+                {gpsStatus === "success" && (
+                  <div className="mt-4 p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-900 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-foreground">Selector de tramo GPS</p>
+                      <span className="text-xs text-muted-foreground">
+                        {gpsPoints.length} puntos
+                        {frecuenciaGps !== null && (
+                          <> · reporte cada {
+                            frecuenciaGps < 60
+                              ? `${frecuenciaGps}s`
+                              : `${Math.round(frecuenciaGps / 60)} min`
+                          }</>
+                        )}
+                      </span>
+                    </div>
+
+                    {/* Slider inicio */}
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <label className="text-xs font-medium text-muted-foreground">Inicio del viaje</label>
+                        <span className="text-xs font-medium text-foreground">
+                          {gpsPoints[sliderInicio]
+                            ? new Date(gpsPoints[sliderInicio].timestamp).toLocaleString("es-MX", {
+                                weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+                              })
+                            : "—"}
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min={0}
+                        max={gpsPoints.length - 1}
+                        value={sliderInicio}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setSliderInicio(val);
+                          setSliderActivo("inicio");
+                          if (val >= sliderFin) setSliderFin(Math.min(val + 1, gpsPoints.length - 1));
+                        }}
+                        className="w-full accent-blue-500"
+                      />
+                    </div>
+
+                    {/* Slider fin */}
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <label className="text-xs font-medium text-muted-foreground">Fin del viaje</label>
+                        <span className="text-xs font-medium text-foreground">
+                          {gpsPoints[sliderFin]
+                            ? new Date(gpsPoints[sliderFin].timestamp).toLocaleString("es-MX", {
+                                weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+                              })
+                            : "—"}
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min={0}
+                        max={gpsPoints.length - 1}
+                        value={sliderFin}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setSliderFin(val);
+                          setSliderActivo("fin");
+                          if (val <= sliderInicio) setSliderInicio(Math.max(val - 1, 0));
+                        }}
+                        className="w-full accent-blue-500"
+                      />
+                    </div>
+
+                    {/* Mini-mapa */}
+                    <div
+                      style={{ position: "relative", zIndex: 0 }}
+                      className="rounded-lg overflow-hidden border border-blue-100 dark:border-blue-900"
+                    >
+                      <MapContainer
+                        center={
+                          tramoPoints.length > 0
+                            ? [tramoPoints[0].lat, tramoPoints[0].lng]
+                            : [19.05, -104.31]
+                        }
+                        zoom={10}
+                        style={{ height: "220px", width: "100%" }}
+                        zoomControl={true}
+                        scrollWheelZoom={true}
+                        attributionControl={false}
+                      >
+                        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                        <FitBounds points={tramoPoints} />
+                        <SeguirPunto punto={puntoActivo} />
+
+                        {gpsPoints.length > 1 && (
+                          <Polyline
+                            positions={gpsPoints.map(p => [p.lat, p.lng])}
+                            pathOptions={{ color: "#94a3b8", weight: 2, opacity: 0.4 }}
+                          />
+                        )}
+                        {tramoPoints.length > 1 && (
+                          <Polyline
+                            positions={tramoPoints.map(p => [p.lat, p.lng])}
+                            pathOptions={{ color: "#185FA5", weight: 3, opacity: 0.9 }}
+                          />
+                        )}
+                        {tramoPoints.length > 0 && (
+                          <CircleMarker
+                            center={[tramoPoints[0].lat, tramoPoints[0].lng]}
+                            radius={7}
+                            pathOptions={{ color: "white", weight: 2, fillColor: "#22c55e", fillOpacity: 1 }}
+                          />
+                        )}
+                        {tramoPoints.length > 1 && (
+                          <CircleMarker
+                            center={[tramoPoints[tramoPoints.length - 1].lat, tramoPoints[tramoPoints.length - 1].lng]}
+                            radius={7}
+                            pathOptions={{ color: "white", weight: 2, fillColor: "#EAB308", fillOpacity: 1 }}
+                          />
+                        )}
+                      </MapContainer>
+                    </div>
+
+                    {/* Resultado del tramo */}
+                    {kmTramo !== null && (
+                      <div className="flex items-center justify-between bg-background rounded-lg border border-border px-4 py-3">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">
+                            Tramo seleccionado: {kmTramo.toLocaleString("es-MX")} km
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {gpsPoints[sliderFin] && gpsPoints[sliderInicio]
+                              ? (() => {
+                                  const ms =
+                                    new Date(gpsPoints[sliderFin].timestamp) -
+                                    new Date(gpsPoints[sliderInicio].timestamp);
+                                  const h = Math.floor(ms / 3600000);
+                                  const m = Math.floor((ms % 3600000) / 60000);
+                                  return `${h}h ${m}min de recorrido`;
+                                })()
+                              : ""}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          onClick={confirmarTramo}
+                          className="bg-green-600 hover:bg-green-700 text-white dark:bg-green-700 dark:hover:bg-green-800"
+                        >
+                          Usar estos km
+                        </Button>
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={fetchGpsPoints}
+                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                    >
+                      <span>↺</span> Recargar datos GPS
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-4 p-4 bg-green-50/50 dark:bg-green-900/10 rounded-lg border border-green-100 dark:border-green-900">
@@ -1297,8 +1373,8 @@ export default function FuelViajes() {
                     <h3 className="font-bold text-foreground">Combustible</h3>
                   </div>
                   <div className="flex items-center gap-2 bg-background/50 px-3 py-1.5 rounded-lg border border-green-100 dark:border-green-900/50">
-                    <Checkbox 
-                      id="edit-no-diesel" 
+                    <Checkbox
+                      id="edit-no-diesel"
                       checked={formData.sinDiesel}
                       onCheckedChange={(checked) => setFormData({ ...formData, sinDiesel: !!checked, litros_combustible: checked ? 0 : formData.litros_combustible, costo_combustible: checked ? 0 : formData.costo_combustible })}
                     />
@@ -1309,45 +1385,25 @@ export default function FuelViajes() {
                 </div>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label
-                      htmlFor="edit-litros"
-                      className="font-semibold text-foreground"
-                    >
-                      Litros
-                    </Label>
+                    <Label htmlFor="edit-litros" className="font-semibold text-foreground">Litros</Label>
                     <Input
                       id="edit-litros"
                       type="number"
                       step="0.01"
                       value={formData.sinDiesel ? "0" : formData.litros_combustible}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          litros_combustible: e.target.value,
-                        })
-                      }
+                      onChange={(e) => setFormData({ ...formData, litros_combustible: e.target.value })}
                       disabled={formData.sinDiesel}
                       className="bg-background border-input disabled:opacity-50"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label
-                      htmlFor="edit-costo"
-                      className="font-semibold text-foreground"
-                    >
-                      Costo Combustible ($)
-                    </Label>
+                    <Label htmlFor="edit-costo" className="font-semibold text-foreground">Costo Combustible ($)</Label>
                     <Input
                       id="edit-costo"
                       type="number"
                       step="0.01"
                       value={formData.sinDiesel ? "0" : formData.costo_combustible}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          costo_combustible: e.target.value,
-                        })
-                      }
+                      onChange={(e) => setFormData({ ...formData, costo_combustible: e.target.value })}
                       disabled={formData.sinDiesel}
                       className="bg-background border-input disabled:opacity-50"
                     />
@@ -1363,8 +1419,8 @@ export default function FuelViajes() {
                     <h3 className="font-bold text-foreground">Casetas</h3>
                   </div>
                   <div className="flex items-center gap-2 bg-background/50 px-3 py-1.5 rounded-lg border border-indigo-100 dark:border-indigo-900/50">
-                    <Checkbox 
-                      id="edit-no-casetas" 
+                    <Checkbox
+                      id="edit-no-casetas"
                       checked={formData.sinCasetas}
                       onCheckedChange={(checked) => setFormData({ ...formData, sinCasetas: !!checked })}
                     />
@@ -1375,37 +1431,23 @@ export default function FuelViajes() {
                 </div>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-foreground font-semibold">
-                      Casetas Ida ($)
-                    </Label>
+                    <Label className="text-foreground font-semibold">Casetas Ida ($)</Label>
                     <Input
                       type="number"
                       step="0.01"
                       value={formData.sinCasetas ? "0" : formData.casetas_ida}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          casetas_ida: e.target.value,
-                        })
-                      }
+                      onChange={(e) => setFormData({ ...formData, casetas_ida: e.target.value })}
                       disabled={formData.sinCasetas}
                       className="bg-background border-input disabled:opacity-50"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-foreground font-semibold">
-                      Casetas Regreso ($)
-                    </Label>
+                    <Label className="text-foreground font-semibold">Casetas Regreso ($)</Label>
                     <Input
                       type="number"
                       step="0.01"
                       value={formData.sinCasetas ? "0" : formData.casetas_regreso}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          casetas_regreso: e.target.value,
-                        })
-                      }
+                      onChange={(e) => setFormData({ ...formData, casetas_regreso: e.target.value })}
                       disabled={formData.sinCasetas}
                       className="bg-background border-input disabled:opacity-50"
                     />
@@ -1414,18 +1456,11 @@ export default function FuelViajes() {
               </div>
 
               <div className="space-y-2">
-                <Label
-                  htmlFor="edit-notas"
-                  className="font-semibold text-foreground"
-                >
-                  Notas Adicionales
-                </Label>
+                <Label htmlFor="edit-notas" className="font-semibold text-foreground">Notas Adicionales</Label>
                 <Textarea
                   id="edit-notas"
                   value={formData.notas}
-                  onChange={(e) =>
-                    setFormData({ ...formData, notas: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
                   rows={4}
                   className="bg-background border-input"
                 />
@@ -1446,16 +1481,9 @@ export default function FuelViajes() {
                   className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   {actualizarMutation.isPending ? (
-                    <>
-                      {" "}
-                      <Loader2 className="w-4 h-4 animate-spin" />{" "}
-                      Guardando...{" "}
-                    </>
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
                   ) : (
-                    <>
-                      {" "}
-                      <Save className="w-4 h-4 mr-2" /> Guardar Cambios{" "}
-                    </>
+                    <><Save className="w-4 h-4 mr-2" /> Guardar Cambios</>
                   )}
                 </Button>
               </div>
@@ -1463,10 +1491,7 @@ export default function FuelViajes() {
           </DialogContent>
         </Dialog>
 
-        <AlertDialog
-          open={!!viajeAEliminar}
-          onOpenChange={() => setViajeAEliminar(null)}
-        >
+        <AlertDialog open={!!viajeAEliminar} onOpenChange={() => setViajeAEliminar(null)}>
           <AlertDialogContent className="bg-card border-border text-foreground">
             <AlertDialogHeader>
               <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
@@ -1475,13 +1500,8 @@ export default function FuelViajes() {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className="bg-background hover:bg-muted">
-                Cancelar
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleEliminar}
-                className="bg-red-600 hover:bg-red-700"
-              >
+              <AlertDialogCancel className="bg-background hover:bg-muted">Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleEliminar} className="bg-red-600 hover:bg-red-700">
                 Eliminar
               </AlertDialogAction>
             </AlertDialogFooter>

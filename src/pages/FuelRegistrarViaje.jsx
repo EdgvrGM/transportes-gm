@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { supabase } from "@/supabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -21,16 +21,55 @@ import {
   Save,
   Loader2,
   Plus,
-  ArrowRight,
   Fuel,
-  X,
-  Route,
   Ticket,
   MapPin,
   Calendar,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import { MapContainer, TileLayer, Polyline, CircleMarker, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+
+function FitBounds({ points }) {
+  const map = useMap();
+  const fitted = useRef(false);
+  useEffect(() => {
+    if (points.length < 2 || fitted.current) return;
+    const bounds = points.map(p => [p.lat, p.lng]);
+    map.fitBounds(bounds, { padding: [24, 24], animate: true });
+    fitted.current = true;
+  }, [points]);
+  return null;
+}
+
+function SeguirPunto({ punto }) {
+  const map = useMap();
+  const prevPunto = useRef(null);
+  useEffect(() => {
+    if (!punto) return;
+    if (
+      prevPunto.current &&
+      prevPunto.current.lat === punto.lat &&
+      prevPunto.current.lng === punto.lng
+    ) return;
+    prevPunto.current = punto;
+    map.panTo([punto.lat, punto.lng], { animate: true, duration: 0.3 });
+  }, [punto]);
+  return null;
+}
+
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
 export default function FuelRegistrarViaje() {
   const navigate = useNavigate();
@@ -56,9 +95,8 @@ export default function FuelRegistrarViaje() {
     remolque_id: stateData.remolque_id || "",
     remolque2_id: stateData.remolque2_id || "",
     ruta_ida: "",
-    kilometros_ida: "",
-    ruta_regreso: "",
-    kilometros_regreso: "",
+    kilometros_total: "",
+    km_gps: false,
     litros_combustible: "",
     costo_combustible: "",
     casetas_ida: "",
@@ -82,7 +120,6 @@ export default function FuelRegistrarViaje() {
     return "";
   };
 
-  const [rutasAdicionales, setRutasAdicionales] = useState([]);
   const [nuevoConductor, setNuevoConductor] = useState({
     nombre: "",
     licencia: "",
@@ -122,7 +159,7 @@ export default function FuelRegistrarViaje() {
     queryFn: async () => {
       const { data } = await supabase.from("Viaje").select("ruta_ida, kilometros_ida");
       if (!data) return [];
-      
+
       const rutasMap = new Map();
       data.forEach(v => {
         if (v.ruta_ida && v.kilometros_ida && !rutasMap.has(v.ruta_ida)) {
@@ -133,16 +170,135 @@ export default function FuelRegistrarViaje() {
     }
   });
 
+  // CAMBIO 1: estado del selector GPS
+  const [gpsPoints, setGpsPoints]       = useState([]);
+  const [gpsStatus, setGpsStatus]       = useState("idle");
+  // idle | loading | success | no_data | sin_gps | error
+  const [sliderInicio, setSliderInicio] = useState(0);
+  const [sliderFin, setSliderFin]       = useState(0);
+  const [kmTramo, setKmTramo]           = useState(null);
+  const [sliderActivo, setSliderActivo] = useState(null);
+  // "inicio" | "fin" | null
+
+  const frecuenciaGps = useMemo(() => {
+    if (gpsPoints.length < 2) return null;
+    let totalSegundos = 0;
+    let segmentos = 0;
+    for (let i = 1; i < Math.min(gpsPoints.length, 20); i++) {
+      const diff = new Date(gpsPoints[i].timestamp) -
+                   new Date(gpsPoints[i - 1].timestamp);
+      if (diff > 0 && diff < 600000) {
+        totalSegundos += diff / 1000;
+        segmentos++;
+      }
+    }
+    if (segmentos === 0) return null;
+    return Math.round(totalSegundos / segmentos);
+  }, [gpsPoints]);
+
+  const puntoActivo = useMemo(() => {
+    if (sliderActivo === "inicio") return gpsPoints[sliderInicio] ?? null;
+    if (sliderActivo === "fin")    return gpsPoints[sliderFin]    ?? null;
+    return null;
+  }, [sliderActivo, sliderInicio, sliderFin, gpsPoints]);
+
+  // CAMBIO 3: tramo visible — compartido entre cálculo de km y mini-mapa
+  const tramoPoints = useMemo(() => {
+    if (gpsPoints.length < 2) return [];
+    return gpsPoints.slice(sliderInicio, sliderFin + 1);
+  }, [gpsPoints, sliderInicio, sliderFin]);
+
+  // CAMBIO 2: fetchGpsPoints reemplaza calcularKmDesdeGPS
+  const fetchGpsPoints = async () => {
+    if (!viaje.camion_id || !viaje.fecha || !viaje.fecha_llegada) return;
+
+    setGpsStatus("loading");
+    setGpsPoints([]);
+    setKmTramo(null);
+    setViaje(prev => ({ ...prev, km_gps: false }));
+
+    try {
+      const { data: unidadGPS } = await supabase
+        .from("UnidadGPS")
+        .select("wialon_unit_id")
+        .eq("camion_id", viaje.camion_id)
+        .eq("activo", true)
+        .single();
+
+      if (!unidadGPS) throw new Error("sin_gps");
+
+      const fromTs = Math.floor(
+        new Date(viaje.fecha + "T00:00:00").getTime() / 1000
+      );
+      const toTs = Math.floor(
+        new Date(viaje.fecha_llegada + "T23:59:59").getTime() / 1000
+      );
+
+      const res = await fetch(
+        `https://wialon-proxy.transportesgm.workers.dev?action=history` +
+        `&unit=${unidadGPS.wialon_unit_id}&from=${fromTs}&to=${toTs}`
+      );
+      if (!res.ok) throw new Error("fetch_error");
+
+      const data = await res.json();
+      const points = data.points || [];
+
+      if (points.length < 2) {
+        setGpsStatus("no_data");
+        return;
+      }
+
+      setGpsPoints(points);
+      setSliderInicio(0);
+      setSliderFin(points.length - 1);
+      setGpsStatus("success");
+
+    } catch (err) {
+      setGpsStatus(err.message === "sin_gps" ? "sin_gps" : "error");
+    }
+  };
+
+  // CAMBIO 3: recalcular km usando tramoPoints
+  useEffect(() => {
+    if (tramoPoints.length < 2) {
+      setKmTramo(null);
+      return;
+    }
+    let dist = 0;
+    for (let i = 1; i < tramoPoints.length; i++) {
+      dist += haversineKm(
+        tramoPoints[i - 1].lat, tramoPoints[i - 1].lng,
+        tramoPoints[i].lat,     tramoPoints[i].lng
+      );
+    }
+    setKmTramo(Math.round(dist));
+  }, [tramoPoints]);
+
+  // CAMBIO 4: auto-trigger cuando los tres datos están listos
+  useEffect(() => {
+    if (viaje.camion_id && viaje.fecha && viaje.fecha_llegada) {
+      fetchGpsPoints();
+    }
+  }, [viaje.camion_id, viaje.fecha, viaje.fecha_llegada]);
+
+  // CAMBIO 5: confirmar tramo seleccionado
+  const confirmarTramo = () => {
+    if (kmTramo === null) return;
+    setViaje(prev => ({
+      ...prev,
+      kilometros_total: kmTramo,
+      km_gps: true,
+    }));
+  };
+
   const crearViajeMutation = useMutation({
     mutationFn: async (data) => {
-      // Intentar inserción con viaje_id
       const { data: result, error } = await supabase
         .from("Viaje")
         .insert([data])
         .select();
-        
+
       if (error) {
-        // Fallback: Si la columna viaje_id no existe en la tabla legacy
         if (error.message.includes("viaje_id") || error.code === "PGRST204" || error.code === "42703") {
           const { viaje_id, ...dataSinViajeId } = data;
           const { data: resultFallback, error: errorFallback } = await supabase
@@ -157,15 +313,12 @@ export default function FuelRegistrarViaje() {
       return { result, usabaViajeId: true };
     },
     onSuccess: async () => {
-      // Cierre del Ciclo: Actualizar tabla de viajes_registrados
       if (viajeRegistradoId) {
         await supabase
           .from("viajes_registrados")
           .update({ combustible_registrado: viaje.litros_combustible !== "" })
           .eq("id", viajeRegistradoId);
       } else {
-        // Soft Update: Si no hay ID directo, buscamos por coincidencia de datos
-        // para asegurar que el dashboard se mantenga al día.
         await supabase
           .from("viajes_registrados")
           .update({ combustible_registrado: viaje.litros_combustible !== "" })
@@ -227,42 +380,21 @@ export default function FuelRegistrarViaje() {
     },
   });
 
-  const agregarRutaAdicional = () =>
-    setRutasAdicionales([...rutasAdicionales, { ruta: "", kilometros: "" }]);
-  const eliminarRutaAdicional = (index) =>
-    setRutasAdicionales(rutasAdicionales.filter((_, i) => i !== index));
-  const actualizarRutaAdicional = (index, campo, valor) => {
-    const nuevasRutas = [...rutasAdicionales];
-    nuevasRutas[index][campo] = valor;
-    setRutasAdicionales(nuevasRutas);
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
     setError(null);
-    const kmIda = parseFloat(viaje.kilometros_ida) || 0;
-    const kmRegreso = parseFloat(viaje.kilometros_regreso) || 0;
 
     if (
       !viaje.fecha ||
       !viaje.conductor_id ||
       !viaje.camion_id ||
       !viaje.ruta_ida ||
-      viaje.kilometros_ida === "" ||
-      isNaN(kmIda) ||
-      !viaje.ruta_regreso ||
-      viaje.kilometros_regreso === "" ||
-      isNaN(kmRegreso)
+      viaje.kilometros_total === "" ||
+      isNaN(parseFloat(viaje.kilometros_total))
     ) {
       setError("Por favor completa todos los campos obligatorios.");
       return;
     }
-
-    const kmAdicionales = rutasAdicionales.reduce(
-      (sum, ruta) => sum + parseFloat(ruta.kilometros || 0),
-      0,
-    );
-    const kmTotal = kmIda + kmAdicionales + kmRegreso;
 
     let litros = viaje.litros_combustible !== "" ? parseFloat(viaje.litros_combustible) : null;
     let costoFuel = viaje.costo_combustible !== "" ? parseFloat(viaje.costo_combustible) : null;
@@ -292,21 +424,16 @@ export default function FuelRegistrarViaje() {
       remolque_id: viaje.remolque_id || null,
       remolque2_id: viaje.remolque2_id || null,
       ruta_ida: viaje.ruta_ida,
-      kilometros_ida: kmIda,
-      rutas_adicionales: rutasAdicionales.map((r) => ({
-        ruta: r.ruta,
-        kilometros: parseFloat(r.kilometros || 0),
-      })),
-      ruta_regreso: viaje.ruta_regreso,
-      kilometros_regreso: kmRegreso,
-      kilometros_total: kmTotal,
+      kilometros_total: parseFloat(viaje.kilometros_total),
+      km_gps: viaje.km_gps,
+      km_por_litro: (litros !== null && litros > 0)
+        ? parseFloat(viaje.kilometros_total) / litros
+        : 0,
       litros_combustible: litros,
-      km_por_litro: (litros !== null && litros > 0) ? kmTotal / litros : 0,
       costo_combustible: costoFuel,
       casetas_ida: casetasIda,
       casetas_regreso: casetasRegreso,
       notas: viaje.notas,
-      // Se incluye como BIGINT (número entero)
       viaje_id: viajeRegistradoId ? parseInt(viajeRegistradoId, 10) : null,
     };
     crearViajeMutation.mutate(datosViaje);
@@ -332,48 +459,10 @@ export default function FuelRegistrarViaje() {
 
   const handleRutaIdaChange = (e) => {
     const val = e.target.value;
-    
-    setViaje((prev) => {
-      const updated = { ...prev, ruta_ida: val };
-      
-      const match = rutasHistoricas.find(r => r.ruta.toLowerCase() === val.toLowerCase());
-      if (match) {
-        updated.kilometros_ida = match.km;
-      }
-      
-      // Intelligent reverse
-      if (val.includes("-")) {
-         const parts = val.split("-").map(p => p.trim());
-         if (parts.length === 2 && parts[0] && parts[1]) {
-            updated.ruta_regreso = `${parts[1]} - ${parts[0]}`;
-            if (match) {
-               updated.kilometros_regreso = match.km;
-            } else if (updated.kilometros_ida) {
-               updated.kilometros_regreso = updated.kilometros_ida;
-            }
-         }
-      }
-      
-      return updated;
-    });
+    setViaje(prev => ({ ...prev, ruta_ida: val }));
   };
 
-  const handleKmIdaChange = (e) => {
-    const val = e.target.value;
-    setViaje((prev) => {
-       const updated = { ...prev, kilometros_ida: val };
-       // Mirror to return if return km is empty or was the same as previous IDA
-       if (!prev.kilometros_regreso || prev.kilometros_regreso === prev.kilometros_ida) {
-          updated.kilometros_regreso = val;
-       }
-       return updated;
-    });
-  };
-
-  const kmTotales =
-    (parseFloat(viaje.kilometros_ida) || 0) +
-    (parseFloat(viaje.kilometros_regreso) || 0) +
-    rutasAdicionales.reduce((s, r) => s + (parseFloat(r.kilometros) || 0), 0);
+  const kmTotales = parseFloat(viaje.kilometros_total) || 0;
   const litrosVal = parseFloat(viaje.litros_combustible);
   const eficiencia = litrosVal > 0 ? (kmTotales / litrosVal).toFixed(2) : "-";
 
@@ -615,8 +704,8 @@ export default function FuelRegistrarViaje() {
                   <Select
                     value={viaje.tipo_viaje}
                     onValueChange={(val) =>
-                      setViaje({ 
-                        ...viaje, 
+                      setViaje({
+                        ...viaje,
                         tipo_viaje: val,
                         remolque2_id: val === "Sencillo" ? "" : viaje.remolque2_id
                       })
@@ -687,12 +776,14 @@ export default function FuelRegistrarViaje() {
                 )}
               </div>
 
-              {/* RUTAS */}
+              {/* CAMBIO 6: sección de ruta con selector de tramo GPS */}
               <div className="space-y-4 p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-900">
                 <div className="flex items-center gap-2 mb-2">
-                  <ArrowRight className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  <h3 className="font-bold text-foreground">Ruta de Ida</h3>
+                  <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <h3 className="font-bold text-foreground">Ruta del viaje</h3>
                 </div>
+
+                {/* Ruta + Kilómetros */}
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-foreground font-semibold">
@@ -703,7 +794,7 @@ export default function FuelRegistrarViaje() {
                       value={viaje.ruta_ida}
                       onChange={handleRutaIdaChange}
                       required
-                      placeholder="Ej. Tecoman - Colima"
+                      placeholder="Ej. Tecomán - San Isidro"
                       className="bg-background border-input"
                     />
                     <datalist id="rutas-sugerencias">
@@ -712,117 +803,245 @@ export default function FuelRegistrarViaje() {
                       ))}
                     </datalist>
                   </div>
+
                   <div className="space-y-2">
                     <Label className="text-foreground font-semibold">
-                      Kilómetros <span className="text-red-500">*</span>
+                      Kilómetros totales del viaje <span className="text-red-500">*</span>
                     </Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      value={viaje.kilometros_ida}
-                      onChange={handleKmIdaChange}
-                      required
-                      className="bg-background border-input"
-                    />
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        step="1"
+                        value={viaje.kilometros_total}
+                        onChange={(e) => setViaje(prev => ({
+                          ...prev,
+                          kilometros_total: e.target.value,
+                          km_gps: false,
+                        }))}
+                        required
+                        placeholder="km"
+                        className={`bg-background border-input flex-1 ${
+                          viaje.km_gps
+                            ? "border-green-500 bg-green-50/50 dark:bg-green-900/10"
+                            : ""
+                        }`}
+                      />
+                      {viaje.km_gps && (
+                        <span className="flex items-center gap-1 text-xs text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-md border border-green-200 dark:border-green-800 whitespace-nowrap">
+                          <span>📡</span> GPS
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="space-y-4 p-4 bg-purple-50/50 dark:bg-purple-900/10 rounded-lg border border-purple-100 dark:border-purple-900">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Route className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                    <h3 className="font-bold text-foreground">
-                      Rutas Adicionales
-                    </h3>
+                {/* Estados del fetch GPS */}
+                {gpsStatus === "loading" && (
+                  <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Obteniendo recorrido GPS...
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={agregarRutaAdicional}
-                    className="gap-2 bg-background hover:bg-muted"
-                  >
-                    <Plus className="w-4 h-4" /> Agregar
-                  </Button>
-                </div>
-                {rutasAdicionales.map((ruta, index) => (
-                  <div
-                    key={index}
-                    className="grid grid-cols-[1fr_auto_auto] md:grid-cols-[1fr_auto_auto] gap-3 p-3 bg-background/50 rounded-lg border border-border"
-                  >
-                    <Input
-                      placeholder="Ruta"
-                      value={ruta.ruta}
-                      onChange={(e) =>
-                        actualizarRutaAdicional(index, "ruta", e.target.value)
-                      }
-                      className="bg-background"
-                    />
-                    <Input
-                      type="number"
-                      step="0.1"
-                      placeholder="km"
-                      value={ruta.kilometros}
-                      onChange={(e) =>
-                        actualizarRutaAdicional(
-                          index,
-                          "kilometros",
-                          e.target.value,
-                        )
-                      }
-                      className="bg-background w-24 md:w-32"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => eliminarRutaAdicional(index)}
+                )}
+
+                {gpsStatus === "sin_gps" && (
+                  <p className="mt-3 text-xs text-amber-600 dark:text-amber-400">
+                    Esta unidad no tiene GPS vinculado — ingresa los km manualmente
+                  </p>
+                )}
+
+                {gpsStatus === "no_data" && (
+                  <p className="mt-3 text-xs text-amber-600 dark:text-amber-400">
+                    Sin datos GPS para este rango de fechas — ingresa los km manualmente
+                  </p>
+                )}
+
+                {gpsStatus === "error" && (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    No se pudo conectar con GPS — ingresa los km manualmente
+                  </p>
+                )}
+
+                {/* Panel selector de tramo */}
+                {gpsStatus === "success" && (
+                  <div className="mt-4 p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-900 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-foreground">
+                        Selector de tramo GPS
+                      </p>
+                      <span className="text-xs text-muted-foreground">
+                        {gpsPoints.length} puntos
+                        {frecuenciaGps !== null && (
+                          <> · reporte cada {
+                            frecuenciaGps < 60
+                              ? `${frecuenciaGps}s`
+                              : `${Math.round(frecuenciaGps / 60)} min`
+                          }</>
+                        )}
+                      </span>
+                    </div>
+
+                    {/* Slider inicio */}
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <label className="text-xs font-medium text-muted-foreground">
+                          Inicio del viaje
+                        </label>
+                        <span className="text-xs font-medium text-foreground">
+                          {gpsPoints[sliderInicio]
+                            ? new Date(gpsPoints[sliderInicio].timestamp)
+                                .toLocaleString("es-MX", {
+                                  weekday: "short", day: "2-digit",
+                                  month: "short", hour: "2-digit", minute: "2-digit",
+                                })
+                            : "—"}
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min={0}
+                        max={gpsPoints.length - 1}
+                        value={sliderInicio}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setSliderInicio(val);
+                          setSliderActivo("inicio");
+                          if (val >= sliderFin) setSliderFin(Math.min(val + 1, gpsPoints.length - 1));
+                        }}
+                        className="w-full accent-blue-500"
+                      />
+                    </div>
+
+                    {/* Slider fin */}
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <label className="text-xs font-medium text-muted-foreground">
+                          Fin del viaje
+                        </label>
+                        <span className="text-xs font-medium text-foreground">
+                          {gpsPoints[sliderFin]
+                            ? new Date(gpsPoints[sliderFin].timestamp)
+                                .toLocaleString("es-MX", {
+                                  weekday: "short", day: "2-digit",
+                                  month: "short", hour: "2-digit", minute: "2-digit",
+                                })
+                            : "—"}
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min={0}
+                        max={gpsPoints.length - 1}
+                        value={sliderFin}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setSliderFin(val);
+                          setSliderActivo("fin");
+                          if (val <= sliderInicio) setSliderInicio(Math.max(val - 1, 0));
+                        }}
+                        className="w-full accent-blue-500"
+                      />
+                    </div>
+
+                    {/* Mini-mapa — wrapper con zIndex: 0 obligatorio per CLAUDE.md */}
+                    <div
+                      style={{ position: "relative", zIndex: 0 }}
+                      className="rounded-lg overflow-hidden border border-blue-100 dark:border-blue-900"
                     >
-                      <X className="w-4 h-4 text-red-500" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
+                      <MapContainer
+                        center={
+                          tramoPoints.length > 0
+                            ? [tramoPoints[0].lat, tramoPoints[0].lng]
+                            : [19.05, -104.31]
+                        }
+                        zoom={10}
+                        style={{ height: "220px", width: "100%" }}
+                        zoomControl={true}
+                        scrollWheelZoom={true}
+                        attributionControl={false}
+                      >
+                        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-              <div className="space-y-4 p-4 bg-orange-50/50 dark:bg-orange-900/10 rounded-lg border border-orange-100 dark:border-orange-900">
-                <div className="flex items-center gap-2 mb-2">
-                  <ArrowLeft className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                  <h3 className="font-bold text-foreground">Ruta de Regreso</h3>
-                </div>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-foreground font-semibold">
-                      Ruta <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      value={viaje.ruta_regreso}
-                      onChange={(e) =>
-                        setViaje({ ...viaje, ruta_regreso: e.target.value })
-                      }
-                      required
-                      className="bg-background border-input"
-                    />
+                        <FitBounds points={tramoPoints} />
+                        <SeguirPunto punto={puntoActivo} />
+
+                        {/* Ruta completa en gris — contexto */}
+                        {gpsPoints.length > 1 && (
+                          <Polyline
+                            positions={gpsPoints.map(p => [p.lat, p.lng])}
+                            pathOptions={{ color: "#94a3b8", weight: 2, opacity: 0.4 }}
+                          />
+                        )}
+
+                        {/* Tramo seleccionado en azul */}
+                        {tramoPoints.length > 1 && (
+                          <Polyline
+                            positions={tramoPoints.map(p => [p.lat, p.lng])}
+                            pathOptions={{ color: "#185FA5", weight: 3, opacity: 0.9 }}
+                          />
+                        )}
+
+                        {/* Inicio — verde */}
+                        {tramoPoints.length > 0 && (
+                          <CircleMarker
+                            center={[tramoPoints[0].lat, tramoPoints[0].lng]}
+                            radius={7}
+                            pathOptions={{ color: "white", weight: 2, fillColor: "#22c55e", fillOpacity: 1 }}
+                          />
+                        )}
+
+                        {/* Fin — amarillo GM */}
+                        {tramoPoints.length > 1 && (
+                          <CircleMarker
+                            center={[
+                              tramoPoints[tramoPoints.length - 1].lat,
+                              tramoPoints[tramoPoints.length - 1].lng,
+                            ]}
+                            radius={7}
+                            pathOptions={{ color: "white", weight: 2, fillColor: "#EAB308", fillOpacity: 1 }}
+                          />
+                        )}
+                      </MapContainer>
+                    </div>
+
+                    {/* Resultado del tramo */}
+                    {kmTramo !== null && (
+                      <div className="flex items-center justify-between bg-background rounded-lg border border-border px-4 py-3">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">
+                            Tramo seleccionado: {kmTramo.toLocaleString("es-MX")} km
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {gpsPoints[sliderFin] && gpsPoints[sliderInicio]
+                              ? (() => {
+                                  const ms =
+                                    new Date(gpsPoints[sliderFin].timestamp) -
+                                    new Date(gpsPoints[sliderInicio].timestamp);
+                                  const h = Math.floor(ms / 3600000);
+                                  const m = Math.floor((ms % 3600000) / 60000);
+                                  return `${h}h ${m}min de recorrido`;
+                                })()
+                              : ""}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          onClick={confirmarTramo}
+                          className="bg-green-600 hover:bg-green-700 text-white dark:bg-green-700 dark:hover:bg-green-800"
+                        >
+                          Usar estos km
+                        </Button>
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={fetchGpsPoints}
+                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                    >
+                      <span>↺</span> Recargar datos GPS
+                    </button>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-foreground font-semibold">
-                      Kilómetros <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      value={viaje.kilometros_regreso}
-                      onChange={(e) =>
-                        setViaje({
-                          ...viaje,
-                          kilometros_regreso: e.target.value,
-                        })
-                      }
-                      required
-                      className="bg-background border-input"
-                    />
-                  </div>
-                </div>
+                )}
               </div>
 
               <Separator className="bg-border" />
@@ -835,8 +1054,8 @@ export default function FuelRegistrarViaje() {
                     <h3 className="font-bold text-foreground">Combustible</h3>
                   </div>
                   <div className="flex items-center gap-2 bg-background/50 px-3 py-1.5 rounded-lg border border-green-100 dark:border-green-900/50">
-                    <Checkbox 
-                      id="no-diesel" 
+                    <Checkbox
+                      id="no-diesel"
                       checked={viaje.sinDiesel}
                       onCheckedChange={(checked) => setViaje({ ...viaje, sinDiesel: !!checked, litros_combustible: checked ? 0 : viaje.litros_combustible, costo_combustible: checked ? 0 : viaje.costo_combustible })}
                     />
@@ -894,7 +1113,7 @@ export default function FuelRegistrarViaje() {
                 )}
               </div>
 
-              {/* CASETAS (NUEVO BLOQUE) */}
+              {/* CASETAS */}
               <div className="space-y-4 p-4 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-lg border border-indigo-100 dark:border-indigo-900">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
@@ -902,8 +1121,8 @@ export default function FuelRegistrarViaje() {
                     <h3 className="font-bold text-foreground">Casetas</h3>
                   </div>
                   <div className="flex items-center gap-2 bg-background/50 px-3 py-1.5 rounded-lg border border-indigo-100 dark:border-indigo-900/50">
-                    <Checkbox 
-                      id="no-casetas" 
+                    <Checkbox
+                      id="no-casetas"
                       checked={viaje.sinCasetas}
                       onCheckedChange={(checked) => setViaje({ ...viaje, sinCasetas: !!checked })}
                     />

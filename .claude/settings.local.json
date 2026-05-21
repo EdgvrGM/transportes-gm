@@ -28,7 +28,8 @@
       "Bash(curl -s \"https://wialon-proxy.transportesgm.workers.dev?action=positions\")",
       "Bash(Start-Sleep -Seconds 8)",
       "Bash(Get-Content \"C:\\\\Users\\\\Joker\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-Joker-Documents-dev-Version-1-1-transportes-gm\\\\283f8a47-07fa-497f-ab7a-b6b79a5210e9\\\\tasks\\\\brwz9lhmw.output\")",
-      "Bash(curl -s \"https://wialon-proxy.transportesgm.workers.dev?action=positions\" -o \"%TEMP%\\\\wialon_out.json\")"
+      "Bash(curl -s \"https://wialon-proxy.transportesgm.workers.dev?action=positions\" -o \"%TEMP%\\\\wialon_out.json\")",
+      "Bash(git checkout *)"
     ]
   }
 }
