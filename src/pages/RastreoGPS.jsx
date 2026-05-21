@@ -22,6 +22,91 @@ async function fetchPositions(unidadesInactivas = []) {
   return res.json();
 }
 
+// BUG 1 FIX: componente externo para evitar desmonte en cada render del padre
+function PanelContent({
+  activeTab, positions, vinculaciones, isLoading,
+  selectedUnit, setSelectedUnit, setUnidadEnfocada, setBottomSheetState,
+  setHistorialPuntos, setPuntoReproduccion, setReproduciendo, setIconoUnidad
+}) {
+  return (
+    <>
+      {activeTab === "envivo" && (
+        <>
+          <div className="p-3 border-b border-border shrink-0">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Unidades en Vivo
+            </h3>
+          </div>
+          {isLoading ? (
+            <div className="p-4 text-sm text-muted-foreground">Cargando...</div>
+          ) : (
+            positions.map((p) => {
+              const camion = vinculaciones[p.id];
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => {
+                    setSelectedUnit(p);
+                    setUnidadEnfocada(p);
+                    if (window.innerWidth < 768) setBottomSheetState("medium");
+                  }}
+                  className={`w-full text-left p-3 border-b border-border/50 hover:bg-accent transition-colors shrink-0 ${
+                    selectedUnit?.id === p.id ? "bg-gm-primary/10" : ""
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 shrink-0 flex items-center justify-center">
+                      {p.uri
+                        ? <img
+                            src={`${WIALON_IMG_BASE}${p.uri}`}
+                            style={{ width: 28, height: 28, objectFit: "contain" }}
+                            onError={(e) => { e.target.style.display = "none"; }}
+                          />
+                        : <span style={{ fontSize: 20 }}>🚚</span>
+                      }
+                    </div>
+                    <span
+                      className="w-2 h-2 rounded-full shrink-0"
+                      style={{ background: p.motor ? "#22c55e" : "#94a3b8" }}
+                    />
+                    <div className="min-w-0">
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-sm font-bold text-foreground truncate uppercase">
+                          {camion ? camion.nombre : p.nombre.split(" ")[0]}
+                        </span>
+                        {camion?.placas && (
+                          <span className="text-xs font-bold text-muted-foreground shrink-0">
+                            {camion.placas}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        {p.velocidad} km/h · {p.motor ? "En movimiento" : "Detenido"}
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              );
+            })
+          )}
+        </>
+      )}
+      {activeTab === "historial" && (
+        <HistorialGPS
+          positions={positions}
+          onHistorialCargado={setHistorialPuntos}
+          onPuntoActivo={setPuntoReproduccion}
+          onReproduciendo={setReproduciendo}
+          onIconoUnidad={setIconoUnidad}
+        />
+      )}
+      {activeTab === "alertas"     && <AlertasGPS />}
+      {activeTab === "reportes"    && <ReportesGPS />}
+      {activeTab === "compartidos" && <CompartidosGPS positions={positions} />}
+    </>
+  );
+}
+
 export default function RastreoGPS() {
   const [selectedUnit,      setSelectedUnit]      = useState(null);
   const [activeTab,         setActiveTab]         = useState("envivo");
@@ -132,88 +217,11 @@ export default function RastreoGPS() {
     { id: "compartidos", label: "Compartidos", icon: Share2, badge: conteoCompartidos, badgeColor: "bg-green-600" },
   ];
 
-  /* ── Helpers ─────────────────────────────────────────────────────────── */
-  // Contenido del panel lateral / bottom-sheet — reutilizado en ambos layouts
-  function PanelContent() {
-    return (
-      <>
-        {activeTab === "envivo" && (
-          <>
-            <div className="p-3 border-b border-border shrink-0">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Unidades en Vivo
-              </h3>
-            </div>
-            {isLoading ? (
-              <div className="p-4 text-sm text-muted-foreground">Cargando...</div>
-            ) : (
-              positions.map((p) => {
-                const camion = vinculaciones[p.id];
-                return (
-                  <button
-                    key={p.id}
-                    onClick={() => {
-                      setSelectedUnit(p);
-                      setUnidadEnfocada(p);
-                      // En móvil bajamos el sheet a "medium" para ver el mapa
-                      if (window.innerWidth < 768) setBottomSheetState("medium");
-                    }}
-                    className={`w-full text-left p-3 border-b border-border/50 hover:bg-accent transition-colors shrink-0 ${
-                      selectedUnit?.id === p.id ? "bg-gm-primary/10" : ""
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 shrink-0 flex items-center justify-center">
-                        {p.uri
-                          ? <img
-                              src={`${WIALON_IMG_BASE}${p.uri}`}
-                              style={{ width: 28, height: 28, objectFit: "contain" }}
-                              onError={(e) => { e.target.style.display = "none"; }}
-                            />
-                          : <span style={{ fontSize: 20 }}>🚚</span>
-                        }
-                      </div>
-                      <span
-                        className="w-2 h-2 rounded-full shrink-0"
-                        style={{ background: p.motor ? "#22c55e" : "#94a3b8" }}
-                      />
-                      <div className="min-w-0">
-                        <div className="flex items-baseline gap-1.5">
-                          <span className="text-sm font-bold text-foreground truncate uppercase">
-                            {camion ? camion.nombre : p.nombre.split(" ")[0]}
-                          </span>
-                          {camion?.placas && (
-                            <span className="text-xs font-bold text-muted-foreground shrink-0">
-                              {camion.placas}
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-xs text-muted-foreground mt-0.5">
-                          {p.velocidad} km/h · {p.motor ? "En movimiento" : "Detenido"}
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })
-            )}
-          </>
-        )}
-        {activeTab === "historial" && (
-          <HistorialGPS
-            positions={positions}
-            onHistorialCargado={setHistorialPuntos}
-            onPuntoActivo={setPuntoReproduccion}
-            onReproduciendo={setReproduciendo}
-            onIconoUnidad={setIconoUnidad}
-          />
-        )}
-        {activeTab === "alertas"     && <AlertasGPS />}
-        {activeTab === "reportes"    && <ReportesGPS />}
-        {activeTab === "compartidos" && <CompartidosGPS positions={positions} />}
-      </>
-    );
-  }
+  const panelProps = {
+    activeTab, positions, vinculaciones, isLoading,
+    selectedUnit, setSelectedUnit, setUnidadEnfocada, setBottomSheetState,
+    setHistorialPuntos, setPuntoReproduccion, setReproduciendo, setIconoUnidad,
+  };
 
   /* ── Render ──────────────────────────────────────────────────────────── */
   return (
@@ -287,7 +295,7 @@ export default function RastreoGPS() {
 
         {/* Panel lateral — solo en md+ */}
         <div className="hidden md:flex md:w-64 shrink-0 border-r border-border overflow-y-auto bg-card flex-col">
-          <PanelContent />
+          <PanelContent {...panelProps} />
         </div>
 
         {/* Mapa — ocupa el 100% en móvil */}
@@ -352,9 +360,9 @@ export default function RastreoGPS() {
             </div>
           </div>
 
-          {/* Sheet content */}
-          <div className="flex-1 overflow-y-auto">
-            <PanelContent />
+          {/* Sheet content — BUG 2 FIX: flex column con min-h-0 para que h-full de HistorialGPS no colapse */}
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+            <PanelContent {...panelProps} />
           </div>
         </div>
 
@@ -367,13 +375,16 @@ export default function RastreoGPS() {
               <button
                 key={t.id}
                 onClick={() => {
-                  setActiveTab(t.id);
+                  // BUG 3 FIX: abrir directo en "expanded" para tabs que necesitan más espacio
+                  const tabsExpandidos = ["historial", "alertas", "reportes", "compartidos"];
                   if (bottomSheetState === "closed") {
-                    setBottomSheetState("medium");
+                    setBottomSheetState(tabsExpandidos.includes(t.id) ? "expanded" : "medium");
                   } else if (activeTab === t.id) {
-                    // Tap mismo tab activo → cierra el sheet
                     setBottomSheetState("closed");
+                  } else if (tabsExpandidos.includes(t.id)) {
+                    setBottomSheetState("expanded");
                   }
+                  setActiveTab(t.id);
                 }}
                 className={`flex flex-col items-center justify-center gap-1 w-16 h-full transition-colors relative ${
                   active
