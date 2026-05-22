@@ -19,10 +19,14 @@ const DURACIONES = [
 ];
 
 function tiempoDesde(ts) {
-  const diff = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
-  if (diff < 60)   return `hace ${diff}s`;
-  if (diff < 3600) return `hace ${Math.floor(diff / 60)} min`;
-  return `hace ${Math.floor(diff / 3600)}h ${Math.floor((diff % 3600) / 60)}min`;
+  if (!ts) return "Sin datos";
+  const ms = typeof ts === "number" ? ts * 1000 : new Date(ts).getTime();
+  const diff = Math.floor((Date.now() - ms) / 1000);
+  if (diff < 0 || diff > 86400 * 30) return "Sin señal reciente";
+  if (diff < 60)    return `hace ${diff}s`;
+  if (diff < 3600)  return `hace ${Math.floor(diff / 60)} min`;
+  if (diff < 86400) return `hace ${Math.floor(diff / 3600)}h ${Math.floor((diff % 3600) / 60)}min`;
+  return `hace ${Math.floor(diff / 86400)} días`;
 }
 
 function generateToken() {
@@ -130,7 +134,11 @@ export default function TooltipUnidad({ unidad, onClose, onMouseEnter, onMouseLe
             {unidad.nombre}
           </p>
           <p className="text-xs text-slate-400">
-            {tiempoDesde(unidad.ultima_actualizacion)} · {new Date(unidad.ultima_actualizacion).toLocaleTimeString("es-MX")}
+            {tiempoDesde(unidad.ultima_actualizacion)} · {new Date(
+            typeof unidad.ultima_actualizacion === "number"
+              ? unidad.ultima_actualizacion * 1000
+              : unidad.ultima_actualizacion
+          ).toLocaleTimeString("es-MX")}
           </p>
         </div>
 
