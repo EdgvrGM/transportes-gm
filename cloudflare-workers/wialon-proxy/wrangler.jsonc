@@ -13,6 +13,17 @@
 	"upload_source_maps": true,
 	"compatibility_flags": [
 		"nodejs_compat"
+	],
+	"triggers": {
+		"crons": [
+			"* * * * *"
+		]
+	},
+	"kv_namespaces": [
+		{
+			"binding": "GEOCERCA_KV",
+			"id": "f887303531b54779bad651936c97e325"
+		}
 	]
 	/**
 	 * Smart Placement

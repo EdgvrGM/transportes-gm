@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/supabaseClient";
 import MapaGPS from "@/components/gps/MapaGPS";
 import ModalConfiguracion from "@/components/gps/ModalConfiguracion";
@@ -7,10 +7,15 @@ import HistorialGPS from "@/components/gps/HistorialGPS";
 import AlertasGPS from "@/components/gps/AlertasGPS";
 import ReportesGPS from "@/components/gps/ReportesGPS";
 import CompartidosGPS from "@/components/gps/CompartidosGPS";
-import { MapPin, Navigation, Bell, Settings, RefreshCw, Settings2, Share2 } from "lucide-react";
+import { MapPin, Navigation, Bell, Settings, RefreshCw, Settings2, Share2, Copy, Check, ShieldCheck, Gauge } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import PanelCompartir from "@/components/gps/PanelCompartir";
+import GeocercaGPS from "@/components/gps/GeocercaGPS";
+import RalentiGPS from "@/components/gps/RalentiGPS";
 
-const WIALON_PROXY_URL = "https://wialon-proxy.transportesgm.workers.dev";
-const WIALON_IMG_BASE  = "https://hst-api.wialon.com";
+const WIALON_PROXY_URL  = "https://wialon-proxy.transportesgm.workers.dev";
+const WIALON_IMG_BASE   = "https://hst-api.wialon.com";
+const RALENTI_UMBRAL_MS = 15 * 60 * 1000;
 
 async function fetchPositions(unidadesInactivas = []) {
   const exclude = unidadesInactivas.join(",");
@@ -26,8 +31,20 @@ async function fetchPositions(unidadesInactivas = []) {
 function PanelContent({
   activeTab, positions, vinculaciones, isLoading,
   selectedUnit, setSelectedUnit, setUnidadEnfocada, setBottomSheetState,
-  setHistorialPuntos, setPuntoReproduccion, setReproduciendo, setIconoUnidad
+  setHistorialPuntos, setPuntoReproduccion, setReproduciendo, setIconoUnidad,
+  setPanelCompartirUnidad, ralentiActivo,
 }) {
+  const [copiedId, setCopiedId] = useState(null);
+
+  const copiarCoordenadas = (e, p) => {
+    e.stopPropagation();
+    const texto = `${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`;
+    navigator.clipboard.writeText(texto).then(() => {
+      setCopiedId(p.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  };
+
   return (
     <>
       {activeTab === "envivo" && (
@@ -41,7 +58,13 @@ function PanelContent({
             <div className="p-4 text-sm text-muted-foreground">Cargando...</div>
           ) : (
             positions.map((p) => {
-              const camion = vinculaciones[p.id];
+              const camion      = vinculaciones[p.id];
+              const enRalenti   = p.motor && p.velocidad === 0;
+              const textoEstado = enRalenti
+                ? "Ralentí"
+                : p.motor
+                  ? `${p.velocidad} km/h · En movimiento`
+                  : "Motor apagado";
               return (
                 <button
                   key={p.id}
@@ -50,11 +73,11 @@ function PanelContent({
                     setUnidadEnfocada(p);
                     if (window.innerWidth < 768) setBottomSheetState("medium");
                   }}
-                  className={`w-full text-left p-3 border-b border-border/50 hover:bg-accent transition-colors shrink-0 ${
+                  className={`group w-full text-left p-3 border-b border-border/50 hover:bg-accent transition-colors shrink-0 flex items-center ${
                     selectedUnit?.id === p.id ? "bg-gm-primary/10" : ""
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
                     <div className="w-8 h-8 shrink-0 flex items-center justify-center">
                       {p.uri
                         ? <img
@@ -67,23 +90,41 @@ function PanelContent({
                     </div>
                     <span
                       className="w-2 h-2 rounded-full shrink-0"
-                      style={{ background: p.motor ? "#22c55e" : "#94a3b8" }}
+                      style={{ background: enRalenti ? "#EAB308" : p.motor ? "#22c55e" : "#94a3b8" }}
                     />
-                    <div className="min-w-0">
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-sm font-bold text-foreground truncate uppercase">
-                          {camion ? camion.nombre : p.nombre.split(" ")[0]}
-                        </span>
-                        {camion?.placas && (
-                          <span className="text-xs font-bold text-muted-foreground shrink-0">
-                            {camion.placas}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-0.5">
-                        {p.velocidad} km/h · {p.motor ? "En movimiento" : "Detenido"}
-                      </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-foreground uppercase truncate leading-tight">
+                        {camion ? camion.nombre : p.nombre.split(" ")[0]}
+                      </p>
+                      {camion?.placas && (
+                        <p className="text-xs font-bold text-muted-foreground leading-tight">
+                          {camion.placas}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-0.5 whitespace-nowrap">
+                        {textoEstado}
+                      </p>
                     </div>
+                  </div>
+
+                  <div className="flex flex-col items-center gap-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    <button
+                      onClick={(e) => copiarCoordenadas(e, p)}
+                      title="Copiar coordenadas"
+                      className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                    >
+                      {copiedId === p.id
+                        ? <Check className="w-3.5 h-3.5 text-green-500" />
+                        : <Copy className="w-3.5 h-3.5" />
+                      }
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setPanelCompartirUnidad(p); }}
+                      title="Compartir rastreo"
+                      className="p-1.5 rounded-md text-muted-foreground hover:text-yellow-600 hover:bg-gm-primary/10 transition-colors"
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </button>
               );
@@ -103,11 +144,14 @@ function PanelContent({
       {activeTab === "alertas"     && <AlertasGPS />}
       {activeTab === "reportes"    && <ReportesGPS />}
       {activeTab === "compartidos" && <CompartidosGPS positions={positions} />}
+      {activeTab === "geocerca"    && <GeocercaGPS positions={positions} />}
+      {activeTab === "ralenti"    && <RalentiGPS positions={positions} ralentiActivo={ralentiActivo} />}
     </>
   );
 }
 
 export default function RastreoGPS() {
+  const queryClient = useQueryClient();
   const [selectedUnit,      setSelectedUnit]      = useState(null);
   const [activeTab,         setActiveTab]         = useState("envivo");
   const [showConfig,        setShowConfig]        = useState(false);
@@ -136,6 +180,10 @@ export default function RastreoGPS() {
   // Rastro: guarda últimas 10 posiciones por unidad
   const RASTRO_MAX = 10;
   const historialRastroRef = useRef({});
+
+  // Ralentí: seguimiento por unidad
+  const ralentiInicioRef = useRef({});
+  const [ralentiActivo, setRalentiActivo] = useState({});
   const [historialRastro, setHistorialRastro] = useState({});
 
   useEffect(() => {
@@ -151,6 +199,51 @@ export default function RastreoGPS() {
     });
     historialRastroRef.current = nuevo;
     setHistorialRastro(nuevo);
+  }, [positions]);
+
+  // Ralentí: detectar motor encendido + velocidad 0
+  useEffect(() => {
+    if (!positions || positions.length === 0) return;
+    const ahora        = Date.now();
+    const nuevoRalenti = { ...ralentiActivo };
+    let cambio         = false;
+
+    positions.forEach(async (unit) => {
+      const enRalenti = unit.motor === true && unit.velocidad === 0;
+
+      if (enRalenti) {
+        if (!ralentiInicioRef.current[unit.id]) {
+          ralentiInicioRef.current[unit.id] = ahora;
+          nuevoRalenti[unit.id]             = ahora;
+          cambio = true;
+        }
+        const duracion = ahora - ralentiInicioRef.current[unit.id];
+        if (duracion >= RALENTI_UMBRAL_MS) {
+          const yaAlerto = ralentiInicioRef.current[`alerta_${unit.id}`];
+          if (!yaAlerto) {
+            ralentiInicioRef.current[`alerta_${unit.id}`] = true;
+            const minutos = Math.round(duracion / 60000);
+            await supabase.from("AlertaGPS").insert({
+              tipo:          "ralenti",
+              wialon_nombre: unit.nombre,
+              mensaje:       `${unit.nombre} lleva ${minutos} minutos con motor encendido sin moverse`,
+              leida:         false,
+            });
+            queryClient.invalidateQueries({ queryKey: ["alertas-gps"] });
+            queryClient.invalidateQueries({ queryKey: ["alertas-gps-count"] });
+          }
+        }
+      } else {
+        if (ralentiInicioRef.current[unit.id]) {
+          delete ralentiInicioRef.current[unit.id];
+          delete ralentiInicioRef.current[`alerta_${unit.id}`];
+          delete nuevoRalenti[unit.id];
+          cambio = true;
+        }
+      }
+    });
+
+    if (cambio) setRalentiActivo({ ...nuevoRalenti });
   }, [positions]);
 
   // Vinculaciones UnidadGPS → Camion
@@ -180,6 +273,22 @@ export default function RastreoGPS() {
     refetchInterval: 30000,
   });
 
+  // Conteo de eventos de geocerca fuera de horario hoy
+  const { data: eventosGeocercaHoy = 0 } = useQuery({
+    queryKey: ["geocerca-count"],
+    queryFn: async () => {
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      const { count } = await supabase
+        .from("EventoGeocerca")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", hoy.toISOString())
+        .eq("fuera_de_horario", true);
+      return count ?? 0;
+    },
+    refetchInterval: 60000,
+  });
+
   // Conteo de links compartidos activos
   const { data: conteoCompartidos = 0 } = useQuery({
     queryKey: ["rastreo-compartido-count"],
@@ -202,25 +311,32 @@ export default function RastreoGPS() {
     return map;
   }, [unidadesGPS]);
 
-  const [historialPuntos,    setHistorialPuntos]    = useState([]);
-  const [puntoReproduccion,  setPuntoReproduccion]  = useState(null);
-  const [reproduciendo,      setReproduciendo]      = useState(false);
-  const [iconoUnidad,        setIconoUnidad]        = useState(null);
-  const [unidadEnfocada,     setUnidadEnfocada]     = useState(null);
+  const [historialPuntos,       setHistorialPuntos]       = useState([]);
+  const [puntoReproduccion,     setPuntoReproduccion]     = useState(null);
+  const [reproduciendo,         setReproduciendo]         = useState(false);
+  const [iconoUnidad,           setIconoUnidad]           = useState(null);
+  const [unidadEnfocada,        setUnidadEnfocada]        = useState(null);
+  const [panelCompartirUnidad,  setPanelCompartirUnidad]  = useState(null);
+
+  const ralentiExcesivoCount = Object.entries(ralentiActivo)
+    .filter(([, inicio]) => Date.now() - inicio >= RALENTI_UMBRAL_MS).length;
 
   /* ── Tab definitions ─────────────────────────────────────────────────── */
   const tabs = [
     { id: "envivo",      label: "En vivo",     icon: Navigation },
     { id: "historial",   label: "Historial",   icon: MapPin },
-    { id: "alertas",     label: "Alertas",     icon: Bell,   badge: alertasNoLeidas,   badgeColor: "bg-red-500"   },
+    { id: "alertas",     label: "Alertas",     icon: Bell,        badge: alertasNoLeidas,      badgeColor: "bg-red-500"    },
     { id: "reportes",    label: "Reportes",    icon: Settings },
-    { id: "compartidos", label: "Compartidos", icon: Share2, badge: conteoCompartidos, badgeColor: "bg-green-600" },
+    { id: "compartidos", label: "Compartidos", icon: Share2,      badge: conteoCompartidos,    badgeColor: "bg-green-600"  },
+    { id: "geocerca",    label: "Geocerca",    icon: ShieldCheck, badge: eventosGeocercaHoy,   badgeColor: "bg-blue-500"   },
+    { id: "ralenti",     label: "Ralentí",     icon: Gauge,       badge: ralentiExcesivoCount, badgeColor: "bg-orange-500" },
   ];
 
   const panelProps = {
     activeTab, positions, vinculaciones, isLoading,
     selectedUnit, setSelectedUnit, setUnidadEnfocada, setBottomSheetState,
     setHistorialPuntos, setPuntoReproduccion, setReproduciendo, setIconoUnidad,
+    setPanelCompartirUnidad, ralentiActivo,
   };
 
   /* ── Render ──────────────────────────────────────────────────────────── */
@@ -376,7 +492,7 @@ export default function RastreoGPS() {
                 key={t.id}
                 onClick={() => {
                   // BUG 3 FIX: abrir directo en "expanded" para tabs que necesitan más espacio
-                  const tabsExpandidos = ["historial", "alertas", "reportes", "compartidos"];
+                  const tabsExpandidos = ["historial", "alertas", "reportes", "compartidos", "geocerca", "ralenti"];
                   if (bottomSheetState === "closed") {
                     setBottomSheetState(tabsExpandidos.includes(t.id) ? "expanded" : "medium");
                   } else if (activeTab === t.id) {
@@ -407,6 +523,24 @@ export default function RastreoGPS() {
         </div>
 
       </div>{/* end body */}
+
+      {/* Dialog compartir rastreo desde la lista */}
+      <Dialog
+        open={!!panelCompartirUnidad}
+        onOpenChange={(open) => !open && setPanelCompartirUnidad(null)}
+      >
+        <DialogContent className="max-w-xs p-0 overflow-hidden">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Compartir rastreo</DialogTitle>
+          </DialogHeader>
+          {panelCompartirUnidad && (
+            <PanelCompartir
+              unidad={panelCompartirUnidad}
+              onClose={() => setPanelCompartirUnidad(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Modal de configuración */}
       <ModalConfiguracion open={showConfig} onClose={() => setShowConfig(false)} />

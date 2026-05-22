@@ -1,5 +1,33 @@
 const WIALON_HOST = "https://hst-api.wialon.com/wialon/ajax.html";
 
+const PATIO_LAT      = 18.9350;
+const PATIO_LNG      = -103.8899;
+const PATIO_RADIO_M  = 70;
+const HORARIO_INICIO = 6;
+const HORARIO_FIN    = 22;
+
+function distanciaMetros(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R    = 6371000;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function estaEnPatio(lat: number, lng: number): boolean {
+  if (lat === 0 && lng === 0) return false;
+  return distanciaMetros(lat, lng, PATIO_LAT, PATIO_LNG) <= PATIO_RADIO_M;
+}
+
+function fueraDeHorario(): boolean {
+  const hora = new Date().getHours();
+  return hora < HORARIO_INICIO || hora >= HORARIO_FIN;
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -67,7 +95,7 @@ async function wialonGetUnitsBasic(eid: string) {
       sortType: "sys_name",
     },
     force: 1,
-    flags: 1 | 16 | 1024 | 4096 | 8192, // base + icono + última posición + contadores + sensores
+    flags: 1 | 8 | 16 | 1024 | 4096 | 8192, // base + último mensaje + icono + última posición + contadores + sensores
     from: 0,
     to: 0,
   }, eid);
@@ -93,19 +121,11 @@ async function getAddress(lat: number, lng: number): Promise<string> {
 }
 
 async function parsearPosicionCompleta(item: Record<string, unknown>, includeAddress = false) {
-  if ((item.nm as string)?.includes("37BE2D")) {
-    console.log("VOLVO DEBUG:", JSON.stringify({
-      cnm: item.cnm,
-      cneh: item.cneh,
-      sens: item.sens,
-      prms: item.prms,
-    }));
-  }
-
   const pos      = item.pos  as Record<string, number> | null;
   const sensores = (item.sens as Record<string, Record<string, unknown>>) ?? {};
   const lmsg     = item.lmsg as Record<string, unknown> | null | undefined;
   const params   = (lmsg?.p as Record<string, number>) ?? {};
+  const lmsgP    = (lmsg?.p ?? {}) as Record<string, unknown>;
 
   const sensoresArr = Object.values(sensores).map((s) => ({
     id:     s.id,
@@ -128,6 +148,23 @@ async function parsearPosicionCompleta(item: Record<string, unknown>, includeAdd
     ? parseFloat((engineRaw / 3600).toFixed(2))
     : typeof item.cneh === "number" ? parseFloat(item.cneh.toFixed(2)) : null;
 
+  const sensoresObj    = (item.sens as Record<string, Record<string, unknown>>) ?? {};
+  const sensorIgnicion = Object.values(sensoresObj).find((s) => s.t === "engine operation");
+  let motorEncendido: boolean;
+  if (lmsgP.ign !== undefined) {
+    // Queclink — campo ign en lmsg.p (vt del sensor no es confiable)
+    motorEncendido = lmsgP.ign === 1;
+  } else if (lmsgP.io_239 !== undefined) {
+    // Teltonika — campo io_239 en lmsg.p
+    motorEncendido = lmsgP.io_239 === 1;
+  } else if (sensorIgnicion) {
+    // Fallback — sensor procesado por Wialon
+    motorEncendido = (sensorIgnicion.vt as number) === 1;
+  } else {
+    // Último recurso — velocidad
+    motorEncendido = (pos?.s ?? 0) > 2;
+  }
+
   return {
     id:        item.id,
     nombre:    item.nm,
@@ -135,7 +172,7 @@ async function parsearPosicionCompleta(item: Record<string, unknown>, includeAdd
     lng:       pos?.x ?? 0,
     velocidad: pos?.s ?? 0,
     rumbo:     pos?.c ?? 0,
-    motor:     (pos?.s ?? 0) > 2,
+    motor:     motorEncendido,
     satelites: pos?.sc ?? 0,
     uri:       (item.uri as string) ?? null,
     odometro,
@@ -183,6 +220,57 @@ async function wialonGetHistory(eid: string, unitId: string, from: number, to: n
 
 async function wialonLogout(eid: string) {
   await wialonPost("core/logout", {}, eid).catch(() => {});
+}
+
+// ── Cron: geocerca del patio ──────────────────────────────────────────────────
+async function ejecutarGeocerca(env: Env): Promise<void> {
+  let eid: string | null = null;
+  try {
+    eid = await wialonLogin(env.WIALON_TOKEN);
+    const items     = await wialonGetUnitsBasic(eid);
+    const positions = await Promise.all(
+      items.map((item) => parsearPosicionCompleta(item, false))
+    );
+
+    for (const unit of positions) {
+      const enPatioAhora = estaEnPatio(unit.lat as number, unit.lng as number);
+      const kvKey        = `geocerca:${unit.id}`;
+      const prevStr      = await env.GEOCERCA_KV.get(kvKey);
+      const enPatioPrev  = prevStr === null ? null : prevStr === "true";
+
+      await env.GEOCERCA_KV.put(kvKey, String(enPatioAhora));
+
+      if (enPatioPrev === null) continue;
+      if (enPatioAhora === enPatioPrev) continue;
+
+      const tipo  = enPatioAhora ? "entrada" : "salida";
+      const fuera = fueraDeHorario();
+
+      await fetch(`${env.SUPABASE_URL}/rest/v1/EventoGeocerca`, {
+        method: "POST",
+        headers: {
+          "Content-Type":  "application/json",
+          "apikey":        env.SUPABASE_SERVICE_KEY,
+          "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+          "Prefer":        "return=minimal",
+        },
+        body: JSON.stringify({
+          wialon_unit_id:   parseInt(String(unit.id), 10),
+          wialon_nombre:    unit.nombre,
+          tipo,
+          lat:              unit.lat,
+          lng:              unit.lng,
+          fuera_de_horario: fuera,
+        }),
+      });
+
+      console.log(`[Geocerca] ${unit.nombre} → ${tipo}${fuera ? " (fuera de horario)" : ""}`);
+    }
+  } catch (err) {
+    console.error("[Geocerca cron] error:", String(err));
+  } finally {
+    if (eid) await wialonLogout(eid);
+  }
 }
 
 // ── Handler principal ─────────────────────────────────────────────────────────
@@ -278,8 +366,15 @@ export default {
       if (eid) await wialonLogout(eid);
     }
   },
+
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+    ctx.waitUntil(ejecutarGeocerca(env));
+  },
 } satisfies ExportedHandler<Env>;
 
 interface Env {
-  WIALON_TOKEN: string;
+  WIALON_TOKEN:        string;
+  SUPABASE_URL:        string;
+  SUPABASE_SERVICE_KEY: string;
+  GEOCERCA_KV:         KVNamespace;
 }

@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/supabaseClient";
-import { Bell, BellOff, Filter, CheckCheck, AlertTriangle, Clock, MapPin } from "lucide-react";
+import { Bell, BellOff, Filter, CheckCheck, AlertTriangle, Clock, MapPin, Gauge } from "lucide-react";
 
 const TIPOS = [
   { value: "",          label: "Todos los tipos" },
   { value: "velocidad", label: "Velocidad excesiva" },
   { value: "parada",    label: "Parada prolongada" },
   { value: "zona",      label: "Salida de zona" },
+  { value: "ralenti",   label: "Ralentí excesivo" },
+  { value: "geocerca",  label: "Geocerca" },
 ];
 
 const TIPO_CONFIG = {
@@ -32,15 +34,75 @@ const TIPO_CONFIG = {
     icon: MapPin,
     label: "Zona",
   },
+  ralenti: {
+    color: "text-orange-600",
+    bg: "bg-orange-50 dark:bg-orange-900/20",
+    border: "border-orange-200 dark:border-orange-800",
+    icon: Gauge,
+    label: "Ralentí",
+  },
+  geocerca: {
+    color: "text-blue-600",
+    bg: "bg-blue-50 dark:bg-blue-900/20",
+    border: "border-blue-200 dark:border-blue-800",
+    icon: MapPin,
+    label: "Geocerca",
+  },
 };
 
+function mapearGeocerca(ev) {
+  return {
+    id:            ev.id,
+    tipo:          "geocerca",
+    wialon_nombre: ev.wialon_nombre,
+    mensaje:       `${ev.wialon_nombre} ${ev.tipo === "entrada" ? "entró al patio" : "salió del patio"}${ev.fuera_de_horario ? " · Fuera de horario" : ""}`,
+    leida:         false,
+    created_at:    ev.created_at,
+  };
+}
+
 async function fetchAlertas({ tipo, soloNoLeidas }) {
+  if (tipo === "geocerca") {
+    const { data, error } = await supabase
+      .from("EventoGeocerca")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    return (data || []).map(mapearGeocerca);
+  }
+
+  if (tipo === "") {
+    let qAlertas = supabase
+      .from("AlertaGPS")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (soloNoLeidas) qAlertas = qAlertas.eq("leida", false);
+
+    const [alertasRes, geocercaRes] = await Promise.all([
+      qAlertas,
+      supabase
+        .from("EventoGeocerca")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(20),
+    ]);
+    if (alertasRes.error) throw alertasRes.error;
+
+    const alertas   = alertasRes.data || [];
+    const geocercas = (geocercaRes.data || []).map(mapearGeocerca);
+    return [...alertas, ...geocercas]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 50);
+  }
+
   let q = supabase
     .from("AlertaGPS")
     .select("*")
+    .eq("tipo", tipo)
     .order("created_at", { ascending: false })
     .limit(50);
-  if (tipo)         q = q.eq("tipo", tipo);
   if (soloNoLeidas) q = q.eq("leida", false);
   const { data, error } = await q;
   if (error) throw error;
@@ -233,8 +295,8 @@ export default function AlertasGPS() {
                   </p>
                 </div>
 
-                {/* Botón marcar leída */}
-                {!alerta.leida && (
+                {/* Botón marcar leída — no aplica a geocerca */}
+                {!alerta.leida && alerta.tipo !== "geocerca" && (
                   <button
                     onClick={() => marcarLeidaMutation.mutate(alerta.id)}
                     disabled={marcarLeidaMutation.isPending}

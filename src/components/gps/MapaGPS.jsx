@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Tooltip, LayersControl, Polyline, CircleMarker, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, LayersControl, Polyline, CircleMarker, Circle, useMap } from "react-leaflet";
 import TooltipUnidad from "@/components/gps/TooltipUnidad";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -208,6 +208,13 @@ export default function MapaGPS({
         <SeguimientoAuto punto={puntoActivo} reproduciendo={reproduciendo} />
         <EnfocarUnidad unidad={unidadEnfocada} onEnfocado={onEnfocado} />
 
+        {/* Geocerca del patio */}
+        <Circle
+          center={[18.9350, -103.8899]}
+          radius={70}
+          pathOptions={{ color: "#EAB308", fillColor: "#EAB308", fillOpacity: 0.08, weight: 2, dashArray: "6 4" }}
+        />
+
         {/* ── Capa 1: Marcadores en vivo — siempre visibles ── */}
         {positions.map((p) => (
           <RastroUnidad key={`rastro-${p.id}`} historialPos={historialRastro[p.id]} />
@@ -219,7 +226,7 @@ export default function MapaGPS({
             <Marker
               key={p.id}
               position={[p.lat, p.lng]}
-              icon={createUnitIcon(p.uri, p.rumbo, p.motor, p.nombre)}
+              icon={createUnitIcon(p.uri, p.rumbo, p.motor, p.nombre, p.velocidad)}
               eventHandlers={{
                 click: () => onMarkerClick?.(p),
                 mouseover: (e) => {
