@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/supabaseClient";
 import MapaGPS from "@/components/gps/MapaGPS";
 import ModalConfiguracion from "@/components/gps/ModalConfiguracion";
@@ -13,8 +13,8 @@ import PanelCompartir from "@/components/gps/PanelCompartir";
 import GeocercaGPS from "@/components/gps/GeocercaGPS";
 import RalentiGPS from "@/components/gps/RalentiGPS";
 
-const WIALON_PROXY_URL  = "https://wialon-proxy.transportesgm.workers.dev";
-const WIALON_IMG_BASE   = "https://hst-api.wialon.com";
+const WIALON_PROXY_URL = "https://wialon-proxy.transportesgm.workers.dev";
+const WIALON_IMG_BASE  = "https://hst-api.wialon.com";
 const RALENTI_UMBRAL_MS = 15 * 60 * 1000;
 
 async function fetchPositions(unidadesInactivas = []) {
@@ -151,7 +151,6 @@ function PanelContent({
 }
 
 export default function RastreoGPS() {
-  const queryClient = useQueryClient();
   const [selectedUnit,      setSelectedUnit]      = useState(null);
   const [activeTab,         setActiveTab]         = useState("envivo");
   const [showConfig,        setShowConfig]        = useState(false);
@@ -180,10 +179,6 @@ export default function RastreoGPS() {
   // Rastro: guarda últimas 10 posiciones por unidad
   const RASTRO_MAX = 10;
   const historialRastroRef = useRef({});
-
-  // Ralentí: seguimiento por unidad
-  const ralentiInicioRef = useRef({});
-  const [ralentiActivo, setRalentiActivo] = useState({});
   const [historialRastro, setHistorialRastro] = useState({});
 
   useEffect(() => {
@@ -201,51 +196,6 @@ export default function RastreoGPS() {
     setHistorialRastro(nuevo);
   }, [positions]);
 
-  // Ralentí: detectar motor encendido + velocidad 0
-  useEffect(() => {
-    if (!positions || positions.length === 0) return;
-    const ahora        = Date.now();
-    const nuevoRalenti = { ...ralentiActivo };
-    let cambio         = false;
-
-    positions.forEach(async (unit) => {
-      const enRalenti = unit.motor === true && unit.velocidad === 0;
-
-      if (enRalenti) {
-        if (!ralentiInicioRef.current[unit.id]) {
-          ralentiInicioRef.current[unit.id] = ahora;
-          nuevoRalenti[unit.id]             = ahora;
-          cambio = true;
-        }
-        const duracion = ahora - ralentiInicioRef.current[unit.id];
-        if (duracion >= RALENTI_UMBRAL_MS) {
-          const yaAlerto = ralentiInicioRef.current[`alerta_${unit.id}`];
-          if (!yaAlerto) {
-            ralentiInicioRef.current[`alerta_${unit.id}`] = true;
-            const minutos = Math.round(duracion / 60000);
-            await supabase.from("AlertaGPS").insert({
-              tipo:          "ralenti",
-              wialon_nombre: unit.nombre,
-              mensaje:       `${unit.nombre} lleva ${minutos} minutos con motor encendido sin moverse`,
-              leida:         false,
-            });
-            queryClient.invalidateQueries({ queryKey: ["alertas-gps"] });
-            queryClient.invalidateQueries({ queryKey: ["alertas-gps-count"] });
-          }
-        }
-      } else {
-        if (ralentiInicioRef.current[unit.id]) {
-          delete ralentiInicioRef.current[unit.id];
-          delete ralentiInicioRef.current[`alerta_${unit.id}`];
-          delete nuevoRalenti[unit.id];
-          cambio = true;
-        }
-      }
-    });
-
-    if (cambio) setRalentiActivo({ ...nuevoRalenti });
-  }, [positions]);
-
   // Vinculaciones UnidadGPS → Camion
   const { data: unidadesGPS = [] } = useQuery({
     queryKey: ["unidades-gps"],
@@ -258,6 +208,25 @@ export default function RastreoGPS() {
       return data;
     },
   });
+
+  // Ralentí activo desde Supabase (persiste entre sesiones)
+  const { data: ralentiActivo = [] } = useQuery({
+    queryKey: ["ralenti-activo"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("RalentiActivo").select("*");
+      if (error) throw error;
+      return data || [];
+    },
+    refetchInterval: 15000,
+  });
+
+  const ralentiActivoMap = useMemo(() => {
+    const map = {};
+    ralentiActivo.forEach((r) => {
+      map[String(r.wialon_unit_id)] = new Date(r.inicio_ralenti).getTime();
+    });
+    return map;
+  }, [ralentiActivo]);
 
   // Conteo de alertas no leídas
   const { data: alertasNoLeidas = 0 } = useQuery({
@@ -318,7 +287,7 @@ export default function RastreoGPS() {
   const [unidadEnfocada,        setUnidadEnfocada]        = useState(null);
   const [panelCompartirUnidad,  setPanelCompartirUnidad]  = useState(null);
 
-  const ralentiExcesivoCount = Object.entries(ralentiActivo)
+  const ralentiExcesivoCount = Object.entries(ralentiActivoMap)
     .filter(([, inicio]) => Date.now() - inicio >= RALENTI_UMBRAL_MS).length;
 
   /* ── Tab definitions ─────────────────────────────────────────────────── */
@@ -336,7 +305,7 @@ export default function RastreoGPS() {
     activeTab, positions, vinculaciones, isLoading,
     selectedUnit, setSelectedUnit, setUnidadEnfocada, setBottomSheetState,
     setHistorialPuntos, setPuntoReproduccion, setReproduciendo, setIconoUnidad,
-    setPanelCompartirUnidad, ralentiActivo,
+    setPanelCompartirUnidad, ralentiActivo: ralentiActivoMap,
   };
 
   /* ── Render ──────────────────────────────────────────────────────────── */

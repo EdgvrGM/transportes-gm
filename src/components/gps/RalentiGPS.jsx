@@ -32,7 +32,13 @@ export default function RalentiGPS({ positions = [], ralentiActivo = {} }) {
     return () => clearInterval(id);
   }, []);
 
-  const unidadesEnRalenti = positions.filter((p) => ralentiActivo[p.id]);
+  const unidadesEnRalenti = positions
+    .filter((p) => ralentiActivo[String(p.id)] !== undefined)
+    .map((p) => ({
+      ...p,
+      inicioRalenti: ralentiActivo[String(p.id)],
+      duracionMs:    Date.now() - ralentiActivo[String(p.id)],
+    }));
 
   const excesivoCount = Object.entries(ralentiActivo)
     .filter(([, inicio]) => Date.now() - inicio >= RALENTI_UMBRAL_MS).length;
@@ -97,7 +103,7 @@ export default function RalentiGPS({ positions = [], ralentiActivo = {} }) {
           </p>
           <div className="space-y-3">
             {unidadesEnRalenti.map((p) => {
-              const ms       = Date.now() - ralentiActivo[p.id];
+              const ms       = p.duracionMs;
               const progreso = Math.min((ms / RALENTI_UMBRAL_MS) * 100, 100);
               const excesivo = ms >= RALENTI_UMBRAL_MS;
               return (

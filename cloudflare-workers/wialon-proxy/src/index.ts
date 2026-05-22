@@ -222,6 +222,8 @@ async function wialonLogout(eid: string) {
   await wialonPost("core/logout", {}, eid).catch(() => {});
 }
 
+const RALENTI_UMBRAL_S = 15 * 60;
+
 // ── Cron: geocerca del patio ──────────────────────────────────────────────────
 async function ejecutarGeocerca(env: Env): Promise<void> {
   let eid: string | null = null;
@@ -268,6 +270,112 @@ async function ejecutarGeocerca(env: Env): Promise<void> {
     }
   } catch (err) {
     console.error("[Geocerca cron] error:", String(err));
+  } finally {
+    if (eid) await wialonLogout(eid);
+  }
+}
+
+// ── Cron: monitor de ralentí ──────────────────────────────────────────────────
+async function ejecutarRalenti(env: Env): Promise<void> {
+  let eid: string | null = null;
+  try {
+    eid = await wialonLogin(env.WIALON_TOKEN);
+    const items     = await wialonGetUnitsBasic(eid);
+    const positions = await Promise.all(
+      items.map((item) => parsearPosicionCompleta(item, false))
+    );
+
+    for (const unit of positions) {
+      const enRalenti = (unit.motor as boolean) === true &&
+                        (unit.velocidad as number) === 0;
+      const unitId = parseInt(String(unit.id), 10);
+      const nombre = unit.nombre as string;
+
+      if (enRalenti) {
+        const getRes  = await fetch(
+          `${env.SUPABASE_URL}/rest/v1/RalentiActivo?wialon_unit_id=eq.${unitId}&select=id,inicio_ralenti,alerta_enviada`,
+          {
+            headers: {
+              "apikey":        env.SUPABASE_SERVICE_KEY,
+              "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+            },
+          }
+        );
+        const existing = JSON.parse(await getRes.text()) as { id: number; inicio_ralenti: string; alerta_enviada: boolean }[];
+
+        if (existing.length === 0) {
+          await fetch(`${env.SUPABASE_URL}/rest/v1/RalentiActivo`, {
+            method: "POST",
+            headers: {
+              "Content-Type":  "application/json",
+              "apikey":        env.SUPABASE_SERVICE_KEY,
+              "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+              "Prefer":        "return=minimal",
+            },
+            body: JSON.stringify({
+              wialon_unit_id: unitId,
+              wialon_nombre:  nombre,
+              inicio_ralenti: new Date().toISOString(),
+              alerta_enviada: false,
+            }),
+          });
+          console.log(`[Ralenti] ${nombre} → inicio de ralentí`);
+        } else {
+          const registro  = existing[0];
+          const inicioMs  = new Date(registro.inicio_ralenti).getTime();
+          const duracionS = (Date.now() - inicioMs) / 1000;
+
+          if (duracionS >= RALENTI_UMBRAL_S && !registro.alerta_enviada) {
+            const minutos = Math.round(duracionS / 60);
+            await fetch(`${env.SUPABASE_URL}/rest/v1/AlertaGPS`, {
+              method: "POST",
+              headers: {
+                "Content-Type":  "application/json",
+                "apikey":        env.SUPABASE_SERVICE_KEY,
+                "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+                "Prefer":        "return=minimal",
+              },
+              body: JSON.stringify({
+                tipo:          "ralenti",
+                wialon_nombre: nombre,
+                mensaje:       `${nombre} lleva ${minutos} minutos con motor encendido sin moverse`,
+                leida:         false,
+              }),
+            });
+            await fetch(
+              `${env.SUPABASE_URL}/rest/v1/RalentiActivo?wialon_unit_id=eq.${unitId}`,
+              {
+                method: "PATCH",
+                headers: {
+                  "Content-Type":  "application/json",
+                  "apikey":        env.SUPABASE_SERVICE_KEY,
+                  "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+                  "Prefer":        "return=minimal",
+                },
+                body: JSON.stringify({ alerta_enviada: true }),
+              }
+            );
+            console.log(`[Ralenti] ${nombre} → alerta enviada (${minutos} min)`);
+          }
+        }
+      } else {
+        const delRes = await fetch(
+          `${env.SUPABASE_URL}/rest/v1/RalentiActivo?wialon_unit_id=eq.${unitId}`,
+          {
+            method: "DELETE",
+            headers: {
+              "apikey":        env.SUPABASE_SERVICE_KEY,
+              "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+            },
+          }
+        );
+        if (delRes.status === 204) {
+          console.log(`[Ralenti] ${nombre} → fin de ralentí`);
+        }
+      }
+    }
+  } catch (err) {
+    console.error("[Ralenti cron] error:", String(err));
   } finally {
     if (eid) await wialonLogout(eid);
   }
@@ -368,7 +476,10 @@ export default {
   },
 
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
-    ctx.waitUntil(ejecutarGeocerca(env));
+    ctx.waitUntil(Promise.all([
+      ejecutarGeocerca(env),
+      ejecutarRalenti(env),
+    ]));
   },
 } satisfies ExportedHandler<Env>;
 

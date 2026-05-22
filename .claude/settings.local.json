@@ -32,7 +32,10 @@
       "Bash(git checkout *)",
       "Bash(node --input-type=module)",
       "Bash(wrangler deploy *)",
-      "Bash(Start-Sleep *)"
+      "Bash(Start-Sleep *)",
+      "Bash(wrangler secret *)",
+      "Bash(wrangler tail *)",
+      "Bash(ping -n 80 127.0.0.1)"
     ]
   }
 }
