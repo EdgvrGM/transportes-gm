@@ -179,6 +179,10 @@ export default function Liquidaciones() {
   };
 
   // Manejadores
+  const handleEliminarViaje = (index) => {
+    setViajesDetalle(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleFleteChange = (index, value) => {
     const newVal = parseFloat(value) || 0;
     const newDetalle = [...viajesDetalle];
@@ -542,6 +546,7 @@ export default function Liquidaciones() {
                             <TableHead className="font-bold uppercase text-[10px] tracking-wider text-right w-32">Flete Bruto</TableHead>
                             <TableHead className="font-bold uppercase text-[10px] tracking-wider text-center w-20">%</TableHead>
                             <TableHead className="font-bold uppercase text-[10px] tracking-wider text-right">Comisión</TableHead>
+                            <TableHead className="w-8" />
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -576,6 +581,15 @@ export default function Liquidaciones() {
                               </TableCell>
                               <TableCell className="text-right font-black text-green-600 dark:text-green-500 text-base">
                                 ${formatCurrency(v.comision)}
+                              </TableCell>
+                              <TableCell className="text-right w-8">
+                                <button
+                                  onClick={() => handleEliminarViaje(i)}
+                                  className="p-1.5 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                  aria-label="Eliminar viaje"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
                               </TableCell>
                             </TableRow>
                           ))}
