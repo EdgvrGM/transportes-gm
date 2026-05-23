@@ -328,6 +328,36 @@ async function ejecutarRalenti(env: Env): Promise<void> {
 
           if (duracionS >= RALENTI_UMBRAL_S && !registro.alerta_enviada) {
             const minutos = Math.round(duracionS / 60);
+
+            // PATCH condicional atómico — solo actualiza si alerta_enviada sigue siendo false
+            const patchRes = await fetch(
+              `${env.SUPABASE_URL}/rest/v1/RalentiActivo?wialon_unit_id=eq.${unitId}&alerta_enviada=eq.false`,
+              {
+                method: "PATCH",
+                headers: {
+                  "Content-Type":  "application/json",
+                  "apikey":        env.SUPABASE_SERVICE_KEY,
+                  "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+                  "Prefer":        "return=representation",
+                },
+                body: JSON.stringify({ alerta_enviada: true }),
+              }
+            );
+
+            if (!patchRes.ok) {
+              console.error(`[Ralenti] Error en PATCH atómico para ${nombre}: ${patchRes.status}`);
+              continue;
+            }
+
+            // Solo insertar la alerta si el PATCH realmente actualizó una fila
+            const patchData = JSON.parse(await patchRes.text()) as unknown[];
+            if (patchData.length === 0) {
+              // Otra instancia ya lo procesó — ignorar
+              console.log(`[Ralenti] ${nombre} → alerta ya enviada por otra instancia, ignorando`);
+              continue;
+            }
+
+            // El PATCH fue exitoso y fue esta instancia — insertar la alerta
             const alertaRes = await fetch(`${env.SUPABASE_URL}/rest/v1/AlertaGPS`, {
               method: "POST",
               headers: {
@@ -344,22 +374,10 @@ async function ejecutarRalenti(env: Env): Promise<void> {
                 leida:          false,
               }),
             });
+
             if (!alertaRes.ok) {
               console.error(`[Ralenti] Error insertando alerta para ${nombre}: ${alertaRes.status} ${await alertaRes.text()}`);
             } else {
-              await fetch(
-                `${env.SUPABASE_URL}/rest/v1/RalentiActivo?wialon_unit_id=eq.${unitId}`,
-                {
-                  method: "PATCH",
-                  headers: {
-                    "Content-Type":  "application/json",
-                    "apikey":        env.SUPABASE_SERVICE_KEY,
-                    "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-                    "Prefer":        "return=minimal",
-                  },
-                  body: JSON.stringify({ alerta_enviada: true }),
-                }
-              );
               console.log(`[Ralenti] ${nombre} → alerta enviada (${minutos} min)`);
             }
           }
