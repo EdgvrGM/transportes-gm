@@ -365,6 +365,47 @@ async function ejecutarRalenti(env: Env): Promise<void> {
           }
         }
       } else {
+        // Antes de borrar, leer el registro para guardar el historial
+        const getRes = await fetch(
+          `${env.SUPABASE_URL}/rest/v1/RalentiActivo?wialon_unit_id=eq.${unitId}&select=inicio_ralenti,wialon_nombre`,
+          {
+            headers: {
+              "apikey":        env.SUPABASE_SERVICE_KEY,
+              "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+            },
+          }
+        );
+
+        if (getRes.ok) {
+          const registros = JSON.parse(await getRes.text()) as { inicio_ralenti: string; wialon_nombre: string }[];
+          if (registros.length > 0) {
+            const { inicio_ralenti, wialon_nombre: nombreRegistrado } = registros[0];
+            const finRalenti       = new Date().toISOString();
+            const duracion_segundos = Math.round((Date.now() - new Date(inicio_ralenti).getTime()) / 1000);
+
+            if (duracion_segundos >= 240) {
+              await fetch(`${env.SUPABASE_URL}/rest/v1/RalentiHistorial`, {
+                method: "POST",
+                headers: {
+                  "Content-Type":  "application/json",
+                  "apikey":        env.SUPABASE_SERVICE_KEY,
+                  "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+                  "Prefer":        "return=minimal",
+                },
+                body: JSON.stringify({
+                  wialon_unit_id:    unitId,
+                  wialon_nombre:     nombreRegistrado,
+                  inicio_ralenti,
+                  fin_ralenti:       finRalenti,
+                  duracion_segundos,
+                }),
+              });
+              console.log(`[Ralenti] ${nombre} → historial guardado (${Math.round(duracion_segundos / 60)} min)`);
+            }
+          }
+        }
+
+        // Ahora sí borrar de la tabla activa
         const delRes = await fetch(
           `${env.SUPABASE_URL}/rest/v1/RalentiActivo?wialon_unit_id=eq.${unitId}`,
           {
@@ -376,7 +417,7 @@ async function ejecutarRalenti(env: Env): Promise<void> {
           }
         );
         if (delRes.status === 204) {
-          console.log(`[Ralenti] ${nombre} → fin de ralentí`);
+          console.log(`[Ralenti] ${nombre} → eliminado de RalentiActivo`);
         }
       }
     }

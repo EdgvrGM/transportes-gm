@@ -35,7 +35,13 @@
       "Bash(Start-Sleep *)",
       "Bash(wrangler secret *)",
       "Bash(wrangler tail *)",
-      "Bash(ping -n 80 127.0.0.1)"
+      "Bash(ping -n 80 127.0.0.1)",
+      "Bash(python3 \".claude/skills/ui-ux-pro-max/scripts/search.py\" \"fleet gps dashboard dark list cards data\" --design-system -p \"TransportesGM\")",
+      "Bash(python \".claude/skills/ui-ux-pro-max/scripts/search.py\" \"fleet gps dashboard list cards data transport\" --design-system -p \"TransportesGM\")",
+      "Bash(where python3 *)",
+      "Bash(where python *)",
+      "Bash(where py *)",
+      "Bash(py \".claude/skills/ui-ux-pro-max/scripts/search.py\" \"fleet gps dashboard list cards data transport\" --design-system -p \"TransportesGM\")"
     ]
   }
 }
