@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/supabaseClient";
 import { Bell, BellOff, Filter, CheckCheck, AlertTriangle, Clock, MapPin, Gauge } from "lucide-react";
@@ -55,39 +55,33 @@ function mapearGeocerca(ev) {
     id:            ev.id,
     tipo:          "geocerca",
     wialon_nombre: ev.wialon_nombre,
-    mensaje:       `${ev.wialon_nombre} ${ev.tipo === "entrada" ? "entró al patio" : "salió del patio"}${ev.fuera_de_horario ? " · Fuera de horario" : ""}`,
-    leida:         false,
+    mensaje:       `${ev.wialon_nombre} ${ev.tipo === "entrada" ? "entró al patio" : "salió del patio"}`,
+    leida:         ev.leida ?? false,
     created_at:    ev.created_at,
   };
 }
 
 async function fetchAlertas({ tipo, soloNoLeidas }) {
   if (tipo === "geocerca") {
-    const { data, error } = await supabase
+    let q = supabase
       .from("EventoGeocerca")
       .select("*")
       .order("created_at", { ascending: false })
       .limit(50);
+    if (soloNoLeidas) q = q.eq("leida", false);
+    const { data, error } = await q;
     if (error) throw error;
     return (data || []).map(mapearGeocerca);
   }
 
   if (tipo === "") {
-    let qAlertas = supabase
-      .from("AlertaGPS")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(50);
-    if (soloNoLeidas) qAlertas = qAlertas.eq("leida", false);
-
-    const [alertasRes, geocercaRes] = await Promise.all([
-      qAlertas,
-      supabase
-        .from("EventoGeocerca")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(20),
-    ]);
+    let qAlertas   = supabase.from("AlertaGPS").select("*").order("created_at", { ascending: false }).limit(50);
+    let qGeocerca  = supabase.from("EventoGeocerca").select("*").order("created_at", { ascending: false }).limit(20);
+    if (soloNoLeidas) {
+      qAlertas  = qAlertas.eq("leida", false);
+      qGeocerca = qGeocerca.eq("leida", false);
+    }
+    const [alertasRes, geocercaRes] = await Promise.all([qAlertas, qGeocerca]);
     if (alertasRes.error) throw alertasRes.error;
 
     const alertas   = alertasRes.data || [];
@@ -110,12 +104,12 @@ async function fetchAlertas({ tipo, soloNoLeidas }) {
 }
 
 async function fetchConteoNoLeidas() {
-  const { count, error } = await supabase
-    .from("AlertaGPS")
-    .select("*", { count: "exact", head: true })
-    .eq("leida", false);
-  if (error) throw error;
-  return count || 0;
+  const [alertasRes, geocercaRes] = await Promise.all([
+    supabase.from("AlertaGPS").select("*", { count: "exact", head: true }).eq("leida", false),
+    supabase.from("EventoGeocerca").select("*", { count: "exact", head: true }).eq("leida", false),
+  ]);
+  if (alertasRes.error) throw alertasRes.error;
+  return (alertasRes.count || 0) + (geocercaRes.count || 0);
 }
 
 function tiempoRelativo(ts) {
@@ -131,7 +125,13 @@ function tiempoRelativo(ts) {
 export default function AlertasGPS() {
   const queryClient = useQueryClient();
   const [tipo, setTipo]                 = useState("");
-  const [soloNoLeidas, setSoloNoLeidas] = useState(false);
+  const [soloNoLeidas, setSoloNoLeidas] = useState(true);
+
+  useEffect(() => {
+    const corte = new Date();
+    corte.setDate(corte.getDate() - 10);
+    supabase.from("AlertaGPS").delete().lt("created_at", corte.toISOString()).then(() => {});
+  }, []);
 
   const { data: alertas = [], isLoading } = useQuery({
     queryKey: ["alertas-gps", tipo, soloNoLeidas],
@@ -145,32 +145,35 @@ export default function AlertasGPS() {
     refetchInterval: 30000,
   });
 
+  const invalidar = () => {
+    queryClient.invalidateQueries({ queryKey: ["alertas-gps"] });
+    queryClient.invalidateQueries({ queryKey: ["alertas-gps-count"] });
+  };
+
   const marcarLeidaMutation = useMutation({
-    mutationFn: async (id) => {
-      const { error } = await supabase
-        .from("AlertaGPS")
-        .update({ leida: true })
+    mutationFn: async ({ id, tipo }) => {
+      const tabla = tipo === "geocerca" ? "EventoGeocerca" : "AlertaGPS";
+      const { error, count } = await supabase
+        .from(tabla)
+        .update({ leida: true }, { count: "exact" })
         .eq("id", id);
       if (error) throw error;
+      if (count === 0) throw new Error(`Sin permiso para actualizar ${tabla}`);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["alertas-gps"] });
-      queryClient.invalidateQueries({ queryKey: ["alertas-gps-count"] });
-    },
+    onSuccess: invalidar,
+    onError: (err) => console.error("[AlertasGPS] marcar leída:", err.message),
   });
 
   const marcarTodasMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase
-        .from("AlertaGPS")
-        .update({ leida: true })
-        .eq("leida", false);
-      if (error) throw error;
+      const [r1, r2] = await Promise.all([
+        supabase.from("AlertaGPS").update({ leida: true }).eq("leida", false),
+        supabase.from("EventoGeocerca").update({ leida: true }).eq("leida", false),
+      ]);
+      if (r1.error) throw r1.error;
+      if (r2.error) throw r2.error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["alertas-gps"] });
-      queryClient.invalidateQueries({ queryKey: ["alertas-gps-count"] });
-    },
+    onSuccess: invalidar,
   });
 
   return (
@@ -247,7 +250,7 @@ export default function AlertasGPS() {
             Cargando alertas...
           </div>
         ) : alertas.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-slate-400">
+          <div className="flex flex-col items-center justify-center py-16 text-slate-400 text-center">
             <Bell className="w-12 h-12 mb-3 opacity-20" />
             <p className="text-sm">No hay alertas para los filtros seleccionados</p>
           </div>
@@ -295,10 +298,9 @@ export default function AlertasGPS() {
                   </p>
                 </div>
 
-                {/* Botón marcar leída — no aplica a geocerca */}
-                {!alerta.leida && alerta.tipo !== "geocerca" && (
+                {!alerta.leida && (
                   <button
-                    onClick={() => marcarLeidaMutation.mutate(alerta.id)}
+                    onClick={() => marcarLeidaMutation.mutate({ id: alerta.id, tipo: alerta.tipo })}
                     disabled={marcarLeidaMutation.isPending}
                     title="Marcar como leída"
                     className="p-1.5 rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 transition-colors shrink-0 disabled:opacity-50"

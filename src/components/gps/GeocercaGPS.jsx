@@ -1,6 +1,7 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/supabaseClient";
-import { ShieldCheck, ShieldAlert, LogIn, LogOut, Clock, Truck } from "lucide-react";
+import { ShieldCheck, LogIn, LogOut, Truck } from "lucide-react";
 
 const PATIO_LAT      = 18.9350;
 const PATIO_LNG      = -103.8899;
@@ -33,6 +34,12 @@ function tiempoRelativo(ts) {
 export default function GeocercaGPS({ positions = [] }) {
   const hoyInicio = (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d.toISOString(); })();
 
+  useEffect(() => {
+    const corte = new Date();
+    corte.setDate(corte.getDate() - 7);
+    supabase.from("EventoGeocerca").delete().lt("created_at", corte.toISOString()).then(() => {});
+  }, []);
+
   const { data: eventos = [], isLoading } = useQuery({
     queryKey: ["geocerca-eventos"],
     queryFn: async () => {
@@ -47,10 +54,9 @@ export default function GeocercaGPS({ positions = [] }) {
     refetchInterval: 30000,
   });
 
-  const eventosHoy   = eventos.filter((e) => e.created_at >= hoyInicio);
-  const entradasHoy  = eventosHoy.filter((e) => e.tipo === "entrada").length;
-  const salidasHoy   = eventosHoy.filter((e) => e.tipo === "salida").length;
-  const alertasHoy   = eventosHoy.filter((e) => e.fuera_de_horario).length;
+  const eventosHoy  = eventos.filter((e) => e.created_at >= hoyInicio);
+  const entradasHoy = eventosHoy.filter((e) => e.tipo === "entrada").length;
+  const salidasHoy  = eventosHoy.filter((e) => e.tipo === "salida").length;
 
   const unidadesEnPatio = positions.filter(
     (p) => p.lat !== 0 && p.lng !== 0 && estaEnPatio(p.lat, p.lng)
@@ -76,13 +82,6 @@ export default function GeocercaGPS({ positions = [] }) {
           </div>
         </div>
         <div className="rounded-xl border border-border bg-card p-3">
-          <p className="text-xs text-muted-foreground mb-1">Alertas fuera horario</p>
-          <div className="flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4 text-amber-500 shrink-0" />
-            <span className="text-xl font-bold text-foreground">{alertasHoy}</span>
-          </div>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-3">
           <p className="text-xs text-muted-foreground mb-1">En patio ahora</p>
           <div className="flex items-center gap-2">
             <Truck className="w-4 h-4 text-gm-primary shrink-0" />
@@ -98,9 +97,6 @@ export default function GeocercaGPS({ positions = [] }) {
           <p className="text-xs font-semibold text-foreground">Patio Transportes GM</p>
           <p className="text-xs text-muted-foreground">
             {PATIO_LAT.toFixed(4)}, {PATIO_LNG.toFixed(4)} · radio {PATIO_RADIO_M} m
-          </p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Horario: 06:00 – 22:00
           </p>
         </div>
       </div>
@@ -147,11 +143,7 @@ export default function GeocercaGPS({ positions = [] }) {
             {eventos.map((ev) => (
               <div
                 key={ev.id}
-                className={`flex items-start gap-3 p-3 rounded-xl border ${
-                  ev.fuera_de_horario
-                    ? "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800"
-                    : "bg-card border-border"
-                }`}
+                className="flex items-start gap-3 p-3 rounded-xl border bg-card border-border"
               >
                 <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
                   ev.tipo === "entrada"
@@ -164,19 +156,45 @@ export default function GeocercaGPS({ positions = [] }) {
                   }
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className={`text-xs font-bold uppercase ${
-                      ev.tipo === "entrada" ? "text-green-600" : "text-blue-600"
-                    }`}>
-                      {ev.tipo === "entrada" ? "Entrada" : "Salida"}
-                    </span>
-                    {ev.fuera_de_horario && (
-                      <span className="flex items-center gap-0.5 text-[10px] font-semibold text-amber-600 bg-amber-100 dark:bg-amber-900/40 px-1.5 py-0.5 rounded-full">
-                        <Clock className="w-2.5 h-2.5" />
-                        Fuera de horario
-                      </span>
-                    )}
-                  </div>
+                  {(() => {
+                    const fecha = new Date(ev.created_at);
+                    const esHoy = fecha.toDateString() === new Date().toDateString();
+                    const hora = fecha.toLocaleTimeString("es-MX", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                    });
+                    const fechaStr = fecha.toLocaleDateString("es-MX", {
+                      day: "2-digit",
+                      month: "short",
+                    });
+                    const colorTipo = ev.tipo === "entrada"
+                      ? "text-green-600 dark:text-green-400"
+                      : "text-blue-600 dark:text-blue-400";
+                    const label = ev.tipo === "entrada" ? "Entrada" : "Salida";
+                    if (esHoy) {
+                      return (
+                        <div className="flex items-center gap-1.5">
+                          <span className={`text-xs font-bold uppercase tracking-wide ${colorTipo}`}>
+                            {label}
+                          </span>
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">
+                            {hora}
+                          </span>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div className="flex flex-col">
+                        <span className={`text-xs font-bold uppercase tracking-wide ${colorTipo}`}>
+                          {label}
+                        </span>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          {fechaStr} · {hora}
+                        </span>
+                      </div>
+                    );
+                  })()}
                   <p className="text-sm font-medium text-foreground truncate">
                     {ev.wialon_nombre}
                   </p>

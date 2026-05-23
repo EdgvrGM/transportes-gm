@@ -97,6 +97,8 @@ export default function FuelRegistrarViaje() {
     ruta_ida: "",
     kilometros_total: "",
     km_gps: false,
+    gps_tramo_desde: "",
+    gps_tramo_hasta: "",
     litros_combustible: "",
     costo_combustible: "",
     casetas_ida: "",
@@ -288,6 +290,8 @@ export default function FuelRegistrarViaje() {
       ...prev,
       kilometros_total: kmTramo,
       km_gps: true,
+      gps_tramo_desde: gpsPoints[sliderInicio]?.timestamp || "",
+      gps_tramo_hasta: gpsPoints[sliderFin]?.timestamp || "",
     }));
   };
 
@@ -426,6 +430,8 @@ export default function FuelRegistrarViaje() {
       ruta_ida: viaje.ruta_ida,
       kilometros_total: parseFloat(viaje.kilometros_total),
       km_gps: viaje.km_gps,
+      gps_tramo_desde: viaje.gps_tramo_desde || null,
+      gps_tramo_hasta: viaje.gps_tramo_hasta || null,
       km_por_litro: (litros !== null && litros > 0)
         ? parseFloat(viaje.kilometros_total) / litros
         : 0,
@@ -817,6 +823,8 @@ export default function FuelRegistrarViaje() {
                           ...prev,
                           kilometros_total: e.target.value,
                           km_gps: false,
+                          gps_tramo_desde: "",
+                          gps_tramo_hasta: "",
                         }))}
                         required
                         placeholder="km"

@@ -138,6 +138,8 @@ export default function FuelViajes() {
     ruta_ida: "",
     kilometros_total: "",
     km_gps: false,
+    gps_tramo_desde: "",
+    gps_tramo_hasta: "",
     litros_combustible: "",
     costo_combustible: "",
     casetas_ida: "",
@@ -239,8 +241,26 @@ export default function FuelViajes() {
       }
 
       setGpsPoints(points);
-      setSliderInicio(0);
-      setSliderFin(points.length - 1);
+
+      const hasSavedTramo = formData.gps_tramo_desde && formData.gps_tramo_hasta;
+      if (hasSavedTramo) {
+        const targetDesde = new Date(formData.gps_tramo_desde).getTime();
+        const targetHasta = new Date(formData.gps_tramo_hasta).getTime();
+        let closestInicio = 0, minD = Infinity;
+        let closestFin = points.length - 1, minF = Infinity;
+        points.forEach((p, i) => {
+          const dDesde = Math.abs(new Date(p.timestamp).getTime() - targetDesde);
+          if (dDesde < minD) { minD = dDesde; closestInicio = i; }
+          const dHasta = Math.abs(new Date(p.timestamp).getTime() - targetHasta);
+          if (dHasta < minF) { minF = dHasta; closestFin = i; }
+        });
+        setSliderInicio(closestInicio);
+        setSliderFin(closestFin);
+      } else {
+        setSliderInicio(0);
+        setSliderFin(points.length - 1);
+      }
+
       setGpsStatus("success");
 
     } catch (err) {
@@ -254,6 +274,8 @@ export default function FuelViajes() {
       ...prev,
       kilometros_total: kmTramo,
       km_gps: true,
+      gps_tramo_desde: gpsPoints[sliderInicio]?.timestamp || "",
+      gps_tramo_hasta: gpsPoints[sliderFin]?.timestamp || "",
     }));
   };
 
@@ -490,6 +512,8 @@ export default function FuelViajes() {
       // CAMBIO 2: nuevo formato km
       kilometros_total: viaje.kilometros_total || viaje.kilometros || "",
       km_gps: viaje.km_gps || false,
+      gps_tramo_desde: viaje.gps_tramo_desde || "",
+      gps_tramo_hasta: viaje.gps_tramo_hasta || "",
       litros_combustible: viaje.litros_combustible ?? "",
       costo_combustible: viaje.costo_combustible ?? "",
       sinDiesel: viaje.litros_combustible === 0,
@@ -533,6 +557,8 @@ export default function FuelViajes() {
       ruta_ida: "",
       kilometros_total: "",
       km_gps: false,
+      gps_tramo_desde: "",
+      gps_tramo_hasta: "",
       litros_combustible: "",
       costo_combustible: "",
       casetas_ida: "",
@@ -601,6 +627,8 @@ export default function FuelViajes() {
       ruta_ida: formData.ruta_ida,
       kilometros_total: kmTotal,
       km_gps: formData.km_gps,
+      gps_tramo_desde: formData.gps_tramo_desde || null,
+      gps_tramo_hasta: formData.gps_tramo_hasta || null,
       km_por_litro: (litros && litros > 0) ? kmTotal / litros : 0,
       litros_combustible: litros,
       costo_combustible: costoFuel,
@@ -1165,6 +1193,8 @@ export default function FuelViajes() {
                           ...prev,
                           kilometros_total: e.target.value,
                           km_gps: false,
+                          gps_tramo_desde: "",
+                          gps_tramo_hasta: "",
                         }))}
                         required
                         placeholder="km"

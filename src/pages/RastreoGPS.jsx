@@ -57,7 +57,8 @@ function PanelContent({
           {isLoading ? (
             <div className="p-4 text-sm text-muted-foreground">Cargando...</div>
           ) : (
-            positions.map((p) => {
+            <div className="flex-1 overflow-y-auto min-h-0">
+            {positions.map((p) => {
               const camion      = vinculaciones[p.id];
               const enRalenti   = p.motor && p.velocidad === 0;
               const textoEstado = enRalenti
@@ -128,7 +129,8 @@ function PanelContent({
                   </div>
                 </button>
               );
-            })
+            })}
+            </div>
           )}
         </>
       )}
@@ -242,20 +244,18 @@ export default function RastreoGPS() {
     refetchInterval: 30000,
   });
 
-  // Conteo de eventos de geocerca fuera de horario hoy
   const { data: eventosGeocercaHoy = 0 } = useQuery({
     queryKey: ["geocerca-count"],
     queryFn: async () => {
-      const hoy = new Date();
-      hoy.setHours(0, 0, 0, 0);
-      const { count } = await supabase
+      const hoy = new Date().toISOString().split("T")[0];
+      const { count, error } = await supabase
         .from("EventoGeocerca")
         .select("*", { count: "exact", head: true })
-        .gte("created_at", hoy.toISOString())
-        .eq("fuera_de_horario", true);
-      return count ?? 0;
+        .gte("created_at", hoy);
+      if (error) throw error;
+      return count || 0;
     },
-    refetchInterval: 60000,
+    refetchInterval: 30000,
   });
 
   // Conteo de links compartidos activos
@@ -452,7 +452,7 @@ export default function RastreoGPS() {
         </div>
 
         {/* ── Bottom Navigation (móvil) ────────────────────────────────── */}
-        <div className="fixed bottom-0 left-0 right-0 h-16 bg-card border-t border-border flex items-center justify-around z-50 md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-2">
+        <div className="fixed bottom-0 left-0 right-0 h-16 bg-card border-t border-border flex items-center overflow-x-auto z-50 md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {tabs.map((t) => {
             const Icon   = t.icon;
             const active = activeTab === t.id && bottomSheetState !== "closed";
@@ -460,18 +460,15 @@ export default function RastreoGPS() {
               <button
                 key={t.id}
                 onClick={() => {
-                  // BUG 3 FIX: abrir directo en "expanded" para tabs que necesitan más espacio
                   const tabsExpandidos = ["historial", "alertas", "reportes", "compartidos", "geocerca", "ralenti"];
                   if (bottomSheetState === "closed") {
                     setBottomSheetState(tabsExpandidos.includes(t.id) ? "expanded" : "medium");
-                  } else if (activeTab === t.id) {
-                    setBottomSheetState("closed");
-                  } else if (tabsExpandidos.includes(t.id)) {
-                    setBottomSheetState("expanded");
+                  } else if (activeTab !== t.id) {
+                    if (tabsExpandidos.includes(t.id)) setBottomSheetState("expanded");
                   }
                   setActiveTab(t.id);
                 }}
-                className={`flex flex-col items-center justify-center gap-1 w-16 h-full transition-colors relative ${
+                className={`flex flex-col items-center justify-center gap-1 min-w-[72px] h-full transition-colors relative shrink-0 ${
                   active
                     ? "text-yellow-500 font-bold"
                     : "text-muted-foreground hover:text-foreground"

@@ -115,11 +115,11 @@ export default function RalentiGPS({ positions = [], ralentiActivo = {} }) {
                       : "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800"
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-bold text-foreground uppercase truncate">
+                  <div className="flex flex-col gap-1 mb-2">
+                    <span className="text-sm font-bold text-foreground uppercase">
                       {p.nombre}
                     </span>
-                    <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                    <div className="flex items-center gap-1.5">
                       {excesivo && (
                         <span className="text-[10px] font-semibold bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 px-1.5 py-0.5 rounded-full whitespace-nowrap">
                           Alerta enviada

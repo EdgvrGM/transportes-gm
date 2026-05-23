@@ -3,8 +3,6 @@ const WIALON_HOST = "https://hst-api.wialon.com/wialon/ajax.html";
 const PATIO_LAT      = 18.9350;
 const PATIO_LNG      = -103.8899;
 const PATIO_RADIO_M  = 70;
-const HORARIO_INICIO = 6;
-const HORARIO_FIN    = 22;
 
 function distanciaMetros(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R    = 6371000;
@@ -23,10 +21,6 @@ function estaEnPatio(lat: number, lng: number): boolean {
   return distanciaMetros(lat, lng, PATIO_LAT, PATIO_LNG) <= PATIO_RADIO_M;
 }
 
-function fueraDeHorario(): boolean {
-  const hora = new Date().getHours();
-  return hora < HORARIO_INICIO || hora >= HORARIO_FIN;
-}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -245,8 +239,7 @@ async function ejecutarGeocerca(env: Env): Promise<void> {
       if (enPatioPrev === null) continue;
       if (enPatioAhora === enPatioPrev) continue;
 
-      const tipo  = enPatioAhora ? "entrada" : "salida";
-      const fuera = fueraDeHorario();
+      const tipo = enPatioAhora ? "entrada" : "salida";
 
       await fetch(`${env.SUPABASE_URL}/rest/v1/EventoGeocerca`, {
         method: "POST",
@@ -262,11 +255,11 @@ async function ejecutarGeocerca(env: Env): Promise<void> {
           tipo,
           lat:              unit.lat,
           lng:              unit.lng,
-          fuera_de_horario: fuera,
+          fuera_de_horario: false,
         }),
       });
 
-      console.log(`[Geocerca] ${unit.nombre} → ${tipo}${fuera ? " (fuera de horario)" : ""}`);
+      console.log(`[Geocerca] ${unit.nombre} → ${tipo}`);
     }
   } catch (err) {
     console.error("[Geocerca cron] error:", String(err));
@@ -292,7 +285,7 @@ async function ejecutarRalenti(env: Env): Promise<void> {
       const nombre = unit.nombre as string;
 
       if (enRalenti) {
-        const getRes  = await fetch(
+        const getRes = await fetch(
           `${env.SUPABASE_URL}/rest/v1/RalentiActivo?wialon_unit_id=eq.${unitId}&select=id,inicio_ralenti,alerta_enviada`,
           {
             headers: {
@@ -301,10 +294,14 @@ async function ejecutarRalenti(env: Env): Promise<void> {
             },
           }
         );
+        if (!getRes.ok) {
+          console.error(`[Ralenti] Error leyendo RalentiActivo para ${nombre}: ${getRes.status} ${await getRes.text()}`);
+          continue;
+        }
         const existing = JSON.parse(await getRes.text()) as { id: number; inicio_ralenti: string; alerta_enviada: boolean }[];
 
         if (existing.length === 0) {
-          await fetch(`${env.SUPABASE_URL}/rest/v1/RalentiActivo`, {
+          const postRes = await fetch(`${env.SUPABASE_URL}/rest/v1/RalentiActivo`, {
             method: "POST",
             headers: {
               "Content-Type":  "application/json",
@@ -319,7 +316,11 @@ async function ejecutarRalenti(env: Env): Promise<void> {
               alerta_enviada: false,
             }),
           });
-          console.log(`[Ralenti] ${nombre} → inicio de ralentí`);
+          if (!postRes.ok) {
+            console.error(`[Ralenti] Error creando RalentiActivo para ${nombre}: ${postRes.status} ${await postRes.text()}`);
+          } else {
+            console.log(`[Ralenti] ${nombre} → inicio de ralentí`);
+          }
         } else {
           const registro  = existing[0];
           const inicioMs  = new Date(registro.inicio_ralenti).getTime();
@@ -327,7 +328,7 @@ async function ejecutarRalenti(env: Env): Promise<void> {
 
           if (duracionS >= RALENTI_UMBRAL_S && !registro.alerta_enviada) {
             const minutos = Math.round(duracionS / 60);
-            await fetch(`${env.SUPABASE_URL}/rest/v1/AlertaGPS`, {
+            const alertaRes = await fetch(`${env.SUPABASE_URL}/rest/v1/AlertaGPS`, {
               method: "POST",
               headers: {
                 "Content-Type":  "application/json",
@@ -336,26 +337,31 @@ async function ejecutarRalenti(env: Env): Promise<void> {
                 "Prefer":        "return=minimal",
               },
               body: JSON.stringify({
-                tipo:          "ralenti",
-                wialon_nombre: nombre,
-                mensaje:       `${nombre} lleva ${minutos} minutos con motor encendido sin moverse`,
-                leida:         false,
+                tipo:           "ralenti",
+                wialon_unit_id: unitId,
+                wialon_nombre:  nombre,
+                mensaje:        `${nombre} lleva ${minutos} minutos con motor encendido sin moverse`,
+                leida:          false,
               }),
             });
-            await fetch(
-              `${env.SUPABASE_URL}/rest/v1/RalentiActivo?wialon_unit_id=eq.${unitId}`,
-              {
-                method: "PATCH",
-                headers: {
-                  "Content-Type":  "application/json",
-                  "apikey":        env.SUPABASE_SERVICE_KEY,
-                  "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-                  "Prefer":        "return=minimal",
-                },
-                body: JSON.stringify({ alerta_enviada: true }),
-              }
-            );
-            console.log(`[Ralenti] ${nombre} → alerta enviada (${minutos} min)`);
+            if (!alertaRes.ok) {
+              console.error(`[Ralenti] Error insertando alerta para ${nombre}: ${alertaRes.status} ${await alertaRes.text()}`);
+            } else {
+              await fetch(
+                `${env.SUPABASE_URL}/rest/v1/RalentiActivo?wialon_unit_id=eq.${unitId}`,
+                {
+                  method: "PATCH",
+                  headers: {
+                    "Content-Type":  "application/json",
+                    "apikey":        env.SUPABASE_SERVICE_KEY,
+                    "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+                    "Prefer":        "return=minimal",
+                  },
+                  body: JSON.stringify({ alerta_enviada: true }),
+                }
+              );
+              console.log(`[Ralenti] ${nombre} → alerta enviada (${minutos} min)`);
+            }
           }
         }
       } else {
