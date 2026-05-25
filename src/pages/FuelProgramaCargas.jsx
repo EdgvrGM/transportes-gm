@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { supabase } from "@/supabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -59,10 +59,12 @@ import {
   Info,
   ImageIcon,
   RotateCcw,
+  Route,
 } from "lucide-react";
 import { format, addDays, parseISO, getISOWeek } from "date-fns";
 import { es } from "date-fns/locale";
 import { TrailerIcon } from "./Layout";
+import ModalRutaViaje from "@/components/gps/ModalRutaViaje";
 
 const FECHA_LIMITE_ARCHIVO = '2026-04-24';
 
@@ -310,6 +312,7 @@ export default function FuelProgramaCargas() {
   const [evidenciaAEliminar, setEvidenciaAEliminar] = useState(null);
   const [fotoAEliminar, setFotoAEliminar] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [viajeRutaSeleccionado, setViajeRutaSeleccionado] = useState(null);
   const [formData, setFormData] = useState({
     id: null,
     titulo: "",
@@ -447,6 +450,21 @@ export default function FuelProgramaCargas() {
       return data || [];
     },
   });
+
+  // IDs de viajes que tienen ruta GPS guardada en ViajeRuta
+  const { data: rutasGuardadas = [] } = useQuery({
+    queryKey: ["rutasGuardadas"],
+    queryFn: async () => {
+      const { data } = await supabase.from("ViajeRuta").select("viaje_id");
+      return data || [];
+    },
+    staleTime: 30000,
+  });
+
+  const rutasSet = useMemo(
+    () => new Set(rutasGuardadas.map((r) => String(r.viaje_id))),
+    [rutasGuardadas]
+  );
 
   const guardarMutation = useMutation({
     onMutate: () => setErrorMsg(null),
@@ -1148,13 +1166,71 @@ export default function FuelProgramaCargas() {
                       </div>
 
                       {/* Fila Inferior: Botón Centrado y Badge Evidencias */}
-                        <div className="relative flex flex-col md:flex-row justify-center items-center pt-4 md:pt-2 border-t border-border/40 mt-2 gap-3 min-h-[3rem]">
-                          <div className="md:absolute md:left-0 flex items-center justify-center w-full md:w-auto gap-2">
-                            {(() => {
-                              const tieneEvidencias = viaje.evidencias?.length > 0;
-                              const todasEntregadas = tieneEvidencias && viaje.evidencias.some(e => e.entregada);
-                              
-                              return (
+                        {(() => {
+                          const registeredViaje = getRegisteredTrip(viaje, diaVerActivo);
+                          const hasFuel = registeredViaje && parseFloat(registeredViaje.litros_combustible || 0) > 0;
+                          const hasTolls = registeredViaje && registeredViaje.casetas_ida !== null && registeredViaje.casetas_regreso !== null;
+                          const hasRuta = registeredViaje && rutasSet.has(String(registeredViaje.id));
+                          const tieneEvidencias = viaje.evidencias?.length > 0;
+                          const todasEntregadas = tieneEvidencias && viaje.evidencias.some(e => e.entregada);
+
+                          let mainButton;
+                          if (registeredViaje) {
+                            if (hasFuel && hasTolls) {
+                              mainButton = (
+                                <Button
+                                  variant="outline"
+                                  onClick={() => {
+                                    setViajeConsumoSeleccionado(registeredViaje);
+                                    setDialogConsumoAbierto(true);
+                                  }}
+                                  className="min-h-[2.25rem] h-auto py-2 px-4 md:px-6 gap-2 border-green-200 text-green-700 bg-green-50/50 hover:bg-green-100 dark:border-green-900/30 dark:text-green-400 dark:bg-green-900/20 dark:hover:bg-green-900/40 rounded-xl font-black text-[10px] shadow-sm active:scale-95 transition-all text-center whitespace-normal"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                  <span>VER DETALLES DE CONSUMO</span>
+                                </Button>
+                              );
+                            } else {
+                              let btnLabel = "COMPLETAR REGISTRO";
+                              let btnIcon = <Edit className="w-3.5 h-3.5" />;
+                              let btnClass = "border-orange-200 text-orange-700 bg-orange-50/50 hover:bg-orange-100 dark:border-orange-900/30 dark:text-orange-400 dark:bg-orange-900/20";
+                              if (!hasFuel && hasTolls) {
+                                btnLabel = "REGISTRAR COMBUSTIBLE";
+                                btnIcon = <Fuel className="w-3.5 h-3.5" />;
+                                btnClass = "border-amber-200 text-amber-700 bg-amber-50/50 hover:bg-amber-100 dark:border-amber-900/30 dark:text-amber-400 dark:bg-amber-900/20";
+                              } else if (hasFuel && !hasTolls) {
+                                btnLabel = "REGISTRAR CASETAS";
+                                btnIcon = <Ticket className="w-3.5 h-3.5" />;
+                                btnClass = "border-indigo-200 text-indigo-700 bg-indigo-50/50 hover:bg-indigo-100 dark:border-indigo-900/30 dark:text-indigo-400 dark:bg-indigo-900/20";
+                              }
+                              mainButton = (
+                                <Button
+                                  variant="outline"
+                                  onClick={() => handleRegistrarCombustible(viaje)}
+                                  className={`min-h-[2.25rem] h-auto py-2 px-4 md:px-6 gap-2 rounded-xl font-black text-[10px] shadow-sm active:scale-95 transition-all text-center whitespace-normal ${btnClass}`}
+                                >
+                                  {btnIcon}
+                                  <span>{btnLabel}</span>
+                                </Button>
+                              );
+                            }
+                          } else {
+                            mainButton = (
+                              <Button
+                                variant="outline"
+                                onClick={() => handleRegistrarCombustible(viaje)}
+                                className="min-h-[2.25rem] h-auto py-2 px-4 md:px-6 border-orange-200 text-orange-600 hover:bg-orange-50 dark:border-orange-900/30 dark:text-orange-400 dark:bg-orange-900/20 dark:hover:bg-orange-900/40 rounded-xl font-black text-[10px] gap-2 shadow-sm active:scale-95 transition-all text-center whitespace-normal"
+                              >
+                                <Plus className="w-4 h-4" />
+                                <span>REGISTRAR CONSUMOS DE COMBUSTIBLE Y CASETAS</span>
+                              </Button>
+                            );
+                          }
+
+                          return (
+                            <div className="relative flex flex-col md:flex-row justify-center items-center pt-4 md:pt-2 border-t border-border/40 mt-2 gap-3 min-h-[3rem]">
+                              {/* LEFT: evidencias */}
+                              <div className="md:absolute md:left-0 flex items-center justify-center w-full md:w-auto gap-2">
                                 <button
                                   onClick={() => handleAbrirGestorEvidencias(viaje)}
                                   className={`inline-flex items-center px-3 py-1.5 rounded-lg text-[10px] font-black transition-all hover:scale-105 shadow-sm border ${
@@ -1166,76 +1242,29 @@ export default function FuelProgramaCargas() {
                                   {todasEntregadas ? <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> : <Clock className="w-3.5 h-3.5 mr-1.5" />}
                                   {todasEntregadas ? "EVIDENCIA: ENTREGADA" : "EVIDENCIA: SIN ENTREGAR"}
                                 </button>
-                              );
-                            })()}
-                          </div>
-                          <div className="flex items-center justify-center w-full md:w-auto gap-2 z-10">
-                            {(() => {
-                            const registeredViaje = getRegisteredTrip(viaje, diaVerActivo);
-                            
-                            if (registeredViaje) {
-                              const hasFuel = parseFloat(registeredViaje.litros_combustible || 0) > 0;
-                              const hasTolls = registeredViaje.casetas_ida !== null && registeredViaje.casetas_regreso !== null;
+                              </div>
 
-                              if (hasFuel && hasTolls) {
-                                return (
-                                  <div className="flex gap-2 w-full justify-center">
-                                    <Button
-                                      variant="outline"
-                                      onClick={() => {
-                                        setViajeConsumoSeleccionado(registeredViaje);
-                                        setDialogConsumoAbierto(true);
-                                      }}
-                                      className="min-h-[2.25rem] h-auto py-2 px-4 md:px-6 gap-2 border-green-200 text-green-700 bg-green-50/50 hover:bg-green-100 dark:border-green-900/30 dark:text-green-400 dark:bg-green-900/20 dark:hover:bg-green-900/40 rounded-xl font-black text-[10px] shadow-sm active:scale-95 transition-all text-center whitespace-normal"
-                                    >
-                                      <Eye className="w-3.5 h-3.5" />
-                                      <span>VER DETALLES DE CONSUMO</span>
-                                    </Button>
-                                  </div>
-                                );
-                              }
+                              {/* CENTER: main action */}
+                              <div className="flex items-center justify-center w-full md:w-auto gap-2 z-10">
+                                {mainButton}
+                              </div>
 
-                              // Caso parcial: Falta combustible o casetas
-                              let btnLabel = "COMPLETAR REGISTRO";
-                              let btnIcon = <Edit className="w-3.5 h-3.5" />;
-                              let btnClass = "border-orange-200 text-orange-700 bg-orange-50/50 hover:bg-orange-100 dark:border-orange-900/30 dark:text-orange-400 dark:bg-orange-900/20";
-
-                              if (!hasFuel && hasTolls) {
-                                btnLabel = "REGISTRAR COMBUSTIBLE";
-                                btnIcon = <Fuel className="w-3.5 h-3.5" />;
-                                btnClass = "border-amber-200 text-amber-700 bg-amber-50/50 hover:bg-amber-100 dark:border-amber-900/30 dark:text-amber-400 dark:bg-amber-900/20";
-                              } else if (hasFuel && !hasTolls) {
-                                btnLabel = "REGISTRAR CASETAS";
-                                btnIcon = <Ticket className="w-3.5 h-3.5" />;
-                                btnClass = "border-indigo-200 text-indigo-700 bg-indigo-50/50 hover:bg-indigo-100 dark:border-indigo-900/30 dark:text-indigo-400 dark:bg-indigo-900/20";
-                              }
-
-                              return (
-                                <Button
-                                  variant="outline"
-                                  onClick={() => handleRegistrarCombustible(viaje)}
-                                  className={`min-h-[2.25rem] h-auto py-2 px-4 md:px-6 gap-2 rounded-xl font-black text-[10px] shadow-sm active:scale-95 transition-all text-center whitespace-normal ${btnClass}`}
-                                >
-                                  {btnIcon}
-                                  <span>{btnLabel}</span>
-                                </Button>
-                              );
-                            }
-
-                            // No existe registro en la tabla Viaje
-                            return (
-                              <Button
-                                variant="outline"
-                                onClick={() => handleRegistrarCombustible(viaje)}
-                                className="min-h-[2.25rem] h-auto py-2 px-4 md:px-6 border-orange-200 text-orange-600 hover:bg-orange-50 dark:border-orange-900/30 dark:text-orange-400 dark:bg-orange-900/20 dark:hover:bg-orange-900/40 rounded-xl font-black text-[10px] gap-2 shadow-sm active:scale-95 transition-all text-center whitespace-normal"
-                              >
-                                <Plus className="w-4 h-4" />
-                                <span>REGISTRAR CONSUMOS DE COMBUSTIBLE Y CASETAS</span>
-                              </Button>
-                              );
-                            })()}
-                          </div>
-                        </div>
+                              {/* RIGHT: VER RUTA */}
+                              {hasRuta && (
+                                <div className="md:absolute md:right-0">
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => setViajeRutaSeleccionado(registeredViaje)}
+                                    className="min-h-[2.25rem] h-auto py-2 px-4 gap-2 border-blue-200 text-blue-700 bg-blue-50/50 hover:bg-blue-100 dark:border-blue-900/30 dark:text-blue-400 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 rounded-xl font-black text-[10px] shadow-sm active:scale-95 transition-all"
+                                  >
+                                    <Route className="w-3.5 h-3.5" />
+                                    <span>VER RUTA</span>
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                     </div>
                   );
                 }
@@ -2039,6 +2068,12 @@ export default function FuelProgramaCargas() {
             })()}
           </DialogContent>
         </Dialog>
+
+        {/* Modal reproducción de ruta GPS */}
+        <ModalRutaViaje
+          viaje={viajeRutaSeleccionado}
+          onClose={() => setViajeRutaSeleccionado(null)}
+        />
       </div>
     </div>
   );

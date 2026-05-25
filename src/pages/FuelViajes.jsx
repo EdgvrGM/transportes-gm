@@ -409,6 +409,15 @@ export default function FuelViajes() {
       return result;
     },
     onSuccess: async (data, variables) => {
+      // Guardar/actualizar puntos GPS si el tramo fue confirmado
+      if (variables.puntosRuta) {
+        await supabase.from("ViajeRuta").delete().eq("viaje_id", variables.id);
+        await supabase.from("ViajeRuta").insert({
+          viaje_id: variables.id,
+          puntos: variables.puntosRuta,
+          total_puntos: variables.puntosRuta.length,
+        });
+      }
       try {
         const hasFuel = parseFloat(variables.data.litros_combustible || 0) > 0;
         const fechaMatch = typeof variables.data.fecha === 'string'
@@ -427,6 +436,7 @@ export default function FuelViajes() {
       }
       queryClient.invalidateQueries({ queryKey: ["viajes"] });
       queryClient.invalidateQueries({ queryKey: ["viajesRegistrados"] });
+      queryClient.invalidateQueries({ queryKey: ["rutasGuardadas"] });
       cerrarDialog();
     },
     onError: (err) => {
@@ -639,7 +649,11 @@ export default function FuelViajes() {
       notas: formData.notas,
     };
     if (viajeEditando)
-      actualizarMutation.mutate({ id: viajeEditando.id, data: datosViaje });
+      actualizarMutation.mutate({
+        id: viajeEditando.id,
+        data: datosViaje,
+        puntosRuta: formData.km_gps && tramoPoints.length > 1 ? tramoPoints : null,
+      });
   };
 
   const getEficienciaColor = (kmPorLitro) => {

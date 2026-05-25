@@ -297,15 +297,27 @@ export default function FuelRegistrarViaje() {
 
   const crearViajeMutation = useMutation({
     mutationFn: async (data) => {
+      const { _puntosRuta, ...datosViaje } = data;
       const { data: result, error } = await supabase
         .from("Viaje")
-        .insert([data])
+        .insert([datosViaje])
         .select();
 
       if (error) throw new Error(error.message);
-      return { result };
+      return { result, puntosRuta: _puntosRuta };
     },
-    onSuccess: async () => {
+    onSuccess: async (data) => {
+      const viajeId = data.result[0]?.id;
+
+      // Guardar puntos del tramo GPS para reproducción posterior
+      if (viajeId && data.puntosRuta) {
+        await supabase.from("ViajeRuta").insert({
+          viaje_id: viajeId,
+          puntos: data.puntosRuta,
+          total_puntos: data.puntosRuta.length,
+        });
+      }
+
       if (viajeRegistradoId) {
         await supabase
           .from("viajes_registrados")
@@ -323,6 +335,7 @@ export default function FuelRegistrarViaje() {
       }
       queryClient.invalidateQueries({ queryKey: ["viajes"] });
       queryClient.invalidateQueries({ queryKey: ["viajes_registrados"] });
+      queryClient.invalidateQueries({ queryKey: ["rutasGuardadas"] });
       navigate(createPageUrl("ControlCombustible"));
     },
     onError: (_err) => {
@@ -431,7 +444,10 @@ export default function FuelRegistrarViaje() {
       notas: viaje.notas,
       viaje_registrado_id: viajeRegistradoId ? parseInt(viajeRegistradoId, 10) : null,
     };
-    crearViajeMutation.mutate(datosViaje);
+    crearViajeMutation.mutate({
+      ...datosViaje,
+      _puntosRuta: viaje.km_gps && tramoPoints.length > 1 ? tramoPoints : null,
+    });
   };
 
   const handleConductorChange = (id) => {
