@@ -915,6 +915,17 @@ export default function FuelProgramaCargas() {
 
   const getRegisteredTrip = (viajeProgramado, diaActivo) => {
     if (!programaSeleccionado) return null;
+
+    // Match directo por FK: sin importar la fecha de carga, el vínculo es exacto.
+    if (viajeProgramado.id) {
+      const byFk = viajes.find(
+        (v) => v.viaje_registrado_id != null &&
+          String(v.viaje_registrado_id) === String(viajeProgramado.id)
+      );
+      if (byFk) return byFk;
+    }
+
+    // Fallback por fecha para viajes registrados antes de esta mejora (sin FK).
     const diasMap = { "Lunes": 0, "Martes": 1, "Miércoles": 2, "Jueves": 3, "Viernes": 4, "Sábado": 5 };
     const indexDia = diasMap[diaActivo] || 0;
     const fechaInicio = parseISO(programaSeleccionado.fecha_inicio);

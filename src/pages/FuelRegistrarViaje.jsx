@@ -302,19 +302,8 @@ export default function FuelRegistrarViaje() {
         .insert([data])
         .select();
 
-      if (error) {
-        if (error.message.includes("viaje_id") || error.code === "PGRST204" || error.code === "42703") {
-          const { viaje_id, ...dataSinViajeId } = data;
-          const { data: resultFallback, error: errorFallback } = await supabase
-            .from("Viaje")
-            .insert([dataSinViajeId])
-            .select();
-          if (errorFallback) throw new Error(errorFallback.message);
-          return { result: resultFallback, usabaViajeId: false };
-        }
-        throw new Error(error.message);
-      }
-      return { result, usabaViajeId: true };
+      if (error) throw new Error(error.message);
+      return { result };
     },
     onSuccess: async () => {
       if (viajeRegistradoId) {
@@ -440,7 +429,7 @@ export default function FuelRegistrarViaje() {
       casetas_ida: casetasIda,
       casetas_regreso: casetasRegreso,
       notas: viaje.notas,
-      viaje_id: viajeRegistradoId ? parseInt(viajeRegistradoId, 10) : null,
+      viaje_registrado_id: viajeRegistradoId ? parseInt(viajeRegistradoId, 10) : null,
     };
     crearViajeMutation.mutate(datosViaje);
   };
