@@ -121,6 +121,12 @@
   pointer-events: none;
 }
 
+@media (max-width: 640px) {
+  .scroll-indicator {
+    display: none;
+  }
+}
+
 .mouse {
   width: 26px;
   height: 42px;

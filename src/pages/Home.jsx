@@ -15,7 +15,7 @@ import {
   MessageSquare,
   Settings,
 } from "lucide-react";
-import { motion, AnimatePresence, useMotionValue } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import LiquidButton from "@/components/LiquidButton";
@@ -71,13 +71,19 @@ export default function Home() {
   const [activeSection, setActiveSection] = useState("inicio");
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
   const [scrolled, setScrolled] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const videoRef = useRef(null);
 
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-
   const websiteInfo = staticWebsiteInfo;
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -85,26 +91,12 @@ export default function Home() {
     video.play().catch(() => {});
   }, []);
 
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      const { clientX, clientY } = e;
-      const { innerWidth, innerHeight } = window;
-      const x = (clientX / innerWidth - 0.5) * 60;
-      const y = (clientY / innerHeight - 0.5) * 60;
-      mouseX.set(x);
-      mouseY.set(y);
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [mouseX, mouseY]);
-
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
     if (element) {
       const offset = 80;
       const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - offset;
+      const offsetPosition = elementPosition + window.scrollY - offset;
 
       window.scrollTo({
         top: offsetPosition,
@@ -119,7 +111,7 @@ export default function Home() {
     const sections = ["inicio", "servicios", "nosotros", "contacto", "cotizar"];
     const observerOptions = {
       root: null,
-      rootMargin: "-20% 0px -70% 0px",
+      rootMargin: "-15% 0px -50% 0px",
       threshold: 0,
     };
 
@@ -179,7 +171,7 @@ export default function Home() {
   ];
 
   const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f1a8df21531359b12e1164/2dfaaffb2_LOGO.png";
-  const WHATSAPP_URL = `https://wa.me/523131911815?text=Hola, me gustaría solicitar una cotización`;
+  const WHATSAPP_URL = `https://wa.me/523131911815?text=${encodeURIComponent("Hola, me gustaría solicitar una cotización")}`;
   const NAV_LINKS = [
     { id: 'inicio',    label: 'Inicio' },
     { id: 'servicios', label: 'Servicios' },
@@ -204,7 +196,7 @@ export default function Home() {
             maxWidth: '900px',
             padding: '10px 16px 10px 16px',
             borderRadius: '50px',
-            border: '0.5px solid rgba(255,255,255,0.12)',
+            border: '1px solid rgba(255,255,255,0.08)',
             background: scrolled
               ? 'rgba(10,10,10,0.95)'
               : 'rgba(10,10,10,0.75)',
@@ -287,7 +279,7 @@ export default function Home() {
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               style={{
                 background: 'rgba(255,255,255,0.08)',
-                border: '0.5px solid rgba(255,255,255,0.12)',
+                border: '1px solid rgba(255,255,255,0.08)',
                 borderRadius: '50px',
                 padding: '7px 10px',
                 cursor: 'pointer',
@@ -319,7 +311,7 @@ export default function Home() {
                 background: 'rgba(10,10,10,0.97)',
                 backdropFilter: 'blur(24px)',
                 WebkitBackdropFilter: 'blur(24px)',
-                border: '0.5px solid rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.08)',
                 borderRadius: '20px',
                 padding: '16px',
                 zIndex: 49,
@@ -388,7 +380,7 @@ export default function Home() {
             muted
             loop
             playsInline
-            preload="auto"
+            preload={isMobile ? "metadata" : "auto"}
             className="w-full h-full object-cover"
             style={{ willChange: 'transform' }}
           >
@@ -409,7 +401,7 @@ export default function Home() {
           zIndex: 2,
         }}>
           <Antigravity
-            count={250}
+            count={isMobile ? 90 : 250}
             magnetRadius={10}
             ringRadius={9}
             waveSpeed={0.12}
@@ -866,10 +858,10 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 gap-8 max-w-xl mx-auto">
+          <div className="max-w-xl mx-auto">
             <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
               <Card className="h-full border-0 shadow-2xl overflow-hidden group hover:shadow-3xl transition-all duration-300">
@@ -973,8 +965,8 @@ export default function Home() {
               {
                 icon: Phone,
                 title: "Teléfono",
-                content: "+52 313 324 2919",
-                //content2: "+52 313 136 96 06",
+                content: "+52 313 191 1815",
+                link: "tel:+523131911815",
                 bgGradient: "from-yellow-50 to-orange-50",
                 iconBg: "from-yellow-400 to-orange-500",
               },
@@ -982,7 +974,6 @@ export default function Home() {
                 icon: Mail,
                 title: "Email",
                 content: "ventas@transportesgm.mx",
-                content2: null,
                 link: "mailto:ventas@transportesgm.mx",
                 bgGradient: "from-amber-50 to-yellow-50",
                 iconBg: "from-amber-400 to-yellow-500",
@@ -990,27 +981,17 @@ export default function Home() {
               {
                 icon: MapPin,
                 title: "Ubicación",
-                content: "Tecoman, Colima, Mexico. 28110",
-                content2: null,
-                link: `https://www.google.com/maps/place/Tecom%C3%A1n,+Colima/@18.9151529,-103.8987044,8243m/data=!3m2!1e3!4b1!4m6!3m5!1s0x843ab659e3ad4c75:0xf75a2010d124c583!8m2!3d18.9173829!4d-103.8738031!16zL20vMDFnbjNt!5m1!1e1?entry=ttu&g_ep=EgoyMDI2MDQyNi4wIKXMDSoASAFQAw%3D%3D",
-                )}`,
+                content: "Tecomán, Colima, México. 28110",
+                link: "https://www.google.com/maps/place/Tecom%C3%A1n,+Colima/@18.9151529,-103.8987044,8243m/data=!3m2!1e3!4b1!4m6!3m5!1s0x843ab659e3ad4c75:0xf75a2010d124c583!8m2!3d18.9173829!4d-103.8738031!16zL20vMDFnbjNt!5m1!1e1",
                 bgGradient: "from-orange-50 to-amber-50",
                 iconBg: "from-orange-400 to-amber-500",
               },
             ].map((contact, index) => {
-              const Wrapper = contact.title === "Teléfonos" ? "div" : "a";
-              const wrapperProps =
-                contact.title === "Teléfonos"
-                  ? {}
-                  : {
-                      href: contact.link,
-                      target:
-                        contact.title === "Ubicación" ? "_blank" : undefined,
-                      rel:
-                        contact.title === "Ubicación"
-                          ? "noopener noreferrer"
-                          : undefined,
-                    };
+              const wrapperProps = {
+                href: contact.link,
+                target: contact.title === "Ubicación" ? "_blank" : undefined,
+                rel: contact.title === "Ubicación" ? "noopener noreferrer" : undefined,
+              };
 
               return (
                 <motion.div
@@ -1021,12 +1002,7 @@ export default function Home() {
                   transition={{ delay: index * 0.1 }}
                   className="h-full"
                 >
-                  <Wrapper
-                    {...wrapperProps}
-                    className={`block h-full ${
-                      contact.title === "Teléfonos" ? "" : "cursor-pointer"
-                    }`}
-                  >
+                  <a {...wrapperProps} className="block h-full cursor-pointer">
                     <Card className="relative overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-all duration-500 group h-full">
                       <div
                         className="absolute top-0 right-0 w-32 h-32 transform translate-x-16 -translate-y-16 rounded-full opacity-20 group-hover:scale-150 transition-transform duration-500"
@@ -1070,41 +1046,16 @@ export default function Home() {
                           </h3>
 
                           <div className="space-y-2">
-                            {contact.title === "Teléfonos" ? (
-                              <>
-                                <a
-                                  href={`tel:${contact.content.replace(
-                                    /\s/g,
-                                    "",
-                                  )}`}
-                                  className="block text-lg text-gray-700 hover:text-gray-900 transition-all duration-300 font-medium hover:scale-105"
-                                >
-                                  {contact.content}
-                                </a>
-                                {contact.content2 && (
-                                  <a
-                                    href={`tel:${contact.content2.replace(
-                                      /\s/g,
-                                      "",
-                                    )}`}
-                                    className="block text-lg text-gray-700 hover:text-gray-900 transition-all duration-300 font-medium hover:scale-105"
-                                  >
-                                    {contact.content2}
-                                  </a>
-                                )}
-                              </>
-                            ) : (
-                              <p className="text-lg text-gray-700 hover:text-gray-900 transition-all duration-300 font-medium group-hover:scale-105">
-                                {contact.content}
-                              </p>
-                            )}
+                            <p className="text-lg text-gray-700 hover:text-gray-900 transition-all duration-300 font-medium group-hover:scale-105">
+                              {contact.content}
+                            </p>
                           </div>
                         </div>
 
                         <div className="mt-6 w-16 h-1 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 group-hover:w-full transition-all duration-500" />
                       </CardContent>
                     </Card>
-                  </Wrapper>
+                  </a>
                 </motion.div>
               );
             })}
@@ -1279,7 +1230,7 @@ export default function Home() {
                   width="100%"
                   height="160"
                   style={{ border: 0 }}
-                  allowFullScreen=""
+                  allowFullScreen
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                   title="Ubicación Transportes GM"
