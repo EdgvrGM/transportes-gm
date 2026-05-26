@@ -168,6 +168,9 @@ export default function Home() {
     "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f1a8df21531359b12e1164/24b4ddaa7_Cliente4.png",
     "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f1a8df21531359b12e1164/9f64daa60_Cliente5.png",
     "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f1a8df21531359b12e1164/9f9a6c33d_Cliente6.png",
+    "https://emdctovxdnqauiffxobg.supabase.co/storage/v1/object/public/logos/Cliente%202.png",
+    "https://emdctovxdnqauiffxobg.supabase.co/storage/v1/object/public/logos/logo-mamut-2.png",
+    "https://emdctovxdnqauiffxobg.supabase.co/storage/v1/object/public/logos/Cliente%203.png",
   ];
 
   const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f1a8df21531359b12e1164/2dfaaffb2_LOGO.png";
