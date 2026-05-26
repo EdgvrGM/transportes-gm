@@ -78,6 +78,13 @@ export default function ModalRutaViaje({ viaje, onClose }) {
 
   const puntoActual = puntos[playbackIdx] ?? null;
 
+  const getEficienciaColor = (kmPorLitro) => {
+    if (!kmPorLitro) return "text-muted-foreground";
+    if (kmPorLitro > 2.25) return "text-green-600 dark:text-green-400";
+    if (kmPorLitro >= 2.0) return "text-amber-600 dark:text-amber-400";
+    return "text-red-600 dark:text-red-400";
+  };
+
   const handleClose = () => {
     setIsPlaying(false);
     clearInterval(playIntervalRef.current);
@@ -129,132 +136,218 @@ export default function ModalRutaViaje({ viaje, onClose }) {
           </div>
 
           {/* Barra de controles inferior */}
-          <div className="shrink-0 border-t border-border bg-card px-5 py-3 flex items-center gap-4">
+          <div className="shrink-0 border-t border-border bg-card">
 
-            {/* Velocímetro actual */}
-            <div className="shrink-0 w-20 flex flex-col items-start">
-              <p className="text-2xl font-black text-foreground leading-none tabular-nums">
-                {puntoActual?.velocidad ?? 0}
-                <span className="text-xs font-bold text-muted-foreground ml-1">km/h</span>
-              </p>
-              <p className="text-[9px] text-muted-foreground tabular-nums mt-0.5">
-                {puntoActual
-                  ? new Date(puntoActual.timestamp).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-                  : "—"}
-              </p>
-            </div>
+            {/* ── DESKTOP: fila única ── */}
+            <div className="hidden md:flex items-center gap-4 px-5 py-3">
 
-            {/* Slider + controles */}
-            <div className="flex-1 flex flex-col gap-1.5 min-w-0">
-              <div className="flex items-center justify-between text-[10px] text-muted-foreground font-bold tabular-nums px-0.5">
-                <span>{playbackIdx + 1}</span>
-                <span>{puntos.length}</span>
-              </div>
-              <input
-                type="range"
-                min={0}
-                max={Math.max(0, puntos.length - 1)}
-                value={playbackIdx}
-                onChange={(e) => { setPlaybackIdx(Number(e.target.value)); setIsPlaying(false); setSeguir(true); }}
-                className="w-full accent-yellow-400"
-                disabled={puntos.length === 0}
-              />
-              <div className="flex gap-1">
-                <Button size="icon" variant="ghost"
-                  className="h-7 w-7 rounded-lg shrink-0 text-muted-foreground hover:text-foreground"
-                  onClick={() => { setPlaybackIdx(0); setIsPlaying(false); }}
-                  disabled={puntos.length === 0}
-                >
-                  <RotateCcw className="w-3 h-3" />
-                </Button>
-                <Button
-                  className="flex-1 h-7 rounded-xl font-black shadow-sm"
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  disabled={puntos.length === 0}
-                >
-                  {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-                </Button>
-                <Button size="icon" variant="ghost"
-                  className="h-7 w-7 rounded-lg shrink-0 text-muted-foreground hover:text-foreground"
-                  onClick={() => { setIsPlaying(false); setSeguir(true); setPlaybackIdx((p) => Math.max(0, p - 1)); }}
-                  disabled={puntos.length === 0 || playbackIdx === 0}
-                >
-                  <ChevronLeft className="w-3.5 h-3.5" />
-                </Button>
-                <Button size="icon" variant="ghost"
-                  className="h-7 w-7 rounded-lg shrink-0 text-muted-foreground hover:text-foreground"
-                  onClick={() => { setIsPlaying(false); setSeguir(true); setPlaybackIdx((p) => Math.min(puntos.length - 1, p + 1)); }}
-                  disabled={puntos.length === 0 || playbackIdx === puntos.length - 1}
-                >
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Velocidad de reproducción */}
-            <div className="shrink-0 flex flex-col gap-1.5 pl-4 border-l border-border">
-              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Velocidad</p>
-              <div className="flex gap-1">
-                {[1, 2, 5, 10].map((v) => (
-                  <button key={v} onClick={() => setVelocidad(v)}
-                    className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all ${
-                      velocidad === v
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                    }`}
-                  >
-                    {v}x
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Eficiencia + km/lt */}
-            <div className="shrink-0 flex gap-5 pl-4 border-l border-border items-center">
-              <div className="flex flex-col">
-                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Eficiencia</p>
-                <p className="text-2xl font-black text-emerald-500 leading-none tabular-nums">
-                  {viaje?.km_por_litro ? Number(viaje.km_por_litro).toFixed(1) : "—"}
-                  <span className="text-xs font-bold text-muted-foreground ml-1">km/L</span>
+              <div className="shrink-0 w-20 flex flex-col items-start">
+                <p className="text-2xl font-black text-foreground leading-none tabular-nums">
+                  {puntoActual?.velocidad ?? 0}
+                  <span className="text-xs font-bold text-muted-foreground ml-1">km/h</span>
+                </p>
+                <p className="text-[9px] text-muted-foreground tabular-nums mt-0.5">
+                  {puntoActual
+                    ? new Date(puntoActual.timestamp).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+                    : "—"}
                 </p>
               </div>
-              <div className="flex flex-col gap-0.5">
-                <div className="flex items-baseline gap-1">
-                  <p className="text-sm font-black text-foreground tabular-nums">
-                    {viaje?.kilometros_total ? Number(viaje.kilometros_total).toLocaleString("es-MX") : "—"}
-                  </p>
-                  <p className="text-[9px] font-bold text-muted-foreground">km</p>
+
+              <div className="flex-1 flex flex-col gap-1.5 min-w-0">
+                <div className="flex items-center justify-between text-[10px] text-muted-foreground font-bold tabular-nums px-0.5">
+                  <span>{playbackIdx + 1}</span>
+                  <span>{puntos.length}</span>
                 </div>
-                <div className="flex items-baseline gap-1">
-                  <p className="text-sm font-black text-foreground tabular-nums">
-                    {viaje?.litros_combustible ? Number(viaje.litros_combustible).toLocaleString("es-MX") : "—"}
-                  </p>
-                  <p className="text-[9px] font-bold text-muted-foreground">lt</p>
+                <input
+                  type="range"
+                  min={0}
+                  max={Math.max(0, puntos.length - 1)}
+                  value={playbackIdx}
+                  onChange={(e) => { setPlaybackIdx(Number(e.target.value)); setIsPlaying(false); setSeguir(true); }}
+                  className="w-full accent-yellow-400"
+                  disabled={puntos.length === 0}
+                />
+                <div className="flex gap-1">
+                  <Button size="icon" variant="ghost" className="h-7 w-7 rounded-lg shrink-0 text-muted-foreground hover:text-foreground"
+                    onClick={() => { setPlaybackIdx(0); setIsPlaying(false); }} disabled={puntos.length === 0}>
+                    <RotateCcw className="w-3 h-3" />
+                  </Button>
+                  <Button className="flex-1 h-7 rounded-xl font-black shadow-sm"
+                    onClick={() => setIsPlaying(!isPlaying)} disabled={puntos.length === 0}>
+                    {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-7 w-10 rounded-lg shrink-0 text-muted-foreground hover:text-foreground"
+                    onClick={() => { setIsPlaying(false); setSeguir(true); setPlaybackIdx((p) => Math.max(0, p - 1)); }}
+                    disabled={puntos.length === 0 || playbackIdx === 0}>
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-7 w-10 rounded-lg shrink-0 text-muted-foreground hover:text-foreground"
+                    onClick={() => { setIsPlaying(false); setSeguir(true); setPlaybackIdx((p) => Math.min(puntos.length - 1, p + 1)); }}
+                    disabled={puntos.length === 0 || playbackIdx === puntos.length - 1}>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </Button>
                 </div>
+              </div>
+
+              <div className="shrink-0 flex flex-col gap-1.5 pl-4 border-l border-border">
+                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Velocidad</p>
+                <div className="flex gap-1">
+                  {[1, 2, 5, 10].map((v) => (
+                    <button key={v} onClick={() => setVelocidad(v)}
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all ${velocidad === v ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
+                      {v}x
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="shrink-0 flex gap-5 pl-4 border-l border-border items-center">
+                <div className="flex flex-col">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Eficiencia</p>
+                  <p className={`text-2xl font-black ${getEficienciaColor(viaje?.km_por_litro)} leading-none tabular-nums`}>
+                    {viaje?.km_por_litro ? Number(viaje.km_por_litro).toFixed(1) : "—"}
+                    <span className="text-xs font-bold text-muted-foreground ml-1">km/L</span>
+                  </p>
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <div className="flex items-baseline gap-1">
+                    <p className="text-sm font-black text-foreground tabular-nums">
+                      {viaje?.kilometros_total ? Number(viaje.kilometros_total).toLocaleString("es-MX") : "—"}
+                    </p>
+                    <p className="text-[9px] font-bold text-muted-foreground">km</p>
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <p className="text-sm font-black text-foreground tabular-nums">
+                      {viaje?.litros_combustible ? Number(viaje.litros_combustible).toLocaleString("es-MX") : "—"}
+                    </p>
+                    <p className="text-[9px] font-bold text-muted-foreground">lt</p>
+                  </div>
+                </div>
+              </div>
+
+              {puntos.length > 0 && (
+                <div className="shrink-0 flex gap-4 pl-4 border-l border-border">
+                  <div className="flex flex-col gap-0.5">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Inicio</p>
+                    <p className="text-sm font-black text-foreground tabular-nums">
+                      {puntos[0]?.timestamp ? new Date(puntos[0].timestamp).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }) : "—"}
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Fin</p>
+                    <p className="text-sm font-black text-foreground tabular-nums">
+                      {puntos[puntos.length - 1]?.timestamp ? new Date(puntos[puntos.length - 1].timestamp).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }) : "—"}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ── MOBILE: 3 filas ── */}
+            <div className="flex md:hidden flex-col gap-2 px-4 pt-3 pb-3">
+
+              {/* Fila 1: Slider */}
+              <div className="flex flex-col gap-1">
+                <div className="flex justify-between text-[10px] text-muted-foreground font-bold tabular-nums px-0.5">
+                  <span>{playbackIdx + 1}</span>
+                  <span>{puntos.length}</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={Math.max(0, puntos.length - 1)}
+                  value={playbackIdx}
+                  onChange={(e) => { setPlaybackIdx(Number(e.target.value)); setIsPlaying(false); setSeguir(true); }}
+                  className="w-full accent-yellow-400"
+                  disabled={puntos.length === 0}
+                />
+              </div>
+
+              {/* Fila 2: km/h + botones + velocidad */}
+              <div className="flex items-center gap-2">
+                <div className="shrink-0 w-[72px]">
+                  <p className="text-2xl font-black text-foreground leading-none tabular-nums">
+                    {puntoActual?.velocidad ?? 0}
+                    <span className="text-xs font-bold text-muted-foreground ml-1">km/h</span>
+                  </p>
+                  <p className="text-[9px] text-muted-foreground tabular-nums mt-0.5">
+                    {puntoActual
+                      ? new Date(puntoActual.timestamp).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+                      : "—"}
+                  </p>
+                </div>
+                <div className="flex flex-1 gap-1">
+                  <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg shrink-0 text-muted-foreground hover:text-foreground"
+                    onClick={() => { setPlaybackIdx(0); setIsPlaying(false); }} disabled={puntos.length === 0}>
+                    <RotateCcw className="w-3 h-3" />
+                  </Button>
+                  <Button className="flex-1 h-8 rounded-xl font-black shadow-sm"
+                    onClick={() => setIsPlaying(!isPlaying)} disabled={puntos.length === 0}>
+                    {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-8 w-11 rounded-lg shrink-0 text-muted-foreground hover:text-foreground"
+                    onClick={() => { setIsPlaying(false); setSeguir(true); setPlaybackIdx((p) => Math.max(0, p - 1)); }}
+                    disabled={puntos.length === 0 || playbackIdx === 0}>
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-8 w-11 rounded-lg shrink-0 text-muted-foreground hover:text-foreground"
+                    onClick={() => { setIsPlaying(false); setSeguir(true); setPlaybackIdx((p) => Math.min(puntos.length - 1, p + 1)); }}
+                    disabled={puntos.length === 0 || playbackIdx === puntos.length - 1}>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+                <div className="shrink-0 flex gap-1 pl-2 border-l border-border">
+                  {[1, 2, 5, 10].map((v) => (
+                    <button key={v} onClick={() => setVelocidad(v)}
+                      className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black transition-all ${velocidad === v ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
+                      {v}x
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Fila 3: Estadísticas */}
+              <div className="flex items-center justify-between border-t border-border/50 pt-2">
+                <div className="flex flex-col">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Eficiencia</p>
+                  <p className={`text-xl font-black ${getEficienciaColor(viaje?.km_por_litro)} leading-none tabular-nums`}>
+                    {viaje?.km_por_litro ? Number(viaje.km_por_litro).toFixed(1) : "—"}
+                    <span className="text-xs font-bold text-muted-foreground ml-1">km/L</span>
+                  </p>
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <div className="flex items-baseline gap-1">
+                    <p className="text-sm font-black text-foreground tabular-nums">
+                      {viaje?.kilometros_total ? Number(viaje.kilometros_total).toLocaleString("es-MX") : "—"}
+                    </p>
+                    <p className="text-[9px] font-bold text-muted-foreground">km</p>
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <p className="text-sm font-black text-foreground tabular-nums">
+                      {viaje?.litros_combustible ? Number(viaje.litros_combustible).toLocaleString("es-MX") : "—"}
+                    </p>
+                    <p className="text-[9px] font-bold text-muted-foreground">lt</p>
+                  </div>
+                </div>
+                {puntos.length > 0 && (
+                  <div className="flex gap-3">
+                    <div className="flex flex-col gap-0.5">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Inicio</p>
+                      <p className="text-sm font-black text-foreground tabular-nums">
+                        {puntos[0]?.timestamp ? new Date(puntos[0].timestamp).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }) : "—"}
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Fin</p>
+                      <p className="text-sm font-black text-foreground tabular-nums">
+                        {puntos[puntos.length - 1]?.timestamp ? new Date(puntos[puntos.length - 1].timestamp).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }) : "—"}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Resumen horario */}
-            {puntos.length > 0 && (
-              <div className="shrink-0 flex gap-4 pl-4 border-l border-border">
-                <div className="flex flex-col gap-0.5">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Inicio</p>
-                  <p className="text-sm font-black text-foreground tabular-nums">
-                    {puntos[0]?.timestamp
-                      ? new Date(puntos[0].timestamp).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })
-                      : "—"}
-                  </p>
-                </div>
-                <div className="flex flex-col gap-0.5">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Fin</p>
-                  <p className="text-sm font-black text-foreground tabular-nums">
-                    {puntos[puntos.length - 1]?.timestamp
-                      ? new Date(puntos[puntos.length - 1].timestamp).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })
-                      : "—"}
-                  </p>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </DialogContent>
