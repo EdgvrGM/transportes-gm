@@ -30,7 +30,7 @@ export default function RalentiGPS({ positions = [], ralentiActivo = {} }) {
   const [, setTick]            = useState(0);
   const [vistaHistorial, setVistaHistorial] = useState("resumen");
   const [filtroUnidad, setFiltroUnidad]     = useState("");
-  const [filtroRango,  setFiltroRango]      = useState("hoy");
+  const [filtroRango,  setFiltroRango]      = useState("7dias");
 
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 30000);
@@ -76,7 +76,7 @@ export default function RalentiGPS({ positions = [], ralentiActivo = {} }) {
         .select("id, wialon_unit_id, wialon_nombre, inicio_ralenti, fin_ralenti, duracion_segundos")
         .gte("inicio_ralenti", baseDesde)
         .order("inicio_ralenti", { ascending: false })
-        .limit(100);
+        .limit(1000);
       if (error) throw error;
       return data || [];
     },
