@@ -351,8 +351,10 @@ export default function FuelViajes() {
   const getClienteDelViaje = (viaje) => {
     if (!viaje) return null;
     let vr = null;
-    if (viaje.viaje_id) {
-      vr = viajesRegistrados.find((v) => String(v.id) === String(viaje.viaje_id));
+    // FK directa: prioriza viaje_registrado_id (nuevo) sobre viaje_id (legacy)
+    const fkId = viaje.viaje_registrado_id ?? viaje.viaje_id;
+    if (fkId) {
+      vr = viajesRegistrados.find((v) => String(v.id) === String(fkId));
     }
     if (!vr) {
       const fechaBusqueda = viaje.fecha ? viaje.fecha.split("T")[0] : "";
@@ -533,6 +535,7 @@ export default function FuelViajes() {
       remolque_id: viaje.remolque_id ? String(viaje.remolque_id) : "",
       remolque2_id: viaje.remolque2_id ? String(viaje.remolque2_id) : "",
       viaje_id: viaje.viaje_id || null,
+      viaje_registrado_id: viaje.viaje_registrado_id || null,
       notas: viaje.notas || "",
     });
     setDialogAbierto(true);
@@ -576,6 +579,7 @@ export default function FuelViajes() {
       remolque_id: "",
       remolque2_id: "",
       viaje_id: null,
+      viaje_registrado_id: null,
       notas: "",
     });
   };

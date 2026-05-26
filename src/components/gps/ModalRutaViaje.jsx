@@ -136,7 +136,7 @@ export default function ModalRutaViaje({ viaje, onClose }) {
           </div>
 
           {/* Barra de controles inferior */}
-          <div className="shrink-0 border-t border-border bg-card">
+          <div className={`shrink-0 border-t border-border bg-card transition-opacity duration-200 ${cargando || puntos.length === 0 ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
 
             {/* ── DESKTOP: fila única ── */}
             <div className="hidden md:flex items-center gap-4 px-5 py-3">
@@ -176,12 +176,12 @@ export default function ModalRutaViaje({ viaje, onClose }) {
                     onClick={() => setIsPlaying(!isPlaying)} disabled={puntos.length === 0}>
                     {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
                   </Button>
-                  <Button size="icon" variant="ghost" className="h-7 w-10 rounded-lg shrink-0 text-muted-foreground hover:text-foreground"
+                  <Button size="icon" className="h-7 w-10 rounded-lg shrink-0 shadow-sm"
                     onClick={() => { setIsPlaying(false); setSeguir(true); setPlaybackIdx((p) => Math.max(0, p - 1)); }}
                     disabled={puntos.length === 0 || playbackIdx === 0}>
                     <ChevronLeft className="w-3.5 h-3.5" />
                   </Button>
-                  <Button size="icon" variant="ghost" className="h-7 w-10 rounded-lg shrink-0 text-muted-foreground hover:text-foreground"
+                  <Button size="icon" className="h-7 w-10 rounded-lg shrink-0 shadow-sm"
                     onClick={() => { setIsPlaying(false); setSeguir(true); setPlaybackIdx((p) => Math.min(puntos.length - 1, p + 1)); }}
                     disabled={puntos.length === 0 || playbackIdx === puntos.length - 1}>
                     <ChevronRight className="w-3.5 h-3.5" />
@@ -285,12 +285,12 @@ export default function ModalRutaViaje({ viaje, onClose }) {
                     onClick={() => setIsPlaying(!isPlaying)} disabled={puntos.length === 0}>
                     {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
                   </Button>
-                  <Button size="icon" variant="ghost" className="h-8 w-11 rounded-lg shrink-0 text-muted-foreground hover:text-foreground"
+                  <Button size="icon" className="h-8 w-11 rounded-lg shrink-0 shadow-sm"
                     onClick={() => { setIsPlaying(false); setSeguir(true); setPlaybackIdx((p) => Math.max(0, p - 1)); }}
                     disabled={puntos.length === 0 || playbackIdx === 0}>
                     <ChevronLeft className="w-3.5 h-3.5" />
                   </Button>
-                  <Button size="icon" variant="ghost" className="h-8 w-11 rounded-lg shrink-0 text-muted-foreground hover:text-foreground"
+                  <Button size="icon" className="h-8 w-11 rounded-lg shrink-0 shadow-sm"
                     onClick={() => { setIsPlaying(false); setSeguir(true); setPlaybackIdx((p) => Math.min(puntos.length - 1, p + 1)); }}
                     disabled={puntos.length === 0 || playbackIdx === puntos.length - 1}>
                     <ChevronRight className="w-3.5 h-3.5" />

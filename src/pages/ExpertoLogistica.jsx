@@ -114,12 +114,12 @@ function MarkdownMessage({ content }) {
 
 // ── Chips de sugerencia ──────────────────────────────────────────────────────
 const CHIPS = [
-  { label: "¿Cuál conductor tiene mejor rendimiento?", icon: "🏆" },
+  { label: "¿Qué viajes están pendientes de entregar remisión?", icon: "📄" },
   { label: "Muéstrame los viajes con rendimiento crítico.", icon: "⚠️" },
-  { label: "Resume los costos de esta semana.", icon: "📊" },
-  { label: "¿Qué unidad consume más combustible?", icon: "🚛" },
-  { label: "¿Hay viajes sin combustible registrado?", icon: "🔍" },
-  { label: "Compara el rendimiento de los conductores.", icon: "📈" },
+  { label: "¿Qué viajes están registrados pero sin diesel cargado?", icon: "⛽" },
+  { label: "Resume los costos de combustible y casetas.", icon: "📊" },
+  { label: "¿Qué conductor tiene mejor rendimiento promedio?", icon: "🏆" },
+  { label: "¿Qué unidad gasta más en casetas?", icon: "🚛" },
 ];
 
 export default function ExpertoLogistica() {
@@ -198,15 +198,27 @@ export default function ExpertoLogistica() {
 
       const { data: vRegistrados } = await planeacionQuery;
 
+      // Evidencias (remisiones) ligadas a viajes_registrados
+      const vrIds = (vRegistrados || []).map(v => v.id);
+      let evidencias = [];
+      if (vrIds.length > 0) {
+        const { data: evData } = await supabase
+          .from("Evidencia")
+          .select("viaje_id, num_remision, entregada, fecha_entrega")
+          .in("viaje_id", vrIds);
+        evidencias = evData || [];
+      }
+
       const viajesData = (viajes || []).map(v => {
         const fechaV = v.fecha?.split("T")[0];
         
         // Match con viajes_registrados para sacar el nombre del cliente
         let reg = null;
         
-        // 1. Intento por ID directo (vínculo oficial)
-        if (v.viaje_id) {
-          reg = vRegistrados?.find(r => String(r.id) === String(v.viaje_id));
+        // 1. Intento por ID directo (vínculo oficial): prioriza viaje_registrado_id (nuevo) sobre viaje_id (legacy)
+        const fkId = v.viaje_registrado_id ?? v.viaje_id;
+        if (fkId) {
+          reg = vRegistrados?.find(r => String(r.id) === String(fkId));
         }
 
         // 2. Fallback por Fecha/Conductor/Camión utilizando IDs directos
@@ -220,13 +232,16 @@ export default function ExpertoLogistica() {
 
         const clienteObj = reg ? clientes?.find(c => String(c.id) === String(reg.cliente_id)) : null;
         const litrosVal = parseFloat(v.litros_combustible || 0);
+        const rutaIda = v.ruta_ida || v.ruta || "";
+        const rutaTexto = v.ruta_regreso ? `${rutaIda} → ${v.ruta_regreso}` : rutaIda;
 
         return {
+          _vrId: v.viaje_registrado_id ?? v.viaje_id ?? null,
           fecha: fechaV,
           cliente: clienteObj?.nombre || "N/A",
           conductor: v.conductor_nombre,
           unidad: `${v.camion_nombre} (${v.camion_placas})`,
-          ruta: `${v.ruta_ida} → ${v.ruta_regreso || ""}`,
+          ruta: rutaTexto,
           km: v.kilometros_total,
           litros: litrosVal,
           estado_combustible: litrosVal > 0 ? "Registrado" : "PENDIENTE (Registro Parcial)",
@@ -248,12 +263,21 @@ export default function ExpertoLogistica() {
         const rem1 = remolques?.find(r => String(r.id) === String(pr.remolque_id));
         const rem2 = remolques?.find(r => String(r.id) === String(pr.remolque2_id));
 
-        // Verificar si existe en ejecución para dar contexto extra a la IA
-        const existeEnEjecucion = viajesData.find(v => 
-          v.fecha === pr.fecha_viaje && 
-          v.conductor === cond?.nombre && 
-          v.unidad.includes(cam?.placas || "---")
-        );
+        // Vínculo directo por FK con la ejecución (no por fecha)
+        const viajeEjecutado = viajesData.find(v => v._vrId != null && String(v._vrId) === String(pr.id));
+
+        let estado_registro;
+        if (!viajeEjecutado) {
+          estado_registro = "No iniciado (Falta Registro)";
+        } else if (viajeEjecutado.litros > 0) {
+          estado_registro = "Completado";
+        } else {
+          estado_registro = "Parcial (Falta Diesel)";
+        }
+
+        // Evidencias / remisiones de este viaje
+        const evsViaje = evidencias.filter(e => String(e.viaje_id) === String(pr.id));
+        const evEntregadas = evsViaje.filter(e => e.entregada).length;
 
         return {
           fecha: pr.fecha_viaje,
@@ -263,10 +287,20 @@ export default function ExpertoLogistica() {
           remolques: [rem1?.placas, rem2?.placas].filter(Boolean).join(" / ") || "Sencillo",
           destino: pr.destino,
           modalidad: pr.modalidad,
-          estado_registro: existeEnEjecucion 
-            ? (existeEnEjecucion.litros > 0 ? "Completado" : "Parcial (Falta Diesel)") 
-            : "No iniciado (Falta Registro)",
-          completado: pr.combustible_registrado || false,
+          estado_registro,
+          combustible_registrado: pr.combustible_registrado || false,
+          remisiones: {
+            total: evsViaje.length,
+            entregadas: evEntregadas,
+            pendientes: evsViaje.length - evEntregadas,
+            estado: evsViaje.length === 0
+              ? "Sin remisiones registradas"
+              : evEntregadas === evsViaje.length
+                ? "Todas entregadas"
+                : evEntregadas === 0
+                  ? "Todas pendientes"
+                  : `${evEntregadas}/${evsViaje.length} entregadas`,
+          },
         };
       });
 
@@ -275,6 +309,11 @@ export default function ExpertoLogistica() {
       const promedio = conRendimiento.length > 0
         ? (conRendimiento.reduce((s, v) => s + parseFloat(v.km_por_litro), 0) / conRendimiento.length).toFixed(2)
         : "N/A";
+
+      // Totales de evidencias en el periodo
+      const totalRemisiones = planeacionData.reduce((s, p) => s + p.remisiones.total, 0);
+      const remisionesEntregadas = planeacionData.reduce((s, p) => s + p.remisiones.entregadas, 0);
+      const viajesSinRemision = planeacionData.filter(p => p.remisiones.total === 0).length;
 
       return {
         periodo: programa ? `Semana: ${programa.titulo}` : "Últimos 30 días (Historial)",
@@ -287,6 +326,12 @@ export default function ExpertoLogistica() {
           alertas_criticas_en_ejecucion: viajesData.filter(v => v.alerta).length,
           costo_total_ejecutado: viajesData.reduce((s, v) => s + (v.costo_total || 0), 0).toFixed(2),
           clientes_activos: [...new Set(viajesData.map(v => v.cliente))].filter(c => c !== "N/A"),
+          remisiones: {
+            total: totalRemisiones,
+            entregadas: remisionesEntregadas,
+            pendientes: totalRemisiones - remisionesEntregadas,
+            viajes_sin_remision: viajesSinRemision,
+          },
         },
         ejecucion: viajesData,
         planeacion: planeacionData,
@@ -298,9 +343,17 @@ export default function ExpertoLogistica() {
   // Mensaje de bienvenida dinámico
   useEffect(() => {
     if (contexto && messages.length === 0) {
+      const r = contexto.resumen;
+      const rendimientoTexto = r.promedio_rendimiento_km_l === "N/A"
+        ? "Aún no hay viajes con rendimiento calculado en este periodo."
+        : `El rendimiento promedio es **${r.promedio_rendimiento_km_l} km/L**.`;
+      const remisionesTexto = r.remisiones.total > 0
+        ? ` ${r.remisiones.entregadas}/${r.remisiones.total} remisiones entregadas.`
+        : "";
+
       setMessages([{
         role: "assistant",
-        content: `¡Hola! Soy el **Experto en Logística Transportes GM**. Tengo acceso a la planeación (${contexto.resumen.total_viajes_planeados} viajes) y ejecución (${contexto.resumen.total_viajes_ejecutados} consumos) de este periodo.\n\nEl rendimiento promedio es **${contexto.resumen.promedio_rendimiento_km_l} km/L** y quedan **${contexto.resumen.viajes_pendientes_de_registro} viajes pendientes** por registrar combustible.\n\n¿Qué te gustaría analizar hoy?`
+        content: `¡Hola! Soy el **Experto en Logística Transportes GM**. Tengo acceso a la planeación (${r.total_viajes_planeados} viajes) y ejecución (${r.total_viajes_ejecutados} consumos) de este periodo.\n\n${rendimientoTexto} Quedan **${r.viajes_pendientes_de_registro} viajes pendientes** por registrar combustible.${remisionesTexto}\n\n¿Qué te gustaría analizar hoy?`
       }]);
     }
   }, [contexto]);

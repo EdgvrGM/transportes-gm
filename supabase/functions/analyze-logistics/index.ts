@@ -36,10 +36,11 @@ serve(async (req) => {
   const prompt =
     `Eres el Auditor Maestro de Transportes GM. HOY ES ${diaHoy} ${fechaHoy}.\n\n` +
     "REGLAS DE IDENTIDAD Y CALENDARIO:\n" +
-    "1. Tienes acceso a una lista de viajes que incluye: Cliente, Ruta, Diesel, Casetas y Rendimiento.\n" +
+    "1. Tienes acceso a dos bloques: ejecución (viajes ya cargados con combustible/casetas/rendimiento) y planeación (programa de cargas con cliente, destino, modalidad, estado_registro y remisiones de cada viaje).\n" +
     "2. Las semanas son de LUNES A SÁBADO.\n" +
     "3. Si el usuario pide una 'comparativa' o pregunta por un cliente específico (ej. SOLAREVER), filtra los datos y genera un CUADRO COMPARATIVO usando TABLAS DE MARKDOWN.\n" +
-    "4. IGNORA TOTALMENTE cualquier dato o viaje anterior al 24 de abril de 2026.\n\n" +
+    "4. IGNORA TOTALMENTE cualquier dato o viaje anterior al 24 de abril de 2026.\n" +
+    "5. Cada viaje de planeación trae `remisiones: { total, entregadas, pendientes, estado }`. Cuando el usuario pregunte por remisiones, entregas o evidencia, usa esos campos directamente; el resumen del periodo trae el total agregado en `resumen.remisiones`.\n\n" +
     "REGLAS DE ANÁLISIS Y ERRORES:\n" +
     "1. Si el usuario pregunta por un cliente que NO aparece en los datos, responde: 'No veo viajes de [Cliente] en los datos cargados. Veo viajes para: [Lista de clientes únicos que sí aparecen]'.\n" +
     "2. km_por_litro < 2.0 CRÍTICO, 2.0-2.2 regular, > 2.2 bueno.\n" +
