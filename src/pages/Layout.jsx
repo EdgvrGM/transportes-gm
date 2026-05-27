@@ -4,7 +4,6 @@ import { createPageUrl } from "@/utils";
 import { supabase } from "@/supabaseClient";
 import {
   LayoutDashboard,
-  PlusCircle,
   Truck,
   Users,
   Home,
@@ -17,7 +16,6 @@ import {
   ChevronDown,
   ChevronRight,
   Settings2,
-  Fuel,
   Sparkles,
   DollarSign,
   ShieldCheck,
@@ -51,7 +49,6 @@ export default function Layout({ children, currentPageName }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Estados para controlar qué secciones desplegables están abiertas
-  const [openCombustible, setOpenCombustible] = useState(false);
   const [openCatalogos, setOpenCatalogos] = useState(false);
 
   const handleLogout = async () => {
@@ -64,14 +61,6 @@ export default function Layout({ children, currentPageName }) {
     setIsMobileMenuOpen(false);
 
     const path = location.pathname.toLowerCase();
-
-    // Auto-abrir Control de Combustible si estamos en sus rutas
-    if (
-      path.includes("fuelviajes") ||
-      path.includes("fuelregistrarviaje")
-    ) {
-      setOpenCombustible(true);
-    }
 
     // Auto-abrir Catálogos si estamos en sus rutas
     if (
@@ -204,26 +193,15 @@ export default function Layout({ children, currentPageName }) {
               <span className="font-medium">Programa de Cargas</span>
             </Link>
 
-            {/* BOTÓN: LIQUIDACIONES (Directo) */}
+            {/* BOTÓN: REGISTRO DE VIAJES (Directo) */}
             <Link
-              to={createPageUrl("Liquidaciones")}
+              to={createPageUrl("FuelViajes")}
               className={navItemClass(
-                location.pathname === createPageUrl("Liquidaciones"),
+                location.pathname === createPageUrl("FuelViajes"),
               )}
             >
-              <DollarSign className="w-5 h-5" />
-              <span className="font-medium">Liquidaciones</span>
-            </Link>
-
-            {/* BOTÓN: DOCUMENTACIÓN LEGAL (Directo) */}
-            <Link
-              to={createPageUrl("DocumentacionLegal")}
-              className={navItemClass(
-                location.pathname === createPageUrl("DocumentacionLegal"),
-              )}
-            >
-              <ShieldCheck className="w-5 h-5" />
-              <span className="font-medium">Documentación Legal</span>
+              <FileText className="w-5 h-5" />
+              <span className="font-medium">Registro de Viajes</span>
             </Link>
 
             {/* BOTÓN: RASTREO GPS (Directo) */}
@@ -237,6 +215,17 @@ export default function Layout({ children, currentPageName }) {
               <span className="font-medium">Rastreo GPS</span>
             </Link>
 
+            {/* BOTÓN: LIQUIDACIONES (Directo) */}
+            <Link
+              to={createPageUrl("Liquidaciones")}
+              className={navItemClass(
+                location.pathname === createPageUrl("Liquidaciones"),
+              )}
+            >
+              <DollarSign className="w-5 h-5" />
+              <span className="font-medium">Liquidaciones</span>
+            </Link>
+
             {/* BOTÓN: MANTENIMIENTO (Directo) */}
             <Link
               to={createPageUrl("Mantenimiento")}
@@ -248,46 +237,16 @@ export default function Layout({ children, currentPageName }) {
               <span className="font-medium">Mantenimiento</span>
             </Link>
 
-            {/* SECCIÓN: CONTROL DE COMBUSTIBLE (Desplegable) */}
-            <div className="space-y-1">
-              <button
-                onClick={() => setOpenCombustible(!openCombustible)}
-                className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200"
-              >
-                <div className="flex items-center gap-3">
-                  <Fuel className="w-5 h-5" />
-                  <span className="font-medium">Combustible</span>
-                </div>
-                {openCombustible ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRight className="w-4 h-4" />
-                )}
-              </button>
-
-              {openCombustible && (
-                <div className="space-y-1 animate-in fade-in slide-in-from-top-1 duration-200">
-                  <Link
-                    to={createPageUrl("FuelViajes")}
-                    className={subItemClass(
-                      location.pathname === createPageUrl("FuelViajes"),
-                    )}
-                  >
-                    <FileText className="w-4 h-4" />
-                    <span>Registro de Viajes</span>
-                  </Link>
-                  <Link
-                    to={createPageUrl("FuelRegistrarViaje")}
-                    className={subItemClass(
-                      location.pathname === createPageUrl("FuelRegistrarViaje"),
-                    )}
-                  >
-                    <PlusCircle className="w-4 h-4" />
-                    <span>Registrar Viaje</span>
-                  </Link>
-                </div>
+            {/* BOTÓN: DOCUMENTACIÓN LEGAL (Directo) */}
+            <Link
+              to={createPageUrl("DocumentacionLegal")}
+              className={navItemClass(
+                location.pathname === createPageUrl("DocumentacionLegal"),
               )}
-            </div>
+            >
+              <ShieldCheck className="w-5 h-5" />
+              <span className="font-medium">Documentación Legal</span>
+            </Link>
 
             {/* SECCIÓN: CATÁLOGOS (Desplegable) */}
             <div className="space-y-1">

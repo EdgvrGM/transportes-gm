@@ -99,6 +99,152 @@ function haversineKm(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+function VinculoProgramaPicker({
+  viajeEditandoId,
+  formData,
+  setFormData,
+  viajes,
+  viajesRegistrados,
+  programas,
+}) {
+  const [pickerAbierto, setPickerAbierto] = useState(false);
+
+  const vinculoActual = formData.viaje_registrado_id
+    ? viajesRegistrados.find((vr) => String(vr.id) === String(formData.viaje_registrado_id))
+    : null;
+
+  const candidatos = useMemo(() => {
+    if (!formData.fecha || !formData.conductor_id || !formData.camion_id) return [];
+    const fechaViaje = new Date(`${formData.fecha}T00:00:00`);
+    const idsTomados = new Set();
+    viajes.forEach((v) => {
+      if (v.viaje_registrado_id != null && String(v.id) !== String(viajeEditandoId)) {
+        idsTomados.add(String(v.viaje_registrado_id));
+      }
+    });
+    return viajesRegistrados
+      .filter((vr) => !idsTomados.has(String(vr.id)))
+      .filter((vr) => String(vr.conductor_id) === String(formData.conductor_id))
+      .filter((vr) => String(vr.camion_id) === String(formData.camion_id))
+      .filter((vr) => {
+        if (!vr.fecha_viaje) return false;
+        const diff = Math.abs(new Date(vr.fecha_viaje) - fechaViaje) / 86400000;
+        return diff <= 7;
+      })
+      .sort(
+        (a, b) =>
+          Math.abs(new Date(a.fecha_viaje) - fechaViaje) -
+          Math.abs(new Date(b.fecha_viaje) - fechaViaje)
+      );
+  }, [formData.fecha, formData.conductor_id, formData.camion_id, viajeEditandoId, viajesRegistrados, viajes]);
+
+  const formatVr = (vr) => {
+    if (!vr) return null;
+    const prog = programas.find((p) => String(p.id) === String(vr.programa_id));
+    const fecha = vr.fecha_viaje
+      ? new Date(vr.fecha_viaje).toLocaleDateString("es-MX", { weekday: "long", day: "2-digit", month: "short" })
+      : "—";
+    const semana = prog
+      ? `Sem ${new Date(prog.fecha_inicio).toLocaleDateString("es-MX", { day: "2-digit", month: "short" })} – ${new Date(prog.fecha_fin).toLocaleDateString("es-MX", { day: "2-digit", month: "short" })}`
+      : "Programa sin fecha";
+    return { fecha, semana, destino: vr.destino || "Sin destino", modalidad: vr.modalidad || "" };
+  };
+
+  const infoActual = formatVr(vinculoActual);
+
+  return (
+    <div className="p-4 bg-amber-50/50 dark:bg-amber-900/10 rounded-lg border border-amber-100 dark:border-amber-900 space-y-3">
+      <div className="flex items-center gap-2">
+        <Layers className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+        <h3 className="font-bold text-foreground">Viaje programado vinculado</h3>
+      </div>
+
+      {vinculoActual ? (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="text-sm min-w-0">
+            <p className="font-semibold text-foreground capitalize truncate">
+              {infoActual.fecha} · {infoActual.destino}
+            </p>
+            <p className="text-xs text-muted-foreground truncate">
+              {infoActual.semana}{infoActual.modalidad ? ` · ${infoActual.modalidad}` : ""}
+            </p>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <Button type="button" variant="outline" size="sm" onClick={() => setPickerAbierto(true)}>
+              Cambiar
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-red-600 hover:text-red-700"
+              onClick={() => setFormData((p) => ({ ...p, viaje_registrado_id: null }))}
+            >
+              Desvincular
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            Este viaje no está vinculado a ningún viaje programado.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setPickerAbierto(true)}
+            disabled={!formData.conductor_id || !formData.camion_id || !formData.fecha}
+          >
+            Vincular…
+          </Button>
+        </div>
+      )}
+
+      <Dialog open={pickerAbierto} onOpenChange={setPickerAbierto}>
+        <DialogContent className="w-[95vw] max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Seleccionar viaje programado</DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground">
+            Mostrando viajes programados del mismo conductor y camión dentro de ±7 días que aún
+            no estén vinculados a otro registro.
+          </p>
+          <div className="space-y-2 mt-4">
+            {candidatos.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                No hay viajes programados disponibles que coincidan.
+              </p>
+            ) : (
+              candidatos.map((vr) => {
+                const info = formatVr(vr);
+                return (
+                  <button
+                    key={vr.id}
+                    type="button"
+                    onClick={() => {
+                      setFormData((p) => ({ ...p, viaje_registrado_id: vr.id }));
+                      setPickerAbierto(false);
+                    }}
+                    className="w-full text-left p-3 rounded-lg border border-border hover:border-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+                  >
+                    <p className="font-semibold capitalize text-foreground">
+                      {info.fecha} · {info.destino}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {info.semana}{info.modalidad ? ` · ${info.modalidad}` : ""}
+                    </p>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
 export default function FuelViajes() {
   const location = useLocation();
   const stateData = location.state || {};
@@ -110,6 +256,7 @@ export default function FuelViajes() {
   const [clienteFiltro, setClienteFiltro] = useState("todos");
   const [rutaFiltro, setRutaFiltro] = useState("");
   const [periodoFiltro, setPeriodoFiltro] = useState(stateData.periodoFiltro || "todos");
+  const [soloSinVincular, setSoloSinVincular] = useState(false);
   const [viajeAEliminar, setViajeAEliminar] = useState(null);
   const [viajeEditando, setViajeEditando] = useState(null);
   const [dialogAbierto, setDialogAbierto] = useState(false);
@@ -348,6 +495,17 @@ export default function FuelViajes() {
     gcTime: 0,
   });
 
+  const { data: programas = [] } = useQuery({
+    queryKey: ["programasCargaAll"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ProgramaCargas")
+        .select("id, fecha_inicio, fecha_fin");
+      if (error) throw new Error(error.message);
+      return data || [];
+    },
+  });
+
   const getClienteDelViaje = (viaje) => {
     if (!viaje) return null;
     let vr = null;
@@ -422,17 +580,34 @@ export default function FuelViajes() {
       }
       try {
         const hasFuel = parseFloat(variables.data.litros_combustible || 0) > 0;
-        const fechaMatch = typeof variables.data.fecha === 'string'
-          ? variables.data.fecha.split("T")[0]
-          : variables.data.fecha;
-        await supabase
-          .from("viajes_registrados")
-          .update({ combustible_registrado: hasFuel })
-          .match({
-            fecha_viaje: fechaMatch,
-            conductor_id: variables.data.conductor_id,
-            camion_id: variables.data.camion_id
-          });
+        const vrNuevo = variables.data.viaje_registrado_id || null;
+        const vrPrevio = variables.vrPrevio || null;
+
+        if (vrPrevio && String(vrPrevio) !== String(vrNuevo)) {
+          await supabase
+            .from("viajes_registrados")
+            .update({ combustible_registrado: false })
+            .eq("id", vrPrevio);
+        }
+
+        if (vrNuevo) {
+          await supabase
+            .from("viajes_registrados")
+            .update({ combustible_registrado: hasFuel })
+            .eq("id", vrNuevo);
+        } else {
+          const fechaMatch = typeof variables.data.fecha === 'string'
+            ? variables.data.fecha.split("T")[0]
+            : variables.data.fecha;
+          await supabase
+            .from("viajes_registrados")
+            .update({ combustible_registrado: hasFuel })
+            .match({
+              fecha_viaje: fechaMatch,
+              conductor_id: variables.data.conductor_id,
+              camion_id: variables.data.camion_id
+            });
+        }
       } catch (_err) {
         // Sync failure is non-critical
       }
@@ -479,10 +654,31 @@ export default function FuelViajes() {
     }
     if (rutaFiltro && !rutaPrincipal.toLowerCase().includes(rutaFiltro.toLowerCase()))
       cumpleFiltros = false;
+    if (soloSinVincular) {
+      // "Sin vincular" = el programa de cargas no lo reconoce ni por FK ni por fallback
+      // (mismo criterio que getRegisteredTrip en FuelProgramaCargas).
+      if (viaje.viaje_registrado_id != null) {
+        cumpleFiltros = false;
+      } else if (!viaje.fecha) {
+        // sin fecha no podemos evaluar el fallback; lo marcamos como sin vincular
+      } else {
+        const fechaStr = String(viaje.fecha).split("T")[0];
+        const matcheaPorFallback = viajesRegistrados.some((vr) => {
+          if (!vr.fecha_viaje || !String(vr.fecha_viaje).startsWith(fechaStr)) return false;
+          if (String(vr.conductor_id) !== String(viaje.conductor_id)) return false;
+          if (String(vr.camion_id) !== String(viaje.camion_id)) return false;
+          if (vr.remolque_id && viaje.remolque_id &&
+              String(vr.remolque_id) !== String(viaje.remolque_id)) return false;
+          return true;
+        });
+        if (matcheaPorFallback) cumpleFiltros = false;
+      }
+    }
     return cumpleFiltros;
-  }), [viajes, filtroIdDirecto, periodoFiltro, fechaInicio, fechaFin, conductorFiltro, camionFiltro, clienteFiltro, rutaFiltro, clientes, viajesRegistrados]);
+  }), [viajes, filtroIdDirecto, periodoFiltro, fechaInicio, fechaFin, conductorFiltro, camionFiltro, clienteFiltro, rutaFiltro, soloSinVincular, clientes, viajesRegistrados]);
 
   const limpiarFiltros = () => {
+    setSoloSinVincular(false);
     setFechaInicio("");
     setFechaFin("");
     setConductorFiltro("todos");
@@ -650,6 +846,7 @@ export default function FuelViajes() {
       casetas_regreso: casetasRegreso,
       remolque_id: safeParseInt(formData.remolque_id),
       remolque2_id: safeParseInt(formData.remolque2_id),
+      viaje_registrado_id: formData.viaje_registrado_id || null,
       notas: formData.notas,
     };
     if (viajeEditando)
@@ -657,6 +854,7 @@ export default function FuelViajes() {
         id: viajeEditando.id,
         data: datosViaje,
         puntosRuta: formData.km_gps && tramoPoints.length > 1 ? tramoPoints : null,
+        vrPrevio: viajeEditando.viaje_registrado_id || null,
       });
   };
 
@@ -716,6 +914,8 @@ export default function FuelViajes() {
             setRutaFiltro={setRutaFiltro}
             periodoFiltro={periodoFiltro}
             setPeriodoFiltro={setPeriodoFiltro}
+            soloSinVincular={soloSinVincular}
+            setSoloSinVincular={setSoloSinVincular}
             conductores={conductores}
             camiones={camiones}
             clientes={clientes}
@@ -1050,6 +1250,15 @@ export default function FuelViajes() {
                   </div>
                 </div>
               )}
+
+              <VinculoProgramaPicker
+                viajeEditandoId={viajeEditando?.id}
+                formData={formData}
+                setFormData={setFormData}
+                viajes={viajes}
+                viajesRegistrados={viajesRegistrados}
+                programas={programas}
+              />
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-fecha" className="font-semibold text-foreground">

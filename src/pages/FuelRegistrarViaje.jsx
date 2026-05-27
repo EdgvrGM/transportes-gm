@@ -442,7 +442,7 @@ export default function FuelRegistrarViaje() {
       casetas_ida: casetasIda,
       casetas_regreso: casetasRegreso,
       notas: viaje.notas,
-      viaje_registrado_id: viajeRegistradoId ? parseInt(viajeRegistradoId, 10) : null,
+      viaje_registrado_id: viajeRegistradoId || null,
     };
     crearViajeMutation.mutate({
       ...datosViaje,
