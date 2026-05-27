@@ -12,10 +12,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import PanelCompartir from "@/components/gps/PanelCompartir";
 import GeocercaGPS from "@/components/gps/GeocercaGPS";
 import RalentiGPS from "@/components/gps/RalentiGPS";
-
-const WIALON_PROXY_URL = "https://wialon-proxy.transportesgm.workers.dev";
-const WIALON_IMG_BASE  = "https://hst-api.wialon.com";
-const RALENTI_UMBRAL_MS = 15 * 60 * 1000;
+import {
+  WIALON_PROXY_URL, WIALON_IMG_BASE, RALENTI_UMBRAL_MS,
+  RASTRO_MAX, POLL_POSITIONS_MS, POLL_ALERTAS_MS,
+} from "@/components/gps/constants";
 
 async function fetchPositions(unidadesInactivas = []) {
   const exclude = unidadesInactivas.join(",");
@@ -29,10 +29,10 @@ async function fetchPositions(unidadesInactivas = []) {
 
 // BUG 1 FIX: componente externo para evitar desmonte en cada render del padre
 function PanelContent({
-  activeTab, positions, vinculaciones, isLoading,
+  activeTab, positions, vinculaciones, isLoading, positionsError,
   selectedUnit, setSelectedUnit, setUnidadEnfocada, setBottomSheetState,
   setHistorialPuntos, setPuntoReproduccion, setReproduciendo, setIconoUnidad,
-  setPanelCompartirUnidad, ralentiActivo,
+  setPanelCompartirUnidad, ralentiActivo, refetch,
 }) {
   const [copiedId, setCopiedId] = useState(null);
 
@@ -54,7 +54,17 @@ function PanelContent({
               Unidades en Vivo
             </h3>
           </div>
-          {isLoading ? (
+          {positionsError ? (
+            <div className="p-4 space-y-2">
+              <p className="text-sm text-red-600 dark:text-red-400">No se pudieron obtener las posiciones. Verifica tu conexión.</p>
+              <button
+                onClick={() => refetch?.()}
+                className="text-xs px-3 py-1.5 rounded-lg border border-border hover:bg-accent transition-colors"
+              >
+                Reintentar
+              </button>
+            </div>
+          ) : isLoading ? (
             <div className="p-4 text-sm text-muted-foreground">Cargando...</div>
           ) : (
             <div className="flex-1 overflow-y-auto min-h-0">
@@ -82,6 +92,7 @@ function PanelContent({
                     <div className="w-8 h-8 shrink-0 flex items-center justify-center">
                       {p.uri
                         ? <img
+                            alt={p.nombre}
                             src={`${WIALON_IMG_BASE}${p.uri}`}
                             style={{ width: 28, height: 28, objectFit: "contain" }}
                             onError={(e) => { e.target.style.display = "none"; }}
@@ -171,29 +182,32 @@ export default function RastreoGPS() {
     },
   });
 
-  const { data: positions = [], isLoading, refetch, isFetching } = useQuery({
+  const { data: positions = [], isLoading, refetch, isFetching, error: positionsError } = useQuery({
     queryKey: ["gps-positions", unidadesInactivas],
     queryFn:  () => fetchPositions(unidadesInactivas),
-    refetchInterval: 15000,
+    refetchInterval: POLL_POSITIONS_MS,
     enabled: true,
   });
 
-  // Rastro: guarda últimas 10 posiciones por unidad
-  const RASTRO_MAX = 10;
+  // Rastro: guarda últimas N posiciones por unidad
   const historialRastroRef = useRef({});
   const [historialRastro, setHistorialRastro] = useState({});
 
   useEffect(() => {
     if (positions.length === 0) return;
-    const nuevo = { ...historialRastroRef.current };
+    const prevState = historialRastroRef.current;
+    const nuevo = { ...prevState };
+    let cambio = false;
     positions.forEach((p) => {
       if (p.lat === 0 && p.lng === 0) return;
       const prev  = nuevo[p.id] || [];
       const ultima = prev[prev.length - 1];
       if (!ultima || ultima.lat !== p.lat || ultima.lng !== p.lng) {
         nuevo[p.id] = [...prev, { lat: p.lat, lng: p.lng }].slice(-RASTRO_MAX);
+        cambio = true;
       }
     });
+    if (!cambio) return;
     historialRastroRef.current = nuevo;
     setHistorialRastro(nuevo);
   }, [positions]);
@@ -219,7 +233,7 @@ export default function RastreoGPS() {
       if (error) throw error;
       return data || [];
     },
-    refetchInterval: 15000,
+    refetchInterval: POLL_POSITIONS_MS,
   });
 
   const ralentiActivoMap = useMemo(() => {
@@ -241,7 +255,7 @@ export default function RastreoGPS() {
       if (error) throw error;
       return count || 0;
     },
-    refetchInterval: 30000,
+    refetchInterval: POLL_ALERTAS_MS,
   });
 
   const { data: eventosGeocercaHoy = 0 } = useQuery({
@@ -255,7 +269,7 @@ export default function RastreoGPS() {
       if (error) throw error;
       return count || 0;
     },
-    refetchInterval: 30000,
+    refetchInterval: POLL_ALERTAS_MS,
   });
 
   // Conteo de links compartidos activos
@@ -302,7 +316,7 @@ export default function RastreoGPS() {
   ];
 
   const panelProps = {
-    activeTab, positions, vinculaciones, isLoading,
+    activeTab, positions, vinculaciones, isLoading, positionsError, refetch,
     selectedUnit, setSelectedUnit, setUnidadEnfocada, setBottomSheetState,
     setHistorialPuntos, setPuntoReproduccion, setReproduciendo, setIconoUnidad,
     setPanelCompartirUnidad, ralentiActivo: ralentiActivoMap,
@@ -383,6 +397,15 @@ export default function RastreoGPS() {
           <PanelContent {...panelProps} />
         </div>
 
+        {/* FAB Configurar — solo móvil */}
+        <button
+          onClick={() => setShowConfig(true)}
+          className="md:hidden fixed top-32 right-3 z-30 w-10 h-10 flex items-center justify-center rounded-full bg-gm-primary text-slate-900 shadow-lg hover:bg-yellow-400 active:scale-95 transition-all"
+          title="Configurar unidades"
+        >
+          <Settings2 className="w-4 h-4" />
+        </button>
+
         {/* Mapa — ocupa el 100% en móvil */}
         <div className="flex-1 h-full w-full overflow-hidden" style={{ zIndex: 0 }}>
           <MapaGPS
@@ -413,7 +436,7 @@ export default function RastreoGPS() {
               ? "translate-y-full pointer-events-none opacity-0"
               : "translate-y-0"}
             ${bottomSheetState === "medium"   ? "bottom-16 h-[40vh]" : ""}
-            ${bottomSheetState === "expanded" ? "bottom-16 h-[85vh]" : ""}
+            ${bottomSheetState === "expanded" ? "bottom-16 h-[calc(100vh-8rem)]" : ""}
           `}
         >
           {/* Handle */}
@@ -478,7 +501,7 @@ export default function RastreoGPS() {
                   <Icon className="w-5 h-5" />
                   {t.badge > 0 && (
                     <span className={`absolute -top-1.5 -right-1.5 px-1 min-w-[14px] h-[14px] ${t.badgeColor ?? "bg-red-500"} text-white text-[8px] font-bold rounded-full flex items-center justify-center`}>
-                      {t.badge}
+                      {t.badge > 9 ? "9+" : t.badge}
                     </span>
                   )}
                 </div>

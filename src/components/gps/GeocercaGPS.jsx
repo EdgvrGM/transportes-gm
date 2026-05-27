@@ -2,10 +2,7 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/supabaseClient";
 import { ShieldCheck, LogIn, LogOut, Truck } from "lucide-react";
-
-const PATIO_LAT      = 18.9350;
-const PATIO_LNG      = -103.8899;
-const PATIO_RADIO_M  = 70;
+import { PATIO_LAT, PATIO_LNG, PATIO_RADIO_M } from "@/components/gps/constants";
 
 function distanciaMetros(lat1, lng1, lat2, lng2) {
   const R    = 6371000;

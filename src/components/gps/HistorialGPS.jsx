@@ -5,11 +5,17 @@ import {
   Search, Loader2,
   ChevronsLeft, ChevronLeft, Play, Pause, ChevronRight, ChevronsRight, X,
 } from "lucide-react";
+import { WIALON_PROXY_URL, VELOCIDAD_ALERTA } from "@/components/gps/constants";
 
-const WIALON_PROXY_URL = "https://wialon-proxy.transportesgm.workers.dev";
+function localDateStr(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
 
-const today     = new Date().toISOString().split("T")[0];
-const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+const today     = localDateStr(new Date());
+const yesterday = localDateStr(new Date(Date.now() - 86400000));
 
 function toDatetimeLocal(date, time) {
   return `${date}T${time}`;
@@ -57,33 +63,32 @@ export default function HistorialGPS({ positions = [], onHistorialCargado, onPun
     queryFn: fetchUnidades,
   });
 
-  const { data: historial, isFetching } = useQuery({
+  const { data: historial, isFetching, error: historialError } = useQuery({
     queryKey: ["gps-history", unitId, fromDt, toDt, fetchCount],
     queryFn: () => fetchHistory({ unitId, fromDt, toDt }),
     enabled: fetchCount > 0,
   });
 
   // Sincronizar ícono Wialon de la unidad seleccionada.
-  // Solo se limpia el ícono cuando unitId cambia; un refresco de positions que no
-  // incluya al camión (offline) no debe borrar el ícono ya conocido.
-  const prevUnitIdRef = useRef(null);
+  // 1) Optimista: usar el uri de positions si está disponible (refresco gratis).
+  // 2) Si no está, fetchear gps-details para que el icono no dependa del polling en vivo.
   useEffect(() => {
     if (!unitId) {
-      prevUnitIdRef.current = null;
       onIconoUnidad?.(null);
       return;
     }
     const found = positions.find((p) => String(p.id) === String(unitId));
-    const unitChanged = prevUnitIdRef.current !== unitId;
-    prevUnitIdRef.current = unitId;
-
-    if (found?.uri !== undefined) {
+    if (found?.uri) {
       onIconoUnidad?.(found.uri);
-    } else if (unitChanged) {
-      // Nueva unidad sin posición conocida todavía
-      onIconoUnidad?.(null);
+      return;
     }
-    // Si el camión desapareció temporalmente del refresco, conservar el ícono anterior
+    // Unidad offline o no presente en el refresco actual → buscar detalles
+    let cancelado = false;
+    fetch(`${WIALON_PROXY_URL}?action=details&unit=${unitId}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (!cancelado && d?.uri) onIconoUnidad?.(d.uri); })
+      .catch(() => {});
+    return () => { cancelado = true; };
   }, [unitId, positions]);
 
   const [puntosLocales, setPuntosLocales] = useState([]);
@@ -119,7 +124,8 @@ export default function HistorialGPS({ positions = [], onHistorialCargado, onPun
         const next = prev + 1;
         if (next >= totalPoints) {
           setIsPlaying(false);
-          onPuntoActivo?.(null);
+          // Mantener marker en el último punto para no perder contexto visual
+          onPuntoActivo?.(prev);
           return prev;
         }
         onPuntoActivo?.(next);
@@ -149,12 +155,12 @@ export default function HistorialGPS({ positions = [], onHistorialCargado, onPun
     setToDt(toDatetimeLocal(yesterday, "23:59"));
   };
   const setSemana = () => {
-    const d = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0];
+    const d = localDateStr(new Date(Date.now() - 7 * 86400000));
     setFromDt(toDatetimeLocal(d, "00:00"));
     setToDt(toDatetimeLocal(today, "23:59"));
   };
   const setMes = () => {
-    const d = new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
+    const d = localDateStr(new Date(Date.now() - 30 * 86400000));
     setFromDt(toDatetimeLocal(d, "00:00"));
     setToDt(toDatetimeLocal(today, "23:59"));
   };
@@ -190,8 +196,23 @@ export default function HistorialGPS({ positions = [], onHistorialCargado, onPun
     ? new Date(points[0].timestamp).toLocaleDateString("es-MX")
     : null;
 
-  const btnQuick = "flex-1 py-1 text-xs font-medium rounded border border-border text-muted-foreground hover:bg-accent hover:text-foreground transition-colors";
-  const ctrlBtn  = "p-1 text-muted-foreground hover:text-foreground transition-colors rounded disabled:opacity-40";
+  const btnQuick       = "flex-1 py-1 text-xs font-medium rounded border border-border text-muted-foreground hover:bg-accent hover:text-foreground transition-colors";
+  const btnQuickActive = "flex-1 py-1 text-xs font-semibold rounded border border-gm-primary/40 bg-gm-primary/20 text-yellow-600";
+  const ctrlBtn        = "p-1 text-muted-foreground hover:text-foreground transition-colors rounded disabled:opacity-40";
+
+  const rangoActivo = (() => {
+    const dHoy   = toDatetimeLocal(today, "23:59");
+    const dHoyIni = toDatetimeLocal(today, "00:00");
+    const dAyer  = toDatetimeLocal(yesterday, "23:59");
+    const dAyerIni = toDatetimeLocal(yesterday, "00:00");
+    if (fromDt === dHoyIni && toDt === dHoy) return "hoy";
+    if (fromDt === dAyerIni && toDt === dAyer) return "ayer";
+    const d7  = localDateStr(new Date(Date.now() -  7 * 86400000));
+    const d30 = localDateStr(new Date(Date.now() - 30 * 86400000));
+    if (fromDt === toDatetimeLocal(d7,  "00:00") && toDt === dHoy) return "7d";
+    if (fromDt === toDatetimeLocal(d30, "00:00") && toDt === dHoy) return "30d";
+    return null;
+  })();
 
   return (
     <div className="flex flex-col h-full text-sm">
@@ -204,7 +225,15 @@ export default function HistorialGPS({ positions = [], onHistorialCargado, onPun
           </label>
           <select
             value={unitId}
-            onChange={(e) => setUnitId(e.target.value)}
+            onChange={(e) => {
+              setUnitId(e.target.value);
+              clearInterval(playIntervalRef.current);
+              setPuntosLocales([]);
+              setPlaybackIdx(0);
+              setIsPlaying(false);
+              onHistorialCargado?.([]);
+              onPuntoActivo?.(null);
+            }}
             className="w-full text-xs border border-border rounded-lg px-2 py-1.5 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-yellow-400"
           >
             <option value="">Seleccionar...</option>
@@ -218,10 +247,10 @@ export default function HistorialGPS({ positions = [], onHistorialCargado, onPun
 
         {/* Botones rápidos */}
         <div className="flex gap-1">
-          <button className={btnQuick} onClick={setHoy}>Hoy</button>
-          <button className={btnQuick} onClick={setAyer}>Ayer</button>
-          <button className={btnQuick} onClick={setSemana}>7d</button>
-          <button className={btnQuick} onClick={setMes}>30d</button>
+          <button className={rangoActivo === "hoy"  ? btnQuickActive : btnQuick} onClick={setHoy}>Hoy</button>
+          <button className={rangoActivo === "ayer" ? btnQuickActive : btnQuick} onClick={setAyer}>Ayer</button>
+          <button className={rangoActivo === "7d"   ? btnQuickActive : btnQuick} onClick={setSemana}>7d</button>
+          <button className={rangoActivo === "30d"  ? btnQuickActive : btnQuick} onClick={setMes}>30d</button>
         </div>
 
         {/* Datetime local inputs */}
@@ -246,15 +275,28 @@ export default function HistorialGPS({ positions = [], onHistorialCargado, onPun
           </div>
         </div>
 
+        {/* Validación de rango */}
+        {fromDt && toDt && fromDt > toDt && (
+          <p className="text-[11px] text-red-500 font-medium">
+            La fecha "De" debe ser anterior o igual a "A".
+          </p>
+        )}
+
         {/* Botón buscar */}
         <button
           onClick={mostrarRecorrido}
-          disabled={!unitId || isFetching}
+          disabled={!unitId || isFetching || (fromDt && toDt && fromDt > toDt)}
           className="w-full flex items-center justify-center gap-2 py-1.5 rounded-lg bg-yellow-400 hover:bg-yellow-500 disabled:bg-muted disabled:text-muted-foreground text-slate-900 text-xs font-semibold transition-colors"
         >
           {isFetching ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
           Mostrar recorrido
         </button>
+
+        {historialError && (
+          <p className="text-[11px] text-red-500 font-medium">
+            Error al obtener el historial. Revisa el rango e inténtalo de nuevo.
+          </p>
+        )}
       </div>
 
       {/* ── Resultado ── */}
@@ -291,7 +333,7 @@ export default function HistorialGPS({ positions = [], onHistorialCargado, onPun
                 {" · "}
                 {new Date(points[playbackIdx].timestamp).toLocaleTimeString("es-MX")}
                 {" · "}
-                <span className={points[playbackIdx].velocidad > 80 ? "text-red-500 font-medium" : ""}>
+                <span className={points[playbackIdx].velocidad > VELOCIDAD_ALERTA ? "text-red-500 font-medium" : ""}>
                   {points[playbackIdx].velocidad} km/h
                 </span>
               </p>

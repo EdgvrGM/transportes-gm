@@ -149,6 +149,16 @@
     @apply transition-colors duration-200;
   }
 
+  /* Popups de Leaflet — soporte dark mode */
+  .dark .leaflet-popup-content-wrapper,
+  .dark .leaflet-popup-tip {
+    background: #0f172a;
+    color: #e2e8f0;
+  }
+  .dark .leaflet-popup-content-wrapper {
+    border: 1px solid #334155;
+  }
+
   /* Scrollbar Minimalista para Modo Oscuro */
   .dark ::-webkit-scrollbar {
     width: 8px;

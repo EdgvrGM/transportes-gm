@@ -5,9 +5,7 @@ import {
   Loader2, Copy, Check, Share2,
 } from "lucide-react";
 import PanelCompartir from "@/components/gps/PanelCompartir";
-
-const WIALON_PROXY_URL = "https://wialon-proxy.transportesgm.workers.dev";
-const WIALON_IMG_BASE  = "https://hst-api.wialon.com";
+import { WIALON_PROXY_URL, WIALON_IMG_BASE } from "@/components/gps/constants";
 
 function tiempoDesde(ts) {
   if (!ts) return "Sin datos";
@@ -21,7 +19,7 @@ function tiempoDesde(ts) {
 }
 
 
-export default function TooltipUnidad({ unidad, onClose, onMouseEnter, onMouseLeave, style }) {
+export default function TooltipUnidad({ unidad, onClose, onMouseEnter, onMouseLeave, style, centered = false }) {
   const [copied,    setCopied]    = useState(false);
   const [showShare, setShowShare] = useState(false);
 
@@ -42,7 +40,7 @@ export default function TooltipUnidad({ unidad, onClose, onMouseEnter, onMouseLe
       if (!res.ok) throw new Error("Error al obtener detalles");
       return res.json();
     },
-    staleTime: 30000,
+    staleTime: 5 * 60 * 1000, // 5 min — odómetro y horas motor cambian poco
   });
 
   const handleMouseLeave = () => {
@@ -51,18 +49,13 @@ export default function TooltipUnidad({ unidad, onClose, onMouseEnter, onMouseLe
 
   const enRalenti = unidad.motor && unidad.velocidad === 0;
 
-  return (
-    <div
-      style={{ position: "fixed", zIndex: 9999, pointerEvents: "auto", ...style }}
-      className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 w-80 overflow-hidden"
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
+  const content = (
+    <>
       {/* Header */}
       <div className="flex items-center gap-3 p-3 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
         <div className="w-10 h-10 flex items-center justify-center shrink-0">
           {unidad.uri
-            ? <img src={`${WIALON_IMG_BASE}${unidad.uri}`} style={{ width: 36, height: 36, objectFit: "contain" }} />
+            ? <img alt={unidad.nombre} src={`${WIALON_IMG_BASE}${unidad.uri}`} style={{ width: 36, height: 36, objectFit: "contain" }} />
             : <span style={{ fontSize: 24 }}>🚚</span>
           }
         </div>
@@ -179,22 +172,56 @@ export default function TooltipUnidad({ unidad, onClose, onMouseEnter, onMouseLe
           </div>
         </div>
       </div>
+    </>
+  );
 
-      {/* Estado */}
-      <div className="flex items-center gap-2 px-3 py-2">
-        <span
-          className="w-2.5 h-2.5 rounded-full shrink-0"
-          style={{ background: enRalenti ? "#EAB308" : unidad.motor ? "#22c55e" : "#94a3b8" }}
+  if (centered) {
+    return (
+      <>
+        <div
+          className="fixed inset-0 bg-black/40 z-[9998]"
+          onClick={onClose}
         />
-        <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
-          {enRalenti
-            ? "Motor encendido · Ralentí"
-            : unidad.motor
-              ? "Motor encendido · En movimiento"
-              : "Motor apagado · Detenido"
-          }
-        </span>
-      </div>
+        <div
+          style={{ position: "fixed", zIndex: 9999, top: "50%", left: "50%", transform: "translate(-50%, -50%)", pointerEvents: "auto" }}
+          className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 w-[min(20rem,calc(100vw-2rem))] max-h-[calc(100vh-6rem)] overflow-y-auto"
+        >
+          {content}
+          <EstadoMotor enRalenti={enRalenti} unidad={unidad} />
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <div
+      style={{ position: "fixed", zIndex: 9999, pointerEvents: "auto", ...style }}
+      className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 w-80 overflow-hidden"
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      {content}
+      <EstadoMotor enRalenti={enRalenti} unidad={unidad} />
     </div>
   );
 }
+
+function EstadoMotor({ enRalenti, unidad }) {
+  return (
+    <div className="flex items-center gap-2 px-3 py-2">
+      <span
+        className="w-2.5 h-2.5 rounded-full shrink-0"
+        style={{ background: enRalenti ? "#EAB308" : unidad.motor ? "#22c55e" : "#94a3b8" }}
+      />
+      <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
+        {enRalenti
+          ? "Motor encendido · Ralentí"
+          : unidad.motor
+            ? "Motor encendido · En movimiento"
+            : "Motor apagado · Detenido"
+        }
+      </span>
+    </div>
+  );
+}
+

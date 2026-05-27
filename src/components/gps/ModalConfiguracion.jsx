@@ -9,8 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Settings, Loader2, Check, Truck } from "lucide-react";
-
-const WIALON_PROXY_URL = "https://wialon-proxy.transportesgm.workers.dev";
+import { WIALON_PROXY_URL } from "@/components/gps/constants";
 
 async function fetchWialonUnits() {
   const res = await fetch(`${WIALON_PROXY_URL}?action=units`);

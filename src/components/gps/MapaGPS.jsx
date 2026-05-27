@@ -4,6 +4,7 @@ import TooltipUnidad from "@/components/gps/TooltipUnidad";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { createUnitIcon } from "@/components/gps/unitIconHelper";
+import { PATIO_LAT, PATIO_LNG, PATIO_RADIO_M, CENTRO_MX, VELOCIDAD_ALERTA } from "@/components/gps/constants";
 
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
@@ -116,7 +117,7 @@ function BoundsController({ positions, histLatlngs, tabActivo }) {
     if (validas.length > 0) {
       map.fitBounds(L.latLngBounds(validas.map((p) => [p.lat, p.lng])), { padding: [50, 50] });
     } else {
-      map.setView([23.6345, -102.5528], 5);
+      map.setView(CENTRO_MX, 5);
     }
   }, [positions.length]);
 
@@ -132,7 +133,8 @@ function EnfocarUnidad({ unidad, onEnfocado }) {
   const map = useMap();
   useEffect(() => {
     if (!unidad || (unidad.lat === 0 && unidad.lng === 0)) return;
-    map.flyTo([unidad.lat, unidad.lng], 14, { animate: true, duration: 1 });
+    const zoomDeseado = Math.max(map.getZoom(), 14);
+    map.flyTo([unidad.lat, unidad.lng], zoomDeseado, { animate: true, duration: 1 });
     onEnfocado();
   }, [unidad]);
   return null;
@@ -146,6 +148,60 @@ function SeguimientoAuto({ punto, reproduciendo }) {
     }
   }, [punto]);
   return null;
+}
+
+// Marker de unidad en vivo — memoiza el icono para evitar parpadeo cada 15s
+function LiveUnitMarker({ p, camion, onMarkerClick, hoverTimerRef, closeTimerRef, setTooltip, setTooltipCentrado }) {
+  const icon = useMemo(
+    () => createUnitIcon(p.uri, p.rumbo, p.motor, p.nombre, p.velocidad),
+    [p.uri, p.rumbo, p.motor, p.nombre, p.velocidad]
+  );
+
+  return (
+    <Marker
+      position={[p.lat, p.lng]}
+      icon={icon}
+      eventHandlers={{
+        click: () => {
+          if (window.innerWidth < 768) {
+            setTooltipCentrado(p);
+          }
+          onMarkerClick?.(p);
+        },
+        mouseover: (e) => {
+          clearTimeout(hoverTimerRef.current);
+          const point = e.containerPoint;
+          const rect  = e.target._map.getContainer().getBoundingClientRect();
+          hoverTimerRef.current = setTimeout(() => {
+            setTooltip((prev) => {
+              if (prev?.unidad?.id === p.id) return prev;
+              return { unidad: p, x: rect.left + point.x, y: rect.top + point.y };
+            });
+          }, 500);
+        },
+        mouseout: () => {
+          clearTimeout(hoverTimerRef.current);
+          closeTimerRef.current = setTimeout(() => setTooltip(null), 300);
+        },
+      }}
+    >
+      <Popup>
+        <div style={{ fontSize: "13px", lineHeight: 1.6, minWidth: "160px" }}>
+          <strong>{camion ? camion.nombre : p.nombre}</strong>
+          {camion?.placas && (
+            <><br /><span className="text-slate-600 dark:text-slate-300" style={{ fontFamily: "monospace", fontSize: "11px" }}>{camion.placas}</span></>
+          )}
+          <br />
+          Velocidad: {p.velocidad} km/h<br />
+          Rumbo: {p.rumbo}°<br />
+          Estado: {p.motor ? "🟢 En movimiento" : "⚪ Detenido"}<br />
+          <span className="text-slate-500 dark:text-slate-400" style={{ fontSize: "11px" }}>
+            {new Date(p.ultima_actualizacion).toLocaleTimeString("es-MX")}
+          </span>
+        </div>
+      </Popup>
+    </Marker>
+  );
 }
 
 // ── Componente principal ──────────────────────────────────────────────────────
@@ -163,13 +219,17 @@ export default function MapaGPS({
   onEnfocado,
 }) {
   const primera = positions.find((p) => p.lat !== 0 && p.lng !== 0);
-  const center  = primera ? [primera.lat, primera.lng] : [19.2433, -103.7250];
+  const center  = primera ? [primera.lat, primera.lng] : CENTRO_MX;
 
   const [tooltip, setTooltip] = useState(null);
+  const [tooltipCentrado, setTooltipCentrado] = useState(null);
   const closeTimerRef = useRef(null);
   const hoverTimerRef = useRef(null);
 
-  useEffect(() => () => clearTimeout(hoverTimerRef.current), []);
+  useEffect(() => () => {
+    clearTimeout(hoverTimerRef.current);
+    clearTimeout(closeTimerRef.current);
+  }, []);
 
   const handleTooltipMouseEnter = useCallback(() => {
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
@@ -210,8 +270,8 @@ export default function MapaGPS({
 
         {/* Geocerca del patio */}
         <Circle
-          center={[18.9350, -103.8899]}
-          radius={70}
+          center={[PATIO_LAT, PATIO_LNG]}
+          radius={PATIO_RADIO_M}
           pathOptions={{ color: "#EAB308", fillColor: "#EAB308", fillOpacity: 0.08, weight: 2, dashArray: "6 4" }}
         />
 
@@ -221,47 +281,17 @@ export default function MapaGPS({
         ))}
         {positions.map((p) => {
           if (p.lat === 0 && p.lng === 0) return null;
-          const camion = vinculaciones[p.id];
           return (
-            <Marker
+            <LiveUnitMarker
               key={p.id}
-              position={[p.lat, p.lng]}
-              icon={createUnitIcon(p.uri, p.rumbo, p.motor, p.nombre, p.velocidad)}
-              eventHandlers={{
-                click: () => onMarkerClick?.(p),
-                mouseover: (e) => {
-                  clearTimeout(hoverTimerRef.current);
-                  const point = e.containerPoint;
-                  const rect  = e.target._map.getContainer().getBoundingClientRect();
-                  hoverTimerRef.current = setTimeout(() => {
-                    setTooltip((prev) => {
-                      if (prev?.unidad?.id === p.id) return prev;
-                      return { unidad: p, x: rect.left + point.x, y: rect.top + point.y };
-                    });
-                  }, 500);
-                },
-                mouseout: () => {
-                  clearTimeout(hoverTimerRef.current);
-                  closeTimerRef.current = setTimeout(() => setTooltip(null), 300);
-                },
-              }}
-            >
-              <Popup>
-                <div style={{ fontSize: "13px", lineHeight: 1.6, minWidth: "160px" }}>
-                  <strong>{camion ? camion.nombre : p.nombre}</strong>
-                  {camion?.placas && (
-                    <><br /><span style={{ color: "#555", fontFamily: "monospace", fontSize: "11px" }}>{camion.placas}</span></>
-                  )}
-                  <br />
-                  Velocidad: {p.velocidad} km/h<br />
-                  Rumbo: {p.rumbo}°<br />
-                  Estado: {p.motor ? "🟢 En movimiento" : "⚪ Detenido"}<br />
-                  <span style={{ color: "#888", fontSize: "11px" }}>
-                    {new Date(p.ultima_actualizacion).toLocaleTimeString("es-MX")}
-                  </span>
-                </div>
-              </Popup>
-            </Marker>
+              p={p}
+              camion={vinculaciones[p.id]}
+              onMarkerClick={onMarkerClick}
+              hoverTimerRef={hoverTimerRef}
+              closeTimerRef={closeTimerRef}
+              setTooltip={setTooltip}
+              setTooltipCentrado={setTooltipCentrado}
+            />
           );
         })}
 
@@ -302,7 +332,7 @@ export default function MapaGPS({
                   <div style={{ fontSize: "12px", lineHeight: 1.6 }}>
                     <strong>Parada</strong><br />
                     Duración: {formatDuracion(p.durSec)}<br />
-                    <span style={{ color: "#888" }}>
+                    <span className="text-slate-500 dark:text-slate-400">
                       {new Date(p.inicio).toLocaleTimeString("es-MX")} → {new Date(p.fin).toLocaleTimeString("es-MX")}
                     </span>
                   </div>
@@ -310,29 +340,40 @@ export default function MapaGPS({
               </Marker>
             ))}
 
-            {/* Anotaciones de velocidad cada 10 puntos */}
-            {historialPuntos
-              .filter((_, i) => i % 10 === 0 && i !== 0 && i !== historialPuntos.length - 1)
-              .map((p, i) => (
-                <CircleMarker
-                  key={`ann-${i}`}
-                  center={[p.lat, p.lng]}
-                  radius={p.velocidad > 80 ? 7 : 4}
-                  pathOptions={{
-                    color:       p.velocidad > 80 ? "#ef4444" : "#64748b",
-                    fillColor:   p.velocidad > 80 ? "#ef4444" : "#fff",
-                    fillOpacity: 1,
-                    weight:      2,
-                  }}
-                >
-                  <Popup>
-                    <div style={{ fontSize: "12px", lineHeight: 1.5 }}>
-                      <strong>{new Date(p.timestamp).toLocaleTimeString("es-MX")}</strong><br />
-                      {p.velocidad} km/h
-                    </div>
-                  </Popup>
-                </CircleMarker>
-              ))}
+            {/* Anotaciones: todos los puntos con exceso de velocidad + sample de contexto */}
+            {(() => {
+              const total = historialPuntos.length;
+              const MAX_CONTEXT = 50;
+              const step = Math.max(10, Math.ceil(total / MAX_CONTEXT));
+              const indicesContext = new Set();
+              for (let i = step; i < total - 1; i += step) indicesContext.add(i);
+              return historialPuntos
+                .map((p, i) => ({ p, i }))
+                .filter(({ p, i }) =>
+                  i !== 0 && i !== total - 1 &&
+                  (p.velocidad > VELOCIDAD_ALERTA || indicesContext.has(i))
+                )
+                .map(({ p, i }) => (
+                  <CircleMarker
+                    key={`ann-${i}`}
+                    center={[p.lat, p.lng]}
+                    radius={p.velocidad > VELOCIDAD_ALERTA ? 7 : 4}
+                    pathOptions={{
+                      color:       p.velocidad > VELOCIDAD_ALERTA ? "#ef4444" : "#64748b",
+                      fillColor:   p.velocidad > VELOCIDAD_ALERTA ? "#ef4444" : "#fff",
+                      fillOpacity: 1,
+                      weight:      2,
+                    }}
+                  >
+                    <Popup>
+                      <div style={{ fontSize: "12px", lineHeight: 1.5 }}>
+                        <strong>{new Date(p.timestamp).toLocaleTimeString("es-MX")}</strong><br />
+                        {p.velocidad} km/h
+                      </div>
+                    </Popup>
+                  </CircleMarker>
+                ));
+            })()}
 
             {/* Inicio y fin */}
             <Marker position={histLatlngs[0]} icon={startIcon}>
@@ -370,7 +411,7 @@ export default function MapaGPS({
         )}
       </MapContainer>
 
-      {/* Tooltip de unidad en vivo */}
+      {/* Tooltip de unidad en vivo — desktop hover */}
       {tooltip && (
         <TooltipUnidad
           unidad={tooltip.unidad}
@@ -378,9 +419,18 @@ export default function MapaGPS({
           onMouseEnter={handleTooltipMouseEnter}
           onMouseLeave={handleTooltipMouseLeave}
           style={{
-            left: Math.min(tooltip.x + 16, window.innerWidth - 340),
-            top:  Math.min(tooltip.y - 10, window.innerHeight - 400),
+            left: Math.max(8, Math.min(tooltip.x + 16, window.innerWidth - 328)),
+            top:  Math.max(8, Math.min(tooltip.y - 10, window.innerHeight - 408)),
           }}
+        />
+      )}
+
+      {/* Tooltip centrado — móvil click */}
+      {tooltipCentrado && (
+        <TooltipUnidad
+          unidad={tooltipCentrado}
+          onClose={() => setTooltipCentrado(null)}
+          centered
         />
       )}
     </div>

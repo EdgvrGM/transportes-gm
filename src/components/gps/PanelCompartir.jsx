@@ -22,7 +22,10 @@ export default function PanelCompartir({ unidad, onClose }) {
     setGenerando(true);
     setErrorShare(null);
     try {
-      const token  = crypto.randomUUID().replace(/-/g, "");
+      const token = (crypto?.randomUUID
+        ? crypto.randomUUID()
+        : `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}-${Math.random().toString(16).slice(2)}`
+      ).replace(/-/g, "");
       const expira = addHours(new Date(), duracion).toISOString();
       const payload = {
         token,
