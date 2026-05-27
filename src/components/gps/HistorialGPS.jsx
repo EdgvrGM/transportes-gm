@@ -63,10 +63,27 @@ export default function HistorialGPS({ positions = [], onHistorialCargado, onPun
     enabled: fetchCount > 0,
   });
 
-  // Sincronizar ícono Wialon de la unidad seleccionada
+  // Sincronizar ícono Wialon de la unidad seleccionada.
+  // Solo se limpia el ícono cuando unitId cambia; un refresco de positions que no
+  // incluya al camión (offline) no debe borrar el ícono ya conocido.
+  const prevUnitIdRef = useRef(null);
   useEffect(() => {
-    const uri = positions.find((p) => String(p.id) === String(unitId))?.uri ?? null;
-    onIconoUnidad?.(uri);
+    if (!unitId) {
+      prevUnitIdRef.current = null;
+      onIconoUnidad?.(null);
+      return;
+    }
+    const found = positions.find((p) => String(p.id) === String(unitId));
+    const unitChanged = prevUnitIdRef.current !== unitId;
+    prevUnitIdRef.current = unitId;
+
+    if (found?.uri !== undefined) {
+      onIconoUnidad?.(found.uri);
+    } else if (unitChanged) {
+      // Nueva unidad sin posición conocida todavía
+      onIconoUnidad?.(null);
+    }
+    // Si el camión desapareció temporalmente del refresco, conservar el ícono anterior
   }, [unitId, positions]);
 
   const [puntosLocales, setPuntosLocales] = useState([]);
