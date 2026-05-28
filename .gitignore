@@ -43,3 +43,5 @@ scratch/
 # Supabase local
 supabase/.temp
 supabase/config.toml
+# Added by code-review-graph
+.code-review-graph/

@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="es" class="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Panel de Control — Mockup · Transportes GM</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          'gm-primary': '#EAB308',
+        },
+        fontFamily: {
+          sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+        },
+      },
+    },
+  };
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  html, body { font-family: 'Inter', sans-serif; }
+  body {
+    background: #0a0a0a;
+    color: #e4e4e7;
+  }
+  html:not(.dark) body {
+    background: #f8fafc;
+    color: #0f172a;
+  }
+  .card {
+    background: #18181b;
+    border: 1px solid #27272a;
+  }
+  html:not(.dark) .card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+  }
+  .muted-bg { background: #27272a; }
+  html:not(.dark) .muted-bg { background: #f1f5f9; }
+  .pulse-dot::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    background: currentColor;
+    opacity: 0.4;
+    animation: pulse-ring 2s ease-out infinite;
+  }
+  @keyframes pulse-ring {
+    0% { transform: scale(0.8); opacity: 0.5; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+  .row-hover:hover { background: rgba(234, 179, 8, 0.04); }
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 9999px; }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- Theme toggle (solo para mockup) -->
+<button id="theme-toggle" class="fixed top-4 right-4 z-50 p-2 rounded-lg card shadow-lg" title="Alternar tema">
+  <i data-lucide="sun-moon" class="w-4 h-4"></i>
+</button>
+
+<div class="max-w-[1600px] mx-auto p-4 md:p-8">
+
+  <!-- HEADER -->
+  <header class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-3xl md:text-4xl font-black tracking-tight">Panel de Control</h1>
+      <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Vista operativa en tiempo real</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+        <span class="relative inline-block w-2 h-2 rounded-full bg-green-500 text-green-500 pulse-dot"></span>
+        <span>En vivo · Lun 27 May · 14:32</span>
+      </div>
+      <button class="p-2 rounded-lg card hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
+        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ═════════════ BLOQUE 1: ESTADO DE FLOTA EN VIVO ═════════════ -->
+  <section class="card rounded-2xl p-5 md:p-6 mb-5 shadow-sm">
+    <!-- Fila superior: título + contadores compactos + botón abrir GPS -->
+    <div class="flex flex-col lg:flex-row lg:items-center gap-4 mb-5">
+      <div class="flex items-center gap-3 shrink-0">
+        <div class="p-2 rounded-lg bg-gm-primary/10 text-gm-primary">
+          <i data-lucide="radar" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h2 class="text-lg font-bold leading-tight">Estado de Flota</h2>
+          <div class="flex items-center gap-1.5 mt-0.5">
+            <span class="relative inline-block w-1.5 h-1.5 rounded-full bg-green-500 text-green-500 pulse-dot"></span>
+            <span class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">En vivo</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contadores compactos en una sola línea -->
+      <div class="flex items-center gap-2 md:gap-3 flex-1 flex-wrap lg:flex-nowrap lg:justify-center">
+        <button class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:border-green-500/40 hover:bg-green-500/5 transition group">
+          <span class="relative inline-block w-2 h-2 rounded-full bg-green-500 text-green-500 pulse-dot"></span>
+          <span class="text-lg font-black leading-none">12</span>
+          <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">En ruta</span>
+        </button>
+        <button class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:border-orange-500/40 hover:bg-orange-500/5 transition">
+          <span class="inline-block w-2 h-2 rounded-full bg-orange-500"></span>
+          <span class="text-lg font-black leading-none">3</span>
+          <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">Detenidas</span>
+        </button>
+        <button class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:border-blue-500/40 hover:bg-blue-500/5 transition">
+          <span class="inline-block w-2 h-2 rounded-full bg-blue-500"></span>
+          <span class="text-lg font-black leading-none">2</span>
+          <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">En patio</span>
+        </button>
+        <button class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:border-zinc-500/40 hover:bg-zinc-500/5 transition">
+          <span class="inline-block w-2 h-2 rounded-full bg-zinc-400"></span>
+          <span class="text-lg font-black leading-none">1</span>
+          <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">Sin señal</span>
+        </button>
+      </div>
+
+      <a href="#" class="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gm-primary text-zinc-900 font-bold text-xs uppercase tracking-wider hover:brightness-110 transition">
+        <i data-lucide="map" class="w-3.5 h-3.5"></i> Abrir GPS
+      </a>
+    </div>
+
+    <!-- Mini mapa GPS -->
+    <div class="relative rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800" style="z-index: 0;">
+      <div id="mini-map" style="height: 280px; width: 100%;"></div>
+
+      <!-- Leyenda flotante -->
+      <div class="absolute top-3 left-3 z-[400] card rounded-lg px-3 py-2 shadow-lg backdrop-blur-sm bg-opacity-90">
+        <div class="text-[9px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-1.5">Unidades visibles</div>
+        <div class="flex flex-col gap-1 text-xs">
+          <div class="flex items-center gap-2"><span class="inline-block w-2 h-2 rounded-full bg-green-500"></span><span class="font-semibold">En ruta</span></div>
+          <div class="flex items-center gap-2"><span class="inline-block w-2 h-2 rounded-full bg-orange-500"></span><span class="font-semibold">Detenidas</span></div>
+          <div class="flex items-center gap-2"><span class="inline-block w-2 h-2 rounded-full bg-blue-500"></span><span class="font-semibold">En patio</span></div>
+        </div>
+      </div>
+
+      <!-- Botón expandir flotante -->
+      <a href="#" class="absolute top-3 right-3 z-[400] card rounded-lg p-2 shadow-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition" title="Ver mapa completo">
+        <i data-lucide="maximize-2" class="w-4 h-4"></i>
+      </a>
+    </div>
+
+    <!-- Cintillo de alertas vivas -->
+    <div class="flex flex-wrap items-center gap-2 pt-4 mt-4 border-t border-zinc-200 dark:border-zinc-800">
+      <button class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs font-bold hover:bg-red-500/20 transition">
+        <i data-lucide="bell-ring" class="w-3.5 h-3.5"></i>
+        4 alertas sin leer
+      </button>
+      <button class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/30 text-orange-600 dark:text-orange-400 text-xs font-bold hover:bg-orange-500/20 transition">
+        <i data-lucide="hourglass" class="w-3.5 h-3.5"></i>
+        2 en ralentí prolongado
+      </button>
+      <button class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-bold hover:bg-rose-500/20 transition">
+        <i data-lucide="gauge" class="w-3.5 h-3.5"></i>
+        T-07 exceso de velocidad
+      </button>
+      <span class="text-xs text-zinc-500 dark:text-zinc-400 ml-auto">Última actualización hace 4s</span>
+    </div>
+  </section>
+
+  <!-- ═════════════ BLOQUE 2: COLA DE CARGA (COMPACTA) ═════════════ -->
+  <section class="card rounded-2xl shadow-sm mb-5 overflow-hidden">
+    <header class="flex flex-col md:flex-row md:items-center justify-between gap-3 px-5 md:px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">
+      <div class="flex items-center gap-3">
+        <div class="p-2 rounded-lg bg-blue-500/10 text-blue-500">
+          <i data-lucide="list-checks" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h2 class="text-lg font-bold">Cola de carga</h2>
+          <p class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mt-0.5">
+            Semana 22 · 27 May al 01 Jun
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-orange-500/10 border border-orange-500/30 text-orange-600 dark:text-orange-400 text-xs font-bold">
+          <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> 4 pendientes
+        </span>
+        <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-green-500/10 border border-green-500/30 text-green-600 dark:text-green-400 text-xs font-bold">
+          <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> 11 registrados
+        </span>
+      </div>
+    </header>
+
+    <ul>
+      <li class="flex items-center gap-3 px-5 md:px-6 py-3 border-l-2 border-blue-500 row-hover transition">
+        <div class="w-12 text-center">
+          <div class="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Mié</div>
+          <div class="text-sm font-black">29</div>
+        </div>
+        <div class="flex-1 min-w-0 grid grid-cols-3 gap-3">
+          <div class="min-w-0">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Destino</div>
+            <div class="text-sm font-bold truncate">Monterrey</div>
+          </div>
+          <div class="min-w-0">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Conductor</div>
+            <div class="text-sm font-bold truncate">J. López</div>
+          </div>
+          <div class="min-w-0">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Unidad</div>
+            <div class="text-sm font-bold truncate">T-12 · MTR-4521</div>
+          </div>
+        </div>
+        <button class="px-3 py-1.5 rounded-lg bg-gm-primary text-zinc-900 font-bold text-xs uppercase tracking-wider hover:brightness-110 transition flex items-center gap-1.5">
+          <i data-lucide="fuel" class="w-3.5 h-3.5"></i> Registrar
+        </button>
+      </li>
+
+      <li class="flex items-center gap-3 px-5 md:px-6 py-3 border-l-2 border-blue-500 row-hover transition border-t border-zinc-200 dark:border-zinc-800">
+        <div class="w-12 text-center">
+          <div class="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Mié</div>
+          <div class="text-sm font-black">29</div>
+        </div>
+        <div class="flex-1 min-w-0 grid grid-cols-3 gap-3">
+          <div class="min-w-0">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Destino</div>
+            <div class="text-sm font-bold truncate">Saltillo</div>
+          </div>
+          <div class="min-w-0">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Conductor</div>
+            <div class="text-sm font-bold truncate">M. Pérez</div>
+          </div>
+          <div class="min-w-0">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Unidad</div>
+            <div class="text-sm font-bold truncate">T-08 · SLT-2210</div>
+          </div>
+        </div>
+        <button class="px-3 py-1.5 rounded-lg bg-gm-primary text-zinc-900 font-bold text-xs uppercase tracking-wider hover:brightness-110 transition flex items-center gap-1.5">
+          <i data-lucide="fuel" class="w-3.5 h-3.5"></i> Registrar
+        </button>
+      </li>
+
+      <li class="flex items-center gap-3 px-5 md:px-6 py-3 border-l-2 border-orange-500 row-hover transition border-t border-zinc-200 dark:border-zinc-800">
+        <div class="w-12 text-center">
+          <div class="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Jue</div>
+          <div class="text-sm font-black">30</div>
+        </div>
+        <div class="flex-1 min-w-0 grid grid-cols-3 gap-3">
+          <div class="min-w-0">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Destino</div>
+            <div class="text-sm font-bold truncate flex items-center gap-1.5">
+              CDMX
+              <span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 uppercase tracking-wider">Incompleto</span>
+            </div>
+          </div>
+          <div class="min-w-0">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Conductor</div>
+            <div class="text-sm font-bold truncate">R. García</div>
+          </div>
+          <div class="min-w-0">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Unidad</div>
+            <div class="text-sm font-bold truncate">T-05 · CMX-9981</div>
+          </div>
+        </div>
+        <button class="px-3 py-1.5 rounded-lg bg-orange-500 text-white font-bold text-xs uppercase tracking-wider hover:brightness-110 transition flex items-center gap-1.5">
+          <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Completar
+        </button>
+      </li>
+
+      <li class="flex items-center gap-3 px-5 md:px-6 py-3 border-l-2 border-blue-500 row-hover transition border-t border-zinc-200 dark:border-zinc-800">
+        <div class="w-12 text-center">
+          <div class="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Vie</div>
+          <div class="text-sm font-black">31</div>
+        </div>
+        <div class="flex-1 min-w-0 grid grid-cols-3 gap-3">
+          <div class="min-w-0">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Destino</div>
+            <div class="text-sm font-bold truncate">Guadalajara</div>
+          </div>
+          <div class="min-w-0">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Conductor</div>
+            <div class="text-sm font-bold truncate">A. Ruiz</div>
+          </div>
+          <div class="min-w-0">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Unidad</div>
+            <div class="text-sm font-bold truncate">T-11 · GDL-7733</div>
+          </div>
+        </div>
+        <button class="px-3 py-1.5 rounded-lg bg-gm-primary text-zinc-900 font-bold text-xs uppercase tracking-wider hover:brightness-110 transition flex items-center gap-1.5">
+          <i data-lucide="fuel" class="w-3.5 h-3.5"></i> Registrar
+        </button>
+      </li>
+    </ul>
+
+    <div class="px-5 md:px-6 py-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+      <a href="#" class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 hover:text-gm-primary flex items-center gap-1.5">
+        Ver programa completo <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+      </a>
+      <span class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">15 viajes esta semana</span>
+    </div>
+  </section>
+
+  <!-- ═════════════ BLOQUES 3 + 4: PENDIENTES + HOY ═════════════ -->
+  <div class="grid grid-cols-1 lg:grid-cols-5 gap-5 mb-5">
+
+    <!-- BLOQUE 2: PENDIENTES CON ACCIÓN -->
+    <section class="card rounded-2xl p-5 md:p-6 shadow-sm lg:col-span-3">
+      <div class="flex items-center justify-between mb-5">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-lg bg-red-500/10 text-red-500">
+            <i data-lucide="inbox" class="w-5 h-5"></i>
+          </div>
+          <h2 class="text-lg font-bold">Pendientes con acción</h2>
+        </div>
+        <span class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">12 requieren atención</span>
+      </div>
+
+      <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
+        <!-- Viajes sin combustible -->
+        <li>
+          <a href="#" class="row-hover flex items-center gap-4 py-3 px-2 -mx-2 rounded-lg transition">
+            <div class="w-10 h-10 rounded-lg bg-orange-500/10 text-orange-500 flex items-center justify-center shrink-0">
+              <i data-lucide="fuel" class="w-5 h-5"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="font-bold text-sm">Viajes ejecutados sin combustible registrado</div>
+              <div class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Más antiguo: 22 May · 5 días sin capturar</div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="text-2xl font-black text-orange-500">3</div>
+              <i data-lucide="chevron-right" class="w-4 h-4 text-zinc-400"></i>
+            </div>
+          </a>
+        </li>
+
+        <!-- Viajes sin vincular -->
+        <li>
+          <a href="#" class="row-hover flex items-center gap-4 py-3 px-2 -mx-2 rounded-lg transition">
+            <div class="w-10 h-10 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center shrink-0">
+              <i data-lucide="link-2" class="w-5 h-5"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="font-bold text-sm">Viajes sin vincular al programa</div>
+              <div class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">No coinciden por fecha+conductor+camión</div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="text-2xl font-black text-purple-500">2</div>
+              <i data-lucide="chevron-right" class="w-4 h-4 text-zinc-400"></i>
+            </div>
+          </a>
+        </li>
+
+        <!-- OT abiertas -->
+        <li>
+          <a href="#" class="row-hover flex items-center gap-4 py-3 px-2 -mx-2 rounded-lg transition">
+            <div class="w-10 h-10 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
+              <i data-lucide="wrench" class="w-5 h-5"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="font-bold text-sm">Órdenes de trabajo abiertas</div>
+              <div class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">2 en progreso · 1 en espera · 1 sin asignar</div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="text-2xl font-black text-blue-500">4</div>
+              <i data-lucide="chevron-right" class="w-4 h-4 text-zinc-400"></i>
+            </div>
+          </a>
+        </li>
+
+        <!-- Documentos por vencer -->
+        <li>
+          <a href="#" class="row-hover flex items-center gap-4 py-3 px-2 -mx-2 rounded-lg transition">
+            <div class="w-10 h-10 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center shrink-0">
+              <i data-lucide="file-warning" class="w-5 h-5"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="font-bold text-sm">Documentos por vencer en ≤30 días</div>
+              <div class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">T-05 verificación (vence 12 Jun) · T-11 póliza (vence 18 Jun)</div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="text-2xl font-black text-rose-500">2</div>
+              <i data-lucide="chevron-right" class="w-4 h-4 text-zinc-400"></i>
+            </div>
+          </a>
+        </li>
+
+        <!-- Liquidaciones -->
+        <li>
+          <a href="#" class="row-hover flex items-center gap-4 py-3 px-2 -mx-2 rounded-lg transition">
+            <div class="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
+              <i data-lucide="banknote" class="w-5 h-5"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="font-bold text-sm">Liquidaciones pendientes</div>
+              <div class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">J. López · semana del 20 May</div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="text-2xl font-black text-emerald-500">1</div>
+              <i data-lucide="chevron-right" class="w-4 h-4 text-zinc-400"></i>
+            </div>
+          </a>
+        </li>
+
+        <!-- Cuando no hay pendientes (ejemplo en gris) -->
+        <li>
+          <div class="flex items-center gap-4 py-3 px-2 -mx-2 opacity-40">
+            <div class="w-10 h-10 rounded-lg muted-bg flex items-center justify-center shrink-0">
+              <i data-lucide="check" class="w-5 h-5"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="font-bold text-sm">Anomalías de consumo</div>
+              <div class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Sin desviaciones esta semana</div>
+            </div>
+            <div class="text-2xl font-black text-zinc-400">0</div>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <!-- BLOQUE 3: PULSO DEL DÍA -->
+    <section class="card rounded-2xl p-5 md:p-6 shadow-sm lg:col-span-2">
+      <div class="flex items-center justify-between mb-5">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-lg bg-gm-primary/10 text-gm-primary">
+            <i data-lucide="calendar-clock" class="w-5 h-5"></i>
+          </div>
+          <h2 class="text-lg font-bold">Hoy · Lunes</h2>
+        </div>
+        <span class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">27 May</span>
+      </div>
+
+      <!-- Barra de progreso del día -->
+      <div class="mb-5">
+        <div class="flex items-baseline gap-2 mb-2">
+          <div class="text-4xl font-black">3<span class="text-zinc-400 text-2xl">/5</span></div>
+          <div class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">ejecutados</div>
+        </div>
+        <div class="h-2 rounded-full muted-bg overflow-hidden">
+          <div class="h-full bg-gradient-to-r from-green-500 to-emerald-500" style="width: 60%"></div>
+        </div>
+      </div>
+
+      <!-- Mini estado del día -->
+      <div class="space-y-2.5 mb-5">
+        <div class="flex items-center justify-between text-sm">
+          <div class="flex items-center gap-2">
+            <i data-lucide="check-circle-2" class="w-4 h-4 text-green-500"></i>
+            <span class="font-semibold">Completados</span>
+          </div>
+          <span class="font-black">3</span>
+        </div>
+        <div class="flex items-center justify-between text-sm">
+          <div class="flex items-center gap-2">
+            <i data-lucide="navigation-2" class="w-4 h-4 text-blue-500"></i>
+            <span class="font-semibold">En ruta ahora</span>
+          </div>
+          <span class="font-black">1</span>
+        </div>
+        <div class="flex items-center justify-between text-sm">
+          <div class="flex items-center gap-2">
+            <i data-lucide="clock-3" class="w-4 h-4 text-orange-500"></i>
+            <span class="font-semibold">Pendientes</span>
+          </div>
+          <span class="font-black text-orange-500">1</span>
+        </div>
+      </div>
+
+      <!-- Mañana -->
+      <div class="pt-4 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+        <div>
+          <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Mañana · Martes</div>
+          <div class="text-sm font-bold mt-0.5">4 viajes programados</div>
+        </div>
+        <button class="text-xs font-semibold text-gm-primary hover:underline flex items-center gap-1">
+          Ver semana <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <!-- ═════════════ BLOQUE 5: FLOTA & MANTENIMIENTO ═════════════ -->
+  <section class="card rounded-2xl p-5 md:p-6 shadow-sm">
+    <div class="flex items-center justify-between mb-5">
+      <div class="flex items-center gap-3">
+        <div class="p-2 rounded-lg bg-blue-500/10 text-blue-500">
+          <i data-lucide="truck" class="w-5 h-5"></i>
+        </div>
+        <h2 class="text-lg font-bold">Flota y mantenimiento</h2>
+      </div>
+      <a href="#" class="text-xs font-semibold text-gm-primary hover:underline flex items-center gap-1">
+        Abrir mantenimiento <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+      </a>
+    </div>
+
+    <!-- Contadores -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+      <div class="p-3 rounded-xl muted-bg">
+        <div class="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Disponibles</div>
+        <div class="text-2xl font-black mt-1">14</div>
+      </div>
+      <div class="p-3 rounded-xl muted-bg">
+        <div class="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">En servicio</div>
+        <div class="text-2xl font-black mt-1 text-green-500">12</div>
+      </div>
+      <div class="p-3 rounded-xl muted-bg">
+        <div class="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">En taller</div>
+        <div class="text-2xl font-black mt-1 text-orange-500">2</div>
+      </div>
+      <div class="p-3 rounded-xl muted-bg">
+        <div class="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Inactivas</div>
+        <div class="text-2xl font-black mt-1 text-zinc-400">0</div>
+      </div>
+    </div>
+
+    <!-- Próximos servicios preventivos -->
+    <div class="pt-4 border-t border-zinc-200 dark:border-zinc-800">
+      <div class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-3">Próximos servicios preventivos</div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="flex items-center gap-3 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800">
+          <div class="w-10 h-10 rounded-lg bg-orange-500/10 text-orange-500 flex items-center justify-center shrink-0">
+            <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="font-bold text-sm">T-07 · Cambio de aceite</div>
+            <div class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Faltan <span class="text-orange-500 font-bold">850 km</span> (de 10,000)</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800">
+          <div class="w-10 h-10 rounded-lg bg-zinc-500/10 text-zinc-500 flex items-center justify-center shrink-0">
+            <i data-lucide="settings" class="w-5 h-5"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="font-bold text-sm">T-12 · Afinación mayor</div>
+            <div class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Faltan <span class="font-bold">1,200 km</span> (de 30,000)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer mockup -->
+  <p class="text-center text-xs text-zinc-500 dark:text-zinc-600 mt-8">
+    Mockup estático · Transportes GM · Panel de Control v2
+  </p>
+
+</div>
+
+<script>
+  lucide.createIcons();
+  const toggle = document.getElementById('theme-toggle');
+  toggle.addEventListener('click', () => {
+    document.documentElement.classList.toggle('dark');
+  });
+
+  const map = L.map('mini-map', {
+    zoomControl: true,
+    attributionControl: false,
+    scrollWheelZoom: false,
+  }).setView([25.6866, -100.3161], 6);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19,
+  }).addTo(map);
+
+  const unidades = [
+    { nombre: 'T-12', lat: 25.6866, lng: -100.3161, estado: 'ruta',    velocidad: 87, dir: 'Monterrey → Saltillo' },
+    { nombre: 'T-08', lat: 25.4232, lng: -101.0053, estado: 'ruta',    velocidad: 92, dir: 'Saltillo → Torreón' },
+    { nombre: 'T-11', lat: 22.7647, lng: -102.5810, estado: 'ruta',    velocidad: 78, dir: 'Zacatecas → GDL' },
+    { nombre: 'T-05', lat: 19.4326, lng: -99.1332,  estado: 'detenida', velocidad: 0,  dir: 'CDMX · descarga' },
+    { nombre: 'T-14', lat: 20.6597, lng: -103.3496, estado: 'ruta',    velocidad: 65, dir: 'GDL → León' },
+    { nombre: 'T-09', lat: 21.1619, lng: -101.6921, estado: 'detenida', velocidad: 0,  dir: 'León · espera' },
+    { nombre: 'T-07', lat: 24.0277, lng: -104.6532, estado: 'ruta',    velocidad: 95, dir: 'Durango → MTY' },
+    { nombre: 'T-03', lat: 25.7000, lng: -100.4000, estado: 'patio',   velocidad: 0,  dir: 'En patio' },
+    { nombre: 'T-15', lat: 25.7100, lng: -100.4050, estado: 'patio',   velocidad: 0,  dir: 'En patio' },
+  ];
+
+  const colorEstado = {
+    ruta: '#22c55e',
+    detenida: '#f97316',
+    patio: '#3b82f6',
+  };
+
+  const markers = [];
+  unidades.forEach((u) => {
+    const color = colorEstado[u.estado];
+    const html = `
+      <div style="position: relative; width: 28px; height: 28px;">
+        <div style="position: absolute; inset: 0; border-radius: 9999px; background: ${color}; opacity: 0.25; animation: pulse-ring 2s ease-out infinite;"></div>
+        <div style="position: absolute; inset: 4px; border-radius: 9999px; background: ${color}; border: 2px solid #18181b; box-shadow: 0 2px 6px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; color: white; font-size: 9px; font-weight: 900;">
+          ${u.nombre.replace('T-', '')}
+        </div>
+      </div>
+    `;
+    const icon = L.divIcon({ className: '', html, iconSize: [28, 28], iconAnchor: [14, 14] });
+    const marker = L.marker([u.lat, u.lng], { icon }).addTo(map);
+    marker.bindTooltip(
+      `<div style="font-weight: 800;">${u.nombre}</div>
+       <div style="font-size: 11px; color: #94a3b8;">${u.dir}</div>
+       <div style="font-size: 11px; color: ${color}; font-weight: 700;">${u.velocidad} km/h</div>`,
+      { direction: 'top', offset: [0, -10], className: 'unit-tooltip' }
+    );
+    markers.push(marker);
+  });
+
+  const group = L.featureGroup(markers);
+  map.fitBounds(group.getBounds(), { padding: [40, 40] });
+</script>
+
+<style>
+  .leaflet-tooltip {
+    background: #18181b;
+    border: 1px solid #3f3f46;
+    color: #e4e4e7;
+    font-family: 'Inter', sans-serif;
+    padding: 6px 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  }
+  .leaflet-tooltip-top:before { border-top-color: #3f3f46; }
+  html:not(.dark) .leaflet-tooltip {
+    background: white;
+    border: 1px solid #e2e8f0;
+    color: #0f172a;
+  }
+  html:not(.dark) .leaflet-tooltip-top:before { border-top-color: #e2e8f0; }
+</style>
+</body>
+</html>

@@ -54,6 +54,13 @@ export default [
       'react/prop-types': 'off',
     },
   },
+  // Panel components consumed only internally — prop-types not required
+  {
+    files: ['src/components/panel/**/*.{js,jsx}'],
+    rules: {
+      'react/prop-types': 'off',
+    },
+  },
   // Node.js config files
   {
     files: ['*.config.{js,cjs}', '*.cjs'],

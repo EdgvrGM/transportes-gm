@@ -43,5 +43,9 @@
       "Bash(where py *)",
       "Bash(py \".claude/skills/ui-ux-pro-max/scripts/search.py\" \"fleet gps dashboard list cards data transport\" --design-system -p \"TransportesGM\")"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "code-review-graph"
+  ],
+  "enableAllProjectMcpServers": true
 }
