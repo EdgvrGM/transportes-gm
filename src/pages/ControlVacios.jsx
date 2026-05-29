@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/supabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -30,6 +30,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Container,
   Plus,
@@ -48,6 +49,7 @@ import {
   PackageOpen,
   ChevronDown,
   Check,
+  Clock,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
@@ -68,6 +70,13 @@ function localDateStr(date) {
   return `${y}-${m}-${d}`;
 }
 
+// Extrae la ruta interna del bucket "vacios" a partir de su URL pública.
+function pathFotoStorage(url) {
+  const marker = "/storage/v1/object/public/vacios/";
+  const i = url.indexOf(marker);
+  return i === -1 ? null : decodeURIComponent(url.slice(i + marker.length));
+}
+
 const FORM_VACIO = {
   id: null,
   numero_contenedor: "",
@@ -82,8 +91,26 @@ const FORM_VACIO = {
   camion_entrega_id: "",
   remolque_entrega_id: "",
   fecha_entrega_vacio: "",
+  lugar_entrega_vacio: "",
+  entrega_con_cita: false,
+  horario_cita: "",
   notas: "",
   fotos_urls: [],
+};
+
+const FORM_ENTREGA = {
+  id: null,
+  numero_contenedor: "",
+  conductor_carga_id: "",
+  camion_carga_id: "",
+  remolque_carga_id: "",
+  conductor_entrega_id: "",
+  camion_entrega_id: "",
+  remolque_entrega_id: "",
+  fecha_entrega_vacio: "",
+  lugar_entrega_vacio: "",
+  entrega_con_cita: false,
+  horario_cita: "",
 };
 
 export default function ControlVacios() {
@@ -96,9 +123,15 @@ export default function ControlVacios() {
   const [popoverEstatus, setPopoverEstatus] = useState(null);
   const [fotoVisor, setFotoVisor] = useState(null);
   const [galeriaFotos, setGaleriaFotos] = useState(null);
+  const [dialogEntrega, setDialogEntrega] = useState(false);
+  const [entregaData, setEntregaData] = useState(FORM_ENTREGA);
   const [fotoAEliminar, setFotoAEliminar] = useState(null);
   const [subiendoFotos, setSubiendoFotos] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
+
+  // URLs subidas a Storage durante esta sesión de edición pero aún no guardadas en BD.
+  // Si se quitan o se cancela el diálogo, se borran del bucket para no dejar archivos muertos.
+  const fotosSubidasSesion = useRef(new Set());
 
   // Filtros
   const [busqueda, setBusqueda] = useState("");
@@ -185,13 +218,40 @@ export default function ControlVacios() {
         camion_entrega_id: datos.camion_entrega_id ? parseInt(datos.camion_entrega_id, 10) : null,
         remolque_entrega_id: datos.remolque_entrega_id ? parseInt(datos.remolque_entrega_id, 10) : null,
         fecha_entrega_vacio: datos.fecha_entrega_vacio || null,
+        lugar_entrega_vacio: datos.lugar_entrega_vacio?.trim() || null,
+        entrega_con_cita: !!datos.entrega_con_cita,
+        horario_cita: datos.entrega_con_cita ? (datos.horario_cita?.trim() || null) : null,
         notas: datos.notas?.trim() || null,
         fotos_urls: datos.fotos_urls || [],
       };
+      // Fotos previas en BD para detectar cuáles se quitaron y borrarlas del Storage.
+      let fotosPrevias = [];
+      if (datos.id) {
+        const { data: prev } = await supabase
+          .from("contenedores_vacios")
+          .select("fotos_urls")
+          .eq("id", datos.id)
+          .maybeSingle();
+        fotosPrevias = prev?.fotos_urls || [];
+      }
+
       const { error } = await supabase.from("contenedores_vacios").upsert(payload);
       if (error) throw error;
+
+      // Limpieza best-effort de fotos que ya no están en el registro.
+      const nuevas = datos.fotos_urls || [];
+      const eliminadas = fotosPrevias.filter((u) => !nuevas.includes(u));
+      const rutas = eliminadas.map(pathFotoStorage).filter(Boolean);
+      if (rutas.length) {
+        try {
+          await supabase.storage.from("vacios").remove(rutas);
+        } catch (_e) {
+          // ignorar errores de limpieza de Storage
+        }
+      }
     },
     onSuccess: () => {
+      fotosSubidasSesion.current.clear();
       queryClient.invalidateQueries({ queryKey: ["controlVacios"] });
       setDialogAbierto(false);
     },
@@ -210,8 +270,50 @@ export default function ControlVacios() {
     onError: (err) => alert("Error al actualizar estatus: " + err.message),
   });
 
+  const guardarEntregaMutation = useMutation({
+    mutationFn: async (d) => {
+      const { error } = await supabase
+        .from("contenedores_vacios")
+        .update({
+          conductor_entrega_id: d.conductor_entrega_id ? parseInt(d.conductor_entrega_id, 10) : null,
+          camion_entrega_id: d.camion_entrega_id ? parseInt(d.camion_entrega_id, 10) : null,
+          remolque_entrega_id: d.remolque_entrega_id ? parseInt(d.remolque_entrega_id, 10) : null,
+          fecha_entrega_vacio: d.fecha_entrega_vacio || null,
+          lugar_entrega_vacio: d.lugar_entrega_vacio?.trim() || null,
+          entrega_con_cita: !!d.entrega_con_cita,
+          horario_cita: d.entrega_con_cita ? (d.horario_cita?.trim() || null) : null,
+        })
+        .eq("id", d.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["controlVacios"] });
+      setDialogEntrega(false);
+    },
+    onError: (err) => setErrorMsg(err.message),
+  });
+
+  const handleGuardarEntrega = () => {
+    setErrorMsg(null);
+    if (!entregaData.conductor_entrega_id) {
+      setErrorMsg("Selecciona el conductor que entrega el vacío.");
+      return;
+    }
+    guardarEntregaMutation.mutate(entregaData);
+  };
+
   const eliminarMutation = useMutation({
     mutationFn: async (id) => {
+      // Borrado best-effort de las fotos del contenedor (carpeta vacios/{id}).
+      // Si falla el Storage, no bloqueamos la eliminación del registro.
+      try {
+        const { data: archivos } = await supabase.storage.from("vacios").list(`vacios/${id}`);
+        if (archivos?.length) {
+          await supabase.storage.from("vacios").remove(archivos.map((f) => `vacios/${id}/${f.name}`));
+        }
+      } catch (_e) {
+        // ignorar errores de limpieza de Storage
+      }
       const { error } = await supabase.from("contenedores_vacios").delete().eq("id", id);
       if (error) throw error;
     },
@@ -225,8 +327,27 @@ export default function ControlVacios() {
     },
   });
 
+  // Al cerrar el diálogo sin guardar, borra del Storage las fotos subidas en esta
+  // sesión que nunca se persistieron, para no dejar archivos muertos.
+  const cerrarDialogAlta = async (open) => {
+    setDialogAbierto(open);
+    if (!open) {
+      const huerfanas = Array.from(fotosSubidasSesion.current);
+      fotosSubidasSesion.current.clear();
+      const rutas = huerfanas.map(pathFotoStorage).filter(Boolean);
+      if (rutas.length) {
+        try {
+          await supabase.storage.from("vacios").remove(rutas);
+        } catch (_e) {
+          // ignorar errores de limpieza de Storage
+        }
+      }
+    }
+  };
+
   const abrirNuevo = () => {
     setErrorMsg(null);
+    fotosSubidasSesion.current.clear();
     setEsEdicion(false);
     setFormData({
       ...FORM_VACIO,
@@ -239,6 +360,7 @@ export default function ControlVacios() {
 
   const abrirEditar = (c) => {
     setErrorMsg(null);
+    fotosSubidasSesion.current.clear();
     setEsEdicion(true);
     setFormData({
       id: c.id,
@@ -254,10 +376,32 @@ export default function ControlVacios() {
       camion_entrega_id: c.camion_entrega_id != null ? String(c.camion_entrega_id) : "",
       remolque_entrega_id: c.remolque_entrega_id != null ? String(c.remolque_entrega_id) : "",
       fecha_entrega_vacio: c.fecha_entrega_vacio || "",
+      lugar_entrega_vacio: c.lugar_entrega_vacio || "",
+      entrega_con_cita: !!c.entrega_con_cita,
+      horario_cita: c.horario_cita || "",
       notas: c.notas || "",
       fotos_urls: c.fotos_urls || [],
     });
     setDialogAbierto(true);
+  };
+
+  const abrirEntrega = (c) => {
+    setErrorMsg(null);
+    setEntregaData({
+      id: c.id,
+      numero_contenedor: c.numero_contenedor || "",
+      conductor_carga_id: c.conductor_carga_id != null ? String(c.conductor_carga_id) : "",
+      camion_carga_id: c.camion_carga_id != null ? String(c.camion_carga_id) : "",
+      remolque_carga_id: c.remolque_carga_id != null ? String(c.remolque_carga_id) : "",
+      conductor_entrega_id: c.conductor_entrega_id != null ? String(c.conductor_entrega_id) : "",
+      camion_entrega_id: c.camion_entrega_id != null ? String(c.camion_entrega_id) : "",
+      remolque_entrega_id: c.remolque_entrega_id != null ? String(c.remolque_entrega_id) : "",
+      fecha_entrega_vacio: c.fecha_entrega_vacio || "",
+      lugar_entrega_vacio: c.lugar_entrega_vacio || "",
+      entrega_con_cita: !!c.entrega_con_cita,
+      horario_cita: c.horario_cita || "",
+    });
+    setDialogEntrega(true);
   };
 
   const handleGuardar = () => {
@@ -290,6 +434,7 @@ export default function ControlVacios() {
           .upload(filePath, file, { cacheControl: "3600", upsert: false });
         if (upErr) throw upErr;
         const { data: { publicUrl } } = supabase.storage.from("vacios").getPublicUrl(filePath);
+        fotosSubidasSesion.current.add(publicUrl);
         nuevas.push(publicUrl);
       }
       setFormData((f) => ({ ...f, fotos_urls: [...(f.fotos_urls || []), ...nuevas] }));
@@ -301,9 +446,22 @@ export default function ControlVacios() {
     }
   };
 
-  const handleQuitarFoto = (url) => {
+  const handleQuitarFoto = async (url) => {
     setFormData((f) => ({ ...f, fotos_urls: (f.fotos_urls || []).filter((u) => u !== url) }));
     setFotoAEliminar(null);
+    // Si la foto se subió en esta sesión y aún no está en BD, bórrala ya del Storage.
+    // Las fotos ya persistidas se borran al guardar (diff en guardarMutation).
+    if (fotosSubidasSesion.current.has(url)) {
+      fotosSubidasSesion.current.delete(url);
+      const ruta = pathFotoStorage(url);
+      if (ruta) {
+        try {
+          await supabase.storage.from("vacios").remove([ruta]);
+        } catch (_e) {
+          // ignorar errores de limpieza de Storage
+        }
+      }
+    }
   };
 
   const contadores = useMemo(() => {
@@ -516,10 +674,17 @@ export default function ControlVacios() {
                   </div>
 
                   {/* Footer: entrega de vacío */}
-                  {c.conductor_entrega_id && (
+                  {c.conductor_entrega_id ? (
                     c.estatus === "vacio_entregado" ? (
                       <div className="mt-3 pt-3 border-t border-border">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-500 mb-1">Vacío entregado</p>
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-500">Entregó vacío{c.lugar_entrega_vacio ? ` · ${c.lugar_entrega_vacio}` : ""}</p>
+                          {c.entrega_con_cita && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                              <Clock className="w-3 h-3" /> Cita{c.horario_cita ? ` ${c.horario_cita}` : ""}
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-1.5 text-sm text-emerald-700 dark:text-emerald-400 truncate">
                           <PackageOpen className="w-3.5 h-3.5 shrink-0" />
                           <span className="truncate font-medium">
@@ -530,7 +695,14 @@ export default function ControlVacios() {
                       </div>
                     ) : (
                       <div className="mt-3 pt-3 border-t border-dashed border-border">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">Entrega programada</p>
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Entrega programada{c.lugar_entrega_vacio ? ` · ${c.lugar_entrega_vacio}` : ""}</p>
+                          {c.entrega_con_cita && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                              <Clock className="w-3 h-3" /> Cita{c.horario_cita ? ` ${c.horario_cita}` : ""}
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-1.5 text-sm text-muted-foreground truncate">
                           <User className="w-3.5 h-3.5 shrink-0" />
                           <span className="truncate">
@@ -540,6 +712,13 @@ export default function ControlVacios() {
                         </div>
                       </div>
                     )
+                  ) : (
+                    <button
+                      onClick={() => abrirEntrega(c)}
+                      className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-emerald-300 dark:border-emerald-800/70 text-emerald-600 dark:text-emerald-400 text-sm font-bold hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-colors cursor-pointer"
+                    >
+                      <PackageOpen className="w-4 h-4" /> Registrar entrega de vacío
+                    </button>
                   )}
                 </div>
               </div>
@@ -549,7 +728,7 @@ export default function ControlVacios() {
       )}
 
       {/* Dialog alta/edición */}
-      <Dialog open={dialogAbierto} onOpenChange={setDialogAbierto}>
+      <Dialog open={dialogAbierto} onOpenChange={cerrarDialogAlta}>
         <DialogContent className="max-w-3xl w-[95vw] max-h-[90vh] overflow-y-auto rounded-3xl">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black">
@@ -677,6 +856,7 @@ export default function ControlVacios() {
               </Select>
             </div>
 
+            {formData.conductor_entrega_id && (
             <div className="rounded-2xl border border-emerald-200/70 dark:border-emerald-900/40 bg-emerald-50/40 dark:bg-emerald-950/10 p-4">
               <div className="flex items-center justify-between gap-3 mb-3">
                 <div className="flex items-center gap-2">
@@ -740,8 +920,37 @@ export default function ControlVacios() {
                     className="rounded-xl mt-1"
                   />
                 </div>
+                <div className="md:col-span-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <Label className="font-bold">Lugar de entrega</Label>
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <Checkbox
+                        checked={formData.entrega_con_cita}
+                        onCheckedChange={(v) => setFormData((f) => ({ ...f, entrega_con_cita: !!v, horario_cita: v ? f.horario_cita : "" }))}
+                      />
+                      <span className="text-sm font-bold text-foreground">Es con cita</span>
+                    </label>
+                  </div>
+                  <div className="flex gap-3 mt-1">
+                    <Input
+                      value={formData.lugar_entrega_vacio}
+                      onChange={(e) => setFormData((f) => ({ ...f, lugar_entrega_vacio: e.target.value }))}
+                      placeholder="Ej. CIMA, SSA, Hutchison..."
+                      className="rounded-xl flex-1 min-w-0"
+                    />
+                    {formData.entrega_con_cita && (
+                      <Input
+                        type="time"
+                        value={formData.horario_cita}
+                        onChange={(e) => setFormData((f) => ({ ...f, horario_cita: e.target.value }))}
+                        className="rounded-xl w-32 shrink-0"
+                      />
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
+            )}
             </>}
 
             {/* Notas */}
@@ -805,7 +1014,7 @@ export default function ControlVacios() {
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" className="rounded-xl font-bold" onClick={() => setDialogAbierto(false)}>
+            <Button variant="outline" className="rounded-xl font-bold" onClick={() => cerrarDialogAlta(false)}>
               Cancelar
             </Button>
             <Button
@@ -815,6 +1024,131 @@ export default function ControlVacios() {
             >
               {guardarMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
               Guardar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: registrar / editar entrega del vacío */}
+      <Dialog open={dialogEntrega} onOpenChange={setDialogEntrega}>
+        <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] overflow-y-auto rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black flex items-center gap-2">
+              <PackageOpen className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+              Entrega del vacío
+            </DialogTitle>
+            <DialogDescription>
+              {entregaData.numero_contenedor
+                ? `Contenedor ${entregaData.numero_contenedor} — quién, cuándo y dónde se entrega el vacío.`
+                : "Quién, cuándo y dónde se entrega el contenedor vacío."}
+            </DialogDescription>
+          </DialogHeader>
+
+          {errorMsg && (
+            <Alert variant="destructive">
+              <AlertDescription>{errorMsg}</AlertDescription>
+            </Alert>
+          )}
+
+          <div className="rounded-2xl border border-emerald-200/70 dark:border-emerald-900/40 bg-emerald-50/40 dark:bg-emerald-950/10 p-4 my-2">
+            {entregaData.conductor_carga_id && (
+              <div className="flex justify-end mb-3">
+                <button
+                  type="button"
+                  onClick={() => setEntregaData((d) => ({
+                    ...d,
+                    conductor_entrega_id: d.conductor_carga_id,
+                    camion_entrega_id: d.camion_carga_id,
+                    remolque_entrega_id: d.remolque_carga_id,
+                  }))}
+                  className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+                >
+                  Usar mismo chofer de carga
+                </button>
+              </div>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label className="font-bold">Conductor *</Label>
+                <SelectCatalogo
+                  value={entregaData.conductor_entrega_id}
+                  onChange={(v) => setEntregaData((d) => ({ ...d, conductor_entrega_id: v }))}
+                  placeholder="Conductor"
+                  options={conductores}
+                  getLabel={(o) => o.nombre}
+                />
+              </div>
+              <div>
+                <Label className="font-bold">Camión</Label>
+                <SelectCatalogo
+                  value={entregaData.camion_entrega_id}
+                  onChange={(v) => setEntregaData((d) => ({ ...d, camion_entrega_id: v }))}
+                  placeholder="Camión"
+                  options={camiones}
+                  getLabel={(o) => `${o.nombre}${o.placas ? ` - ${o.placas}` : ""}`}
+                />
+              </div>
+              <div>
+                <Label className="font-bold">Remolque</Label>
+                <SelectCatalogo
+                  value={entregaData.remolque_entrega_id}
+                  onChange={(v) => setEntregaData((d) => ({ ...d, remolque_entrega_id: v }))}
+                  placeholder="Remolque"
+                  options={remolquesChasis}
+                  getLabel={(o) => `${o.placas || o.id}`}
+                />
+              </div>
+              <div>
+                <Label className="font-bold">Fecha entrega vacío</Label>
+                <Input
+                  type="date"
+                  value={entregaData.fecha_entrega_vacio}
+                  onChange={(e) => setEntregaData((d) => ({ ...d, fecha_entrega_vacio: e.target.value }))}
+                  className="rounded-xl mt-1"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <div className="flex items-center justify-between gap-3">
+                  <Label className="font-bold">Lugar de entrega</Label>
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <Checkbox
+                      checked={entregaData.entrega_con_cita}
+                      onCheckedChange={(v) => setEntregaData((d) => ({ ...d, entrega_con_cita: !!v, horario_cita: v ? d.horario_cita : "" }))}
+                    />
+                    <span className="text-sm font-bold text-foreground">Es con cita</span>
+                  </label>
+                </div>
+                <div className="flex gap-3 mt-1">
+                  <Input
+                    value={entregaData.lugar_entrega_vacio}
+                    onChange={(e) => setEntregaData((d) => ({ ...d, lugar_entrega_vacio: e.target.value }))}
+                    placeholder="Ej. CIMA, SSA, Hutchison..."
+                    className="rounded-xl flex-1 min-w-0"
+                  />
+                  {entregaData.entrega_con_cita && (
+                    <Input
+                      type="time"
+                      value={entregaData.horario_cita}
+                      onChange={(e) => setEntregaData((d) => ({ ...d, horario_cita: e.target.value }))}
+                      className="rounded-xl w-32 shrink-0"
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" className="rounded-xl font-bold" onClick={() => setDialogEntrega(false)}>
+              Cancelar
+            </Button>
+            <Button
+              className="rounded-xl font-bold gap-2 bg-emerald-600 text-white hover:bg-emerald-700"
+              onClick={handleGuardarEntrega}
+              disabled={guardarEntregaMutation.isPending}
+            >
+              {guardarEntregaMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              Guardar entrega
             </Button>
           </div>
         </DialogContent>

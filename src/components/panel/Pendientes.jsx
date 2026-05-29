@@ -4,7 +4,7 @@ import { supabase } from "@/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { differenceInDays, parseISO } from "date-fns";
-import { Inbox, Fuel, Link2, Wrench, FileWarning, ChevronRight, Check } from "lucide-react";
+import { Inbox, Fuel, Link2, Wrench, FileWarning, ChevronRight, Check, Container } from "lucide-react";
 
 const FECHA_LIMITE_ARCHIVO = "2026-04-24";
 
@@ -85,6 +85,17 @@ export default function Pendientes() {
     },
   });
 
+  const { data: vaciosPend = [] } = useQuery({
+    queryKey: ["panel-vacios-pendientes"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("contenedores_vacios")
+        .select("id, numero_contenedor, fecha_carga")
+        .eq("estatus", "pendiente_vacio");
+      return data || [];
+    },
+  });
+
   const stats = useMemo(() => {
     const sinCombustible = viajes.filter((v) => !v.litros_combustible || parseFloat(v.litros_combustible) <= 0);
 
@@ -151,6 +162,17 @@ export default function Pendientes() {
     const otEnEspera = ordenes.filter((o) => o.estado === "en_espera").length;
     const otSinAsignar = ordenes.filter((o) => o.estado === "abierta").length;
 
+    const vacioFechaMasAntigua = vaciosPend
+      .map((v) => v.fecha_carga)
+      .filter(Boolean)
+      .sort()[0];
+    const vacioContMasAntiguo = vacioFechaMasAntigua
+      ? vaciosPend.find((v) => v.fecha_carga === vacioFechaMasAntigua)
+      : null;
+    const diasVacioMasAntiguo = vacioFechaMasAntigua
+      ? differenceInDays(hoy, parseISO(vacioFechaMasAntigua))
+      : null;
+
     return {
       sinCombustible: sinCombustible.length,
       sinCombustibleSubtitle: fechaMasAntigua
@@ -170,10 +192,14 @@ export default function Pendientes() {
       docsSubtitle: docMasUrgente
         ? `${docMasUrgente.nombre} · ${docMasUrgente.tipo} en ${docMasUrgente.dias}d`
         : "Sin documentos próximos a vencer",
+      vaciosCount: vaciosPend.length,
+      vaciosSubtitle: vacioContMasAntiguo
+        ? `${vacioContMasAntiguo.numero_contenedor} · ${diasVacioMasAntiguo} días esperando vacío`
+        : "Todos los vacíos entregados",
     };
-  }, [viajes, programas, ordenes, conductoresDoc, camionesDoc]);
+  }, [viajes, programas, ordenes, conductoresDoc, camionesDoc, vaciosPend]);
 
-  const total = stats.sinCombustible + stats.sinVincular + stats.otAbiertas + stats.docsCount;
+  const total = stats.sinCombustible + stats.sinVincular + stats.otAbiertas + stats.docsCount + stats.vaciosCount;
 
   return (
     <section className="bg-card border border-border rounded-2xl p-5 md:p-6 shadow-sm h-full">
@@ -190,6 +216,16 @@ export default function Pendientes() {
       </div>
 
       <ul className="divide-y divide-border">
+        <PendingRow
+          icon={Container}
+          iconBg="bg-amber-500/10"
+          iconColor="text-amber-500"
+          accentColor="text-amber-500"
+          title="Contenedores pendientes de vacío"
+          subtitle={stats.vaciosSubtitle}
+          count={stats.vaciosCount}
+          onClick={() => navigate(createPageUrl("ControlVacios"))}
+        />
         <PendingRow
           icon={Fuel}
           iconBg="bg-orange-500/10"
