@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   Navigation,
   Wrench,
+  Container,
 } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
 
@@ -88,6 +89,7 @@ export default function Layout({ children, currentPageName }) {
     "DocumentacionLegal",
     "RastreoGPS",
     "Mantenimiento",
+    "ControlVacios",
   ];
 
   const isPublicRoute = ["/", "/home", "/login"].includes(
@@ -191,6 +193,17 @@ export default function Layout({ children, currentPageName }) {
             >
               <CalendarDays className="w-5 h-5" />
               <span className="font-medium">Programa de Cargas</span>
+            </Link>
+
+            {/* BOTÓN: CONTROL DE VACÍOS (Directo) */}
+            <Link
+              to={createPageUrl("ControlVacios")}
+              className={navItemClass(
+                location.pathname === createPageUrl("ControlVacios"),
+              )}
+            >
+              <Container className="w-5 h-5" />
+              <span className="font-medium">Control de Vacíos</span>
             </Link>
 
             {/* BOTÓN: REGISTRO DE VIAJES (Directo) */}
