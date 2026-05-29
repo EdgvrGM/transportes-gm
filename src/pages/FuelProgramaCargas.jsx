@@ -584,10 +584,14 @@ export default function FuelProgramaCargas() {
           }
         }
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["programaCargas"] });
       queryClient.invalidateQueries({ queryKey: ["viajesRegistrados"] });
       setDialogAbierto(false);
+      if (variables.id) {
+        setProgramaSeleccionado((prev) => ({ ...prev, ...variables }));
+        setDialogVerAbierto(true);
+      }
     },
     onError: (err) => setErrorMsg(err.message),
   });
