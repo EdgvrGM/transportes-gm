@@ -231,7 +231,7 @@ export default function ControlVacios() {
 
   // Filtros
   const [busqueda, setBusqueda] = useState("");
-  const [filtroEstatus, setFiltroEstatus] = useState("todos");
+  const [filtroEstatus, setFiltroEstatus] = useState("pendiente_vacio");
   const [filtroConductor, setFiltroConductor] = useState("todos");
 
   const { data: contenedores = [], isLoading } = useQuery({
