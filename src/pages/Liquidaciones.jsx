@@ -536,7 +536,9 @@ export default function Liquidaciones() {
                       No hay viajes registrados para este conductor en esta semana.
                     </div>
                   ) : (
-                    <div className="overflow-x-auto">
+                    <>
+                    {/* ── VISTA DESKTOP: Tabla ── */}
+                    <div className="hidden md:block overflow-x-auto">
                       <Table>
 
                         <TableHeader className="bg-muted/30">
@@ -596,24 +598,77 @@ export default function Liquidaciones() {
                         </TableBody>
                       </Table>
                     </div>
+
+                    {/* ── VISTA MOBILE: Cards ── */}
+                    <div className="md:hidden divide-y divide-border">
+                      {viajesDetalle.map((v, i) => (
+                        <div key={v.viaje_id} className="p-4 space-y-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="font-bold text-foreground truncate">{v.ruta}</p>
+                              <p className="text-xs text-muted-foreground">{v.fecha}</p>
+                              {v.litros <= 0 && (
+                                <span className="inline-block mt-1 text-[9px] font-bold text-orange-500 uppercase tracking-wider">Sin Diesel</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${v.tipo === 'FULL' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'}`}>
+                                {v.tipo}
+                              </span>
+                              <button
+                                onClick={() => handleEliminarViaje(i)}
+                                className="p-2 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                aria-label="Eliminar viaje"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                          <div className="flex items-end justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                Flete Bruto · {v.porcentaje}%
+                              </Label>
+                              <div className="relative mt-1">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  value={v.flete_bruto || ""}
+                                  onChange={(e) => handleFleteChange(i, e.target.value)}
+                                  className="pl-7 text-right bg-background h-10 rounded-lg"
+                                />
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Comisión</p>
+                              <p className="font-black text-green-600 dark:text-green-500 text-lg leading-tight">
+                                ${formatCurrency(v.comision)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    </>
                   )}
                   {conceptosExtrasViajes.length > 0 && (
                     <div className="border-t border-border/50 p-4 space-y-2">
                       {conceptosExtrasViajes.map((item, i) => (
-                        <div key={i} className="flex items-center gap-3">
+                        <div key={i} className="flex flex-wrap items-center gap-2 sm:gap-3">
                           <Input
                             type="date"
                             value={item.fecha}
                             onChange={(e) => actualizarConceptoExtraViaje(i, 'fecha', e.target.value)}
-                            className="w-36 shrink-0 rounded-lg bg-background h-9"
+                            className="w-full sm:w-36 sm:shrink-0 rounded-lg bg-background h-9"
                           />
                           <Input
                             placeholder="Concepto (Ej. Bono)"
                             value={item.concepto}
                             onChange={(e) => actualizarConceptoExtraViaje(i, 'concepto', e.target.value)}
-                            className="flex-1 rounded-lg bg-background h-9"
+                            className="flex-1 min-w-[140px] rounded-lg bg-background h-9"
                           />
-                          <div className="relative w-32 shrink-0">
+                          <div className="relative w-28 sm:w-32 shrink-0">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
                             <Input
                               type="number"

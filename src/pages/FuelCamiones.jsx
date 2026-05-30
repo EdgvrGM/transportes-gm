@@ -29,12 +29,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useToast } from "@/components/ui/use-toast";
 import { Plus, Edit, Truck, FileText, Loader2, Trash2 } from "lucide-react";
 
 const FECHA_LIMITE_ARCHIVO = '2026-04-24';
 
 export default function FuelCamiones() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [dialogAbierto, setDialogAbierto] = useState(false);
   const [camionEditando, setCamionEditando] = useState(null);
   const [camionAEliminar, setCamionAEliminar] = useState(null);
@@ -81,6 +83,10 @@ export default function FuelCamiones() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["camiones"] });
       cerrarDialog();
+      toast({ title: "Camión creado", description: "El camión se registró correctamente." });
+    },
+    onError: (err) => {
+      toast({ variant: "destructive", title: "Error al crear", description: err.message });
     },
   });
 
@@ -97,6 +103,10 @@ export default function FuelCamiones() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["camiones"] });
       cerrarDialog();
+      toast({ title: "Camión actualizado", description: "Los cambios se guardaron correctamente." });
+    },
+    onError: (err) => {
+      toast({ variant: "destructive", title: "Error al actualizar", description: err.message });
     },
   });
 
@@ -124,6 +134,7 @@ export default function FuelCamiones() {
       queryClient.invalidateQueries({ queryKey: ["camiones"] });
       setCamionAEliminar(null);
       setDeleteError(null);
+      toast({ title: "Camión eliminado", description: "El registro se eliminó correctamente." });
     },
     onError: (err) => {
       if (err.message === "TIENE_VIAJES_ACTIVOS") {
@@ -146,6 +157,7 @@ export default function FuelCamiones() {
       queryClient.invalidateQueries({ queryKey: ["camiones"] });
       setCamionAEliminar(null);
       setDeleteError(null);
+      toast({ title: "Camión desactivado", description: "El camión se marcó como inactivo." });
     },
     onError: (err) => {
       setDeleteError(err.message || "No se pudo desactivar el camión.");

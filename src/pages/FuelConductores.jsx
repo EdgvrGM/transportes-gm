@@ -36,12 +36,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/components/ui/use-toast";
 import { Plus, Edit, Phone, CreditCard, Loader2, Trash2, User } from "lucide-react";
 
 const FECHA_LIMITE_ARCHIVO = '2026-04-24';
 
 export default function FuelConductores() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [dialogAbierto, setDialogAbierto] = useState(false);
   const [conductorEditando, setConductorEditando] = useState(null);
   const [conductorAEliminar, setConductorAEliminar] = useState(null);
@@ -91,6 +93,10 @@ export default function FuelConductores() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["conductores"] });
       cerrarDialog();
+      toast({ title: "Conductor creado", description: "El conductor se registró correctamente." });
+    },
+    onError: (err) => {
+      toast({ variant: "destructive", title: "Error al crear", description: err.message });
     },
   });
 
@@ -107,6 +113,10 @@ export default function FuelConductores() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["conductores"] });
       cerrarDialog();
+      toast({ title: "Conductor actualizado", description: "Los cambios se guardaron correctamente." });
+    },
+    onError: (err) => {
+      toast({ variant: "destructive", title: "Error al actualizar", description: err.message });
     },
   });
 
@@ -135,6 +145,7 @@ export default function FuelConductores() {
       queryClient.invalidateQueries({ queryKey: ["conductores"] });
       setConductorAEliminar(null);
       setDeleteError(null);
+      toast({ title: "Conductor eliminado", description: "El registro se eliminó correctamente." });
     },
     onError: (err) => {
       if (err.message === "TIENE_VIAJES_ACTIVOS") {
@@ -157,6 +168,7 @@ export default function FuelConductores() {
       queryClient.invalidateQueries({ queryKey: ["conductores"] });
       setConductorAEliminar(null);
       setDeleteError(null);
+      toast({ title: "Conductor desactivado", description: "El conductor se marcó como inactivo." });
     },
     onError: (err) => {
       setDeleteError(err.message || "No se pudo desactivar el conductor.");

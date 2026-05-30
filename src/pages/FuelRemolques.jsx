@@ -36,6 +36,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/components/ui/use-toast";
 import { Loader2, Plus, Edit, Trash2, Package } from "lucide-react";
 import { TrailerIcon } from "./Layout";
 
@@ -43,6 +44,7 @@ const FECHA_LIMITE_ARCHIVO = '2026-04-24';
 
 export default function FuelRemolques() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [dialogAbierto, setDialogAbierto] = useState(false);
   const [remolqueAEliminar, setRemolqueAEliminar] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -78,12 +80,16 @@ export default function FuelRemolques() {
         if (error) throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["remolques"] });
       setDialogAbierto(false);
+      toast({
+        title: variables?.id ? "Remolque actualizado" : "Remolque creado",
+        description: "Los cambios se guardaron correctamente.",
+      });
     },
     onError: (err) => {
-      // SI HAY ERROR, LO MOSTRAMOS
+      // SI HAY ERROR, LO MOSTRAMOS EN EL FORMULARIO
       setErrorMsg(err.message || "Ocurrió un error al guardar.");
     },
   });
@@ -112,6 +118,7 @@ export default function FuelRemolques() {
       queryClient.invalidateQueries({ queryKey: ["remolques"] });
       setRemolqueAEliminar(null);
       setDeleteError(null);
+      toast({ title: "Remolque eliminado", description: "El registro se eliminó correctamente." });
     },
     onError: (err) => {
       if (err.message === "TIENE_VIAJES_ACTIVOS") {

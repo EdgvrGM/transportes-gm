@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useToast } from "@/components/ui/use-toast";
 import {
   Container,
   Plus,
@@ -44,7 +45,6 @@ import {
   MapPin,
   User,
   Truck,
-  Calendar,
   Briefcase,
   PackageOpen,
   ChevronDown,
@@ -115,6 +115,7 @@ const FORM_ENTREGA = {
 
 export default function ControlVacios() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const [dialogAbierto, setDialogAbierto] = useState(false);
   const [esEdicion, setEsEdicion] = useState(false);
@@ -266,8 +267,20 @@ export default function ControlVacios() {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["controlVacios"] }),
-    onError: (err) => alert("Error al actualizar estatus: " + err.message),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["controlVacios"] });
+      const label = ESTATUS_VACIOS.find((e) => e.value === variables?.estatus)?.label;
+      toast({
+        title: "Estatus actualizado",
+        description: label ? `Nuevo estatus: ${label}.` : "El estatus se actualizó correctamente.",
+      });
+    },
+    onError: (err) =>
+      toast({
+        variant: "destructive",
+        title: "Error al actualizar estatus",
+        description: err?.message || "No se pudo actualizar el estatus del contenedor.",
+      }),
   });
 
   const guardarEntregaMutation = useMutation({
@@ -320,10 +333,15 @@ export default function ControlVacios() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["controlVacios"] });
       setContenedorAEliminar(null);
+      toast({ title: "Contenedor eliminado", description: "El registro se eliminó correctamente." });
     },
     onError: (err) => {
-      alert("Error al eliminar: " + err.message);
       setContenedorAEliminar(null);
+      toast({
+        variant: "destructive",
+        title: "Error al eliminar",
+        description: err?.message || "No se pudo eliminar el contenedor.",
+      });
     },
   });
 
@@ -439,7 +457,11 @@ export default function ControlVacios() {
       }
       setFormData((f) => ({ ...f, fotos_urls: [...(f.fotos_urls || []), ...nuevas] }));
     } catch (err) {
-      alert("Error al subir foto: " + err.message);
+      toast({
+        variant: "destructive",
+        title: "Error al subir foto",
+        description: err?.message || "No se pudo subir la imagen al almacenamiento.",
+      });
     } finally {
       setSubiendoFotos(false);
       e.target.value = "";

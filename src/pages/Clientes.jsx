@@ -30,6 +30,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/components/ui/use-toast";
 import {
   Plus,
   Trash2,
@@ -42,6 +43,7 @@ import {
 
 export default function Clientes() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [dialogAbierto, setDialogAbierto] = useState(false);
   const [clienteAEliminar, setClienteAEliminar] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -77,9 +79,15 @@ export default function Clientes() {
         if (error) throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["clientes"] });
       setDialogAbierto(false);
+      toast({
+        title: variables?.id ? "Cliente actualizado" : "Cliente creado",
+        description: variables?.nombre
+          ? `${variables.nombre} se guardó correctamente.`
+          : "Los datos se guardaron correctamente.",
+      });
     },
     onError: (err) => setErrorMsg(err.message),
   });
@@ -99,6 +107,7 @@ export default function Clientes() {
       queryClient.invalidateQueries({ queryKey: ["clientes"] });
       setClienteAEliminar(null);
       setDeleteError(null);
+      toast({ title: "Cliente eliminado", description: "El cliente se eliminó correctamente." });
     },
     onError: (err) => {
       const msg = err.message || "";

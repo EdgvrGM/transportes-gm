@@ -33,13 +33,11 @@ export default function PanelCompartir({ unidad, onClose }) {
         wialon_nombre:  unidad.nombre,
         expires_at:     expira,
       };
-      console.log("[RastreoCompartido] insert payload:", payload);
       const { data, error } = await supabase
         .from("RastreoCompartido")
         .insert(payload)
         .select("token")
         .single();
-      console.log("[RastreoCompartido] result:", data, error);
       if (error) throw error;
       setLinkGenerado(`${window.location.origin}/rastreo/${data.token}`);
     } catch (err) {

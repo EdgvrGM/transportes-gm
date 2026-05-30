@@ -5,8 +5,16 @@ import '@/index.css'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { registerSW } from 'virtual:pwa-register'
 
-// Crear una instancia de QueryClient
-const queryClient = new QueryClient()
+// Crear una instancia de QueryClient con configuración global (TanStack Query v5)
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60, // 1 min: evita refetches innecesarios al navegar
+      refetchOnWindowFocus: false, // no recargar cada vez que la pestaña recupera foco
+      retry: 1, // un solo reintento ante fallo de red
+    },
+  },
+})
 
 // Registro condicional del Service Worker de la PWA en producción
 if (import.meta.env.PROD) {

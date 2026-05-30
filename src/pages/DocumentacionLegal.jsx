@@ -39,6 +39,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/use-toast";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -92,15 +94,16 @@ function getBadgeLabel(estado, fechaStr) {
 function StatusBadge({ fechaStr }) {
   const estado = getEstadoVencimiento(fechaStr);
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${getBadgeClasses(estado)}`}
+    <Badge
+      variant="outline"
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${getBadgeClasses(estado)}`}
     >
       {estado === "vencido" && <AlertTriangle className="w-3 h-3" />}
       {estado === "por_vencer" && <Clock className="w-3 h-3" />}
       {estado === "vigente" && <CheckCircle2 className="w-3 h-3" />}
       {estado === "sin_registro" && <FileX className="w-3 h-3" />}
       {getBadgeLabel(estado, fechaStr)}
-    </span>
+    </Badge>
   );
 }
 
@@ -108,6 +111,7 @@ function StatusBadge({ fechaStr }) {
 
 function EditDialog({ open, onClose, record, fields, tableName, idField, nameLabel }) {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [values, setValues] = useState({});
 
   useEffect(() => {
@@ -131,6 +135,19 @@ function EditDialog({ open, onClose, record, fields, tableName, idField, nameLab
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [tableName] });
       onClose();
+      toast({
+        title: "Documentación actualizada",
+        description: record?.[nameLabel]
+          ? `Se guardaron las fechas de ${record[nameLabel]}.`
+          : "Las fechas se guardaron correctamente.",
+      });
+    },
+    onError: (err) => {
+      toast({
+        variant: "destructive",
+        title: "Error al guardar documentación",
+        description: err?.message || "No se pudieron guardar las fechas. Intenta de nuevo.",
+      });
     },
   });
 

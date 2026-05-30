@@ -25,6 +25,26 @@ import {
 } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
 
+// Páginas que pertenecen al sistema interno (muestran el sidebar/layout completo).
+// Definido a nivel de módulo para no recrear el array en cada render.
+const SYSTEM_PAGES = [
+  "ControlCombustible",
+  "FuelProgramaCargas",
+  "FuelRegistrarViaje",
+  "FuelViajes",
+  "Clientes",
+  "FuelConductores",
+  "FuelCamiones",
+  "FuelRemolques",
+  "ExpertoLogistica",
+  "Liquidaciones",
+  "IAAuditorChat",
+  "DocumentacionLegal",
+  "RastreoGPS",
+  "Mantenimiento",
+  "ControlVacios",
+];
+
 export const TrailerIcon = ({ className, ...props }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -74,31 +94,13 @@ export default function Layout({ children, currentPageName }) {
     }
   }, [location.pathname]);
 
-  const systemPages = [
-    "ControlCombustible",
-    "FuelProgramaCargas",
-    "FuelRegistrarViaje",
-    "FuelViajes",
-    "Clientes",
-    "FuelConductores",
-    "FuelCamiones",
-    "FuelRemolques",
-    "ExpertoLogistica",
-    "Liquidaciones",
-    "IAAuditorChat",
-    "DocumentacionLegal",
-    "RastreoGPS",
-    "Mantenimiento",
-    "ControlVacios",
-  ];
-
   const isPublicRoute = ["/", "/home", "/login"].includes(
     location.pathname.toLowerCase(),
   );
-  
+
   const isFuelSystem = useMemo(() => {
-    return currentPageName && systemPages.includes(currentPageName);
-  }, [currentPageName, location.pathname]);
+    return currentPageName && SYSTEM_PAGES.includes(currentPageName);
+  }, [currentPageName]);
 
   if (isPublicRoute || !isFuelSystem) {
     return <>{children}</>;
