@@ -390,8 +390,26 @@ export default function FuelViajes() {
       }
 
       setGpsPoints(points);
-      setSliderInicio(0);
-      setSliderFin(points.length - 1);
+
+      const hasSavedTramo = formData.gps_tramo_desde && formData.gps_tramo_hasta;
+      if (hasSavedTramo) {
+        const targetDesde = new Date(formData.gps_tramo_desde).getTime();
+        const targetHasta = new Date(formData.gps_tramo_hasta).getTime();
+        let closestInicio = 0, minD = Infinity;
+        let closestFin = points.length - 1, minF = Infinity;
+        points.forEach((p, i) => {
+          const dDesde = Math.abs(new Date(p.timestamp).getTime() - targetDesde);
+          if (dDesde < minD) { minD = dDesde; closestInicio = i; }
+          const dHasta = Math.abs(new Date(p.timestamp).getTime() - targetHasta);
+          if (dHasta < minF) { minF = dHasta; closestFin = i; }
+        });
+        setSliderInicio(closestInicio);
+        setSliderFin(closestFin);
+      } else {
+        setSliderInicio(0);
+        setSliderFin(points.length - 1);
+      }
+
       setGpsStatus("success");
 
     } catch (err) {
