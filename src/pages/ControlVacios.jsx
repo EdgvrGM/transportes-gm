@@ -77,6 +77,77 @@ function pathFotoStorage(url) {
   return i === -1 ? null : decodeURIComponent(url.slice(i + marker.length));
 }
 
+// Selector de catálogo (chofer/camión/remolque/cliente).
+function SelectCatalogo({ value, onChange, placeholder, options, getLabel }) {
+  return (
+    <Select value={value || "none"} onValueChange={(v) => onChange(v === "none" ? "" : v)}>
+      <SelectTrigger className="rounded-xl">
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="none">Sin asignar</SelectItem>
+        {options.map((o) => (
+          <SelectItem key={o.id} value={String(o.id)}>
+            {getLabel(o)}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+// Igual que SelectCatalogo pero con opción "Otro (externo)" que cambia a un input
+// de texto libre, para equipo/personas que no están en el sistema.
+// Pasar una `key` ligada al registro actual para que el modo se reinicie al cambiar de registro.
+function SelectCatalogoLibre({ idValue, libreValue, onIdChange, onLibreChange, placeholder, options, getLabel }) {
+  const [modoLibre, setModoLibre] = useState(!!libreValue);
+  if (modoLibre) {
+    return (
+      <div className="flex gap-1.5">
+        <Input
+          autoFocus
+          value={libreValue}
+          onChange={(e) => onLibreChange(e.target.value)}
+          placeholder="Externo (nombre / placas)"
+          className="rounded-xl"
+        />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          title="Volver a la lista"
+          className="rounded-xl shrink-0 text-muted-foreground"
+          onClick={() => { setModoLibre(false); onLibreChange(""); }}
+        >
+          <X className="w-4 h-4" />
+        </Button>
+      </div>
+    );
+  }
+  return (
+    <Select
+      value={idValue || "none"}
+      onValueChange={(v) => {
+        if (v === "__libre__") { onIdChange(""); setModoLibre(true); return; }
+        onIdChange(v === "none" ? "" : v);
+      }}
+    >
+      <SelectTrigger className="rounded-xl">
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="none">Sin asignar</SelectItem>
+        {options.map((o) => (
+          <SelectItem key={o.id} value={String(o.id)}>
+            {getLabel(o)}
+          </SelectItem>
+        ))}
+        <SelectItem value="__libre__">✏️ Otro (externo)…</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+}
+
 const FORM_VACIO = {
   id: null,
   modalidad: "sencillo",
@@ -86,14 +157,22 @@ const FORM_VACIO = {
   cliente_id: "",
   destino: "",
   conductor_carga_id: "",
+  conductor_carga_libre: "",
   camion_carga_id: "",
+  camion_carga_libre: "",
   remolque_carga_id: "",
+  remolque_carga_libre: "",
   remolque_carga_id_2: "",
+  remolque_carga_libre_2: "",
   estatus: "pendiente_vacio",
   conductor_entrega_id: "",
+  conductor_entrega_libre: "",
   camion_entrega_id: "",
+  camion_entrega_libre: "",
   remolque_entrega_id: "",
+  remolque_entrega_libre: "",
   remolque_entrega_id_2: "",
+  remolque_entrega_libre_2: "",
   fecha_entrega_vacio: "",
   lugar_entrega_vacio: "",
   entrega_con_cita: false,
@@ -108,13 +187,21 @@ const FORM_ENTREGA = {
   numero_contenedor: "",
   numero_contenedor_2: "",
   conductor_carga_id: "",
+  conductor_carga_libre: "",
   camion_carga_id: "",
+  camion_carga_libre: "",
   remolque_carga_id: "",
+  remolque_carga_libre: "",
   remolque_carga_id_2: "",
+  remolque_carga_libre_2: "",
   conductor_entrega_id: "",
+  conductor_entrega_libre: "",
   camion_entrega_id: "",
+  camion_entrega_libre: "",
   remolque_entrega_id: "",
+  remolque_entrega_libre: "",
   remolque_entrega_id_2: "",
+  remolque_entrega_libre_2: "",
   fecha_entrega_vacio: "",
   lugar_entrega_vacio: "",
   entrega_con_cita: false,
@@ -202,6 +289,12 @@ export default function ControlVacios() {
     return c ? `${c.nombre}${c.placas ? ` (${c.placas})` : ""}` : "—";
   };
   const getRemolquePlacas = (id) => remolques.find((r) => String(r.id) === String(id))?.placas || "—";
+
+  // Despliegue: usa el catálogo si hay ID; si no, el texto libre (externo) con marca "(ext.)".
+  const showConductor = (id, libre) => (id != null ? getConductorName(id) : (libre?.trim() ? `${libre} (ext.)` : "—"));
+  const showCamion = (id, libre) => (id != null ? getCamionName(id) : (libre?.trim() ? `${libre} (ext.)` : "—"));
+  const showRemolque = (id, libre) => (id != null ? getRemolquePlacas(id) : (libre?.trim() || null));
+
   const formatearFecha = (s) => {
     if (!s) return "—";
     try {
@@ -223,14 +316,22 @@ export default function ControlVacios() {
         cliente_id: datos.cliente_id || null,
         destino: datos.destino?.trim() || null,
         conductor_carga_id: datos.conductor_carga_id ? parseInt(datos.conductor_carga_id, 10) : null,
+        conductor_carga_libre: datos.conductor_carga_libre?.trim() || null,
         camion_carga_id: datos.camion_carga_id ? parseInt(datos.camion_carga_id, 10) : null,
+        camion_carga_libre: datos.camion_carga_libre?.trim() || null,
         remolque_carga_id: datos.remolque_carga_id ? parseInt(datos.remolque_carga_id, 10) : null,
+        remolque_carga_libre: datos.remolque_carga_libre?.trim() || null,
         remolque_carga_id_2: esFull && datos.remolque_carga_id_2 ? parseInt(datos.remolque_carga_id_2, 10) : null,
+        remolque_carga_libre_2: esFull ? (datos.remolque_carga_libre_2?.trim() || null) : null,
         estatus: datos.estatus,
         conductor_entrega_id: datos.conductor_entrega_id ? parseInt(datos.conductor_entrega_id, 10) : null,
+        conductor_entrega_libre: datos.conductor_entrega_libre?.trim() || null,
         camion_entrega_id: datos.camion_entrega_id ? parseInt(datos.camion_entrega_id, 10) : null,
+        camion_entrega_libre: datos.camion_entrega_libre?.trim() || null,
         remolque_entrega_id: datos.remolque_entrega_id ? parseInt(datos.remolque_entrega_id, 10) : null,
+        remolque_entrega_libre: datos.remolque_entrega_libre?.trim() || null,
         remolque_entrega_id_2: esFull && datos.remolque_entrega_id_2 ? parseInt(datos.remolque_entrega_id_2, 10) : null,
+        remolque_entrega_libre_2: esFull ? (datos.remolque_entrega_libre_2?.trim() || null) : null,
         fecha_entrega_vacio: datos.fecha_entrega_vacio || null,
         lugar_entrega_vacio: datos.lugar_entrega_vacio?.trim() || null,
         entrega_con_cita: !!datos.entrega_con_cita,
@@ -302,9 +403,13 @@ export default function ControlVacios() {
         .from("contenedores_vacios")
         .update({
           conductor_entrega_id: d.conductor_entrega_id ? parseInt(d.conductor_entrega_id, 10) : null,
+          conductor_entrega_libre: d.conductor_entrega_libre?.trim() || null,
           camion_entrega_id: d.camion_entrega_id ? parseInt(d.camion_entrega_id, 10) : null,
+          camion_entrega_libre: d.camion_entrega_libre?.trim() || null,
           remolque_entrega_id: d.remolque_entrega_id ? parseInt(d.remolque_entrega_id, 10) : null,
+          remolque_entrega_libre: d.remolque_entrega_libre?.trim() || null,
           remolque_entrega_id_2: d.modalidad === "full" && d.remolque_entrega_id_2 ? parseInt(d.remolque_entrega_id_2, 10) : null,
+          remolque_entrega_libre_2: d.modalidad === "full" ? (d.remolque_entrega_libre_2?.trim() || null) : null,
           fecha_entrega_vacio: d.fecha_entrega_vacio || null,
           lugar_entrega_vacio: d.lugar_entrega_vacio?.trim() || null,
           entrega_con_cita: !!d.entrega_con_cita,
@@ -322,8 +427,8 @@ export default function ControlVacios() {
 
   const handleGuardarEntrega = () => {
     setErrorMsg(null);
-    if (!entregaData.conductor_entrega_id) {
-      setErrorMsg("Selecciona el conductor que entrega el vacío.");
+    if (!entregaData.conductor_entrega_id && !entregaData.conductor_entrega_libre?.trim()) {
+      setErrorMsg("Indica el conductor que entrega el vacío (de la lista o externo).");
       return;
     }
     guardarEntregaMutation.mutate(entregaData);
@@ -403,14 +508,22 @@ export default function ControlVacios() {
       cliente_id: c.cliente_id || "",
       destino: c.destino || "",
       conductor_carga_id: c.conductor_carga_id != null ? String(c.conductor_carga_id) : "",
+      conductor_carga_libre: c.conductor_carga_libre || "",
       camion_carga_id: c.camion_carga_id != null ? String(c.camion_carga_id) : "",
+      camion_carga_libre: c.camion_carga_libre || "",
       remolque_carga_id: c.remolque_carga_id != null ? String(c.remolque_carga_id) : "",
+      remolque_carga_libre: c.remolque_carga_libre || "",
       remolque_carga_id_2: c.remolque_carga_id_2 != null ? String(c.remolque_carga_id_2) : "",
+      remolque_carga_libre_2: c.remolque_carga_libre_2 || "",
       estatus: c.estatus || "cargado",
       conductor_entrega_id: c.conductor_entrega_id != null ? String(c.conductor_entrega_id) : "",
+      conductor_entrega_libre: c.conductor_entrega_libre || "",
       camion_entrega_id: c.camion_entrega_id != null ? String(c.camion_entrega_id) : "",
+      camion_entrega_libre: c.camion_entrega_libre || "",
       remolque_entrega_id: c.remolque_entrega_id != null ? String(c.remolque_entrega_id) : "",
+      remolque_entrega_libre: c.remolque_entrega_libre || "",
       remolque_entrega_id_2: c.remolque_entrega_id_2 != null ? String(c.remolque_entrega_id_2) : "",
+      remolque_entrega_libre_2: c.remolque_entrega_libre_2 || "",
       fecha_entrega_vacio: c.fecha_entrega_vacio || "",
       lugar_entrega_vacio: c.lugar_entrega_vacio || "",
       entrega_con_cita: !!c.entrega_con_cita,
@@ -429,13 +542,21 @@ export default function ControlVacios() {
       numero_contenedor: c.numero_contenedor || "",
       numero_contenedor_2: c.numero_contenedor_2 || "",
       conductor_carga_id: c.conductor_carga_id != null ? String(c.conductor_carga_id) : "",
+      conductor_carga_libre: c.conductor_carga_libre || "",
       camion_carga_id: c.camion_carga_id != null ? String(c.camion_carga_id) : "",
+      camion_carga_libre: c.camion_carga_libre || "",
       remolque_carga_id: c.remolque_carga_id != null ? String(c.remolque_carga_id) : "",
+      remolque_carga_libre: c.remolque_carga_libre || "",
       remolque_carga_id_2: c.remolque_carga_id_2 != null ? String(c.remolque_carga_id_2) : "",
+      remolque_carga_libre_2: c.remolque_carga_libre_2 || "",
       conductor_entrega_id: c.conductor_entrega_id != null ? String(c.conductor_entrega_id) : "",
+      conductor_entrega_libre: c.conductor_entrega_libre || "",
       camion_entrega_id: c.camion_entrega_id != null ? String(c.camion_entrega_id) : "",
+      camion_entrega_libre: c.camion_entrega_libre || "",
       remolque_entrega_id: c.remolque_entrega_id != null ? String(c.remolque_entrega_id) : "",
+      remolque_entrega_libre: c.remolque_entrega_libre || "",
       remolque_entrega_id_2: c.remolque_entrega_id_2 != null ? String(c.remolque_entrega_id_2) : "",
+      remolque_entrega_libre_2: c.remolque_entrega_libre_2 || "",
       fecha_entrega_vacio: c.fecha_entrega_vacio || "",
       lugar_entrega_vacio: c.lugar_entrega_vacio || "",
       entrega_con_cita: !!c.entrega_con_cita,
@@ -534,22 +655,6 @@ export default function ControlVacios() {
       return true;
     });
   }, [contenedores, filtroEstatus, filtroConductor, busqueda]);
-
-  const SelectCatalogo = ({ value, onChange, placeholder, options, getLabel }) => (
-    <Select value={value || "none"} onValueChange={(v) => onChange(v === "none" ? "" : v)}>
-      <SelectTrigger className="rounded-xl">
-        <SelectValue placeholder={placeholder} />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="none">Sin asignar</SelectItem>
-        {options.map((o) => (
-          <SelectItem key={o.id} value={String(o.id)}>
-            {getLabel(o)}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto">
@@ -708,13 +813,13 @@ export default function ControlVacios() {
                       <p className="text-[11px] font-black text-muted-foreground">Cargado · {formatearFecha(c.fecha_carga)}</p>
                       <div className="flex items-center gap-1.5 text-sm text-foreground font-medium truncate">
                         <User className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
-                        <span className="truncate">{getConductorName(c.conductor_carga_id)}</span>
+                        <span className="truncate">{showConductor(c.conductor_carga_id, c.conductor_carga_libre)}</span>
                       </div>
                       <div className="flex items-center gap-1.5 text-sm text-muted-foreground truncate">
                         <Truck className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">{getCamionName(c.camion_carga_id)}</span>
-                        {c.remolque_carga_id && <><span className="text-border shrink-0">·</span><span className="truncate shrink-0">{getRemolquePlacas(c.remolque_carga_id)}</span></>}
-                        {c.modalidad === "full" && c.remolque_carga_id_2 && <><span className="text-border shrink-0">·</span><span className="truncate shrink-0">{getRemolquePlacas(c.remolque_carga_id_2)}</span></>}
+                        <span className="truncate">{showCamion(c.camion_carga_id, c.camion_carga_libre)}</span>
+                        {showRemolque(c.remolque_carga_id, c.remolque_carga_libre) && <><span className="text-border shrink-0">·</span><span className="truncate shrink-0">{showRemolque(c.remolque_carga_id, c.remolque_carga_libre)}</span></>}
+                        {c.modalidad === "full" && showRemolque(c.remolque_carga_id_2, c.remolque_carga_libre_2) && <><span className="text-border shrink-0">·</span><span className="truncate shrink-0">{showRemolque(c.remolque_carga_id_2, c.remolque_carga_libre_2)}</span></>}
                       </div>
                     </div>
                     {/* Columna DESTINO */}
@@ -732,7 +837,7 @@ export default function ControlVacios() {
                   </div>
 
                   {/* Footer: entrega de vacío */}
-                  {c.conductor_entrega_id ? (
+                  {(c.conductor_entrega_id || c.conductor_entrega_libre) ? (
                     c.estatus === "vacio_entregado" ? (
                       <div className="mt-3 pt-3 border-t border-border">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -746,8 +851,8 @@ export default function ControlVacios() {
                         <div className="flex items-center gap-1.5 text-sm text-emerald-700 dark:text-emerald-400 truncate">
                           <PackageOpen className="w-3.5 h-3.5 shrink-0" />
                           <span className="truncate font-medium">
-                            {getConductorName(c.conductor_entrega_id)}
-                            <span className="text-emerald-600/70 dark:text-emerald-500/70 font-normal"> · {getCamionName(c.camion_entrega_id)}{c.fecha_entrega_vacio ? ` · ${formatearFecha(c.fecha_entrega_vacio)}` : ""}</span>
+                            {showConductor(c.conductor_entrega_id, c.conductor_entrega_libre)}
+                            <span className="text-emerald-600/70 dark:text-emerald-500/70 font-normal"> · {showCamion(c.camion_entrega_id, c.camion_entrega_libre)}{c.fecha_entrega_vacio ? ` · ${formatearFecha(c.fecha_entrega_vacio)}` : ""}</span>
                           </span>
                         </div>
                       </div>
@@ -764,8 +869,8 @@ export default function ControlVacios() {
                         <div className="flex items-center gap-1.5 text-sm text-muted-foreground truncate">
                           <User className="w-3.5 h-3.5 shrink-0" />
                           <span className="truncate">
-                            {getConductorName(c.conductor_entrega_id)}
-                            <span className="font-normal"> · {getCamionName(c.camion_entrega_id)}{c.fecha_entrega_vacio ? ` · ${formatearFecha(c.fecha_entrega_vacio)}` : ""}</span>
+                            {showConductor(c.conductor_entrega_id, c.conductor_entrega_libre)}
+                            <span className="font-normal"> · {showCamion(c.camion_entrega_id, c.camion_entrega_libre)}{c.fecha_entrega_vacio ? ` · ${formatearFecha(c.fecha_entrega_vacio)}` : ""}</span>
                           </span>
                         </div>
                       </div>
@@ -894,9 +999,12 @@ export default function ControlVacios() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label className="font-bold">Conductor</Label>
-                  <SelectCatalogo
-                    value={formData.conductor_carga_id}
-                    onChange={(v) => setFormData((f) => ({ ...f, conductor_carga_id: v }))}
+                  <SelectCatalogoLibre
+                    key={`${formData.id}-conductor_carga`}
+                    idValue={formData.conductor_carga_id}
+                    libreValue={formData.conductor_carga_libre}
+                    onIdChange={(v) => setFormData((f) => ({ ...f, conductor_carga_id: v, conductor_carga_libre: "" }))}
+                    onLibreChange={(v) => setFormData((f) => ({ ...f, conductor_carga_libre: v, conductor_carga_id: "" }))}
                     placeholder="Conductor"
                     options={conductores}
                     getLabel={(o) => o.nombre}
@@ -904,9 +1012,12 @@ export default function ControlVacios() {
                 </div>
                 <div>
                   <Label className="font-bold">Camión</Label>
-                  <SelectCatalogo
-                    value={formData.camion_carga_id}
-                    onChange={(v) => setFormData((f) => ({ ...f, camion_carga_id: v }))}
+                  <SelectCatalogoLibre
+                    key={`${formData.id}-camion_carga`}
+                    idValue={formData.camion_carga_id}
+                    libreValue={formData.camion_carga_libre}
+                    onIdChange={(v) => setFormData((f) => ({ ...f, camion_carga_id: v, camion_carga_libre: "" }))}
+                    onLibreChange={(v) => setFormData((f) => ({ ...f, camion_carga_libre: v, camion_carga_id: "" }))}
                     placeholder="Camión"
                     options={camiones}
                     getLabel={(o) => `${o.nombre}${o.placas ? ` - ${o.placas}` : ""}`}
@@ -914,9 +1025,12 @@ export default function ControlVacios() {
                 </div>
                 <div>
                   <Label className="font-bold">{formData.modalidad === "full" ? "Remolque 1" : "Remolque"}</Label>
-                  <SelectCatalogo
-                    value={formData.remolque_carga_id}
-                    onChange={(v) => setFormData((f) => ({ ...f, remolque_carga_id: v }))}
+                  <SelectCatalogoLibre
+                    key={`${formData.id}-remolque_carga`}
+                    idValue={formData.remolque_carga_id}
+                    libreValue={formData.remolque_carga_libre}
+                    onIdChange={(v) => setFormData((f) => ({ ...f, remolque_carga_id: v, remolque_carga_libre: "" }))}
+                    onLibreChange={(v) => setFormData((f) => ({ ...f, remolque_carga_libre: v, remolque_carga_id: "" }))}
                     placeholder="Remolque"
                     options={remolquesChasis}
                     getLabel={(o) => `${o.placas || o.id}`}
@@ -925,9 +1039,12 @@ export default function ControlVacios() {
                 {formData.modalidad === "full" && (
                   <div>
                     <Label className="font-bold">Remolque 2</Label>
-                    <SelectCatalogo
-                      value={formData.remolque_carga_id_2}
-                      onChange={(v) => setFormData((f) => ({ ...f, remolque_carga_id_2: v }))}
+                    <SelectCatalogoLibre
+                      key={`${formData.id}-remolque_carga_2`}
+                      idValue={formData.remolque_carga_id_2}
+                      libreValue={formData.remolque_carga_libre_2}
+                      onIdChange={(v) => setFormData((f) => ({ ...f, remolque_carga_id_2: v, remolque_carga_libre_2: "" }))}
+                      onLibreChange={(v) => setFormData((f) => ({ ...f, remolque_carga_libre_2: v, remolque_carga_id_2: "" }))}
                       placeholder="Remolque"
                       options={remolquesChasis}
                       getLabel={(o) => `${o.placas || o.id}`}
@@ -986,9 +1103,12 @@ export default function ControlVacios() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label className="font-bold">Conductor</Label>
-                  <SelectCatalogo
-                    value={formData.conductor_entrega_id}
-                    onChange={(v) => setFormData((f) => ({ ...f, conductor_entrega_id: v }))}
+                  <SelectCatalogoLibre
+                    key={`${formData.id}-conductor_entrega`}
+                    idValue={formData.conductor_entrega_id}
+                    libreValue={formData.conductor_entrega_libre}
+                    onIdChange={(v) => setFormData((f) => ({ ...f, conductor_entrega_id: v, conductor_entrega_libre: "" }))}
+                    onLibreChange={(v) => setFormData((f) => ({ ...f, conductor_entrega_libre: v, conductor_entrega_id: "" }))}
                     placeholder="Conductor"
                     options={conductores}
                     getLabel={(o) => o.nombre}
@@ -996,9 +1116,12 @@ export default function ControlVacios() {
                 </div>
                 <div>
                   <Label className="font-bold">Camión</Label>
-                  <SelectCatalogo
-                    value={formData.camion_entrega_id}
-                    onChange={(v) => setFormData((f) => ({ ...f, camion_entrega_id: v }))}
+                  <SelectCatalogoLibre
+                    key={`${formData.id}-camion_entrega`}
+                    idValue={formData.camion_entrega_id}
+                    libreValue={formData.camion_entrega_libre}
+                    onIdChange={(v) => setFormData((f) => ({ ...f, camion_entrega_id: v, camion_entrega_libre: "" }))}
+                    onLibreChange={(v) => setFormData((f) => ({ ...f, camion_entrega_libre: v, camion_entrega_id: "" }))}
                     placeholder="Camión"
                     options={camiones}
                     getLabel={(o) => `${o.nombre}${o.placas ? ` - ${o.placas}` : ""}`}
@@ -1006,9 +1129,12 @@ export default function ControlVacios() {
                 </div>
                 <div>
                   <Label className="font-bold">{formData.modalidad === "full" ? "Remolque 1" : "Remolque"}</Label>
-                  <SelectCatalogo
-                    value={formData.remolque_entrega_id}
-                    onChange={(v) => setFormData((f) => ({ ...f, remolque_entrega_id: v }))}
+                  <SelectCatalogoLibre
+                    key={`${formData.id}-remolque_entrega`}
+                    idValue={formData.remolque_entrega_id}
+                    libreValue={formData.remolque_entrega_libre}
+                    onIdChange={(v) => setFormData((f) => ({ ...f, remolque_entrega_id: v, remolque_entrega_libre: "" }))}
+                    onLibreChange={(v) => setFormData((f) => ({ ...f, remolque_entrega_libre: v, remolque_entrega_id: "" }))}
                     placeholder="Remolque"
                     options={remolquesChasis}
                     getLabel={(o) => `${o.placas || o.id}`}
@@ -1017,9 +1143,12 @@ export default function ControlVacios() {
                 {formData.modalidad === "full" && (
                   <div>
                     <Label className="font-bold">Remolque 2</Label>
-                    <SelectCatalogo
-                      value={formData.remolque_entrega_id_2}
-                      onChange={(v) => setFormData((f) => ({ ...f, remolque_entrega_id_2: v }))}
+                    <SelectCatalogoLibre
+                      key={`${formData.id}-remolque_entrega_2`}
+                      idValue={formData.remolque_entrega_id_2}
+                      libreValue={formData.remolque_entrega_libre_2}
+                      onIdChange={(v) => setFormData((f) => ({ ...f, remolque_entrega_id_2: v, remolque_entrega_libre_2: "" }))}
+                      onLibreChange={(v) => setFormData((f) => ({ ...f, remolque_entrega_libre_2: v, remolque_entrega_id_2: "" }))}
                       placeholder="Remolque"
                       options={remolquesChasis}
                       getLabel={(o) => `${o.placas || o.id}`}
@@ -1173,9 +1302,13 @@ export default function ControlVacios() {
                   onClick={() => setEntregaData((d) => ({
                     ...d,
                     conductor_entrega_id: d.conductor_carga_id,
+                    conductor_entrega_libre: d.conductor_carga_libre,
                     camion_entrega_id: d.camion_carga_id,
+                    camion_entrega_libre: d.camion_carga_libre,
                     remolque_entrega_id: d.remolque_carga_id,
+                    remolque_entrega_libre: d.remolque_carga_libre,
                     remolque_entrega_id_2: d.remolque_carga_id_2,
+                    remolque_entrega_libre_2: d.remolque_carga_libre_2,
                   }))}
                   className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
                 >
@@ -1186,9 +1319,12 @@ export default function ControlVacios() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label className="font-bold">Conductor *</Label>
-                <SelectCatalogo
-                  value={entregaData.conductor_entrega_id}
-                  onChange={(v) => setEntregaData((d) => ({ ...d, conductor_entrega_id: v }))}
+                <SelectCatalogoLibre
+                  key={`${entregaData.id}-conductor_entrega`}
+                  idValue={entregaData.conductor_entrega_id}
+                  libreValue={entregaData.conductor_entrega_libre}
+                  onIdChange={(v) => setEntregaData((d) => ({ ...d, conductor_entrega_id: v, conductor_entrega_libre: "" }))}
+                  onLibreChange={(v) => setEntregaData((d) => ({ ...d, conductor_entrega_libre: v, conductor_entrega_id: "" }))}
                   placeholder="Conductor"
                   options={conductores}
                   getLabel={(o) => o.nombre}
@@ -1196,9 +1332,12 @@ export default function ControlVacios() {
               </div>
               <div>
                 <Label className="font-bold">Camión</Label>
-                <SelectCatalogo
-                  value={entregaData.camion_entrega_id}
-                  onChange={(v) => setEntregaData((d) => ({ ...d, camion_entrega_id: v }))}
+                <SelectCatalogoLibre
+                  key={`${entregaData.id}-camion_entrega`}
+                  idValue={entregaData.camion_entrega_id}
+                  libreValue={entregaData.camion_entrega_libre}
+                  onIdChange={(v) => setEntregaData((d) => ({ ...d, camion_entrega_id: v, camion_entrega_libre: "" }))}
+                  onLibreChange={(v) => setEntregaData((d) => ({ ...d, camion_entrega_libre: v, camion_entrega_id: "" }))}
                   placeholder="Camión"
                   options={camiones}
                   getLabel={(o) => `${o.nombre}${o.placas ? ` - ${o.placas}` : ""}`}
@@ -1206,9 +1345,12 @@ export default function ControlVacios() {
               </div>
               <div>
                 <Label className="font-bold">{entregaData.modalidad === "full" ? "Remolque 1" : "Remolque"}</Label>
-                <SelectCatalogo
-                  value={entregaData.remolque_entrega_id}
-                  onChange={(v) => setEntregaData((d) => ({ ...d, remolque_entrega_id: v }))}
+                <SelectCatalogoLibre
+                  key={`${entregaData.id}-remolque_entrega`}
+                  idValue={entregaData.remolque_entrega_id}
+                  libreValue={entregaData.remolque_entrega_libre}
+                  onIdChange={(v) => setEntregaData((d) => ({ ...d, remolque_entrega_id: v, remolque_entrega_libre: "" }))}
+                  onLibreChange={(v) => setEntregaData((d) => ({ ...d, remolque_entrega_libre: v, remolque_entrega_id: "" }))}
                   placeholder="Remolque"
                   options={remolquesChasis}
                   getLabel={(o) => `${o.placas || o.id}`}
@@ -1217,9 +1359,12 @@ export default function ControlVacios() {
               {entregaData.modalidad === "full" && (
                 <div>
                   <Label className="font-bold">Remolque 2</Label>
-                  <SelectCatalogo
-                    value={entregaData.remolque_entrega_id_2}
-                    onChange={(v) => setEntregaData((d) => ({ ...d, remolque_entrega_id_2: v }))}
+                  <SelectCatalogoLibre
+                    key={`${entregaData.id}-remolque_entrega_2`}
+                    idValue={entregaData.remolque_entrega_id_2}
+                    libreValue={entregaData.remolque_entrega_libre_2}
+                    onIdChange={(v) => setEntregaData((d) => ({ ...d, remolque_entrega_id_2: v, remolque_entrega_libre_2: "" }))}
+                    onLibreChange={(v) => setEntregaData((d) => ({ ...d, remolque_entrega_libre_2: v, remolque_entrega_id_2: "" }))}
                     placeholder="Remolque"
                     options={remolquesChasis}
                     getLabel={(o) => `${o.placas || o.id}`}
