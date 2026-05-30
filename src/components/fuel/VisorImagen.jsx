@@ -1,9 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { RotateCcw } from "lucide-react";
+import { RotateCw } from "lucide-react";
 
 export default function VisorImagen({ url, onClose }) {
   const [scale, setScale] = useState(1);
+  const [rotation, setRotation] = useState(0);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
   const dragStart = useRef(null);
@@ -52,6 +53,7 @@ export default function VisorImagen({ url, onClose }) {
 
   const resetear = () => {
     setScale(1);
+    setRotation(0);
     setOffset({ x: 0, y: 0 });
   };
 
@@ -73,11 +75,11 @@ export default function VisorImagen({ url, onClose }) {
             className="w-7 h-7 rounded bg-black/50 text-white text-sm hover:bg-black/70 flex items-center justify-center"
           >−</button>
           <button
-            onClick={resetear}
-            title="Restablecer"
+            onClick={() => setRotation((r) => (r + 90) % 360)}
+            title="Rotar 90°"
             className="w-7 h-7 rounded bg-black/50 text-white hover:bg-black/70 flex items-center justify-center"
           >
-            <RotateCcw className="w-3 h-3" />
+            <RotateCw className="w-3 h-3" />
           </button>
         </div>
 
@@ -95,7 +97,7 @@ export default function VisorImagen({ url, onClose }) {
             alt="Evidencia"
             draggable={false}
             style={{
-              transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
+              transform: `translate(${offset.x}px, ${offset.y}px) rotate(${rotation}deg) scale(${scale})`,
               transition: dragging ? "none" : "transform 0.1s ease",
               maxWidth: "100%",
               maxHeight: "100%",
