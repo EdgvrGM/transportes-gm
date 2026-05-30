@@ -5,7 +5,7 @@ import {
   Search, Loader2,
   ChevronsLeft, ChevronLeft, Play, Pause, ChevronRight, ChevronsRight, X,
 } from "lucide-react";
-import { WIALON_PROXY_URL, VELOCIDAD_ALERTA } from "@/components/gps/constants";
+import { WIALON_PROXY_URL, VELOCIDAD_EXCESO } from "@/components/gps/constants";
 
 function localDateStr(date) {
   const y = date.getFullYear();
@@ -333,7 +333,7 @@ export default function HistorialGPS({ positions = [], onHistorialCargado, onPun
                 {" · "}
                 {new Date(points[playbackIdx].timestamp).toLocaleTimeString("es-MX")}
                 {" · "}
-                <span className={points[playbackIdx].velocidad > VELOCIDAD_ALERTA ? "text-red-500 font-medium" : ""}>
+                <span className={points[playbackIdx].velocidad > VELOCIDAD_EXCESO ? "text-red-500 font-medium" : ""}>
                   {points[playbackIdx].velocidad} km/h
                 </span>
               </p>

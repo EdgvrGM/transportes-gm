@@ -10,6 +10,7 @@ export const PATIO_RADIO_M = 70;
 // Umbrales
 export const RALENTI_UMBRAL_MS  = 15 * 60 * 1000;
 export const VELOCIDAD_ALERTA   = 80;
+export const VELOCIDAD_EXCESO   = 105; // exceso marcado en la ruta del historial
 export const RASTRO_MAX         = 10;
 
 // Polling

@@ -56,6 +56,7 @@ import { es } from "date-fns/locale";
 import FiltrosViajes from "@/components/fuel/FiltrosViajes";
 import { MapContainer, TileLayer, Polyline, CircleMarker, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import ModalRutaViaje from "@/components/gps/ModalRutaViaje";
 
 const FECHA_LIMITE_ARCHIVO = '2026-04-24';
 
@@ -305,6 +306,7 @@ export default function FuelViajes() {
   const [kmTramo, setKmTramo]           = useState(null);
   const [sliderActivo, setSliderActivo] = useState(null);
   // "inicio" | "fin" | null
+  const [viajeRutaSeleccionado, setViajeRutaSeleccionado] = useState(null);
 
   const frecuenciaGps = useMemo(() => {
     if (gpsPoints.length < 2) return null;
@@ -388,26 +390,8 @@ export default function FuelViajes() {
       }
 
       setGpsPoints(points);
-
-      const hasSavedTramo = formData.gps_tramo_desde && formData.gps_tramo_hasta;
-      if (hasSavedTramo) {
-        const targetDesde = new Date(formData.gps_tramo_desde).getTime();
-        const targetHasta = new Date(formData.gps_tramo_hasta).getTime();
-        let closestInicio = 0, minD = Infinity;
-        let closestFin = points.length - 1, minF = Infinity;
-        points.forEach((p, i) => {
-          const dDesde = Math.abs(new Date(p.timestamp).getTime() - targetDesde);
-          if (dDesde < minD) { minD = dDesde; closestInicio = i; }
-          const dHasta = Math.abs(new Date(p.timestamp).getTime() - targetHasta);
-          if (dHasta < minF) { minF = dHasta; closestFin = i; }
-        });
-        setSliderInicio(closestInicio);
-        setSliderFin(closestFin);
-      } else {
-        setSliderInicio(0);
-        setSliderFin(points.length - 1);
-      }
-
+      setSliderInicio(0);
+      setSliderFin(points.length - 1);
       setGpsStatus("success");
 
     } catch (err) {
@@ -505,6 +489,21 @@ export default function FuelViajes() {
       return data || [];
     },
   });
+
+  // IDs de viajes que tienen ruta GPS guardada en ViajeRuta
+  const { data: rutasGuardadas = [] } = useQuery({
+    queryKey: ["rutasGuardadas"],
+    queryFn: async () => {
+      const { data } = await supabase.from("ViajeRuta").select("viaje_id");
+      return data || [];
+    },
+    staleTime: 30000,
+  });
+
+  const rutasSet = useMemo(
+    () => new Set(rutasGuardadas.map((r) => String(r.viaje_id))),
+    [rutasGuardadas]
+  );
 
   const getClienteDelViaje = (viaje) => {
     if (!viaje) return null;
@@ -1196,6 +1195,16 @@ export default function FuelViajes() {
                                   <Gauge className="w-4 h-4 mr-2" />
                                   {formatNumber(eficiencia, 2)} km/L
                                 </Badge>
+                                {rutasSet.has(String(viaje.id)) && (
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => setViajeRutaSeleccionado(viaje)}
+                                    className="min-h-[2.25rem] h-auto py-2 px-4 gap-2 border-blue-200 text-blue-700 bg-blue-50/50 hover:bg-blue-100 dark:border-blue-900/30 dark:text-blue-400 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 rounded-xl font-black text-[10px] shadow-sm active:scale-95 transition-all"
+                                  >
+                                    <Route className="w-3.5 h-3.5" />
+                                    <span>VER RUTA</span>
+                                  </Button>
+                                )}
                                 {viaje.notas && (
                                   <p className="text-xs text-muted-foreground text-center mt-2 line-clamp-2">{viaje.notas}</p>
                                 )}
@@ -1764,6 +1773,11 @@ export default function FuelViajes() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <ModalRutaViaje
+          viaje={viajeRutaSeleccionado}
+          onClose={() => setViajeRutaSeleccionado(null)}
+        />
       </div>
     </div>
   );

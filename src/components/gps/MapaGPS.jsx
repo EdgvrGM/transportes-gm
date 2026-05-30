@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { MapContainer, TileLayer, Marker, Popup, Tooltip, LayersControl, Polyline, CircleMarker, Circle, useMap } from "react-leaflet";
 import TooltipUnidad from "@/components/gps/TooltipUnidad";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { createUnitIcon } from "@/components/gps/unitIconHelper";
-import { PATIO_LAT, PATIO_LNG, PATIO_RADIO_M, CENTRO_MX, VELOCIDAD_ALERTA } from "@/components/gps/constants";
+import { PATIO_LAT, PATIO_LNG, PATIO_RADIO_M, CENTRO_MX, VELOCIDAD_EXCESO } from "@/components/gps/constants";
 
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
@@ -35,6 +36,36 @@ function crearIconoParada(color) {
     iconAnchor: [11, 11],
   });
 }
+
+// Marcador de exceso de velocidad en la ruta del historial
+const excesoIcon = L.divIcon({
+  className: "",
+  html: `<div style="font-size:15px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.45));">⚠️</div>`,
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
+});
+
+// Control personalizado de Leaflet: se apila en la misma esquina que el selector
+// de capas (por debajo, al agregarse después). Renderiza children vía portal.
+function ControlMapa({ position = "topright", children }) {
+  const map = useMap();
+  const [container] = useState(() => L.DomUtil.create("div"));
+  useEffect(() => {
+    const Ctl = L.Control.extend({ onAdd: () => container });
+    const ctl = new Ctl({ position });
+    map.addControl(ctl);
+    L.DomEvent.disableClickPropagation(container);
+    L.DomEvent.disableScrollPropagation(container);
+    return () => map.removeControl(ctl);
+  }, [map, position, container]);
+  return createPortal(children, container);
+}
+
+const FILTROS_RUTA = [
+  { key: "excesos", label: "Excesos de velocidad", icono: "⚠️" },
+  { key: "paradas", label: "Paradas", icono: "🅿️" },
+  { key: "contexto", label: "Puntos de ruta", icono: "•" },
+];
 
 // ── Lógica de segmentación de viajes ─────────────────────────────────────────
 function segmentarViajes(points) {
@@ -223,6 +254,8 @@ export default function MapaGPS({
 
   const [tooltip, setTooltip] = useState(null);
   const [tooltipCentrado, setTooltipCentrado] = useState(null);
+  const [filtrosRuta, setFiltrosRuta] = useState({ excesos: true, paradas: true, contexto: true });
+  const [filtrosColapsado, setFiltrosColapsado] = useState(true);
   const closeTimerRef = useRef(null);
   const hoverTimerRef = useRef(null);
 
@@ -298,6 +331,49 @@ export default function MapaGPS({
         {/* ── Capa 2: Ruta del historial — superpuesta cuando hay datos ── */}
         {tabActivo === "historial" && histLatlngs.length > 1 && (
           <>
+            {/* Filtros de la ruta — debajo del selector de capas, colapsado por defecto */}
+            <ControlMapa position="topright">
+              {filtrosColapsado ? (
+                <button
+                  type="button"
+                  onClick={() => setFiltrosColapsado(false)}
+                  title="Filtros de la ruta"
+                  style={{ width: "34px", height: "34px", background: "#fff", border: "none", borderRadius: "8px", boxShadow: "0 1px 5px rgba(0,0,0,0.4)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#334155" }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+                  </svg>
+                </button>
+              ) : (
+                <div style={{ background: "#fff", borderRadius: "8px", boxShadow: "0 1px 5px rgba(0,0,0,0.4)", padding: "8px 10px", fontSize: "12px", color: "#1e293b", lineHeight: 1.3 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", marginBottom: "6px" }}>
+                    <span style={{ fontWeight: 800, fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.04em", color: "#64748b" }}>
+                      Filtros de ruta
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setFiltrosColapsado(true)}
+                      title="Ocultar filtros"
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", fontSize: "16px", lineHeight: 1, padding: 0 }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                  {FILTROS_RUTA.map((opt) => (
+                    <label key={opt.key} style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", padding: "2px 0", whiteSpace: "nowrap" }}>
+                      <input
+                        type="checkbox"
+                        checked={filtrosRuta[opt.key]}
+                        onChange={(e) => setFiltrosRuta((f) => ({ ...f, [opt.key]: e.target.checked }))}
+                        style={{ cursor: "pointer", accentColor: "#185FA5" }}
+                      />
+                      <span>{opt.icono} {opt.label}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </ControlMapa>
+
             {/* Polylines: split cuando hay punto activo, segmentadas si no */}
             {puntoActivo ? (
               <>
@@ -326,7 +402,7 @@ export default function MapaGPS({
             )}
 
             {/* Marcadores de parada */}
-            {paradas.map((p, pi) => (
+            {filtrosRuta.paradas && paradas.map((p, pi) => (
               <Marker key={`stop-${pi}`} position={[p.lat, p.lng]} icon={crearIconoParada(p.color)}>
                 <Popup>
                   <div style={{ fontSize: "12px", lineHeight: 1.6 }}>
@@ -340,7 +416,7 @@ export default function MapaGPS({
               </Marker>
             ))}
 
-            {/* Anotaciones: todos los puntos con exceso de velocidad + sample de contexto */}
+            {/* Anotaciones: puntos con exceso de velocidad (> VELOCIDAD_EXCESO) + sample de contexto */}
             {(() => {
               const total = historialPuntos.length;
               const MAX_CONTEXT = 50;
@@ -349,30 +425,40 @@ export default function MapaGPS({
               for (let i = step; i < total - 1; i += step) indicesContext.add(i);
               return historialPuntos
                 .map((p, i) => ({ p, i }))
-                .filter(({ p, i }) =>
-                  i !== 0 && i !== total - 1 &&
-                  (p.velocidad > VELOCIDAD_ALERTA || indicesContext.has(i))
-                )
-                .map(({ p, i }) => (
-                  <CircleMarker
-                    key={`ann-${i}`}
-                    center={[p.lat, p.lng]}
-                    radius={p.velocidad > VELOCIDAD_ALERTA ? 7 : 4}
-                    pathOptions={{
-                      color:       p.velocidad > VELOCIDAD_ALERTA ? "#ef4444" : "#64748b",
-                      fillColor:   p.velocidad > VELOCIDAD_ALERTA ? "#ef4444" : "#fff",
-                      fillOpacity: 1,
-                      weight:      2,
-                    }}
-                  >
+                .filter(({ p, i }) => {
+                  if (i === 0 || i === total - 1) return false;
+                  const esExceso = p.velocidad > VELOCIDAD_EXCESO;
+                  if (esExceso) return filtrosRuta.excesos;
+                  return filtrosRuta.contexto && indicesContext.has(i);
+                })
+                .map(({ p, i }) => {
+                  const esExceso = p.velocidad > VELOCIDAD_EXCESO;
+                  const popup = (
                     <Popup>
                       <div style={{ fontSize: "12px", lineHeight: 1.5 }}>
                         <strong>{new Date(p.timestamp).toLocaleTimeString("es-MX")}</strong><br />
+                        {esExceso && (
+                          <span style={{ color: "#ef4444", fontWeight: 700 }}>⚠️ Exceso de velocidad<br /></span>
+                        )}
                         {p.velocidad} km/h
                       </div>
                     </Popup>
-                  </CircleMarker>
-                ));
+                  );
+                  return esExceso ? (
+                    <Marker key={`ann-${i}`} position={[p.lat, p.lng]} icon={excesoIcon}>
+                      {popup}
+                    </Marker>
+                  ) : (
+                    <CircleMarker
+                      key={`ann-${i}`}
+                      center={[p.lat, p.lng]}
+                      radius={3}
+                      pathOptions={{ color: "#64748b", fillColor: "#fff", fillOpacity: 1, weight: 1.5 }}
+                    >
+                      {popup}
+                    </CircleMarker>
+                  );
+                });
             })()}
 
             {/* Inicio y fin */}
