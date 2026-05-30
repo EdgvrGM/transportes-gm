@@ -179,6 +179,28 @@ const ProgramCard = ({ prog, onVer, totalViajes }) => {
   );
 };
 
+// Extrae la ruta interna del bucket "evidencias" a partir de su URL pública.
+function pathEvidenciaStorage(url) {
+  const marker = "/storage/v1/object/public/evidencias/";
+  const i = url.indexOf(marker);
+  return i === -1 ? null : decodeURIComponent(url.slice(i + marker.length));
+}
+
+// Borra todas las fotos de uno o varios viajes (carpeta evidencias/{viajeId},
+// exclusiva de ese viaje). Best-effort: no bloquea si el Storage falla.
+async function limpiarFotosDeViajes(viajeIds) {
+  for (const vid of viajeIds) {
+    try {
+      const { data: files } = await supabase.storage.from("evidencias").list(`evidencias/${vid}`);
+      if (files?.length) {
+        await supabase.storage.from("evidencias").remove(files.map((f) => `evidencias/${vid}/${f.name}`));
+      }
+    } catch (_e) {
+      // ignorar errores de limpieza de Storage
+    }
+  }
+}
+
 export default function FuelProgramaCargas() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -444,6 +466,8 @@ export default function FuelProgramaCargas() {
             if (count === 0) {
               throw new Error("La base de datos bloqueó la eliminación del viaje. Verifica las políticas de seguridad (RLS) en Supabase.");
             }
+            // Limpieza de fotos de los viajes eliminados.
+            await limpiarFotosDeViajes(toDelete);
           }
         }
 
@@ -487,11 +511,22 @@ export default function FuelProgramaCargas() {
 
   const eliminarMutation = useMutation({
     mutationFn: async (id) => {
+      // Reunir los viajes de la semana antes de borrarla (la cascada los elimina)
+      // para poder limpiar sus fotos del Storage.
+      const { data: viajesDeSemana } = await supabase
+        .from("viajes_registrados")
+        .select("id")
+        .eq("programa_id", id);
+
       const { error } = await supabase
         .from("ProgramaCargas")
         .delete()
         .eq("id", id);
       if (error) throw error;
+
+      if (viajesDeSemana?.length) {
+        await limpiarFotosDeViajes(viajesDeSemana.map((v) => v.id));
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["programaCargas"] });
@@ -540,11 +575,22 @@ export default function FuelProgramaCargas() {
   });
 
   const eliminarEvidenciaMutation = useMutation({
-    mutationFn: async (id) => {
+    mutationFn: async (evidencia) => {
+      // Borrado best-effort de las fotos de esta remisión (no de la carpeta del
+      // viaje, que comparte fotos de otras remisiones). Si falla el Storage, no
+      // bloqueamos la eliminación del registro.
+      const rutas = (evidencia.fotos_urls || []).map(pathEvidenciaStorage).filter(Boolean);
+      if (rutas.length) {
+        try {
+          await supabase.storage.from("evidencias").remove(rutas);
+        } catch (_e) {
+          // ignorar errores de limpieza de Storage
+        }
+      }
       const { error } = await supabase
         .from("Evidencia")
         .delete()
-        .eq("id", id);
+        .eq("id", evidencia.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -591,12 +637,10 @@ export default function FuelProgramaCargas() {
 
   const eliminarFotoEvidenciaMutation = useMutation({
     mutationFn: async ({ evidenciaId, currentFotosUrls, urlToRemove }) => {
-       const urlParts = urlToRemove.split('/');
-       const fileName = urlParts.pop();
-       const viajeId = urlParts.pop();
-       const pathToRemove = `evidencias/${viajeId}/${fileName}`;
-       
-       await supabase.storage.from('evidencias').remove([pathToRemove]);
+       const pathToRemove = pathEvidenciaStorage(urlToRemove);
+       if (pathToRemove) {
+         await supabase.storage.from('evidencias').remove([pathToRemove]);
+       }
 
        const newFotosUrls = currentFotosUrls.filter(u => u !== urlToRemove);
        const { error } = await supabase
@@ -1816,7 +1860,7 @@ export default function FuelProgramaCargas() {
                                     </button>
                                     
                                     <button
-                                      onClick={() => setEvidenciaAEliminar(ev.id)}
+                                      onClick={() => setEvidenciaAEliminar(ev)}
                                       disabled={eliminarEvidenciaMutation.isPending}
                                       className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                                       title="Eliminar remisión"
