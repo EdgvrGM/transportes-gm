@@ -79,17 +79,21 @@ function pathFotoStorage(url) {
 
 const FORM_VACIO = {
   id: null,
+  modalidad: "sencillo",
   numero_contenedor: "",
+  numero_contenedor_2: "",
   fecha_carga: "",
   cliente_id: "",
   destino: "",
   conductor_carga_id: "",
   camion_carga_id: "",
   remolque_carga_id: "",
+  remolque_carga_id_2: "",
   estatus: "pendiente_vacio",
   conductor_entrega_id: "",
   camion_entrega_id: "",
   remolque_entrega_id: "",
+  remolque_entrega_id_2: "",
   fecha_entrega_vacio: "",
   lugar_entrega_vacio: "",
   entrega_con_cita: false,
@@ -100,13 +104,17 @@ const FORM_VACIO = {
 
 const FORM_ENTREGA = {
   id: null,
+  modalidad: "sencillo",
   numero_contenedor: "",
+  numero_contenedor_2: "",
   conductor_carga_id: "",
   camion_carga_id: "",
   remolque_carga_id: "",
+  remolque_carga_id_2: "",
   conductor_entrega_id: "",
   camion_entrega_id: "",
   remolque_entrega_id: "",
+  remolque_entrega_id_2: "",
   fecha_entrega_vacio: "",
   lugar_entrega_vacio: "",
   entrega_con_cita: false,
@@ -205,19 +213,24 @@ export default function ControlVacios() {
 
   const guardarMutation = useMutation({
     mutationFn: async (datos) => {
+      const esFull = datos.modalidad === "full";
       const payload = {
         id: datos.id,
+        modalidad: esFull ? "full" : "sencillo",
         numero_contenedor: datos.numero_contenedor.trim(),
+        numero_contenedor_2: esFull ? (datos.numero_contenedor_2?.trim() || null) : null,
         fecha_carga: datos.fecha_carga || null,
         cliente_id: datos.cliente_id || null,
         destino: datos.destino?.trim() || null,
         conductor_carga_id: datos.conductor_carga_id ? parseInt(datos.conductor_carga_id, 10) : null,
         camion_carga_id: datos.camion_carga_id ? parseInt(datos.camion_carga_id, 10) : null,
         remolque_carga_id: datos.remolque_carga_id ? parseInt(datos.remolque_carga_id, 10) : null,
+        remolque_carga_id_2: esFull && datos.remolque_carga_id_2 ? parseInt(datos.remolque_carga_id_2, 10) : null,
         estatus: datos.estatus,
         conductor_entrega_id: datos.conductor_entrega_id ? parseInt(datos.conductor_entrega_id, 10) : null,
         camion_entrega_id: datos.camion_entrega_id ? parseInt(datos.camion_entrega_id, 10) : null,
         remolque_entrega_id: datos.remolque_entrega_id ? parseInt(datos.remolque_entrega_id, 10) : null,
+        remolque_entrega_id_2: esFull && datos.remolque_entrega_id_2 ? parseInt(datos.remolque_entrega_id_2, 10) : null,
         fecha_entrega_vacio: datos.fecha_entrega_vacio || null,
         lugar_entrega_vacio: datos.lugar_entrega_vacio?.trim() || null,
         entrega_con_cita: !!datos.entrega_con_cita,
@@ -291,6 +304,7 @@ export default function ControlVacios() {
           conductor_entrega_id: d.conductor_entrega_id ? parseInt(d.conductor_entrega_id, 10) : null,
           camion_entrega_id: d.camion_entrega_id ? parseInt(d.camion_entrega_id, 10) : null,
           remolque_entrega_id: d.remolque_entrega_id ? parseInt(d.remolque_entrega_id, 10) : null,
+          remolque_entrega_id_2: d.modalidad === "full" && d.remolque_entrega_id_2 ? parseInt(d.remolque_entrega_id_2, 10) : null,
           fecha_entrega_vacio: d.fecha_entrega_vacio || null,
           lugar_entrega_vacio: d.lugar_entrega_vacio?.trim() || null,
           entrega_con_cita: !!d.entrega_con_cita,
@@ -382,17 +396,21 @@ export default function ControlVacios() {
     setEsEdicion(true);
     setFormData({
       id: c.id,
+      modalidad: c.modalidad || "sencillo",
       numero_contenedor: c.numero_contenedor || "",
+      numero_contenedor_2: c.numero_contenedor_2 || "",
       fecha_carga: c.fecha_carga || "",
       cliente_id: c.cliente_id || "",
       destino: c.destino || "",
       conductor_carga_id: c.conductor_carga_id != null ? String(c.conductor_carga_id) : "",
       camion_carga_id: c.camion_carga_id != null ? String(c.camion_carga_id) : "",
       remolque_carga_id: c.remolque_carga_id != null ? String(c.remolque_carga_id) : "",
+      remolque_carga_id_2: c.remolque_carga_id_2 != null ? String(c.remolque_carga_id_2) : "",
       estatus: c.estatus || "cargado",
       conductor_entrega_id: c.conductor_entrega_id != null ? String(c.conductor_entrega_id) : "",
       camion_entrega_id: c.camion_entrega_id != null ? String(c.camion_entrega_id) : "",
       remolque_entrega_id: c.remolque_entrega_id != null ? String(c.remolque_entrega_id) : "",
+      remolque_entrega_id_2: c.remolque_entrega_id_2 != null ? String(c.remolque_entrega_id_2) : "",
       fecha_entrega_vacio: c.fecha_entrega_vacio || "",
       lugar_entrega_vacio: c.lugar_entrega_vacio || "",
       entrega_con_cita: !!c.entrega_con_cita,
@@ -407,13 +425,17 @@ export default function ControlVacios() {
     setErrorMsg(null);
     setEntregaData({
       id: c.id,
+      modalidad: c.modalidad || "sencillo",
       numero_contenedor: c.numero_contenedor || "",
+      numero_contenedor_2: c.numero_contenedor_2 || "",
       conductor_carga_id: c.conductor_carga_id != null ? String(c.conductor_carga_id) : "",
       camion_carga_id: c.camion_carga_id != null ? String(c.camion_carga_id) : "",
       remolque_carga_id: c.remolque_carga_id != null ? String(c.remolque_carga_id) : "",
+      remolque_carga_id_2: c.remolque_carga_id_2 != null ? String(c.remolque_carga_id_2) : "",
       conductor_entrega_id: c.conductor_entrega_id != null ? String(c.conductor_entrega_id) : "",
       camion_entrega_id: c.camion_entrega_id != null ? String(c.camion_entrega_id) : "",
       remolque_entrega_id: c.remolque_entrega_id != null ? String(c.remolque_entrega_id) : "",
+      remolque_entrega_id_2: c.remolque_entrega_id_2 != null ? String(c.remolque_entrega_id_2) : "",
       fecha_entrega_vacio: c.fecha_entrega_vacio || "",
       lugar_entrega_vacio: c.lugar_entrega_vacio || "",
       entrega_con_cita: !!c.entrega_con_cita,
@@ -426,6 +448,10 @@ export default function ControlVacios() {
     setErrorMsg(null);
     if (!formData.numero_contenedor.trim()) {
       setErrorMsg("El número de contenedor es obligatorio.");
+      return;
+    }
+    if (formData.modalidad === "full" && !formData.numero_contenedor_2.trim()) {
+      setErrorMsg("En configuración full debes capturar el segundo número de contenedor.");
       return;
     }
     if (!formData.fecha_carga) {
@@ -501,7 +527,9 @@ export default function ControlVacios() {
       if (filtroConductor !== "todos" && String(c.conductor_carga_id) !== filtroConductor) return false;
       if (busqueda.trim()) {
         const q = busqueda.trim().toLowerCase();
-        if (!(c.numero_contenedor || "").toLowerCase().includes(q)) return false;
+        const enContenedor = (c.numero_contenedor || "").toLowerCase().includes(q)
+          || (c.numero_contenedor_2 || "").toLowerCase().includes(q);
+        if (!enContenedor) return false;
       }
       return true;
     });
@@ -621,6 +649,13 @@ export default function ControlVacios() {
                     {/* Número + badge + fotos */}
                     <div className="flex items-center gap-2 flex-wrap min-w-0">
                       <span className="text-lg font-black text-foreground tracking-tight">{c.numero_contenedor}</span>
+                      {c.modalidad === "full" && c.numero_contenedor_2 && (
+                        <>
+                          <span className="text-muted-foreground/50 font-black">+</span>
+                          <span className="text-lg font-black text-foreground tracking-tight">{c.numero_contenedor_2}</span>
+                          <span className="inline-flex items-center text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shrink-0">FULL</span>
+                        </>
+                      )}
                       <Popover open={popoverEstatus === c.id} onOpenChange={(open) => setPopoverEstatus(open ? c.id : null)}>
                         <PopoverTrigger asChild>
                           <button className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full cursor-pointer hover:opacity-80 transition-opacity shrink-0 ${est.badge}`}>
@@ -679,6 +714,7 @@ export default function ControlVacios() {
                         <Truck className="w-3.5 h-3.5 shrink-0" />
                         <span className="truncate">{getCamionName(c.camion_carga_id)}</span>
                         {c.remolque_carga_id && <><span className="text-border shrink-0">·</span><span className="truncate shrink-0">{getRemolquePlacas(c.remolque_carga_id)}</span></>}
+                        {c.modalidad === "full" && c.remolque_carga_id_2 && <><span className="text-border shrink-0">·</span><span className="truncate shrink-0">{getRemolquePlacas(c.remolque_carga_id_2)}</span></>}
                       </div>
                     </div>
                     {/* Columna DESTINO */}
@@ -768,15 +804,36 @@ export default function ControlVacios() {
           <div className="space-y-4 py-2">
             {/* Datos básicos */}
             <div className="rounded-2xl border border-border bg-muted/30 p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-7 h-7 rounded-lg bg-gm-primary/15 flex items-center justify-center shrink-0">
-                  <Container className="w-4 h-4 text-yellow-600" />
-                </span>
-                <p className="text-sm font-black text-foreground">Datos del contenedor</p>
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="w-7 h-7 rounded-lg bg-gm-primary/15 flex items-center justify-center shrink-0">
+                    <Container className="w-4 h-4 text-yellow-600" />
+                  </span>
+                  <p className="text-sm font-black text-foreground truncate">Datos del contenedor</p>
+                </div>
+                <div className="inline-flex rounded-xl border border-border bg-background p-0.5 shrink-0">
+                  {[
+                    { v: "sencillo", l: "Sencillo" },
+                    { v: "full", l: "Full (doble)" },
+                  ].map((m) => (
+                    <button
+                      key={m.v}
+                      type="button"
+                      onClick={() => setFormData((f) => ({ ...f, modalidad: m.v }))}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                        formData.modalidad === m.v
+                          ? "bg-gm-primary text-black shadow-sm"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {m.l}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="font-bold">Número de contenedor *</Label>
+                  <Label className="font-bold">{formData.modalidad === "full" ? "Contenedor 1 *" : "Número de contenedor *"}</Label>
                   <Input
                     value={formData.numero_contenedor}
                     onChange={(e) => setFormData((f) => ({ ...f, numero_contenedor: e.target.value }))}
@@ -784,6 +841,17 @@ export default function ControlVacios() {
                     className="rounded-xl mt-1 uppercase font-bold tracking-wide focus-visible:ring-gm-primary"
                   />
                 </div>
+                {formData.modalidad === "full" && (
+                  <div>
+                    <Label className="font-bold">Contenedor 2 *</Label>
+                    <Input
+                      value={formData.numero_contenedor_2}
+                      onChange={(e) => setFormData((f) => ({ ...f, numero_contenedor_2: e.target.value }))}
+                      placeholder="Ej. TCLU1234567"
+                      className="rounded-xl mt-1 uppercase font-bold tracking-wide focus-visible:ring-gm-primary"
+                    />
+                  </div>
+                )}
                 <div>
                   <Label className="font-bold">Fecha de carga *</Label>
                   <Input
@@ -845,7 +913,7 @@ export default function ControlVacios() {
                   />
                 </div>
                 <div>
-                  <Label className="font-bold">Remolque</Label>
+                  <Label className="font-bold">{formData.modalidad === "full" ? "Remolque 1" : "Remolque"}</Label>
                   <SelectCatalogo
                     value={formData.remolque_carga_id}
                     onChange={(v) => setFormData((f) => ({ ...f, remolque_carga_id: v }))}
@@ -854,6 +922,18 @@ export default function ControlVacios() {
                     getLabel={(o) => `${o.placas || o.id}`}
                   />
                 </div>
+                {formData.modalidad === "full" && (
+                  <div>
+                    <Label className="font-bold">Remolque 2</Label>
+                    <SelectCatalogo
+                      value={formData.remolque_carga_id_2}
+                      onChange={(v) => setFormData((f) => ({ ...f, remolque_carga_id_2: v }))}
+                      placeholder="Remolque"
+                      options={remolquesChasis}
+                      getLabel={(o) => `${o.placas || o.id}`}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -895,6 +975,7 @@ export default function ControlVacios() {
                       conductor_entrega_id: f.conductor_carga_id,
                       camion_entrega_id: f.camion_carga_id,
                       remolque_entrega_id: f.remolque_carga_id,
+                      remolque_entrega_id_2: f.remolque_carga_id_2,
                     }))}
                     className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
                   >
@@ -924,7 +1005,7 @@ export default function ControlVacios() {
                   />
                 </div>
                 <div>
-                  <Label className="font-bold">Remolque</Label>
+                  <Label className="font-bold">{formData.modalidad === "full" ? "Remolque 1" : "Remolque"}</Label>
                   <SelectCatalogo
                     value={formData.remolque_entrega_id}
                     onChange={(v) => setFormData((f) => ({ ...f, remolque_entrega_id: v }))}
@@ -933,6 +1014,18 @@ export default function ControlVacios() {
                     getLabel={(o) => `${o.placas || o.id}`}
                   />
                 </div>
+                {formData.modalidad === "full" && (
+                  <div>
+                    <Label className="font-bold">Remolque 2</Label>
+                    <SelectCatalogo
+                      value={formData.remolque_entrega_id_2}
+                      onChange={(v) => setFormData((f) => ({ ...f, remolque_entrega_id_2: v }))}
+                      placeholder="Remolque"
+                      options={remolquesChasis}
+                      getLabel={(o) => `${o.placas || o.id}`}
+                    />
+                  </div>
+                )}
                 <div>
                   <Label className="font-bold">Fecha entrega vacío</Label>
                   <Input
@@ -1061,7 +1154,7 @@ export default function ControlVacios() {
             </DialogTitle>
             <DialogDescription>
               {entregaData.numero_contenedor
-                ? `Contenedor ${entregaData.numero_contenedor} — quién, cuándo y dónde se entrega el vacío.`
+                ? `Contenedor ${entregaData.numero_contenedor}${entregaData.modalidad === "full" && entregaData.numero_contenedor_2 ? ` + ${entregaData.numero_contenedor_2}` : ""} — quién, cuándo y dónde se entrega el vacío.`
                 : "Quién, cuándo y dónde se entrega el contenedor vacío."}
             </DialogDescription>
           </DialogHeader>
@@ -1082,6 +1175,7 @@ export default function ControlVacios() {
                     conductor_entrega_id: d.conductor_carga_id,
                     camion_entrega_id: d.camion_carga_id,
                     remolque_entrega_id: d.remolque_carga_id,
+                    remolque_entrega_id_2: d.remolque_carga_id_2,
                   }))}
                   className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
                 >
@@ -1111,7 +1205,7 @@ export default function ControlVacios() {
                 />
               </div>
               <div>
-                <Label className="font-bold">Remolque</Label>
+                <Label className="font-bold">{entregaData.modalidad === "full" ? "Remolque 1" : "Remolque"}</Label>
                 <SelectCatalogo
                   value={entregaData.remolque_entrega_id}
                   onChange={(v) => setEntregaData((d) => ({ ...d, remolque_entrega_id: v }))}
@@ -1120,6 +1214,18 @@ export default function ControlVacios() {
                   getLabel={(o) => `${o.placas || o.id}`}
                 />
               </div>
+              {entregaData.modalidad === "full" && (
+                <div>
+                  <Label className="font-bold">Remolque 2</Label>
+                  <SelectCatalogo
+                    value={entregaData.remolque_entrega_id_2}
+                    onChange={(v) => setEntregaData((d) => ({ ...d, remolque_entrega_id_2: v }))}
+                    placeholder="Remolque"
+                    options={remolquesChasis}
+                    getLabel={(o) => `${o.placas || o.id}`}
+                  />
+                </div>
+              )}
               <div>
                 <Label className="font-bold">Fecha entrega vacío</Label>
                 <Input
