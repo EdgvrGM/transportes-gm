@@ -1,11 +1,21 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/supabaseClient";
+import { addHours } from "date-fns";
 import {
   Search, Loader2,
   ChevronsLeft, ChevronLeft, Play, Pause, ChevronRight, ChevronsRight, X,
+  Share2, Copy, Check, ExternalLink, AlertCircle,
 } from "lucide-react";
 import { WIALON_PROXY_URL, VELOCIDAD_EXCESO } from "@/components/gps/constants";
+
+const DURACIONES_SHARE = [
+  { label: "4h",  horas: 4 },
+  { label: "8h",  horas: 8 },
+  { label: "24h", horas: 24 },
+  { label: "3d",  horas: 72 },
+  { label: "7d",  horas: 168 },
+];
 
 function localDateStr(date) {
   const y = date.getFullYear();
@@ -97,6 +107,14 @@ export default function HistorialGPS({ positions = [], onHistorialCargado, onPun
   const [velocidad,     setVelocidad]     = useState(1);
   const playIntervalRef = useRef(null);
 
+  // Compartir recorrido
+  const [shareOpen,    setShareOpen]    = useState(false);
+  const [shareDur,     setShareDur]     = useState(24);
+  const [shareLink,    setShareLink]    = useState(null);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareCopied,  setShareCopied]  = useState(false);
+  const [shareError,   setShareError]   = useState(null);
+
   // Sincronizar puntos locales cuando llegan datos del servidor
   useEffect(() => {
     const pts = historial?.points || [];
@@ -105,7 +123,50 @@ export default function HistorialGPS({ positions = [], onHistorialCargado, onPun
     setPlaybackIdx(0);
     setIsPlaying(false);
     onPuntoActivo?.(null);
+    // El rango cambió → el link compartido previo ya no corresponde
+    setShareOpen(false);
+    setShareLink(null);
+    setShareError(null);
   }, [historial]);
+
+  const generarLinkHistorial = async () => {
+    setShareLoading(true);
+    setShareError(null);
+    try {
+      const token = (crypto?.randomUUID
+        ? crypto.randomUUID()
+        : `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}-${Math.random().toString(16).slice(2)}`
+      ).replace(/-/g, "");
+      const { data, error } = await supabase
+        .from("RastreoCompartido")
+        .insert({
+          token,
+          wialon_unit_id:   parseInt(unitId, 10),
+          wialon_nombre:    unidadSeleccionada?.wialon_nombre ?? nombreUnidad,
+          expires_at:       addHours(new Date(), shareDur).toISOString(),
+          tipo:             "historial",
+          historial_desde:  new Date(fromDt).toISOString(),
+          historial_hasta:  new Date(toDt).toISOString(),
+        })
+        .select("token")
+        .single();
+      if (error) throw error;
+      setShareLink(`${window.location.origin}/historial/${data.token}`);
+    } catch (err) {
+      console.error("[HistorialCompartido] error:", err);
+      setShareError(err?.message ?? "Error al generar el enlace");
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
+  const copiarLinkHistorial = () => {
+    if (!shareLink) return;
+    navigator.clipboard.writeText(shareLink).then(() => {
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    });
+  };
 
   // Sincronizar estado de reproducción con el padre
   useEffect(() => {
@@ -400,6 +461,91 @@ export default function HistorialGPS({ positions = [], onHistorialCargado, onPun
                   {v}x
                 </button>
               ))}
+            </div>
+
+            {/* Compartir recorrido */}
+            <div className="mt-3 pt-3 border-t border-border">
+              {!shareOpen && !shareLink && (
+                <button
+                  onClick={() => setShareOpen(true)}
+                  className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-border text-xs font-semibold text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                >
+                  <Share2 className="w-3.5 h-3.5" /> Compartir recorrido
+                </button>
+              )}
+
+              {shareOpen && !shareLink && (
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">Vigencia del enlace:</p>
+                  <div className="flex gap-1">
+                    {DURACIONES_SHARE.map((d) => (
+                      <button
+                        key={d.horas}
+                        onClick={() => setShareDur(d.horas)}
+                        className={`flex-1 text-xs py-1 rounded border transition-colors ${
+                          shareDur === d.horas
+                            ? "bg-gm-primary/20 text-yellow-600 border-gm-primary/40 font-semibold"
+                            : "border-border text-muted-foreground hover:bg-accent"
+                        }`}
+                      >
+                        {d.label}
+                      </button>
+                    ))}
+                  </div>
+                  {shareError && (
+                    <div className="flex items-start gap-1.5 p-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                      <AlertCircle className="w-3 h-3 text-red-500 shrink-0 mt-0.5" />
+                      <p className="text-[10px] text-red-600 dark:text-red-400 leading-snug">{shareError}</p>
+                    </div>
+                  )}
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={() => { setShareOpen(false); setShareError(null); }}
+                      className="flex-1 text-xs py-1.5 rounded-lg border border-border text-muted-foreground hover:bg-accent transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={generarLinkHistorial}
+                      disabled={shareLoading}
+                      className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-1.5 rounded-lg bg-gm-primary text-slate-900 hover:bg-yellow-400 transition-colors disabled:opacity-60"
+                    >
+                      {shareLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Share2 className="w-3 h-3" />}
+                      {shareLoading ? "Generando..." : "Generar"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {shareLink && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5 bg-background border border-border rounded-lg px-2 py-1.5">
+                    <span className="text-[10px] text-muted-foreground truncate flex-1 font-mono">{shareLink}</span>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={copiarLinkHistorial}
+                      className="flex-1 flex items-center justify-center gap-1 text-xs py-1.5 rounded-lg border border-border hover:bg-accent transition-colors text-muted-foreground"
+                    >
+                      {shareCopied ? <><Check className="w-3 h-3 text-green-500" /> Copiado</> : <><Copy className="w-3 h-3" /> Copiar</>}
+                    </button>
+                    <a
+                      href={shareLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 flex items-center justify-center gap-1 text-xs py-1.5 rounded-lg bg-gm-primary text-slate-900 hover:bg-yellow-400 transition-colors font-semibold"
+                    >
+                      <ExternalLink className="w-3 h-3" /> Abrir
+                    </a>
+                  </div>
+                  <button
+                    onClick={() => { setShareLink(null); setShareOpen(false); setShareCopied(false); }}
+                    className="w-full text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Generar nuevo enlace
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

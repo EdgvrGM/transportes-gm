@@ -26,6 +26,7 @@ import Liquidaciones from "./Liquidaciones.jsx";
 import DocumentacionLegal from "./DocumentacionLegal.jsx";
 import RastreoGPS from "./RastreoGPS.jsx";
 import RastreoPublico from "./RastreoPublico.jsx";
+import HistorialPublico from "./HistorialPublico.jsx";
 import Mantenimiento from "./Mantenimiento";
 import ControlVacios from "./ControlVacios";
 
@@ -88,6 +89,7 @@ function PagesContent() {
         <Route path="/unidades" element={<Unidades />} />
         <Route path="/login" element={<Login />} />
         <Route path="/rastreo/:token" element={<RastreoPublico />} />
+        <Route path="/historial/:token" element={<HistorialPublico />} />
 
         {/* Rutas Protegidas del Sistema de Combustible */}
         <Route element={<ProtectedRoute />}>
