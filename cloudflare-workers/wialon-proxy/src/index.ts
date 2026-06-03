@@ -207,9 +207,11 @@ async function wialonGetHistory(eid: string, unitId: string, from: number, to: n
   if (data.error) throw new Error(`Wialon history error: ${data.error}`);
 
   const unitData = await wialonPost("core/search_item", {
-    id: parseInt(unitId), flags: 1,
+    id: parseInt(unitId), flags: 1 | 16, // base + icono
   }, eid);
-  const nombre = (unitData.item as Record<string, unknown>)?.nm ?? `Unidad ${unitId}`;
+  const unitItem = unitData.item as Record<string, unknown> | undefined;
+  const nombre   = unitItem?.nm ?? `Unidad ${unitId}`;
+  const uri      = (unitItem?.uri as string) ?? null;
 
   const messages = (data.messages as Record<string, unknown>[]) || [];
   const points   = messages
@@ -226,7 +228,7 @@ async function wialonGetHistory(eid: string, unitId: string, from: number, to: n
       };
     });
 
-  return { unit_id: parseInt(unitId), nombre, points };
+  return { unit_id: parseInt(unitId), nombre, uri, points };
 }
 
 async function wialonLogout(eid: string) {

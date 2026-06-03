@@ -92,17 +92,20 @@ export default function HistorialPublico() {
         const data = await res.json();
         if (cancelado) return;
         const pts = data?.points || [];
+        if (data?.uri) setUri(data.uri);
         setPoints(pts);
         setEstado(pts.length > 0 ? "valido" : "sindata");
+        // Fallback: si el historial no trajo icono, pedirlo a details
+        if (!data?.uri) {
+          fetch(`${WIALON_PROXY_URL}?action=details&unit=${sesion.wialon_unit_id}`)
+            .then((r) => (r.ok ? r.json() : null))
+            .then((d) => { if (!cancelado && d?.uri) setUri(d.uri); })
+            .catch(() => {});
+        }
       } catch {
         if (!cancelado) setEstado("sindata");
       }
     })();
-    // Ícono Wialon de la unidad (opcional, mejora el marcador)
-    fetch(`${WIALON_PROXY_URL}?action=details&unit=${sesion.wialon_unit_id}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (!cancelado && d?.uri) setUri(d.uri); })
-      .catch(() => {});
     return () => { cancelado = true; };
   }, [sesion]);
 

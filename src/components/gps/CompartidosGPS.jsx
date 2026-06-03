@@ -94,9 +94,12 @@ export default function CompartidosGPS({ positions = [] }) {
   const [linkNuevoCopiado, setLinkNuevoCopiado] = useState(false);
   const [errorNuevo, setErrorNuevo]           = useState(null);
 
+  const rutaPublica = (sesion) =>
+    sesion.tipo === "historial" ? `/historial/${sesion.token}` : `/rastreo/${sesion.token}`;
+
   const copyLink = (sesion) => {
     const base = import.meta.env.VITE_PUBLIC_URL ?? window.location.origin;
-    navigator.clipboard.writeText(`${base}/rastreo/${sesion.token}`).then(() => {
+    navigator.clipboard.writeText(`${base}${rutaPublica(sesion)}`).then(() => {
       setCopiedId(sesion.id);
       setTimeout(() => setCopiedId(null), 2000);
     });
@@ -159,6 +162,8 @@ export default function CompartidosGPS({ positions = [] }) {
 
   const renderCard = (sesion) => {
     const activa = new Date(sesion.expires_at) > new Date();
+    const esHistorial = sesion.tipo === "historial";
+    const base = import.meta.env.VITE_PUBLIC_URL ?? window.location.origin;
     return (
       <div key={sesion.id} className="p-3 border-b border-border/50">
         <div className="flex items-center gap-2 mb-1">
@@ -166,8 +171,20 @@ export default function CompartidosGPS({ positions = [] }) {
           <span className="text-sm font-bold text-foreground truncate flex-1">
             {sesion.wialon_nombre}
           </span>
+          <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full shrink-0 ${
+            esHistorial
+              ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+              : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+          }`}>
+            {esHistorial ? "Historial" : "En vivo"}
+          </span>
         </div>
         <TiempoRestante expiresAt={sesion.expires_at} />
+        {esHistorial && sesion.historial_desde && (
+          <p className="text-[10px] text-blue-600 dark:text-blue-400 mt-0.5">
+            Recorrido: {format(new Date(sesion.historial_desde), "dd/MM HH:mm")} → {format(new Date(sesion.historial_hasta), "dd/MM HH:mm")}
+          </p>
+        )}
         <p className="text-[10px] text-muted-foreground mt-0.5">
           {format(new Date(sesion.created_at), "yyyy-MM-dd HH:mm")} → {format(new Date(sesion.expires_at), "yyyy-MM-dd")}
         </p>
@@ -182,6 +199,15 @@ export default function CompartidosGPS({ positions = [] }) {
               : <Link2 className="w-3.5 h-3.5" />
             }
           </button>
+          <a
+            href={`${base}${rutaPublica(sesion)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Abrir enlace"
+            className="flex items-center justify-center w-7 h-7 rounded border border-border hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+          </a>
           <div className="relative">
             <button
               onClick={() => setPopoverId(popoverId === sesion.id ? null : sesion.id)}

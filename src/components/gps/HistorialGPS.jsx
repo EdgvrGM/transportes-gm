@@ -123,6 +123,8 @@ export default function HistorialGPS({ positions = [], onHistorialCargado, onPun
     setPlaybackIdx(0);
     setIsPlaying(false);
     onPuntoActivo?.(null);
+    // El historial trae el icono Wialon — fuente autoritativa, sin depender del fetch a details
+    if (historial?.uri) onIconoUnidad?.(historial.uri);
     // El rango cambió → el link compartido previo ya no corresponde
     setShareOpen(false);
     setShareLink(null);
