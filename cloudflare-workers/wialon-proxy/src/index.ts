@@ -159,12 +159,28 @@ async function parsearPosicionCompleta(item: Record<string, unknown>, includeAdd
     motorEncendido = (pos?.s ?? 0) > 2;
   }
 
+  // Señales de movimiento del ÚLTIMO MENSAJE (frescas, del dispositivo) — independientes
+  // de `pos.s` (velocidad del fix GPS) que puede congelarse en 0 aunque la unidad se mueva
+  // (mala señal GPS momentánea o mensaje de evento sin fix nuevo). En Teltonika:
+  //   io_240 = sensor de movimiento por acelerómetro (1 = en movimiento)
+  //   io_24  = velocidad reportada en el parámetro
+  const lmsgPos      = (lmsg?.pos as Record<string, number> | undefined) ?? undefined;
+  const velocidadMsg =
+    typeof lmsgP.io_24 === "number" ? (lmsgP.io_24 as number) :
+    typeof lmsgPos?.s  === "number" ? lmsgPos.s :
+    typeof lmsgP.speed === "number" ? (lmsgP.speed as number) :
+    null;
+  const enMovimiento = lmsgP.io_240 === 1;
+  const msgTs = typeof lmsg?.t === "number" ? (lmsg.t as number) : null;
+
   return {
     id:        item.id,
     nombre:    item.nm,
     lat:       pos?.y ?? 0,
     lng:       pos?.x ?? 0,
     velocidad: pos?.s ?? 0,
+    velocidad_msg: velocidadMsg,
+    en_movimiento: enMovimiento,
     rumbo:     pos?.c ?? 0,
     motor:     motorEncendido,
     satelites: pos?.sc ?? 0,
@@ -174,6 +190,7 @@ async function parsearPosicionCompleta(item: Record<string, unknown>, includeAdd
     sensores:  sensoresArr,
     direccion,
     ultima_actualizacion: pos?.t ?? Math.floor(Date.now() / 1000),
+    msg_ts:    msgTs,
   };
 }
 
@@ -216,7 +233,9 @@ async function wialonLogout(eid: string) {
   await wialonPost("core/logout", {}, eid).catch(() => {});
 }
 
-const RALENTI_UMBRAL_S = 15 * 60;
+const RALENTI_UMBRAL_S      = 15 * 60;        // 15 min → dispara alerta
+const RALENTI_POS_STALE_S   = 10 * 60;        // posición más vieja que esto → datos no confiables, no sostener ralentí
+const RALENTI_MAX_ACTIVO_S  = 3 * 60 * 60;    // 3 h → red de seguridad: expira cualquier registro trabado
 
 // ── Cron: geocerca del patio ──────────────────────────────────────────────────
 async function ejecutarGeocerca(env: Env): Promise<void> {
@@ -278,11 +297,27 @@ async function ejecutarRalenti(env: Env): Promise<void> {
       items.map((item) => parsearPosicionCompleta(item, false))
     );
 
+    const ahoraS = Math.floor(Date.now() / 1000);
+
     for (const unit of positions) {
-      const enRalenti = (unit.motor as boolean) === true &&
-                        (unit.velocidad as number) === 0;
       const unitId = parseInt(String(unit.id), 10);
       const nombre = unit.nombre as string;
+
+      // (B) Movimiento según el último MENSAJE (fresco) — el sensor de movimiento del
+      // dispositivo (en_movimiento) o la velocidad del parámetro detectan que la unidad
+      // arrancó aunque `pos.s` (velocidad del fix GPS) siga congelado en 0.
+      const seMueve = (unit.velocidad as number) > 0 ||
+                      (typeof unit.velocidad_msg === "number" && unit.velocidad_msg > 0) ||
+                      unit.en_movimiento === true;
+
+      // (A) Frescura de la posición — si el último fix GPS es muy viejo no podemos
+      // afirmar que sigue parado; no sostenemos el ralentí con datos no confiables.
+      const posAgeS   = ahoraS - (unit.ultima_actualizacion as number);
+      const posFresca = posAgeS <= RALENTI_POS_STALE_S;
+
+      const enRalenti = (unit.motor as boolean) === true &&
+                        !seMueve &&
+                        posFresca;
 
       if (enRalenti) {
         const getRes = await fetch(
@@ -325,6 +360,38 @@ async function ejecutarRalenti(env: Env): Promise<void> {
           const registro  = existing[0];
           const inicioMs  = new Date(registro.inicio_ralenti).getTime();
           const duracionS = (Date.now() - inicioMs) / 1000;
+
+          // (C) Red de seguridad — un registro activo más de 3 h es casi seguro un trabado.
+          // Lo cerramos a historial y lo borramos aunque la unidad siga reportando motor on + vel 0.
+          if (duracionS >= RALENTI_MAX_ACTIVO_S) {
+            if (duracionS >= 240) {
+              await fetch(`${env.SUPABASE_URL}/rest/v1/RalentiHistorial`, {
+                method: "POST",
+                headers: {
+                  "Content-Type":  "application/json",
+                  "apikey":        env.SUPABASE_SERVICE_KEY,
+                  "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+                  "Prefer":        "return=minimal",
+                },
+                body: JSON.stringify({
+                  wialon_unit_id:    unitId,
+                  wialon_nombre:     nombre,
+                  inicio_ralenti:    registro.inicio_ralenti,
+                  fin_ralenti:       new Date().toISOString(),
+                  duracion_segundos: Math.round(duracionS),
+                }),
+              });
+            }
+            await fetch(`${env.SUPABASE_URL}/rest/v1/RalentiActivo?wialon_unit_id=eq.${unitId}`, {
+              method: "DELETE",
+              headers: {
+                "apikey":        env.SUPABASE_SERVICE_KEY,
+                "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+              },
+            });
+            console.log(`[Ralenti] ${nombre} → expirado por seguridad (${Math.round(duracionS / 3600)}h)`);
+            continue;
+          }
 
           if (duracionS >= RALENTI_UMBRAL_S && !registro.alerta_enviada) {
             const minutos = Math.round(duracionS / 60);
@@ -419,6 +486,28 @@ async function ejecutarRalenti(env: Env): Promise<void> {
                 }),
               });
               console.log(`[Ralenti] ${nombre} → historial guardado (${Math.round(duracion_segundos / 60)} min)`);
+
+              // Alerta de cierre — solo si duró más de 15 min (ralentí significativo)
+              if (duracion_segundos >= RALENTI_UMBRAL_S) {
+                const minutos = Math.round(duracion_segundos / 60);
+                await fetch(`${env.SUPABASE_URL}/rest/v1/AlertaGPS`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type":  "application/json",
+                    "apikey":        env.SUPABASE_SERVICE_KEY,
+                    "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+                    "Prefer":        "return=minimal",
+                  },
+                  body: JSON.stringify({
+                    tipo:           "ralenti_fin",
+                    wialon_unit_id: unitId,
+                    wialon_nombre:  nombreRegistrado,
+                    mensaje:        `${nombreRegistrado} salió de ralentí tras ${minutos} minutos con motor encendido`,
+                    leida:          false,
+                  }),
+                });
+                console.log(`[Ralenti] ${nombre} → alerta de fin enviada (${minutos} min)`);
+              }
             }
           }
         }

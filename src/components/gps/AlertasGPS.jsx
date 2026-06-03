@@ -8,7 +8,8 @@ const TIPOS = [
   { value: "velocidad", label: "Velocidad excesiva" },
   { value: "parada",    label: "Parada prolongada" },
   { value: "zona",      label: "Salida de zona" },
-  { value: "ralenti",   label: "Ralentí excesivo" },
+  { value: "ralenti",     label: "Ralentí excesivo" },
+  { value: "ralenti_fin", label: "Fin de ralentí" },
   { value: "geocerca",  label: "Geocerca" },
 ];
 
@@ -40,6 +41,13 @@ const TIPO_CONFIG = {
     border: "border-orange-200 dark:border-orange-800",
     icon: Gauge,
     label: "Ralentí",
+  },
+  ralenti_fin: {
+    color: "text-green-600",
+    bg: "bg-green-50 dark:bg-green-900/20",
+    border: "border-green-200 dark:border-green-800",
+    icon: Gauge,
+    label: "Fin de ralentí",
   },
   geocerca: {
     color: "text-blue-600",

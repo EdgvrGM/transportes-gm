@@ -140,7 +140,11 @@ export default function Liquidaciones() {
       .map(v => {
         const isFull = v.tipo_viaje && v.tipo_viaje.toLowerCase().includes("full");
         const porcentaje = isFull ? 15.0 : porcentajeBase;
-        
+
+        const km = parseFloat(v.kilometros_total || v.kilometros) || 0;
+        const litros = parseFloat(v.litros_combustible) || 0;
+        const rendimiento = parseFloat(v.km_por_litro) || (litros > 0 ? km / litros : 0);
+
         return {
           viaje_id: v.id,
           fecha: v.fecha,
@@ -149,7 +153,9 @@ export default function Liquidaciones() {
           flete_bruto: 0,
           porcentaje: porcentaje,
           comision: 0,
-          litros: v.litros_combustible || 0
+          km,
+          litros,
+          rendimiento
         };
       });
 
@@ -177,6 +183,28 @@ export default function Liquidaciones() {
     const [integer, decimal] = n.toFixed(2).split('.');
     return integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + decimal;
   };
+
+  const formatMetricas = (v) =>
+    `${formatCurrency(v.km).replace('.00', '')} km · ${formatCurrency(v.litros).replace('.00', '')} L · ${v.litros > 0 ? v.rendimiento.toFixed(2) + ' km/L' : 'S/D'}`;
+
+  const renderMetricas = (v) => (
+    <div className="flex items-baseline gap-1 mt-1 text-muted-foreground text-sm flex-wrap">
+      <span className="font-bold text-[15px] text-foreground">{formatCurrency(v.km).replace('.00', '')}</span>
+      <span>km</span>
+      <span className="mx-0.5">·</span>
+      <span className="font-bold text-[15px] text-foreground">{formatCurrency(v.litros).replace('.00', '')}</span>
+      <span>L</span>
+      <span className="mx-0.5">·</span>
+      {v.litros > 0 ? (
+        <>
+          <span className="font-bold text-[15px] text-foreground">{v.rendimiento.toFixed(2)}</span>
+          <span>km/L</span>
+        </>
+      ) : (
+        <span>S/D</span>
+      )}
+    </div>
+  );
 
   // Manejadores
   const handleEliminarViaje = (index) => {
@@ -295,10 +323,47 @@ export default function Liquidaciones() {
       ],
       foot: [['', '', 'TOTAL', `$${formatCurrency(totalFleteBruto)}`, '', `$${formatCurrency(totalComisiones)}`]],
       theme: 'grid',
-      headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255] },
-      styles: { fontSize: 11, textColor: [20, 20, 20] },
-      footStyles: { fillColor: [237, 233, 254], fontStyle: 'bold', textColor: [55, 48, 163], fontSize: 11 },
+      headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255], halign: 'center', valign: 'middle' },
+      styles: { fontSize: 12, textColor: [20, 20, 20], valign: 'middle', halign: 'center' },
+      columnStyles: {
+        1: { halign: 'left', valign: 'top' },
+        3: { halign: 'right' },
+        5: { halign: 'right' },
+      },
+      footStyles: { fillColor: [237, 233, 254], fontStyle: 'bold', textColor: [55, 48, 163], fontSize: 12, halign: 'center', valign: 'middle' },
       showFoot: 'lastPage',
+      didParseCell: (data) => {
+        if (data.section === 'body' && data.column.index === 1 && data.row.index < viajesDetalle.length) {
+          data.cell.styles.minCellHeight = 14;
+        }
+      },
+      didDrawCell: (data) => {
+        if (data.section === 'body' && data.column.index === 1 && data.row.index < viajesDetalle.length) {
+          const v = viajesDetalle[data.row.index];
+          const parts = [
+            { text: formatCurrency(v.km).replace('.00', ''), bold: true },
+            { text: ' km · ', bold: false },
+            { text: formatCurrency(v.litros).replace('.00', ''), bold: true },
+            { text: ' L · ', bold: false },
+            ...(v.litros > 0
+              ? [{ text: v.rendimiento.toFixed(2), bold: true }, { text: ' km/L', bold: false }]
+              : [{ text: 'S/D', bold: false }]
+            ),
+          ];
+          doc.setFontSize(10);
+          doc.setTextColor(70);
+          let x = data.cell.x + 2;
+          const y = data.cell.y + 9.5;
+          for (const part of parts) {
+            doc.setFont(undefined, part.bold ? 'bold' : 'normal');
+            doc.text(part.text, x, y);
+            x += doc.getTextWidth(part.text);
+          }
+          doc.setFont(undefined, 'normal');
+          doc.setFontSize(12);
+          doc.setTextColor(20, 20, 20);
+        }
+      },
     });
 
     let finalY = doc.lastAutoTable.finalY + 10;
@@ -557,6 +622,7 @@ export default function Liquidaciones() {
                               <TableCell>
                                 <div className="font-bold text-foreground">{v.ruta}</div>
                                 <div className="text-xs text-muted-foreground">{v.fecha}</div>
+                                {renderMetricas(v)}
                                 {v.litros <= 0 && (
                                   <span className="text-[9px] font-bold text-orange-500 uppercase">Sin Diesel</span>
                                 )}
@@ -607,6 +673,7 @@ export default function Liquidaciones() {
                             <div className="min-w-0">
                               <p className="font-bold text-foreground truncate">{v.ruta}</p>
                               <p className="text-xs text-muted-foreground">{v.fecha}</p>
+                              {renderMetricas(v)}
                               {v.litros <= 0 && (
                                 <span className="inline-block mt-1 text-[9px] font-bold text-orange-500 uppercase tracking-wider">Sin Diesel</span>
                               )}

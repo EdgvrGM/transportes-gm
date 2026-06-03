@@ -193,9 +193,9 @@ export default function Pendientes() {
         ? `${docMasUrgente.nombre} · ${docMasUrgente.tipo} en ${docMasUrgente.dias}d`
         : "Sin documentos próximos a vencer",
       vaciosCount: vaciosPend.length,
-      vaciosSubtitle: vacioContMasAntiguo
-        ? `${vacioContMasAntiguo.numero_contenedor} · ${diasVacioMasAntiguo} días esperando vacío`
-        : "Todos los vacíos entregados",
+      vaciosSubtitle: vaciosPend.length > 0
+        ? `${vaciosPend.length} contenedor${vaciosPend.length !== 1 ? "es" : ""} pendiente${vaciosPend.length !== 1 ? "s" : ""}`
+        : "Sin contenedores pendientes",
     };
   }, [viajes, programas, ordenes, conductoresDoc, camionesDoc, vaciosPend]);
 
@@ -221,7 +221,7 @@ export default function Pendientes() {
           iconBg="bg-amber-500/10"
           iconColor="text-amber-500"
           accentColor="text-amber-500"
-          title="Contenedores pendientes de vacío"
+          title="Contenedores pendientes de entrega"
           subtitle={stats.vaciosSubtitle}
           count={stats.vaciosCount}
           onClick={() => navigate(createPageUrl("ControlVacios"))}
