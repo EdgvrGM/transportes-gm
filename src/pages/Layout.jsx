@@ -323,7 +323,11 @@ export default function Layout({ children, currentPageName }) {
             </div>
           </nav>
 
-          {/* EXPERTO EN LOGÍSTICA IA */}
+          {/* EXPERTO EN LOGÍSTICA IA — PAUSADO (oculto del menú).
+              Motivo: la Edge Function `analyze-logistics` no está desplegada / falta el secret GEMINI_API_KEY,
+              por lo que el chat siempre devuelve error. El código y la ruta /expertologistica siguen intactos.
+              Para reactivar: cambiar `false` por `true`. */}
+          {false && (
           <div className="mt-4 pt-3 border-t border-border">
             <Link
               to={createPageUrl("ExpertoLogistica")}
@@ -341,6 +345,7 @@ export default function Layout({ children, currentPageName }) {
               <span className="text-[9px] font-black px-1.5 py-0.5 rounded-md bg-violet-200 dark:bg-violet-700 text-violet-700 dark:text-violet-200">IA</span>
             </Link>
           </div>
+          )}
         </div>
 
         {/* PIE DEL SIDEBAR */}
