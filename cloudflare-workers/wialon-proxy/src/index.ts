@@ -299,7 +299,53 @@ async function ejecutarRalenti(env: Env): Promise<void> {
       items.map((item) => parsearPosicionCompleta(item, false))
     );
 
-    const ahoraS = Math.floor(Date.now() / 1000);
+    const ahoraS  = Math.floor(Date.now() / 1000);
+    const ahoraMs = Date.now();
+    const authHeaders = {
+      "apikey":        env.SUPABASE_SERVICE_KEY,
+      "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+    };
+    const jsonHeaders = { ...authHeaders, "Content-Type": "application/json", "Prefer": "return=minimal" };
+
+    // UNA sola lectura de TODOS los registros activos (antes era un GET por unidad,
+    // ~N llamadas secuenciales por minuto que saturaban el cron y dejaban sin procesar
+    // a las últimas unidades del orden alfabético → alertas trabadas).
+    const activosRes = await fetch(
+      `${env.SUPABASE_URL}/rest/v1/RalentiActivo?select=wialon_unit_id,inicio_ralenti,alerta_enviada`,
+      { headers: authHeaders }
+    );
+    if (!activosRes.ok) {
+      console.error(`[Ralenti] Error leyendo RalentiActivo: ${activosRes.status} ${await activosRes.text()}`);
+      return;
+    }
+    const activos = JSON.parse(await activosRes.text()) as
+      { wialon_unit_id: number; inicio_ralenti: string; alerta_enviada: boolean }[];
+    const activoPorUnidad = new Map<number, { inicio_ralenti: string; alerta_enviada: boolean }>();
+    activos.forEach((r) => activoPorUnidad.set(Number(r.wialon_unit_id), r));
+
+    const guardarHistorial = (unitId: number, nombre: string, inicio: string, durS: number) =>
+      fetch(`${env.SUPABASE_URL}/rest/v1/RalentiHistorial`, {
+        method: "POST",
+        headers: jsonHeaders,
+        body: JSON.stringify({
+          wialon_unit_id: unitId, wialon_nombre: nombre,
+          inicio_ralenti: inicio, fin_ralenti: new Date().toISOString(),
+          duracion_segundos: Math.round(durS),
+        }),
+      });
+    const borrarActivo = (unitId: number) =>
+      fetch(`${env.SUPABASE_URL}/rest/v1/RalentiActivo?wialon_unit_id=eq.${unitId}`, {
+        method: "DELETE", headers: authHeaders,
+      });
+    const insertarAlerta = (tipo: string, unitId: number, nombre: string, mensaje: string) =>
+      fetch(`${env.SUPABASE_URL}/rest/v1/AlertaGPS`, {
+        method: "POST",
+        headers: jsonHeaders,
+        body: JSON.stringify({ tipo, wialon_unit_id: unitId, wialon_nombre: nombre, mensaje, leida: false }),
+      });
+
+    // Solo se toca la BD cuando hay un cambio real; las operaciones van en paralelo.
+    const ops: Promise<unknown>[] = [];
 
     for (const unit of positions) {
       const unitId = parseInt(String(unit.id), 10);
@@ -317,219 +363,71 @@ async function ejecutarRalenti(env: Env): Promise<void> {
       const posAgeS   = ahoraS - (unit.ultima_actualizacion as number);
       const posFresca = posAgeS <= RALENTI_POS_STALE_S;
 
-      const enRalenti = (unit.motor as boolean) === true &&
-                        !seMueve &&
-                        posFresca;
+      const enRalenti = (unit.motor as boolean) === true && !seMueve && posFresca;
+      const registro  = activoPorUnidad.get(unitId);
 
       if (enRalenti) {
-        const getRes = await fetch(
-          `${env.SUPABASE_URL}/rest/v1/RalentiActivo?wialon_unit_id=eq.${unitId}&select=id,inicio_ralenti,alerta_enviada`,
-          {
-            headers: {
-              "apikey":        env.SUPABASE_SERVICE_KEY,
-              "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-            },
-          }
-        );
-        if (!getRes.ok) {
-          console.error(`[Ralenti] Error leyendo RalentiActivo para ${nombre}: ${getRes.status} ${await getRes.text()}`);
-          continue;
-        }
-        const existing = JSON.parse(await getRes.text()) as { id: number; inicio_ralenti: string; alerta_enviada: boolean }[];
-
-        if (existing.length === 0) {
-          const postRes = await fetch(`${env.SUPABASE_URL}/rest/v1/RalentiActivo`, {
-            method: "POST",
-            headers: {
-              "Content-Type":  "application/json",
-              "apikey":        env.SUPABASE_SERVICE_KEY,
-              "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-              "Prefer":        "return=minimal",
-            },
-            body: JSON.stringify({
-              wialon_unit_id: unitId,
-              wialon_nombre:  nombre,
-              inicio_ralenti: new Date().toISOString(),
-              alerta_enviada: false,
-            }),
-          });
-          if (!postRes.ok) {
-            console.error(`[Ralenti] Error creando RalentiActivo para ${nombre}: ${postRes.status} ${await postRes.text()}`);
-          } else {
-            console.log(`[Ralenti] ${nombre} → inicio de ralentí`);
-          }
-        } else {
-          const registro  = existing[0];
-          const inicioMs  = new Date(registro.inicio_ralenti).getTime();
-          const duracionS = (Date.now() - inicioMs) / 1000;
-
-          // (C) Red de seguridad — un registro activo más de 3 h es casi seguro un trabado.
-          // Lo cerramos a historial y lo borramos aunque la unidad siga reportando motor on + vel 0.
-          if (duracionS >= RALENTI_MAX_ACTIVO_S) {
-            if (duracionS >= 240) {
-              await fetch(`${env.SUPABASE_URL}/rest/v1/RalentiHistorial`, {
-                method: "POST",
-                headers: {
-                  "Content-Type":  "application/json",
-                  "apikey":        env.SUPABASE_SERVICE_KEY,
-                  "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-                  "Prefer":        "return=minimal",
-                },
-                body: JSON.stringify({
-                  wialon_unit_id:    unitId,
-                  wialon_nombre:     nombre,
-                  inicio_ralenti:    registro.inicio_ralenti,
-                  fin_ralenti:       new Date().toISOString(),
-                  duracion_segundos: Math.round(duracionS),
-                }),
-              });
-            }
-            await fetch(`${env.SUPABASE_URL}/rest/v1/RalentiActivo?wialon_unit_id=eq.${unitId}`, {
-              method: "DELETE",
-              headers: {
-                "apikey":        env.SUPABASE_SERVICE_KEY,
-                "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-              },
-            });
-            console.log(`[Ralenti] ${nombre} → expirado por seguridad (${Math.round(duracionS / 3600)}h)`);
-            continue;
-          }
-
-          if (duracionS >= RALENTI_UMBRAL_S && !registro.alerta_enviada) {
-            const minutos = Math.round(duracionS / 60);
-
-            // PATCH condicional atómico — solo actualiza si alerta_enviada sigue siendo false
-            const patchRes = await fetch(
-              `${env.SUPABASE_URL}/rest/v1/RalentiActivo?wialon_unit_id=eq.${unitId}&alerta_enviada=eq.false`,
-              {
-                method: "PATCH",
-                headers: {
-                  "Content-Type":  "application/json",
-                  "apikey":        env.SUPABASE_SERVICE_KEY,
-                  "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-                  "Prefer":        "return=representation",
-                },
-                body: JSON.stringify({ alerta_enviada: true }),
-              }
-            );
-
-            if (!patchRes.ok) {
-              console.error(`[Ralenti] Error en PATCH atómico para ${nombre}: ${patchRes.status}`);
-              continue;
-            }
-
-            // Solo insertar la alerta si el PATCH realmente actualizó una fila
-            const patchData = JSON.parse(await patchRes.text()) as unknown[];
-            if (patchData.length === 0) {
-              // Otra instancia ya lo procesó — ignorar
-              console.log(`[Ralenti] ${nombre} → alerta ya enviada por otra instancia, ignorando`);
-              continue;
-            }
-
-            // El PATCH fue exitoso y fue esta instancia — insertar la alerta
-            const alertaRes = await fetch(`${env.SUPABASE_URL}/rest/v1/AlertaGPS`, {
+        if (!registro) {
+          // Nuevo ralentí
+          ops.push(
+            fetch(`${env.SUPABASE_URL}/rest/v1/RalentiActivo`, {
               method: "POST",
-              headers: {
-                "Content-Type":  "application/json",
-                "apikey":        env.SUPABASE_SERVICE_KEY,
-                "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-                "Prefer":        "return=minimal",
-              },
+              headers: jsonHeaders,
               body: JSON.stringify({
-                tipo:           "ralenti",
-                wialon_unit_id: unitId,
-                wialon_nombre:  nombre,
-                mensaje:        `${nombre} lleva ${minutos} minutos con motor encendido sin moverse`,
-                leida:          false,
+                wialon_unit_id: unitId, wialon_nombre: nombre,
+                inicio_ralenti: new Date().toISOString(), alerta_enviada: false,
               }),
-            });
+            })
+          );
+        } else {
+          const duracionS = (ahoraMs - new Date(registro.inicio_ralenti).getTime()) / 1000;
 
-            if (!alertaRes.ok) {
-              console.error(`[Ralenti] Error insertando alerta para ${nombre}: ${alertaRes.status} ${await alertaRes.text()}`);
-            } else {
+          // (C) Red de seguridad — registro activo > 3 h: cerrar a historial y borrar.
+          if (duracionS >= RALENTI_MAX_ACTIVO_S) {
+            if (duracionS >= 240) ops.push(guardarHistorial(unitId, nombre, registro.inicio_ralenti, duracionS));
+            ops.push(borrarActivo(unitId));
+            console.log(`[Ralenti] ${nombre} → expirado por seguridad (${Math.round(duracionS / 3600)}h)`);
+          } else if (duracionS >= RALENTI_UMBRAL_S && !registro.alerta_enviada) {
+            // PATCH atómico (evita doble alerta entre instancias) + alerta de inicio
+            ops.push((async () => {
+              const patchRes = await fetch(
+                `${env.SUPABASE_URL}/rest/v1/RalentiActivo?wialon_unit_id=eq.${unitId}&alerta_enviada=eq.false`,
+                {
+                  method: "PATCH",
+                  headers: { ...authHeaders, "Content-Type": "application/json", "Prefer": "return=representation" },
+                  body: JSON.stringify({ alerta_enviada: true }),
+                }
+              );
+              if (!patchRes.ok) return;
+              const patchData = JSON.parse(await patchRes.text()) as unknown[];
+              if (patchData.length === 0) return; // otra instancia ya alertó
+              const minutos = Math.round(duracionS / 60);
+              await insertarAlerta("ralenti", unitId, nombre,
+                `${nombre} lleva ${minutos} minutos con motor encendido sin moverse`);
               console.log(`[Ralenti] ${nombre} → alerta enviada (${minutos} min)`);
-            }
+            })());
           }
         }
-      } else {
-        // Antes de borrar, leer el registro para guardar el historial
-        const getRes = await fetch(
-          `${env.SUPABASE_URL}/rest/v1/RalentiActivo?wialon_unit_id=eq.${unitId}&select=inicio_ralenti,wialon_nombre`,
-          {
-            headers: {
-              "apikey":        env.SUPABASE_SERVICE_KEY,
-              "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-            },
-          }
-        );
-
-        if (getRes.ok) {
-          const registros = JSON.parse(await getRes.text()) as { inicio_ralenti: string; wialon_nombre: string }[];
-          if (registros.length > 0) {
-            const { inicio_ralenti, wialon_nombre: nombreRegistrado } = registros[0];
-            const finRalenti       = new Date().toISOString();
-            const duracion_segundos = Math.round((Date.now() - new Date(inicio_ralenti).getTime()) / 1000);
-
-            if (duracion_segundos >= 240) {
-              await fetch(`${env.SUPABASE_URL}/rest/v1/RalentiHistorial`, {
-                method: "POST",
-                headers: {
-                  "Content-Type":  "application/json",
-                  "apikey":        env.SUPABASE_SERVICE_KEY,
-                  "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-                  "Prefer":        "return=minimal",
-                },
-                body: JSON.stringify({
-                  wialon_unit_id:    unitId,
-                  wialon_nombre:     nombreRegistrado,
-                  inicio_ralenti,
-                  fin_ralenti:       finRalenti,
-                  duracion_segundos,
-                }),
-              });
-              console.log(`[Ralenti] ${nombre} → historial guardado (${Math.round(duracion_segundos / 60)} min)`);
-
-              // Alerta de cierre — solo si duró más de 15 min (ralentí significativo)
-              if (duracion_segundos >= RALENTI_UMBRAL_S) {
-                const minutos = Math.round(duracion_segundos / 60);
-                await fetch(`${env.SUPABASE_URL}/rest/v1/AlertaGPS`, {
-                  method: "POST",
-                  headers: {
-                    "Content-Type":  "application/json",
-                    "apikey":        env.SUPABASE_SERVICE_KEY,
-                    "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-                    "Prefer":        "return=minimal",
-                  },
-                  body: JSON.stringify({
-                    tipo:           "ralenti_fin",
-                    wialon_unit_id: unitId,
-                    wialon_nombre:  nombreRegistrado,
-                    mensaje:        `${nombreRegistrado} salió de ralentí tras ${minutos} minutos con motor encendido`,
-                    leida:          false,
-                  }),
-                });
-                console.log(`[Ralenti] ${nombre} → alerta de fin enviada (${minutos} min)`);
-              }
+      } else if (registro) {
+        // Fin de ralentí: historial (+ alerta de fin si fue significativo) y borrar.
+        const duracionS = (ahoraMs - new Date(registro.inicio_ralenti).getTime()) / 1000;
+        ops.push((async () => {
+          if (duracionS >= 240) {
+            await guardarHistorial(unitId, nombre, registro.inicio_ralenti, duracionS);
+            if (duracionS >= RALENTI_UMBRAL_S) {
+              const minutos = Math.round(duracionS / 60);
+              await insertarAlerta("ralenti_fin", unitId, nombre,
+                `${nombre} salió de ralentí tras ${minutos} minutos con motor encendido`);
             }
           }
-        }
-
-        // Ahora sí borrar de la tabla activa
-        const delRes = await fetch(
-          `${env.SUPABASE_URL}/rest/v1/RalentiActivo?wialon_unit_id=eq.${unitId}`,
-          {
-            method: "DELETE",
-            headers: {
-              "apikey":        env.SUPABASE_SERVICE_KEY,
-              "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-            },
-          }
-        );
-        if (delRes.status === 204) {
+          await borrarActivo(unitId);
           console.log(`[Ralenti] ${nombre} → eliminado de RalentiActivo`);
-        }
+        })());
       }
+      // !enRalenti && sin registro → no se hace nada (la mayoría de las unidades)
     }
+
+    await Promise.all(ops);
   } catch (err) {
     console.error("[Ralenti cron] error:", String(err));
   } finally {
