@@ -12,6 +12,11 @@ export const RALENTI_UMBRAL_MS  = 15 * 60 * 1000;
 export const VELOCIDAD_ALERTA   = 80;
 export const VELOCIDAD_EXCESO   = 105; // exceso marcado en la ruta del historial
 export const RASTRO_MAX         = 10;
+export const RALENTI_VEL_MAX    = 2;   // km/h — por debajo de esto se considera "parado" (tolera ruido GPS)
+
+// Estado de ralentí instantáneo para la vista en vivo (tooltip y panel "En vivo").
+// Usa un umbral en vez de === 0 para no parpadear cuando el GPS reporta 1-2 km/h estando parado.
+export const estaEnRalenti = (u) => !!u?.motor && (u?.velocidad ?? 0) <= RALENTI_VEL_MAX;
 
 // Polling
 export const POLL_POSITIONS_MS  = 15000;

@@ -5,7 +5,7 @@ import {
   Loader2, Copy, Check, Share2,
 } from "lucide-react";
 import PanelCompartir from "@/components/gps/PanelCompartir";
-import { WIALON_PROXY_URL, WIALON_IMG_BASE } from "@/components/gps/constants";
+import { WIALON_PROXY_URL, WIALON_IMG_BASE, estaEnRalenti } from "@/components/gps/constants";
 
 function tiempoDesde(ts) {
   if (!ts) return "Sin datos";
@@ -47,7 +47,7 @@ export default function TooltipUnidad({ unidad, onClose, onMouseEnter, onMouseLe
     if (!showShare) onMouseLeave?.();
   };
 
-  const enRalenti = unidad.motor && unidad.velocidad === 0;
+  const enRalenti = estaEnRalenti(unidad);
 
   const content = (
     <>

@@ -14,7 +14,7 @@ import GeocercaGPS from "@/components/gps/GeocercaGPS";
 import RalentiGPS from "@/components/gps/RalentiGPS";
 import {
   WIALON_PROXY_URL, WIALON_IMG_BASE, RALENTI_UMBRAL_MS,
-  RASTRO_MAX, POLL_POSITIONS_MS, POLL_ALERTAS_MS,
+  RASTRO_MAX, POLL_POSITIONS_MS, POLL_ALERTAS_MS, estaEnRalenti,
 } from "@/components/gps/constants";
 
 async function fetchPositions(unidadesInactivas = []) {
@@ -70,7 +70,7 @@ function PanelContent({
             <div className="flex-1 overflow-y-auto min-h-0">
             {positions.map((p) => {
               const camion      = vinculaciones[p.id];
-              const enRalenti   = p.motor && p.velocidad === 0;
+              const enRalenti   = estaEnRalenti(p);
               const textoEstado = enRalenti
                 ? "Ralentí"
                 : p.motor
