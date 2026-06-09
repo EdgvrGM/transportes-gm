@@ -155,7 +155,6 @@ function PanelContent({
         />
       )}
       {activeTab === "alertas"     && <AlertasGPS />}
-      {activeTab === "reportes"    && <ReportesGPS />}
       {activeTab === "compartidos" && <CompartidosGPS positions={positions} />}
       {activeTab === "geocerca"    && <GeocercaGPS positions={positions} />}
       {activeTab === "ralenti"    && <RalentiGPS positions={positions} ralentiActivo={ralentiActivo} />}
@@ -310,7 +309,6 @@ export default function RastreoGPS() {
     { id: "envivo",      label: "En vivo",     icon: Navigation },
     { id: "historial",   label: "Historial",   icon: MapPin },
     { id: "alertas",     label: "Alertas",     icon: Bell,        badge: alertasNoLeidas,      badgeColor: "bg-red-500"    },
-    { id: "reportes",    label: "Reportes",    icon: Settings },
     { id: "compartidos", label: "Compartidos", icon: Share2,      badge: conteoCompartidos,    badgeColor: "bg-green-600"  },
     { id: "geocerca",    label: "Geocerca",    icon: ShieldCheck, badge: eventosGeocercaHoy,   badgeColor: "bg-blue-500"   },
     { id: "ralenti",     label: "Ralentí",     icon: Gauge,       badge: ralentiExcesivoCount, badgeColor: "bg-orange-500" },
@@ -493,7 +491,7 @@ export default function RastreoGPS() {
               <button
                 key={t.id}
                 onClick={() => {
-                  const tabsExpandidos = ["historial", "alertas", "reportes", "compartidos", "geocerca", "ralenti"];
+                  const tabsExpandidos = ["historial", "alertas", "compartidos", "geocerca", "ralenti"];
                   if (bottomSheetState === "closed") {
                     setBottomSheetState(tabsExpandidos.includes(t.id) ? "expanded" : "medium");
                   } else if (activeTab !== t.id) {
