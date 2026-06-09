@@ -43,6 +43,7 @@ const SYSTEM_PAGES = [
   "RastreoGPS",
   "Mantenimiento",
   "ControlVacios",
+  "CuentasCliente",
 ];
 
 export const TrailerIcon = ({ className, ...props }) => (

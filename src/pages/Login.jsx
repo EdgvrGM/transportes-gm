@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/supabaseClient";
 import { useNavigate } from "react-router-dom";
+import { getCuentaCliente } from "@/lib/rol";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -34,8 +35,19 @@ export default function Login() {
 
       if (error) throw error;
 
-      sessionStorage.setItem("showSplash", "1");
-      navigate("/controlcombustible");
+      // Bifurcar según el rol: las cuentas de cliente van al Portal de rastreo.
+      const cuenta = await getCuentaCliente();
+      if (cuenta) {
+        if (!cuenta.activo) {
+          await supabase.auth.signOut();
+          setError("Tu cuenta está desactivada. Contacta a Transportes GM.");
+          return;
+        }
+        navigate("/portal");
+      } else {
+        sessionStorage.setItem("showSplash", "1");
+        navigate("/controlcombustible");
+      }
     } catch (_error) {
       setError("Credenciales inválidas. Por favor, inténtalo de nuevo.");
     } finally {

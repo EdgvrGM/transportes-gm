@@ -1,13 +1,13 @@
 import { useState, useMemo, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/supabaseClient";
 import MapaGPS from "@/components/gps/MapaGPS";
 import ModalConfiguracion from "@/components/gps/ModalConfiguracion";
 import HistorialGPS from "@/components/gps/HistorialGPS";
 import AlertasGPS from "@/components/gps/AlertasGPS";
-import ReportesGPS from "@/components/gps/ReportesGPS";
 import CompartidosGPS from "@/components/gps/CompartidosGPS";
-import { MapPin, Navigation, Bell, Settings, RefreshCw, Settings2, Share2, Copy, Check, ShieldCheck, Gauge } from "lucide-react";
+import { MapPin, Navigation, Bell, RefreshCw, Settings2, Share2, Copy, Check, ShieldCheck, Gauge, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import PanelCompartir from "@/components/gps/PanelCompartir";
 import GeocercaGPS from "@/components/gps/GeocercaGPS";
@@ -164,6 +164,7 @@ function PanelContent({
 }
 
 export default function RastreoGPS() {
+  const navigate = useNavigate();
   const [selectedUnit,      setSelectedUnit]      = useState(null);
   const [activeTab,         setActiveTab]         = useState("envivo");
   const [showConfig,        setShowConfig]        = useState(false);
@@ -375,6 +376,15 @@ export default function RastreoGPS() {
             title="Actualizar"
           >
             <RefreshCw className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`} />
+          </button>
+          <div className="w-px h-5 bg-border" />
+          <button
+            onClick={() => navigate("/cuentascliente")}
+            className="flex items-center gap-1.5 px-3 h-10 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            title="Cuentas de cliente"
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Cuentas</span>
           </button>
           <div className="w-px h-5 bg-border" />
           <button

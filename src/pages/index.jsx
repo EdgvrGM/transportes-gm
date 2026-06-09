@@ -29,6 +29,9 @@ import RastreoPublico from "./RastreoPublico.jsx";
 import HistorialPublico from "./HistorialPublico.jsx";
 import Mantenimiento from "./Mantenimiento";
 import ControlVacios from "./ControlVacios";
+import CuentasCliente from "./CuentasCliente.jsx";
+import PortalCliente from "./PortalCliente.jsx";
+import PortalRoute from "./PortalRoute.jsx";
 
 const PAGES = {
   Home: Home,
@@ -49,6 +52,8 @@ const PAGES = {
   RastreoGPS: RastreoGPS,
   Mantenimiento: Mantenimiento,
   ControlVacios: ControlVacios,
+  CuentasCliente: CuentasCliente,
+  PortalCliente: PortalCliente,
 };
 
 function _getCurrentPage(url) {
@@ -91,6 +96,11 @@ function PagesContent() {
         <Route path="/rastreo/:token" element={<RastreoPublico />} />
         <Route path="/historial/:token" element={<HistorialPublico />} />
 
+        {/* Portal de Cliente (cuenta espejo) — guard propio */}
+        <Route element={<PortalRoute />}>
+          <Route path="/portal" element={<PortalCliente />} />
+        </Route>
+
         {/* Rutas Protegidas del Sistema de Combustible */}
         <Route element={<ProtectedRoute />}>
           <Route path="/controlcombustible" element={<ControlCombustible />} />
@@ -106,6 +116,7 @@ function PagesContent() {
           <Route path="/rastreogps" element={<RastreoGPS />} />
           <Route path="/mantenimiento" element={<Mantenimiento />} />
           <Route path="/controlvacios" element={<ControlVacios />} />
+          <Route path="/cuentascliente" element={<CuentasCliente />} />
           <Route path="/iaauditorchat" element={<IAAuditorChat />} />
           <Route path="/expertologistica" element={<ExpertoLogistica />} />
         </Route>

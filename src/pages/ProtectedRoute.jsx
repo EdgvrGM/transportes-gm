@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/supabaseClient";
 import { Navigate, Outlet } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import { getCuentaCliente } from "@/lib/rol";
 
 export default function ProtectedRoute() {
   const [session, setSession] = useState(null);
+  const [esCliente, setEsCliente] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -13,6 +15,8 @@ export default function ProtectedRoute() {
         data: { session },
       } = await supabase.auth.getSession();
       setSession(session);
+      // Un usuario con cuenta de cliente no debe acceder al ERP interno.
+      if (session) setEsCliente(!!(await getCuentaCliente()));
       setLoading(false);
     };
 
@@ -35,5 +39,7 @@ export default function ProtectedRoute() {
     );
   }
 
-  return session ? <Outlet /> : <Navigate to="/login" />;
+  if (!session) return <Navigate to="/login" />;
+  if (esCliente) return <Navigate to="/portal" />;
+  return <Outlet />;
 }
