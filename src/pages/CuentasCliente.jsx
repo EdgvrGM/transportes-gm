@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/supabaseClient";
 import { WIALON_PROXY_URL } from "@/components/gps/constants";
+import { wialonFetch } from "@/lib/wialonFetch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,7 +33,7 @@ export default function CuentasCliente() {
   const { data: unidades = [] } = useQuery({
     queryKey: ["unidades-proxy"],
     queryFn: async () => {
-      const res = await fetch(`${WIALON_PROXY_URL}?action=positions`);
+      const res = await wialonFetch(`${WIALON_PROXY_URL}?action=positions`);
       const all = await res.json();
       return (all || []).map((u) => ({ id: String(u.id), nombre: u.nombre })).sort((a, b) => a.nombre.localeCompare(b.nombre));
     },

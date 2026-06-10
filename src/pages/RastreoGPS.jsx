@@ -16,13 +16,14 @@ import {
   WIALON_PROXY_URL, WIALON_IMG_BASE, RALENTI_UMBRAL_MS,
   RASTRO_MAX, POLL_POSITIONS_MS, POLL_ALERTAS_MS, estaEnRalenti,
 } from "@/components/gps/constants";
+import { wialonFetch } from "@/lib/wialonFetch";
 
 async function fetchPositions(unidadesInactivas = []) {
   const exclude = unidadesInactivas.join(",");
   const url = exclude
     ? `${WIALON_PROXY_URL}?action=positions&exclude=${exclude}`
     : `${WIALON_PROXY_URL}?action=positions`;
-  const res = await fetch(url);
+  const res = await wialonFetch(url);
   if (!res.ok) throw new Error("Error al obtener posiciones");
   return res.json();
 }

@@ -65,15 +65,12 @@ export default function HistorialPublico() {
   // Validar token
   useEffect(() => {
     (async () => {
-      const { data, error } = await supabase
-        .from("RastreoCompartido")
-        .select("*")
-        .eq("token", token)
-        .single();
+      const { data, error } = await supabase.rpc("rastreo_por_token", { p_token: token });
+      const row = Array.isArray(data) ? data[0] : null;
 
-      if (error || !data || data.tipo !== "historial") { setEstado("invalido"); return; }
-      if (new Date(data.expires_at) <= new Date())      { setEstado("expirado"); return; }
-      setSesion(data);
+      if (error || !row || row.tipo !== "historial") { setEstado("invalido"); return; }
+      if (new Date(row.expires_at) <= new Date())     { setEstado("expirado"); return; }
+      setSesion(row);
     })();
   }, [token]);
 
@@ -86,7 +83,7 @@ export default function HistorialPublico() {
         const fromTs = Math.floor(new Date(sesion.historial_desde).getTime() / 1000);
         const toTs   = Math.floor(new Date(sesion.historial_hasta).getTime() / 1000);
         const res = await fetch(
-          `${WIALON_PROXY_URL}?action=history&unit=${sesion.wialon_unit_id}&from=${fromTs}&to=${toTs}`
+          `${WIALON_PROXY_URL}?action=history&unit=${sesion.wialon_unit_id}&from=${fromTs}&to=${toTs}&token=${encodeURIComponent(token)}`
         );
         if (!res.ok) throw new Error("history");
         const data = await res.json();
@@ -97,7 +94,7 @@ export default function HistorialPublico() {
         setEstado(pts.length > 0 ? "valido" : "sindata");
         // Fallback: si el historial no trajo icono, pedirlo a details
         if (!data?.uri) {
-          fetch(`${WIALON_PROXY_URL}?action=details&unit=${sesion.wialon_unit_id}`)
+          fetch(`${WIALON_PROXY_URL}?action=details&unit=${sesion.wialon_unit_id}&token=${encodeURIComponent(token)}`)
             .then((r) => (r.ok ? r.json() : null))
             .then((d) => { if (!cancelado && d?.uri) setUri(d.uri); })
             .catch(() => {});

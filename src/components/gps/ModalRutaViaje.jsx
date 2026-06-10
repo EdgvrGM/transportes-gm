@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/supabaseClient";
+import { wialonFetch } from "@/lib/wialonFetch";
 import {
   Dialog,
   DialogContent,
@@ -48,7 +49,7 @@ export default function ModalRutaViaje({ viaje, onClose }) {
         .single()
         .then(({ data: unidadData }) => {
           if (!unidadData?.wialon_unit_id) return;
-          fetch(
+          wialonFetch(
             `https://wialon-proxy.transportesgm.workers.dev?action=details&unit=${unidadData.wialon_unit_id}`
           )
             .then((r) => r.json())

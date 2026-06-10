@@ -9,6 +9,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const WIALON_PROXY_URL = Deno.env.get("WIALON_PROXY_URL") ?? "https://wialon-proxy.transportesgm.workers.dev";
+const PROXY_SECRET     = Deno.env.get("PROXY_SHARED_SECRET") ?? "";
+const proxyHeaders     = PROXY_SECRET ? { "X-Proxy-Secret": PROXY_SECRET } : undefined;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -62,7 +64,7 @@ serve(async (req) => {
   }
 
   if (action === "positions") {
-    const res = await fetch(`${WIALON_PROXY_URL}?action=positions`);
+    const res = await fetch(`${WIALON_PROXY_URL}?action=positions`, { headers: proxyHeaders });
     if (!res.ok) return json({ error: "Proxy no disponible" }, 502);
     const all = await res.json();
     const filtradas = (all as Record<string, unknown>[]).filter((u) =>
@@ -81,7 +83,7 @@ serve(async (req) => {
     const to = Math.floor(Number(body.to) || Math.floor(Date.now() / 1000));
     if (from < desdeEpoch) from = desdeEpoch;
 
-    const res = await fetch(`${WIALON_PROXY_URL}?action=history&unit=${unit}&from=${from}&to=${to}`);
+    const res = await fetch(`${WIALON_PROXY_URL}?action=history&unit=${unit}&from=${from}&to=${to}`, { headers: proxyHeaders });
     if (!res.ok) return json({ error: "Proxy no disponible" }, 502);
     return json(await res.json());
   }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/supabaseClient";
+import { wialonFetch } from "@/lib/wialonFetch";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, Wrench, Clock, CheckCircle2, DollarSign, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -42,7 +43,7 @@ export default function DashboardMantenimiento({ onVerOrdenes }) {
   const [wialonUnidades, setWialonUnidades] = useState([]);
 
   useEffect(() => {
-    fetch("https://wialon-proxy.transportesgm.workers.dev?action=positions")
+    wialonFetch("https://wialon-proxy.transportesgm.workers.dev?action=positions")
       .then((r) => r.json())
       .then((data) => {
         if (Array.isArray(data)) setWialonUnidades(data);

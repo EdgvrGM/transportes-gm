@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Truck, ArrowUpRight, AlertTriangle, Settings, Wrench } from "lucide-react";
 import { WIALON_PROXY_URL, POLL_POSITIONS_MS } from "@/components/gps/constants";
+import { wialonFetch } from "@/lib/wialonFetch";
 
 const INTERVALO_PROXIMO_KM = 1500;
 
@@ -13,7 +14,7 @@ async function fetchPositions(unidadesInactivas = []) {
   const url = exclude
     ? `${WIALON_PROXY_URL}?action=positions&exclude=${exclude}`
     : `${WIALON_PROXY_URL}?action=positions`;
-  const r = await fetch(url);
+  const r = await wialonFetch(url);
   if (!r.ok) return [];
   const data = await r.json();
   return Array.isArray(data) ? data : [];

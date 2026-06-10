@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { supabase } from "@/supabaseClient";
+import { wialonFetch } from "@/lib/wialonFetch";
 import { Radar, Map, BellRing, Gauge, ArrowUpRight } from "lucide-react";
 import MiniMapaFlota from "./MiniMapaFlota";
 import { estaEnPatio } from "./panelGeo";
@@ -20,7 +21,7 @@ async function fetchPositions(unidadesInactivas = []) {
   const url = exclude
     ? `${WIALON_PROXY_URL}?action=positions&exclude=${exclude}`
     : `${WIALON_PROXY_URL}?action=positions`;
-  const r = await fetch(url);
+  const r = await wialonFetch(url);
   if (!r.ok) throw new Error("No se pudieron cargar posiciones");
   const data = await r.json();
   return Array.isArray(data) ? data : [];

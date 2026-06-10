@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/supabaseClient";
+import { wialonFetch } from "@/lib/wialonFetch";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Edit, Trash2, Loader2, X, ChevronLeft, ChevronRight, CheckCircle2, CheckCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -185,7 +186,7 @@ export default function OrdenesTrabajoTab() {
   }, [lineasData, otEditando?.id]);
 
   useEffect(() => {
-    fetch("https://wialon-proxy.transportesgm.workers.dev?action=positions")
+    wialonFetch("https://wialon-proxy.transportesgm.workers.dev?action=positions")
       .then((r) => r.json())
       .then((data) => setWialonUnidades(Array.isArray(data) ? data : []))
       .catch(() => {})

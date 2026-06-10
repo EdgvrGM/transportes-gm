@@ -23,17 +23,36 @@ serve(async (req: Request) => { // Añadido el tipo 'Request' para mayor clarida
     const formData = await req.json();
     const { name, email, phone, company, message } = formData;
 
+    // Validación básica anti-abuso (el endpoint es público y sin auth).
+    const corsJson = {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+    };
+    const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+    const nameV = str(name, 120);
+    const emailV = str(email, 200);
+    const messageV = str(message, 5000);
+    const phoneV = str(phone, 40);
+    const companyV = str(company, 200);
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailV);
+    if (!nameV || !emailOk || !messageV) {
+      return new Response(
+        JSON.stringify({ error: "Datos inválidos: nombre, email y mensaje son obligatorios." }),
+        { headers: corsJson, status: 400 },
+      );
+    }
+
     // Construye el cuerpo del correo de forma legible.
     const emailBody = `
       Nueva Solicitud de Cotización
       --------------------------------
-      Nombre: ${name}
-      Email: ${email}
-      Teléfono: ${phone || 'No especificado'}
-      Empresa: ${company || 'No especificada'}
+      Nombre: ${nameV}
+      Email: ${emailV}
+      Teléfono: ${phoneV || 'No especificado'}
+      Empresa: ${companyV || 'No especificada'}
       --------------------------------
       Mensaje:
-      ${message}
+      ${messageV}
     `;
 
     // Obtiene la clave secreta de Resend que guardaremos en Supabase.
@@ -52,9 +71,9 @@ serve(async (req: Request) => { // Añadido el tipo 'Request' para mayor clarida
       body: JSON.stringify({
         from: `${FROM_NAME} <onboarding@resend.dev>`, // Resend usa este 'from' por defecto en el plan gratuito.
         to: TO_EMAIL,
-        subject: `Nueva Cotización de: ${name}`,
+        subject: `Nueva Cotización de: ${nameV}`,
         text: emailBody,
-        reply_to: email, // Permite que al darle "Responder", se responda al cliente.
+        reply_to: emailV, // Permite que al darle "Responder", se responda al cliente.
       }),
     });
 

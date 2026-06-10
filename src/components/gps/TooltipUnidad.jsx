@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import PanelCompartir from "@/components/gps/PanelCompartir";
 import { WIALON_PROXY_URL, WIALON_IMG_BASE, estaEnRalenti } from "@/components/gps/constants";
+import { wialonFetch } from "@/lib/wialonFetch";
 
 function tiempoDesde(ts) {
   if (!ts) return "Sin datos";
@@ -36,7 +37,7 @@ export default function TooltipUnidad({ unidad, onClose, onMouseEnter, onMouseLe
   const { data: detalle, isLoading } = useQuery({
     queryKey: ["gps-details", unidad.id],
     queryFn: async () => {
-      const res = await fetch(`${WIALON_PROXY_URL}?action=details&unit=${unidad.id}`);
+      const res = await wialonFetch(`${WIALON_PROXY_URL}?action=details&unit=${unidad.id}`);
       if (!res.ok) throw new Error("Error al obtener detalles");
       return res.json();
     },

@@ -75,7 +75,6 @@ async function wialonPost(svc: string, params: Record<string, unknown>, sid?: st
 // ── Wialon helpers ────────────────────────────────────────────────────────────
 async function wialonLogin(token: string): Promise<string> {
   const data = await wialonPost("token/login", { token, fl: 1 });
-  console.log("Wialon login response:", JSON.stringify(data));
   if (data.error) throw new Error(`Wialon login error: ${data.error}`);
   return data.eid as string;
 }
@@ -95,9 +94,6 @@ async function wialonGetUnitsBasic(eid: string) {
   }, eid);
   if (data.error) throw new Error(`Wialon search error: ${data.error}`);
   const items = (data.items as Record<string, unknown>[]) || [];
-  if (items.length > 0) {
-    console.log("Item crudo Wialon:", JSON.stringify(items[0]));
-  }
   return items;
 }
 
@@ -203,7 +199,6 @@ async function wialonGetHistory(eid: string, unitId: string, from: number, to: n
     flagsMask: 0xFF00,
     loadCount: 10000,
   }, eid);
-  console.log("History response:", JSON.stringify(data).substring(0, 300));
   if (data.error) throw new Error(`Wialon history error: ${data.error}`);
 
   const unitData = await wialonPost("core/search_item", {
@@ -435,6 +430,89 @@ async function ejecutarRalenti(env: Env): Promise<void> {
   }
 }
 
+// ── Autorización del proxy ────────────────────────────────────────────────────
+// El proxy ya NO es público. Acepta una de tres credenciales:
+//   1. X-Proxy-Secret  → backend de confianza (Edge Function rastreo-cliente).      → "interno"
+//   2. ?token=<hex>     → enlace de rastreo compartido vigente.                      → "token" (1 unidad)
+//   3. Bearer <jwt>     → usuario interno autenticado (NO cuenta de cliente).        → "interno"
+type Autorizacion =
+  | { ok: false }
+  | { ok: true; mode: "interno" }
+  | { ok: true; mode: "token"; unitId: number };
+
+function sbHeaders(env: Env) {
+  return { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}` };
+}
+
+async function unitIdDeToken(token: string, env: Env): Promise<number | null> {
+  if (!/^[a-fA-F0-9]{16,64}$/.test(token)) return null;
+  try {
+    const res = await fetch(
+      `${env.SUPABASE_URL}/rest/v1/RastreoCompartido?select=wialon_unit_id,expires_at&token=eq.${encodeURIComponent(token)}&limit=1`,
+      { headers: sbHeaders(env) }
+    );
+    if (!res.ok) return null;
+    const rows = (await res.json()) as { wialon_unit_id: number; expires_at: string }[];
+    const row = rows?.[0];
+    if (!row || new Date(row.expires_at).getTime() <= Date.now()) return null;
+    return Number(row.wialon_unit_id);
+  } catch {
+    return null;
+  }
+}
+
+async function validarJwt(jwt: string, env: Env): Promise<string | null> {
+  try {
+    const res = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
+      headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${jwt}` },
+    });
+    if (!res.ok) return null;
+    const user = (await res.json()) as { id?: string };
+    return user?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function esCuentaCliente(userId: string, env: Env): Promise<boolean> {
+  try {
+    const res = await fetch(
+      `${env.SUPABASE_URL}/rest/v1/cuenta_cliente?select=id&user_id=eq.${encodeURIComponent(userId)}&limit=1`,
+      { headers: sbHeaders(env) }
+    );
+    if (!res.ok) return false;
+    const rows = (await res.json()) as unknown[];
+    return Array.isArray(rows) && rows.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+async function autorizar(request: Request, url: URL, env: Env): Promise<Autorizacion> {
+  // 1) Backend de confianza
+  const secret = request.headers.get("X-Proxy-Secret");
+  if (env.PROXY_SHARED_SECRET && secret && secret === env.PROXY_SHARED_SECRET) {
+    return { ok: true, mode: "interno" };
+  }
+  // 2) Token de rastreo compartido (páginas públicas)
+  const token = url.searchParams.get("token");
+  if (token) {
+    const unitId = await unitIdDeToken(token, env);
+    if (unitId == null) return { ok: false };
+    return { ok: true, mode: "token", unitId };
+  }
+  // 3) JWT de usuario interno
+  const authz = request.headers.get("Authorization") || "";
+  const jwt = authz.startsWith("Bearer ") ? authz.slice(7).trim() : "";
+  if (jwt) {
+    const userId = await validarJwt(jwt, env);
+    if (userId && !(await esCuentaCliente(userId, env))) {
+      return { ok: true, mode: "interno" };
+    }
+  }
+  return { ok: false };
+}
+
 // ── Handler principal ─────────────────────────────────────────────────────────
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -453,11 +531,35 @@ export default {
       );
     }
 
+    // Autorización — el proxy ya no sirve datos a peticiones anónimas.
+    const auth = await autorizar(request, url, env);
+    if (!auth.ok) {
+      return new Response(
+        JSON.stringify({ error: "No autorizado" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Un enlace de rastreo compartido solo puede ver SU unidad.
+    const unitParam = url.searchParams.get("unit");
+    if (auth.mode === "token") {
+      if (action === "units") {
+        return new Response(JSON.stringify({ error: "No autorizado" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if ((action === "history" || action === "details") &&
+          parseInt(unitParam || "0", 10) !== auth.unitId) {
+        return new Response(JSON.stringify({ error: "Unidad no autorizada" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     let eid: string | null = null;
 
     try {
       eid = await wialonLogin(token);
-      console.log("Login exitoso, eid:", eid);
 
       if (action === "units") {
         const items = await wialonGetUnitsBasic(eid);
@@ -515,13 +617,20 @@ export default {
           .filter((item) => !excludeIds.includes(item.id as number))
           .map((item) => parsearPosicionCompleta(item, false))
       );
-      return new Response(JSON.stringify(positions), {
+      const result = auth.mode === "token"
+        ? positions.filter((p) => Number(p.id) === auth.unitId)
+        : positions;
+      return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
 
     } catch (e) {
       console.error("Wialon error:", String(e));
-      return new Response(JSON.stringify(getMockPositions()), {
+      const mock = getMockPositions();
+      const result = auth.mode === "token"
+        ? mock.filter((p) => Number(p.id) === auth.unitId)
+        : mock;
+      return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     } finally {
@@ -541,5 +650,6 @@ interface Env {
   WIALON_TOKEN:        string;
   SUPABASE_URL:        string;
   SUPABASE_SERVICE_KEY: string;
+  PROXY_SHARED_SECRET: string;
   GEOCERCA_KV:         KVNamespace;
 }

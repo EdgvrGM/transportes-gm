@@ -8,6 +8,7 @@ import {
   Share2, Copy, Check, ExternalLink, AlertCircle,
 } from "lucide-react";
 import { WIALON_PROXY_URL, VELOCIDAD_EXCESO } from "@/components/gps/constants";
+import { wialonFetch } from "@/lib/wialonFetch";
 
 const DURACIONES_SHARE = [
   { label: "4h",  horas: 4 },
@@ -34,7 +35,7 @@ function toDatetimeLocal(date, time) {
 async function fetchHistory({ unitId, fromDt, toDt }) {
   const fromTs = Math.floor(new Date(fromDt).getTime() / 1000);
   const toTs   = Math.floor(new Date(toDt).getTime() / 1000);
-  const res = await fetch(
+  const res = await wialonFetch(
     `${WIALON_PROXY_URL}?action=history&unit=${unitId}&from=${fromTs}&to=${toTs}`
   );
   if (!res.ok) throw new Error("Error al obtener historial");
@@ -94,7 +95,7 @@ export default function HistorialGPS({ positions = [], onHistorialCargado, onPun
     }
     // Unidad offline o no presente en el refresco actual → buscar detalles
     let cancelado = false;
-    fetch(`${WIALON_PROXY_URL}?action=details&unit=${unitId}`)
+    wialonFetch(`${WIALON_PROXY_URL}?action=details&unit=${unitId}`)
       .then((r) => r.ok ? r.json() : null)
       .then((d) => { if (!cancelado && d?.uri) onIconoUnidad?.(d.uri); })
       .catch(() => {});

@@ -10,9 +10,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Settings, Loader2, Check, Truck } from "lucide-react";
 import { WIALON_PROXY_URL } from "@/components/gps/constants";
+import { wialonFetch } from "@/lib/wialonFetch";
 
 async function fetchWialonUnits() {
-  const res = await fetch(`${WIALON_PROXY_URL}?action=units`);
+  const res = await wialonFetch(`${WIALON_PROXY_URL}?action=units`);
   if (!res.ok) throw new Error("Error al obtener unidades Wialon");
   return res.json();
 }

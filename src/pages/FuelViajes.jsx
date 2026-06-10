@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/supabaseClient";
+import { wialonFetch } from "@/lib/wialonFetch";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -375,7 +376,7 @@ export default function FuelViajes() {
         new Date(formData.fecha_llegada + "T23:59:59").getTime() / 1000
       );
 
-      const res = await fetch(
+      const res = await wialonFetch(
         `https://wialon-proxy.transportesgm.workers.dev?action=history` +
         `&unit=${unidadGPS.wialon_unit_id}&from=${fromTs}&to=${toTs}`
       );

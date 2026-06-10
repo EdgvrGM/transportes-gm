@@ -7,6 +7,7 @@ import { format, parseISO, addDays, isWithinInterval } from "date-fns";
 import { es } from "date-fns/locale";
 import { CalendarClock, CheckCircle2, Navigation2, Clock3, ArrowRight } from "lucide-react";
 import { WIALON_PROXY_URL, POLL_POSITIONS_MS } from "@/components/gps/constants";
+import { wialonFetch } from "@/lib/wialonFetch";
 import { estaEnPatio } from "./panelGeo";
 
 const DIAS_SEMANA = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
@@ -29,7 +30,7 @@ async function fetchPositions(unidadesInactivas = []) {
   const url = exclude
     ? `${WIALON_PROXY_URL}?action=positions&exclude=${exclude}`
     : `${WIALON_PROXY_URL}?action=positions`;
-  const r = await fetch(url);
+  const r = await wialonFetch(url);
   if (!r.ok) return [];
   const data = await r.json();
   return Array.isArray(data) ? data : [];

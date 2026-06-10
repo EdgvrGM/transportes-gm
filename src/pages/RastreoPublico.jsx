@@ -37,23 +37,20 @@ export default function RastreoPublico() {
   // Validar token
   useEffect(() => {
     async function validar() {
-      const { data, error } = await supabase
-        .from("RastreoCompartido")
-        .select("*")
-        .eq("token", token)
-        .single();
+      const { data, error } = await supabase.rpc("rastreo_por_token", { p_token: token });
+      const row = Array.isArray(data) ? data[0] : null;
 
-      if (error || !data) {
+      if (error || !row) {
         setEstado("invalido");
         return;
       }
 
-      if (new Date(data.expires_at) <= new Date()) {
+      if (new Date(row.expires_at) <= new Date()) {
         setEstado("expirado");
         return;
       }
 
-      setSesion(data);
+      setSesion(row);
       setEstado("valido");
     }
     validar();
@@ -76,7 +73,7 @@ export default function RastreoPublico() {
   const fetchPosicion = useCallback(async () => {
     if (!sesion) return;
     try {
-      const res = await fetch(`${WIALON_PROXY_URL}?action=positions`);
+      const res = await fetch(`${WIALON_PROXY_URL}?action=positions&token=${encodeURIComponent(token)}`);
       if (!res.ok) return;
       const all = await res.json();
       const unit = all.find((u) => String(u.id) === String(sesion.wialon_unit_id));
