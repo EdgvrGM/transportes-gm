@@ -231,8 +231,9 @@ async function wialonLogout(eid: string) {
 }
 
 const RALENTI_UMBRAL_S      = 15 * 60;        // 15 min → dispara alerta
-const RALENTI_POS_STALE_S   = 10 * 60;        // posición más vieja que esto → datos no confiables, no sostener ralentí
+const RALENTI_POS_STALE_S   = 10 * 60;        // mensaje más viejo que esto → datos no confiables, no sostener ralentí
 const RALENTI_MAX_ACTIVO_S  = 3 * 60 * 60;    // 3 h → red de seguridad: expira cualquier registro trabado
+const RALENTI_VEL_MAX_KMH   = 2;              // misma tolerancia que el frontend: parado, el GPS reporta ruido de 1-2 km/h
 
 // ── Cron: geocerca del patio ──────────────────────────────────────────────────
 async function ejecutarGeocerca(env: Env): Promise<void> {
@@ -346,19 +347,31 @@ async function ejecutarRalenti(env: Env): Promise<void> {
       const unitId = parseInt(String(unit.id), 10);
       const nombre = unit.nombre as string;
 
-      // (B) Movimiento según el último MENSAJE (fresco) — el sensor de movimiento del
-      // dispositivo (en_movimiento) o la velocidad del parámetro detectan que la unidad
-      // arrancó aunque `pos.s` (velocidad del fix GPS) siga congelado en 0.
-      const seMueve = (unit.velocidad as number) > 0 ||
-                      (typeof unit.velocidad_msg === "number" && unit.velocidad_msg > 0) ||
-                      unit.en_movimiento === true;
+      // (B) Movimiento según el último MENSAJE (fresco) — la velocidad del parámetro
+      // detecta que la unidad arrancó aunque `pos.s` (velocidad del fix GPS) siga
+      // congelado en 0. Umbral > RALENTI_VEL_MAX_KMH (no > 0) porque parado el GPS
+      // reporta ruido de 1-2 km/h. io_240 (acelerómetro) NO descalifica: la vibración
+      // del motor en ralentí lo deja en 1 sin que la unidad se mueva.
+      const seMueve = (unit.velocidad as number) > RALENTI_VEL_MAX_KMH ||
+                      (typeof unit.velocidad_msg === "number" && unit.velocidad_msg > RALENTI_VEL_MAX_KMH);
 
-      // (A) Frescura de la posición — si el último fix GPS es muy viejo no podemos
-      // afirmar que sigue parado; no sostenemos el ralentí con datos no confiables.
-      const posAgeS   = ahoraS - (unit.ultima_actualizacion as number);
+      // (A) Frescura por último MENSAJE, no solo por último fix GPS — una unidad
+      // detenida deja de generar fixes nuevos (pos.t se congela) pero sigue mandando
+      // mensajes; con pos.t solo, el ralentí se caía a los 10 min de estar parada.
+      const lastSeenS = Math.max(
+        typeof unit.msg_ts === "number" ? unit.msg_ts : 0,
+        typeof unit.ultima_actualizacion === "number" ? unit.ultima_actualizacion : 0
+      );
+      const posAgeS   = ahoraS - lastSeenS;
       const posFresca = posAgeS <= RALENTI_POS_STALE_S;
 
       const enRalenti = (unit.motor as boolean) === true && !seMueve && posFresca;
+
+      // TEMP diagnóstico — unidades reportadas sin alertas de ralentí; quitar al confirmar
+      if (/88BH7X|47AV6C|94BF6E/i.test(nombre)) {
+        console.log(`[Ralenti][diag] ${nombre} motor=${unit.motor} vel=${unit.velocidad} velMsg=${unit.velocidad_msg} io240=${unit.en_movimiento} ageS=${Math.round(posAgeS)} enRalenti=${enRalenti}`);
+      }
+
       const registro  = activoPorUnidad.get(unitId);
 
       if (enRalenti) {
