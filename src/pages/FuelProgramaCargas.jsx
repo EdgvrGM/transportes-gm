@@ -1029,6 +1029,7 @@ export default function FuelProgramaCargas() {
               <div className="border border-border/80 bg-background dark:bg-card rounded-2xl overflow-hidden shadow-sm divide-y divide-border/60">
                 {getViajesPorDia(diaVerActivo).map(
                   (viaje, idx) => {
+                    const registeredViaje = getRegisteredTrip(viaje, diaVerActivo);
                     return (
                     <div
                       key={viaje.id || idx}
@@ -1104,7 +1105,6 @@ export default function FuelProgramaCargas() {
 
                       {/* Fila Inferior: Botón Centrado y Badge Evidencias */}
                         {(() => {
-                          const registeredViaje = getRegisteredTrip(viaje, diaVerActivo);
                           const hasFuel = registeredViaje && parseFloat(registeredViaje.litros_combustible || 0) > 0;
                           const hasTolls = registeredViaje && registeredViaje.casetas_ida !== null && registeredViaje.casetas_regreso !== null;
                           const hasRuta = registeredViaje && rutasSet.has(String(registeredViaje.id));
@@ -1184,6 +1184,20 @@ export default function FuelProgramaCargas() {
                               {/* CENTER: main action */}
                               <div className="flex items-center justify-center w-full md:w-auto gap-2 z-10">
                                 {mainButton}
+                                {registeredViaje && registeredViaje.km_por_litro && parseFloat(registeredViaje.km_por_litro) > 0 ? (
+                                  <div
+                                    className={`inline-flex items-center px-3 py-1.5 rounded-lg text-[10px] font-black border shadow-sm ${
+                                      registeredViaje.km_por_litro > 2.25
+                                        ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800"
+                                        : registeredViaje.km_por_litro >= 2.0
+                                        ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800"
+                                        : "bg-red-50 text-red-600 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
+                                    }`}
+                                  >
+                                    <Fuel className="w-3.5 h-3.5 mr-1.5 text-primary" />
+                                    {registeredViaje.km_por_litro.toFixed(2)} KM/L
+                                  </div>
+                                ) : null}
                               </div>
 
                               {/* RIGHT: VER RUTA */}
