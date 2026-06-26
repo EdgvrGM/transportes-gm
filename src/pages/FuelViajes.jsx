@@ -1059,17 +1059,23 @@ export default function FuelViajes() {
     if (!pdfConductorId || !pdfFechaInicio || !pdfFechaFin) return;
     setPdfGenerando(true);
     try {
-      const conductor = conductores.find(
-        (c) => String(c.id) === pdfConductorId,
-      );
-      if (!conductor) return;
+      const isTodos = pdfConductorId === "todos";
+      let conductorNombre = "Todos los choferes";
+      if (!isTodos) {
+        const conductor = conductores.find(
+          (c) => String(c.id) === pdfConductorId,
+        );
+        if (!conductor) return;
+        conductorNombre = conductor.nombre;
+      }
 
-      // Filtrar viajes del conductor en el rango
+      // Filtrar viajes del conductor en el rango o todos los viajes
       const viajesChofer = viajes
         .filter((v) => {
           const fechaV = v.fecha ? v.fecha.split("T")[0] : "";
+          const matchChofer = isTodos || String(v.conductor_id) === pdfConductorId;
           return (
-            String(v.conductor_id) === pdfConductorId &&
+            matchChofer &&
             fechaV >= pdfFechaInicio &&
             fechaV <= pdfFechaFin
           );
@@ -1082,7 +1088,7 @@ export default function FuelViajes() {
 
       // Logo
       if (logoRef.current) {
-        const logoW = 40;
+        const logoW = 32;
         const logoH = Math.round(
           logoW *
             (logoRef.current.naturalHeight / logoRef.current.naturalWidth),
@@ -1092,16 +1098,19 @@ export default function FuelViajes() {
       }
 
       // Título
-      doc.setFontSize(20);
+      doc.setFontSize(16);
       doc.setFont(undefined, "bold");
-      doc.text("Reporte de Rendimientos", pageWidth / 2, 22, {
-        align: "center",
-      });
+      doc.text(
+        isTodos ? "Reporte de Rendimientos General" : "Reporte de Rendimientos",
+        pageWidth / 2,
+        22,
+        { align: "center" }
+      );
       doc.setFont(undefined, "normal");
 
       const infoY = Math.max(logoBottomY + 6, 36);
       doc.setFontSize(11);
-      doc.text(`Operador: ${conductor.nombre}`, 14, infoY);
+      doc.text(`Operador: ${conductorNombre}`, 14, infoY);
       doc.text(`Período: ${pdfFechaInicio} al ${pdfFechaFin}`, 14, infoY + 7);
       doc.text(
         `Fecha Emisión: ${format(new Date(), "dd/MM/yyyy HH:mm")}`,
@@ -1130,28 +1139,17 @@ export default function FuelViajes() {
         totalLitrosGlobal > 0 ? totalKmGlobal / totalLitrosGlobal : 0;
 
       // Tabla de viajes
-      const rows = viajesChofer.map((v) => {
-        const km = v.kilometros_total || 0;
-        const litros = v.litros_combustible || 0;
-        const rend = v.km_por_litro || (litros > 0 ? km / litros : 0);
-        const tipo = v.tipo_viaje || "Sencillo";
-        const ruta = v.ruta_ida || v.ruta || "-";
-        const casetas = (v.casetas_ida || 0) + (v.casetas_regreso || 0);
-        return [
-          v.fecha || "-",
-          ruta,
-          tipo,
-          `${formatPdfNum(km).replace(".00", "")} km`,
-          litros > 0 ? `${formatPdfNum(litros).replace(".00", "")} L` : "S/D",
-          litros > 0 ? `${rend.toFixed(2)} km/L` : "-",
-          casetas > 0 ? `$${formatPdfNum(casetas)}` : "-",
-        ];
-      });
-
-      autoTable(doc, {
-        startY: infoY + 22,
-        head: [
-          [
+      const headers = isTodos
+        ? [
+            "Fecha",
+            "Chofer",
+            "Ruta",
+            "Kilómetros",
+            "Litros",
+            "Rendimiento",
+            "Casetas",
+          ]
+        : [
             "Fecha",
             "Ruta",
             "Tipo",
@@ -1159,38 +1157,100 @@ export default function FuelViajes() {
             "Litros",
             "Rendimiento",
             "Casetas",
-          ],
-        ],
+          ];
+
+      const rows = viajesChofer.map((v) => {
+        const km = v.kilometros_total || 0;
+        const litros = v.litros_combustible || 0;
+        const rend = v.km_por_litro || (litros > 0 ? km / litros : 0);
+        const tipo = v.tipo_viaje || "Sencillo";
+        const ruta = v.ruta_ida || v.ruta || "-";
+        const casetas = (v.casetas_ida || 0) + (v.casetas_regreso || 0);
+
+        // Helper to get first 2 names/words of driver name to save PDF column space
+        const shortName = v.conductor_nombre
+          ? v.conductor_nombre.trim().split(/\s+/).slice(0, 2).join(" ")
+          : "-";
+
+        return isTodos
+          ? [
+              v.fecha || "-",
+              shortName,
+              ruta,
+              `${formatPdfNum(km).replace(".00", "")} km`,
+              litros > 0 ? `${formatPdfNum(litros).replace(".00", "")} L` : "S/D",
+              litros > 0 ? `${rend.toFixed(2)} km/L` : "-",
+              casetas > 0 ? `$${formatPdfNum(casetas)}` : "-",
+            ]
+          : [
+              v.fecha || "-",
+              ruta,
+              tipo,
+              `${formatPdfNum(km).replace(".00", "")} km`,
+              litros > 0 ? `${formatPdfNum(litros).replace(".00", "")} L` : "S/D",
+              litros > 0 ? `${rend.toFixed(2)} km/L` : "-",
+              casetas > 0 ? `$${formatPdfNum(casetas)}` : "-",
+            ];
+      });
+
+      autoTable(doc, {
+        startY: infoY + 22,
+        head: [headers],
         body:
           rows.length > 0
             ? rows
             : [["Sin viajes en este rango", "", "", "", "", "", ""]],
         foot: [
-          [
-            { content: "TOTALES", colSpan: 2, styles: { halign: "right" } },
-            `${viajesChofer.length} viajes`,
-            `${formatPdfNum(totalKmGlobal).replace(".00", "")} km`,
-            totalLitrosGlobal > 0
-              ? `${formatPdfNum(totalLitrosGlobal).replace(".00", "")} L`
-              : "S/D",
-            {
-              content:
+          isTodos
+            ? [
+                { content: "TOTALES", colSpan: 3, styles: { halign: "right" } },
+                `${formatPdfNum(totalKmGlobal).replace(".00", "")} km`,
                 totalLitrosGlobal > 0
-                  ? `${rendimientoGlobal.toFixed(2)} km/L`
+                  ? `${formatPdfNum(totalLitrosGlobal).replace(".00", "")} L`
+                  : "S/D",
+                {
+                  content:
+                    totalLitrosGlobal > 0
+                      ? `${rendimientoGlobal.toFixed(2)} km/L`
+                      : "-",
+                  styles: {
+                    textColor:
+                      rendimientoGlobal > 2.25
+                        ? [21, 128, 61]
+                        : rendimientoGlobal >= 2.0
+                          ? [161, 98, 7]
+                          : [185, 28, 28],
+                  },
+                },
+                totalCasetasGlobal > 0
+                  ? `$${formatPdfNum(totalCasetasGlobal)}`
                   : "-",
-              styles: {
-                textColor:
-                  rendimientoGlobal > 2.25
-                    ? [21, 128, 61]
-                    : rendimientoGlobal >= 2.0
-                      ? [161, 98, 7]
-                      : [185, 28, 28],
-              },
-            },
-            totalCasetasGlobal > 0
-              ? `$${formatPdfNum(totalCasetasGlobal)}`
-              : "-",
-          ],
+              ]
+            : [
+                { content: "TOTALES", colSpan: 2, styles: { halign: "right" } },
+                `${viajesChofer.length} viajes`,
+                `${formatPdfNum(totalKmGlobal).replace(".00", "")} km`,
+                totalLitrosGlobal > 0
+                  ? `${formatPdfNum(totalLitrosGlobal).replace(".00", "")} L`
+                  : "S/D",
+                {
+                  content:
+                    totalLitrosGlobal > 0
+                      ? `${rendimientoGlobal.toFixed(2)} km/L`
+                      : "-",
+                  styles: {
+                    textColor:
+                      rendimientoGlobal > 2.25
+                        ? [21, 128, 61]
+                        : rendimientoGlobal >= 2.0
+                          ? [161, 98, 7]
+                          : [185, 28, 28],
+                  },
+                },
+                totalCasetasGlobal > 0
+                  ? `$${formatPdfNum(totalCasetasGlobal)}`
+                  : "-",
+              ],
         ],
         theme: "grid",
         headStyles: {
@@ -1200,11 +1260,24 @@ export default function FuelViajes() {
           fontSize: 10,
         },
         styles: { fontSize: 9, textColor: [20, 20, 20], halign: "center" },
-        columnStyles: {
-          0: { cellWidth: 22 },
-          1: { halign: "left", cellWidth: 55 },
-          2: { cellWidth: 20 },
-        },
+        columnStyles: isTodos
+          ? {
+              0: { cellWidth: 22 },
+              1: { halign: "left", cellWidth: 23 },
+              2: { halign: "left", cellWidth: 46 },
+              3: { cellWidth: 23, fontStyle: "bold" },
+              4: { cellWidth: 20, fontStyle: "bold" },
+              5: { cellWidth: 26, fontStyle: "bold" },
+              6: { cellWidth: 22 },
+            }
+          : {
+              0: { cellWidth: 22 },
+              1: { halign: "left", cellWidth: 55 },
+              2: { cellWidth: 20 },
+              3: { fontStyle: "bold" },
+              4: { fontStyle: "bold" },
+              5: { fontStyle: "bold" },
+            },
         footStyles: {
           fillColor: [237, 233, 254],
           fontStyle: "bold",
@@ -1215,7 +1288,8 @@ export default function FuelViajes() {
         showFoot: "lastPage",
         didParseCell: (data) => {
           // Colorear celda de rendimiento según eficiencia
-          if (data.section === "body" && data.column.index === 5) {
+          const indexRend = 5;
+          if (data.section === "body" && data.column.index === indexRend) {
             const v = viajesChofer[data.row.index];
             if (v) {
               const litros = v.litros_combustible || 0;
@@ -1279,10 +1353,10 @@ export default function FuelViajes() {
           sub:
             totalLitrosGlobal > 0
               ? rendimientoGlobal > 2.25
-                ? "✓ Eficiente"
+                ? "Eficiente"
                 : rendimientoGlobal >= 2.0
-                  ? "~ Regular"
-                  : "✗ Bajo"
+                  ? "Regular"
+                  : "Bajo"
               : "sin datos",
           bg:
             rendimientoGlobal > 2.25
@@ -1341,7 +1415,9 @@ export default function FuelViajes() {
       doc.setTextColor(20, 20, 20);
       doc.setFont(undefined, "normal");
 
-      const nombreArchivo = `Rendimientos_${conductor.nombre.replace(/ /g, "_")}_${pdfFechaInicio}_${pdfFechaFin}.pdf`;
+      const nombreArchivo = isTodos
+        ? `Rendimientos_General_${pdfFechaInicio}_${pdfFechaFin}.pdf`
+        : `Rendimientos_${conductorNombre.replace(/ /g, "_")}_${pdfFechaInicio}_${pdfFechaFin}.pdf`;
       doc.save(nombreArchivo);
       setModalPdfAbierto(false);
     } finally {
@@ -1402,6 +1478,7 @@ export default function FuelViajes() {
                     <SelectValue placeholder="Seleccionar chofer..." />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="todos">Todos los choferes (Reporte General)</SelectItem>
                     {conductores.map((c) => (
                       <SelectItem key={c.id} value={String(c.id)}>
                         {c.nombre}
@@ -1442,16 +1519,19 @@ export default function FuelViajes() {
                 pdfFechaInicio &&
                 pdfFechaFin &&
                 (() => {
+                  const isTodos = pdfConductorId === "todos";
                   const count = viajes.filter((v) => {
                     const fechaV = v.fecha ? v.fecha.split("T")[0] : "";
+                    const matchChofer = isTodos || String(v.conductor_id) === pdfConductorId;
                     return (
-                      String(v.conductor_id) === pdfConductorId &&
+                      matchChofer &&
                       fechaV >= pdfFechaInicio &&
                       fechaV <= pdfFechaFin
                     );
                   }).length;
-                  const nombre =
-                    conductores.find((c) => String(c.id) === pdfConductorId)
+                  const nombre = isTodos
+                    ? "todos los choferes"
+                    : conductores.find((c) => String(c.id) === pdfConductorId)
                       ?.nombre || "";
                   return (
                     <div className="flex items-center gap-3 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-200 dark:border-indigo-800/40">
