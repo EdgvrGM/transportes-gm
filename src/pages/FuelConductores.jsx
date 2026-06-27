@@ -54,6 +54,7 @@ export default function FuelConductores() {
     licencia: "",
     telefono: "",
     estado: "activo",
+    porcentaje_base: "16",
   });
 
   const { data: conductores = [], isLoading } = useQuery({
@@ -183,6 +184,8 @@ export default function FuelConductores() {
         licencia: conductor.licencia || "",
         telefono: conductor.telefono || "",
         estado: conductor.estado || "activo",
+        porcentaje_base:
+          conductor.porcentaje_base != null ? String(conductor.porcentaje_base) : "16",
       });
     }
     setDialogAbierto(true);
@@ -191,15 +194,20 @@ export default function FuelConductores() {
   const cerrarDialog = () => {
     setDialogAbierto(false);
     setConductorEditando(null);
-    setFormData({ nombre: "", licencia: "", telefono: "", estado: "activo" });
+    setFormData({ nombre: "", licencia: "", telefono: "", estado: "activo", porcentaje_base: "16" });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const payload = {
+      ...formData,
+      porcentaje_base:
+        formData.porcentaje_base === "" ? null : parseFloat(formData.porcentaje_base),
+    };
     if (conductorEditando) {
-      actualizarMutation.mutate({ id: conductorEditando.id, data: formData });
+      actualizarMutation.mutate({ id: conductorEditando.id, data: payload });
     } else {
-      crearMutation.mutate(formData);
+      crearMutation.mutate(payload);
     }
   };
 
@@ -320,6 +328,9 @@ export default function FuelConductores() {
                           {stats.totalViajes > 0 && (
                             <span className="font-semibold text-green-600 dark:text-green-400">{stats.promedio.toFixed(2)} km/L</span>
                           )}
+                          <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                            {conductor.porcentaje_base != null ? conductor.porcentaje_base : 16}% pago
+                          </span>
                         </div>
                         <div className="flex gap-1">
                           <Button variant="ghost" size="icon" onClick={() => abrirDialog(conductor)}
@@ -346,12 +357,13 @@ export default function FuelConductores() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50/80 dark:bg-zinc-900/80 hover:bg-transparent border-b border-border/60">
-                    <TableHead className="w-[25%] pl-8 font-bold text-[10px] uppercase tracking-widest text-slate-500 py-4">Nombre del Conductor</TableHead>
-                    <TableHead className="w-[12%] text-center font-bold text-[10px] uppercase tracking-widest text-slate-500 py-4">Estado</TableHead>
-                    <TableHead className="w-[15%] text-center font-bold text-[10px] uppercase tracking-widest text-slate-500 py-4">Licencia</TableHead>
-                    <TableHead className="w-[18%] text-center font-bold text-[10px] uppercase tracking-widest text-slate-500 py-4">Teléfono</TableHead>
-                    <TableHead className="w-[15%] text-center font-bold text-[10px] uppercase tracking-widest text-slate-500 py-4">Eficiencia</TableHead>
-                    <TableHead className="w-[15%] text-right font-bold text-[10px] uppercase tracking-widest text-slate-500 pr-10 py-4">Acciones</TableHead>
+                    <TableHead className="w-[22%] pl-8 font-bold text-[10px] uppercase tracking-widest text-slate-500 py-4">Nombre del Conductor</TableHead>
+                    <TableHead className="w-[11%] text-center font-bold text-[10px] uppercase tracking-widest text-slate-500 py-4">Estado</TableHead>
+                    <TableHead className="w-[10%] text-center font-bold text-[10px] uppercase tracking-widest text-slate-500 py-4">% Pago</TableHead>
+                    <TableHead className="w-[14%] text-center font-bold text-[10px] uppercase tracking-widest text-slate-500 py-4">Licencia</TableHead>
+                    <TableHead className="w-[16%] text-center font-bold text-[10px] uppercase tracking-widest text-slate-500 py-4">Teléfono</TableHead>
+                    <TableHead className="w-[13%] text-center font-bold text-[10px] uppercase tracking-widest text-slate-500 py-4">Eficiencia</TableHead>
+                    <TableHead className="w-[14%] text-right font-bold text-[10px] uppercase tracking-widest text-slate-500 pr-10 py-4">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -374,6 +386,11 @@ export default function FuelConductores() {
                             <Badge variant="outline" className="font-black text-[10px] uppercase tracking-tighter bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800">
                               Activo
                             </Badge>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className="font-black text-sm text-indigo-600 dark:text-indigo-400">
+                              {conductor.porcentaje_base != null ? conductor.porcentaje_base : 16}%
+                            </span>
                           </TableCell>
                           <TableCell className="text-center py-3 font-black text-slate-500 dark:text-slate-400 text-xs uppercase tracking-tighter">
                             {conductor.licencia || "N/A"}
@@ -413,7 +430,7 @@ export default function FuelConductores() {
                       className="bg-slate-50/80 dark:bg-zinc-900/80 hover:bg-slate-100 dark:hover:bg-zinc-900 cursor-pointer transition-colors"
                       onClick={() => setMostrarInactivos(!mostrarInactivos)}
                     >
-                      <TableCell colSpan={6} className="py-4 text-center">
+                      <TableCell colSpan={7} className="py-4 text-center">
                         <div className="flex items-center justify-center gap-2 text-slate-500 font-black text-[10px] uppercase tracking-widest">
                           <span>{mostrarInactivos ? "Ocultar" : "Mostrar"} Conductores Inactivos ({conductores.filter((c) => c.estado !== "activo").length})</span>
                           <Plus className={`w-3 h-3 transition-transform duration-300 ${mostrarInactivos ? "rotate-45" : ""}`} />
@@ -440,6 +457,9 @@ export default function FuelConductores() {
                             <Badge variant="outline" className="font-black text-[10px] uppercase tracking-tighter bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800">
                               Inactivo
                             </Badge>
+                          </TableCell>
+                          <TableCell className="text-center font-black text-sm text-slate-400">
+                            {conductor.porcentaje_base != null ? conductor.porcentaje_base : 16}%
                           </TableCell>
                           <TableCell className="text-center py-3 font-black text-slate-400 text-xs uppercase tracking-tighter">
                             {conductor.licencia || "N/A"}
@@ -536,6 +556,37 @@ export default function FuelConductores() {
                   placeholder="+1 234 567 890"
                   className="bg-background border-input"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="porcentaje_base"
+                  className="font-semibold text-foreground"
+                >
+                  % de pago al operador
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="porcentaje_base"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.5"
+                    value={formData.porcentaje_base}
+                    onChange={(e) =>
+                      setFormData({ ...formData, porcentaje_base: e.target.value })
+                    }
+                    placeholder="16"
+                    className="bg-background border-input pr-8"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                    %
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Porcentaje del flete que se le paga en cada viaje. Se usa en
+                  Liquidaciones (los viajes FULL aplican 15% fijo).
+                </p>
               </div>
 
               <div className="space-y-2">
