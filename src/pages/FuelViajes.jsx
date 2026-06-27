@@ -1080,7 +1080,15 @@ export default function FuelViajes() {
             fechaV <= pdfFechaFin
           );
         })
-        .sort((a, b) => (a.fecha < b.fecha ? -1 : 1));
+        .sort((a, b) => {
+          if (isTodos) {
+            const nombreA = (a.conductor_nombre || "").trim().toLowerCase();
+            const nombreB = (b.conductor_nombre || "").trim().toLowerCase();
+            const cmpNombre = nombreA.localeCompare(nombreB, "es");
+            if (cmpNombre !== 0) return cmpNombre;
+          }
+          return (a.fecha || "").localeCompare(b.fecha || "");
+        });
 
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.width;
@@ -1803,27 +1811,31 @@ export default function FuelViajes() {
                               <div className="pt-3 border-t border-border/60 mt-3 space-y-2 lg:space-y-3">
                                 {viaje.conductor_nombre && (
                                   <div className="flex items-center gap-2 lg:gap-3">
-                                    <User className="w-4 h-4 lg:w-5 lg:h-5 text-slate-400 flex-shrink-0" />
-                                    <span className="text-xs lg:text-sm font-bold text-foreground line-clamp-1">
+                                    <User className="w-4 h-4 lg:w-5 lg:h-5 text-slate-500 dark:text-slate-300 flex-shrink-0" />
+                                    <span className="text-sm lg:text-base font-bold text-foreground line-clamp-1">
                                       {viaje.conductor_nombre}
                                     </span>
                                   </div>
                                 )}
                                 {viaje.camion_nombre && (
-                                  <div className="flex items-center gap-2 lg:gap-3">
+                                  <div className="flex items-center gap-2 lg:gap-3 min-w-0">
                                     <Truck className="w-4 h-4 lg:w-5 lg:h-5 text-slate-400 flex-shrink-0" />
-                                    <span className="text-xs lg:text-sm font-bold text-foreground line-clamp-1">
-                                      {viaje.camion_nombre}{" "}
-                                      <span className="hidden sm:inline text-[10px] lg:text-xs font-medium text-muted-foreground bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded ml-1 whitespace-nowrap">
-                                        {viaje.camion_placas}
+                                    <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                                      <span className="text-xs lg:text-sm font-bold text-foreground truncate">
+                                        {viaje.camion_nombre}
                                       </span>
-                                    </span>
+                                      {viaje.camion_placas && (
+                                        <span className="text-[10px] lg:text-xs font-medium text-muted-foreground bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded whitespace-nowrap">
+                                          {viaje.camion_placas}
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
                                 )}
                                 {(viaje.remolque_id || viaje.remolque2_id) && (
                                   <div className="flex items-center gap-2">
-                                    <Layers className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                                    <span className="text-sm text-foreground font-medium">
+                                    <Layers className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                                    <span className="text-xs font-medium text-foreground">
                                       {viaje.remolque2_id
                                         ? "Remolques: "
                                         : "Remolque: "}
