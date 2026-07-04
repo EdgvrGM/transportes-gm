@@ -335,6 +335,14 @@ export default function Liquidaciones() {
       didParseCell: (data) => {
         if (data.section === 'body' && data.column.index === 1 && data.row.index < viajesDetalle.length) {
           data.cell.styles.minCellHeight = 14;
+          // Reservar espacio abajo para dibujar las métricas (km · L · km/L)
+          // sin importar cuántas líneas ocupe la ruta al hacer wrap.
+          const cp = data.cell.styles.cellPadding;
+          const pad = typeof cp === 'number'
+            ? { top: cp, right: cp, bottom: cp, left: cp }
+            : { top: cp.top ?? 0, right: cp.right ?? 0, bottom: cp.bottom ?? 0, left: cp.left ?? 0 };
+          pad.bottom += 6;
+          data.cell.styles.cellPadding = pad;
         }
       },
       didDrawCell: (data) => {
@@ -353,7 +361,7 @@ export default function Liquidaciones() {
           doc.setFontSize(10);
           doc.setTextColor(70);
           let x = data.cell.x + 2;
-          const y = data.cell.y + 9.5;
+          const y = data.cell.y + data.cell.height - 3;
           for (const part of parts) {
             doc.setFont(undefined, part.bold ? 'bold' : 'normal');
             doc.text(part.text, x, y);

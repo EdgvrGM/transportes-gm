@@ -14,6 +14,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -43,6 +48,7 @@ import {
   ArrowLeftRight,
   Route,
   User,
+  ChevronDown,
   Truck,
   Trash2,
   Edit,
@@ -318,7 +324,10 @@ export default function FuelViajes() {
 
   // --- Estado para modal PDF de rendimientos ---
   const [modalPdfAbierto, setModalPdfAbierto] = useState(false);
+  const [pdfModo, setPdfModo] = useState("chofer"); // "chofer" | "camion"
   const [pdfConductorId, setPdfConductorId] = useState("");
+  const [pdfChoferesIds, setPdfChoferesIds] = useState([]); // choferes del camión seleccionado
+  const [pdfCamionId, setPdfCamionId] = useState("");
   const [pdfFechaInicio, setPdfFechaInicio] = useState("");
   const [pdfFechaFin, setPdfFechaFin] = useState("");
   const [pdfGenerando, setPdfGenerando] = useState(false);
@@ -573,6 +582,37 @@ export default function FuelViajes() {
       return data;
     },
   });
+
+  // Choferes que han manejado el camión seleccionado (para el filtro PDF camión + choferes)
+  const choferesDelCamion = useMemo(() => {
+    if (!pdfCamionId || pdfCamionId === "todos") return [];
+    const map = new Map();
+    viajes.forEach((v) => {
+      if (String(v.camion_id) === pdfCamionId && v.conductor_id != null) {
+        const id = String(v.conductor_id);
+        if (!map.has(id)) {
+          map.set(
+            id,
+            v.conductor_nombre ||
+              conductores.find((c) => String(c.id) === id)?.nombre ||
+              "Sin nombre",
+          );
+        }
+      }
+    });
+    return [...map.entries()]
+      .map(([id, nombre]) => ({ id, nombre }))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+  }, [pdfCamionId, viajes, conductores]);
+
+  // Al elegir un camión específico, preseleccionar todos sus choferes (= camión completo)
+  useEffect(() => {
+    if (pdfModo === "camion" && pdfCamionId && pdfCamionId !== "todos") {
+      setPdfChoferesIds(choferesDelCamion.map((c) => c.id));
+    } else {
+      setPdfChoferesIds([]);
+    }
+  }, [pdfCamionId, pdfModo, choferesDelCamion]);
 
   const { data: clientes = [] } = useQuery({
     queryKey: ["clientes"],
@@ -1056,34 +1096,94 @@ export default function FuelViajes() {
   };
 
   const generarRendimientoPDF = async () => {
-    if (!pdfConductorId || !pdfFechaInicio || !pdfFechaFin) return;
+    const isCamionMode = pdfModo === "camion";
+    const choferesIds = pdfChoferesIds.map(String);
+    const pdfEntidadId = isCamionMode ? pdfCamionId : pdfConductorId;
+
+    if (!pdfFechaInicio || !pdfFechaFin || !pdfEntidadId) return;
+
+    const camionTodos = isCamionMode && pdfEntidadId === "todos";
+    const choferTodos = !isCamionMode && pdfEntidadId === "todos";
+    const camionEspecifico = isCamionMode && !camionTodos;
+    // Camión específico exige al menos un chofer marcado
+    if (camionEspecifico && choferesIds.length === 0) return;
+
     setPdfGenerando(true);
     try {
-      const isTodos = pdfConductorId === "todos";
-      let conductorNombre = "Todos los choferes";
-      if (!isTodos) {
-        const conductor = conductores.find(
-          (c) => String(c.id) === pdfConductorId,
-        );
+      // colEntidad = columna agrupadora del layout general:
+      //  "camion" → todas las unidades · "chofer" → general de choferes o un
+      //  camión con 2+ choferes · null → layout individual (1 chofer)
+      let colEntidad = null;
+      if (camionTodos) colEntidad = "camion";
+      else if (choferTodos) colEntidad = "chofer";
+      else if (camionEspecifico && choferesIds.length > 1) colEntidad = "chofer";
+      const isGeneral = colEntidad !== null;
+      const isColCamion = colEntidad === "camion";
+
+      const camionSel = camionEspecifico
+        ? camiones.find((c) => String(c.id) === pdfEntidadId)
+        : null;
+      if (camionEspecifico && !camionSel) return;
+
+      let entidadNombre;
+      if (camionTodos) entidadNombre = "Todas las unidades";
+      else if (choferTodos) entidadNombre = "Todos los choferes";
+      else if (camionEspecifico)
+        entidadNombre = `${camionSel.nombre}${camionSel.placas ? ` (${camionSel.placas})` : ""}`;
+      else {
+        const conductor = conductores.find((c) => String(c.id) === pdfEntidadId);
         if (!conductor) return;
-        conductorNombre = conductor.nombre;
+        entidadNombre = conductor.nombre;
       }
 
-      // Filtrar viajes del conductor en el rango o todos los viajes
+      // Subtítulo de choferes (solo camión específico)
+      let choferesTexto = "";
+      if (camionEspecifico) {
+        const todosDelCamion =
+          choferesDelCamion.length > 0 &&
+          choferesIds.length === choferesDelCamion.length;
+        if (todosDelCamion) {
+          choferesTexto = "Todos";
+        } else {
+          const nombres = choferesIds
+            .map(
+              (id) =>
+                conductores.find((c) => String(c.id) === id)?.nombre ||
+                choferesDelCamion.find((c) => c.id === id)?.nombre ||
+                "",
+            )
+            .filter(Boolean);
+          choferesTexto =
+            nombres.length <= 3
+              ? nombres.join(", ")
+              : `${choferesIds.length} seleccionados`;
+        }
+      }
+
+      // Filtrar viajes: chofer / todos los choferes / camión (todas o con choferes)
       const viajesChofer = viajes
         .filter((v) => {
           const fechaV = v.fecha ? v.fecha.split("T")[0] : "";
-          const matchChofer = isTodos || String(v.conductor_id) === pdfConductorId;
+          let matchEntidad;
+          if (isCamionMode) {
+            matchEntidad = camionTodos
+              ? true
+              : String(v.camion_id) === pdfEntidadId &&
+                choferesIds.includes(String(v.conductor_id));
+          } else {
+            matchEntidad = choferTodos || String(v.conductor_id) === pdfEntidadId;
+          }
           return (
-            matchChofer &&
+            matchEntidad &&
             fechaV >= pdfFechaInicio &&
             fechaV <= pdfFechaFin
           );
         })
         .sort((a, b) => {
-          if (isTodos) {
-            const nombreA = (a.conductor_nombre || "").trim().toLowerCase();
-            const nombreB = (b.conductor_nombre || "").trim().toLowerCase();
+          if (isGeneral) {
+            const campo = isColCamion ? "camion_nombre" : "conductor_nombre";
+            const nombreA = (a[campo] || "").trim().toLowerCase();
+            const nombreB = (b[campo] || "").trim().toLowerCase();
             const cmpNombre = nombreA.localeCompare(nombreB, "es");
             if (cmpNombre !== 0) return cmpNombre;
           }
@@ -1109,7 +1209,11 @@ export default function FuelViajes() {
       doc.setFontSize(16);
       doc.setFont(undefined, "bold");
       doc.text(
-        isTodos ? "Reporte de Rendimientos General" : "Reporte de Rendimientos",
+        camionTodos
+          ? "Reporte de Rendimientos por Unidad"
+          : choferTodos
+            ? "Reporte de Rendimientos General"
+            : "Reporte de Rendimientos",
         pageWidth / 2,
         22,
         { align: "center" }
@@ -1118,13 +1222,19 @@ export default function FuelViajes() {
 
       const infoY = Math.max(logoBottomY + 6, 36);
       doc.setFontSize(11);
-      doc.text(`Operador: ${conductorNombre}`, 14, infoY);
-      doc.text(`Período: ${pdfFechaInicio} al ${pdfFechaFin}`, 14, infoY + 7);
+      doc.text(`${isCamionMode ? "Unidad" : "Operador"}: ${entidadNombre}`, 14, infoY);
+      let infoOffset = 7;
+      if (camionEspecifico) {
+        doc.text(`Choferes: ${choferesTexto}`, 14, infoY + infoOffset);
+        infoOffset += 7;
+      }
+      doc.text(`Período: ${pdfFechaInicio} al ${pdfFechaFin}`, 14, infoY + infoOffset);
       doc.text(
         `Fecha Emisión: ${format(new Date(), "dd/MM/yyyy HH:mm")}`,
         14,
-        infoY + 14,
+        infoY + infoOffset + 7,
       );
+      const tablaStartY = infoY + infoOffset + 15;
 
       // Cálculos globales
       const totalKmGlobal = viajesChofer.reduce(
@@ -1147,10 +1257,10 @@ export default function FuelViajes() {
         totalLitrosGlobal > 0 ? totalKmGlobal / totalLitrosGlobal : 0;
 
       // Tabla de viajes
-      const headers = isTodos
+      const headers = isGeneral
         ? [
             "Fecha",
-            "Chofer",
+            isColCamion ? "Camión" : "Chofer",
             "Ruta",
             "Kilómetros",
             "Litros",
@@ -1175,15 +1285,19 @@ export default function FuelViajes() {
         const ruta = v.ruta_ida || v.ruta || "-";
         const casetas = (v.casetas_ida || 0) + (v.casetas_regreso || 0);
 
-        // Helper to get first 2 names/words of driver name to save PDF column space
-        const shortName = v.conductor_nombre
-          ? v.conductor_nombre.trim().split(/\s+/).slice(0, 2).join(" ")
-          : "-";
+        // Columna de entidad: camión + placas, o nombre corto del chofer
+        const entidadCol = isColCamion
+          ? v.camion_nombre
+            ? `${v.camion_nombre}${v.camion_placas ? ` ${v.camion_placas}` : ""}`
+            : "-"
+          : v.conductor_nombre
+            ? v.conductor_nombre.trim().split(/\s+/).slice(0, 2).join(" ")
+            : "-";
 
-        return isTodos
+        return isGeneral
           ? [
               v.fecha || "-",
-              shortName,
+              entidadCol,
               ruta,
               `${formatPdfNum(km).replace(".00", "")} km`,
               litros > 0 ? `${formatPdfNum(litros).replace(".00", "")} L` : "S/D",
@@ -1202,14 +1316,14 @@ export default function FuelViajes() {
       });
 
       autoTable(doc, {
-        startY: infoY + 22,
+        startY: tablaStartY,
         head: [headers],
         body:
           rows.length > 0
             ? rows
             : [["Sin viajes en este rango", "", "", "", "", "", ""]],
         foot: [
-          isTodos
+          isGeneral
             ? [
                 { content: "TOTALES", colSpan: 3, styles: { halign: "right" } },
                 `${formatPdfNum(totalKmGlobal).replace(".00", "")} km`,
@@ -1268,7 +1382,7 @@ export default function FuelViajes() {
           fontSize: 10,
         },
         styles: { fontSize: 9, textColor: [20, 20, 20], halign: "center" },
-        columnStyles: isTodos
+        columnStyles: isGeneral
           ? {
               0: { cellWidth: 22 },
               1: { halign: "left", cellWidth: 23 },
@@ -1423,9 +1537,11 @@ export default function FuelViajes() {
       doc.setTextColor(20, 20, 20);
       doc.setFont(undefined, "normal");
 
-      const nombreArchivo = isTodos
-        ? `Rendimientos_General_${pdfFechaInicio}_${pdfFechaFin}.pdf`
-        : `Rendimientos_${conductorNombre.replace(/ /g, "_")}_${pdfFechaInicio}_${pdfFechaFin}.pdf`;
+      const nombreArchivo = camionTodos
+        ? `Rendimientos_Unidades_${pdfFechaInicio}_${pdfFechaFin}.pdf`
+        : choferTodos
+          ? `Rendimientos_General_${pdfFechaInicio}_${pdfFechaFin}.pdf`
+          : `Rendimientos_${entidadNombre.replace(/[ ()]/g, "_")}_${pdfFechaInicio}_${pdfFechaFin}.pdf`;
       doc.save(nombreArchivo);
       setModalPdfAbierto(false);
     } finally {
@@ -1476,25 +1592,153 @@ export default function FuelViajes() {
             <div className="space-y-5 py-2">
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                  Chofer
+                  Tipo de reporte
                 </Label>
-                <Select
-                  value={pdfConductorId}
-                  onValueChange={setPdfConductorId}
-                >
-                  <SelectTrigger className="h-11 rounded-xl bg-background">
-                    <SelectValue placeholder="Seleccionar chofer..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos los choferes (Reporte General)</SelectItem>
-                    {conductores.map((c) => (
-                      <SelectItem key={c.id} value={String(c.id)}>
-                        {c.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { val: "chofer", icon: User, label: "Por chofer" },
+                    { val: "camion", icon: Truck, label: "Por camión" },
+                  ].map(({ val, icon: Icon, label }) => (
+                    <Button
+                      key={val}
+                      type="button"
+                      variant={pdfModo === val ? "default" : "outline"}
+                      onClick={() => setPdfModo(val)}
+                      className={`h-11 rounded-xl gap-2 ${pdfModo === val ? "bg-indigo-600 hover:bg-indigo-700 text-white" : ""}`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      {label}
+                    </Button>
+                  ))}
+                </div>
               </div>
+
+              {pdfModo === "chofer" && (
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                    Chofer
+                  </Label>
+                  <Select
+                    value={pdfConductorId}
+                    onValueChange={setPdfConductorId}
+                  >
+                    <SelectTrigger className="h-11 rounded-xl bg-background">
+                      <SelectValue placeholder="Seleccionar chofer..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todos">Todos los choferes (Reporte General)</SelectItem>
+                      {conductores.map((c) => (
+                        <SelectItem key={c.id} value={String(c.id)}>
+                          {c.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {pdfModo === "camion" && (
+                <>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                      Camión
+                    </Label>
+                    <Select value={pdfCamionId} onValueChange={setPdfCamionId}>
+                      <SelectTrigger className="h-11 rounded-xl bg-background">
+                        <SelectValue placeholder="Seleccionar camión..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="todos">Todas las unidades (Reporte General)</SelectItem>
+                        {camiones.map((c) => (
+                          <SelectItem key={c.id} value={String(c.id)}>
+                            {c.nombre}{c.placas ? ` - ${c.placas}` : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {pdfCamionId && pdfCamionId !== "todos" && (
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                        Choferes de esta unidad
+                      </Label>
+                      {choferesDelCamion.length === 0 ? (
+                        <p className="text-sm text-muted-foreground px-1 py-2">
+                          Esta unidad no tiene viajes con chofer registrado.
+                        </p>
+                      ) : (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button
+                              type="button"
+                              className="flex h-11 w-full items-center justify-between rounded-xl border border-input bg-background px-3 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                            >
+                              <span className={pdfChoferesIds.length ? "" : "text-muted-foreground"}>
+                                {pdfChoferesIds.length === 0
+                                  ? "Seleccionar choferes..."
+                                  : pdfChoferesIds.length === choferesDelCamion.length
+                                    ? `Todos (${choferesDelCamion.length})`
+                                    : pdfChoferesIds.length === 1
+                                      ? choferesDelCamion.find((c) => c.id === pdfChoferesIds[0])?.nombre || "1 chofer"
+                                      : `${pdfChoferesIds.length} de ${choferesDelCamion.length} choferes`}
+                              </span>
+                              <ChevronDown className="w-4 h-4 opacity-50 shrink-0" />
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent
+                            align="start"
+                            className="w-[--radix-popover-trigger-width] p-1"
+                          >
+                            <div className="max-h-72 overflow-y-auto">
+                              <div
+                                role="button"
+                                tabIndex={0}
+                                onClick={() =>
+                                  setPdfChoferesIds((prev) =>
+                                    prev.length === choferesDelCamion.length
+                                      ? []
+                                      : choferesDelCamion.map((c) => c.id),
+                                  )
+                                }
+                                className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm font-semibold hover:bg-accent"
+                              >
+                                <Checkbox
+                                  checked={pdfChoferesIds.length === choferesDelCamion.length}
+                                  className="pointer-events-none"
+                                />
+                                <span>Seleccionar todos</span>
+                              </div>
+                              <div className="my-1 h-px bg-border" />
+                              {choferesDelCamion.map((c) => {
+                                const checked = pdfChoferesIds.includes(c.id);
+                                return (
+                                  <div
+                                    key={c.id}
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() =>
+                                      setPdfChoferesIds((prev) =>
+                                        prev.includes(c.id)
+                                          ? prev.filter((x) => x !== c.id)
+                                          : [...prev, c.id],
+                                      )
+                                    }
+                                    className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm hover:bg-accent"
+                                  >
+                                    <Checkbox checked={checked} className="pointer-events-none" />
+                                    <span>{c.nombre}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -1523,24 +1767,45 @@ export default function FuelViajes() {
                 </div>
               </div>
 
-              {pdfConductorId &&
+              {(pdfModo === "camion" ? pdfCamionId : pdfConductorId) &&
                 pdfFechaInicio &&
                 pdfFechaFin &&
                 (() => {
-                  const isTodos = pdfConductorId === "todos";
+                  const isCamionMode = pdfModo === "camion";
+                  const entidadId = isCamionMode ? pdfCamionId : pdfConductorId;
+                  const camionTodos = isCamionMode && entidadId === "todos";
+                  const choferTodos = !isCamionMode && entidadId === "todos";
+                  const camionEspecifico = isCamionMode && !camionTodos;
+                  const choferesIds = pdfChoferesIds.map(String);
+                  if (camionEspecifico && choferesIds.length === 0) return null;
                   const count = viajes.filter((v) => {
                     const fechaV = v.fecha ? v.fecha.split("T")[0] : "";
-                    const matchChofer = isTodos || String(v.conductor_id) === pdfConductorId;
+                    let matchEntidad;
+                    if (isCamionMode) {
+                      matchEntidad = camionTodos
+                        ? true
+                        : String(v.camion_id) === entidadId &&
+                          choferesIds.includes(String(v.conductor_id));
+                    } else {
+                      matchEntidad = choferTodos || String(v.conductor_id) === entidadId;
+                    }
                     return (
-                      matchChofer &&
+                      matchEntidad &&
                       fechaV >= pdfFechaInicio &&
                       fechaV <= pdfFechaFin
                     );
                   }).length;
-                  const nombre = isTodos
-                    ? "todos los choferes"
-                    : conductores.find((c) => String(c.id) === pdfConductorId)
-                      ?.nombre || "";
+                  const nombre = camionTodos
+                    ? "todas las unidades"
+                    : choferTodos
+                      ? "todos los choferes"
+                      : camionEspecifico
+                        ? `${camiones.find((c) => String(c.id) === entidadId)?.nombre || "la unidad"}${
+                            choferesIds.length === choferesDelCamion.length
+                              ? ""
+                              : ` (${choferesIds.length} chofer${choferesIds.length !== 1 ? "es" : ""})`
+                          }`
+                        : conductores.find((c) => String(c.id) === entidadId)?.nombre || "";
                   return (
                     <div className="flex items-center gap-3 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-200 dark:border-indigo-800/40">
                       <BarChart2 className="w-4 h-4 text-indigo-500 shrink-0" />
@@ -1566,7 +1831,10 @@ export default function FuelViajes() {
               <Button
                 onClick={generarRendimientoPDF}
                 disabled={
-                  !pdfConductorId ||
+                  (pdfModo === "camion"
+                    ? !pdfCamionId ||
+                      (pdfCamionId !== "todos" && pdfChoferesIds.length === 0)
+                    : !pdfConductorId) ||
                   !pdfFechaInicio ||
                   !pdfFechaFin ||
                   pdfGenerando
