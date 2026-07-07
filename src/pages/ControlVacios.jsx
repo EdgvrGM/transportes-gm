@@ -45,29 +45,49 @@ import {
   MapPin,
   User,
   Truck,
-  Briefcase,
   PackageOpen,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Check,
   Clock,
+  CalendarDays,
+  List,
+  AlertTriangle,
+  StickyNote,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import VisorImagen from "@/components/fuel/VisorImagen";
 
 const ESTATUS_VACIOS = [
-  { value: "pendiente_vacio", label: "Pendiente entrega de vacío", badge: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300 border border-orange-200 dark:border-orange-800", stripe: "bg-orange-400" },
-  { value: "vacio_entregado", label: "Vacío entregado", badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800", stripe: "bg-emerald-400" },
-  { value: "en_piso", label: "Contenedor en piso", badge: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border border-purple-200 dark:border-purple-800", stripe: "bg-purple-400" },
+  { value: "pendiente_vacio", label: "Pendiente entrega de vacío", corto: "Pendiente", badge: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300 border border-orange-200 dark:border-orange-800", stripe: "bg-orange-400" },
+  { value: "vacio_entregado", label: "Vacío entregado", corto: "Entregado", badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800", stripe: "bg-emerald-400" },
+  { value: "en_piso", label: "Contenedor en piso", corto: "En piso", badge: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border border-purple-200 dark:border-purple-800", stripe: "bg-purple-400" },
 ];
 
 const getEstatus = (v) => ESTATUS_VACIOS.find((e) => e.value === v) || ESTATUS_VACIOS[0];
+
+const DIAS_SEMANA = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
 function localDateStr(date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
+}
+
+function getLunes(d) {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+  return x;
+}
+
+function addDays(d, n) {
+  const x = new Date(d);
+  x.setDate(x.getDate() + n);
+  return x;
 }
 
 // Extrae la ruta interna del bucket "vacios" a partir de su URL pública.
@@ -99,8 +119,9 @@ function SelectCatalogo({ value, onChange, placeholder, options, getLabel }) {
 // Igual que SelectCatalogo pero con opción "Otro (externo)" que cambia a un input
 // de texto libre, para equipo/personas que no están en el sistema.
 // Pasar una `key` ligada al registro actual para que el modo se reinicie al cambiar de registro.
-function SelectCatalogoLibre({ idValue, libreValue, onIdChange, onLibreChange, placeholder, options, getLabel }) {
+function SelectCatalogoLibre({ idValue, libreValue, onIdChange, onLibreChange, placeholder, options, getLabel, compacto = false }) {
   const [modoLibre, setModoLibre] = useState(!!libreValue);
+  const hInput = compacto ? "h-8 rounded-lg text-sm" : "rounded-xl";
   if (modoLibre) {
     return (
       <div className="flex gap-1.5">
@@ -109,14 +130,14 @@ function SelectCatalogoLibre({ idValue, libreValue, onIdChange, onLibreChange, p
           value={libreValue}
           onChange={(e) => onLibreChange(e.target.value)}
           placeholder="Externo (nombre / placas)"
-          className="rounded-xl"
+          className={hInput}
         />
         <Button
           type="button"
           variant="ghost"
           size="icon"
           title="Volver a la lista"
-          className="rounded-xl shrink-0 text-muted-foreground"
+          className={`${compacto ? "h-8 w-8 rounded-lg" : "rounded-xl"} shrink-0 text-muted-foreground`}
           onClick={() => { setModoLibre(false); onLibreChange(""); }}
         >
           <X className="w-4 h-4" />
@@ -132,7 +153,7 @@ function SelectCatalogoLibre({ idValue, libreValue, onIdChange, onLibreChange, p
         onIdChange(v === "none" ? "" : v);
       }}
     >
-      <SelectTrigger className="rounded-xl">
+      <SelectTrigger className={compacto ? "h-8 rounded-lg text-sm" : "rounded-xl"}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
@@ -181,36 +202,293 @@ const FORM_VACIO = {
   fotos_urls: [],
 };
 
-const FORM_ENTREGA = {
-  id: null,
-  modalidad: "sencillo",
-  numero_contenedor: "",
-  numero_contenedor_2: "",
-  conductor_carga_id: "",
-  conductor_carga_libre: "",
-  camion_carga_id: "",
-  camion_carga_libre: "",
-  remolque_carga_id: "",
-  remolque_carga_libre: "",
-  remolque_carga_id_2: "",
-  remolque_carga_libre_2: "",
-  conductor_entrega_id: "",
-  conductor_entrega_libre: "",
-  camion_entrega_id: "",
-  camion_entrega_libre: "",
-  remolque_entrega_id: "",
-  remolque_entrega_libre: "",
-  remolque_entrega_id_2: "",
-  remolque_entrega_libre_2: "",
-  fecha_entrega_vacio: "",
-  lugar_entrega_vacio: "",
-  entrega_con_cita: false,
-  horario_cita: "",
-};
+// Captura rápida por día: replica la velocidad de anotar en la hoja de papel
+// (contenedor + chofer + destino + nota). Tras guardar queda abierto y con foco
+// para capturar el siguiente contenedor del mismo día.
+function QuickAddVacio({ fechaStr, etiquetaDia, conductores, onGuardar, guardando }) {
+  const [abierto, setAbierto] = useState(false);
+  const [numero, setNumero] = useState("");
+  const [numero2, setNumero2] = useState("");
+  const [esFull, setEsFull] = useState(false);
+  const [conductorId, setConductorId] = useState("");
+  const [conductorLibre, setConductorLibre] = useState("");
+  const [destino, setDestino] = useState("");
+  const [nota, setNota] = useState("");
+  const [error, setError] = useState(null);
+  const numeroRef = useRef(null);
+
+  const reset = () => {
+    setNumero(""); setNumero2(""); setEsFull(false);
+    setConductorId(""); setConductorLibre("");
+    setDestino(""); setNota(""); setError(null);
+  };
+
+  const cerrar = () => { reset(); setAbierto(false); };
+
+  const guardar = async () => {
+    if (!numero.trim()) { setError("Captura el número de contenedor."); return; }
+    if (esFull && !numero2.trim()) { setError("En full captura el segundo contenedor."); return; }
+    setError(null);
+    const ok = await onGuardar({
+      modalidad: esFull ? "full" : "sencillo",
+      numero_contenedor: numero.trim().toUpperCase(),
+      numero_contenedor_2: esFull ? numero2.trim().toUpperCase() : null,
+      fecha_carga: fechaStr,
+      conductor_carga_id: conductorId ? parseInt(conductorId, 10) : null,
+      conductor_carga_libre: conductorLibre.trim() || null,
+      destino: destino.trim() || null,
+      notas: nota.trim() || null,
+      estatus: "pendiente_vacio",
+      fotos_urls: [],
+    });
+    if (ok) {
+      reset();
+      numeroRef.current?.focus();
+    }
+  };
+
+  const teclas = (e) => {
+    if (e.key === "Enter") { e.preventDefault(); guardar(); }
+    if (e.key === "Escape") { e.preventDefault(); cerrar(); }
+  };
+
+  if (!abierto) {
+    return (
+      <button
+        onClick={() => setAbierto(true)}
+        aria-label={`Agregar contenedor a ${etiquetaDia}`}
+        className="w-full h-8 rounded-lg border border-dashed border-border text-muted-foreground hover:text-yellow-700 dark:hover:text-yellow-500 hover:border-gm-primary/60 hover:bg-gm-primary/5 text-xs font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer"
+      >
+        <Plus className="w-3.5 h-3.5" /> Agregar
+      </button>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-gm-primary/50 bg-gm-primary/5 p-2 space-y-1.5">
+      <div className="flex items-center gap-1.5">
+        <Input
+          ref={numeroRef}
+          autoFocus
+          value={numero}
+          onChange={(e) => setNumero(e.target.value)}
+          onKeyDown={teclas}
+          placeholder="Nº contenedor"
+          className="h-8 rounded-lg text-sm font-bold uppercase tracking-wide focus-visible:ring-gm-primary"
+        />
+        <button
+          type="button"
+          onClick={() => setEsFull((v) => !v)}
+          title="Full (doble contenedor)"
+          className={`h-8 px-2 rounded-lg text-[10px] font-black border transition-colors shrink-0 cursor-pointer ${
+            esFull
+              ? "bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-900/40 dark:text-indigo-300 dark:border-indigo-700"
+              : "bg-background text-muted-foreground border-border hover:text-foreground"
+          }`}
+        >
+          FULL
+        </button>
+      </div>
+      {esFull && (
+        <Input
+          value={numero2}
+          onChange={(e) => setNumero2(e.target.value)}
+          onKeyDown={teclas}
+          placeholder="Nº contenedor 2"
+          className="h-8 rounded-lg text-sm font-bold uppercase tracking-wide focus-visible:ring-gm-primary"
+        />
+      )}
+      <SelectCatalogoLibre
+        compacto
+        idValue={conductorId}
+        libreValue={conductorLibre}
+        onIdChange={(v) => { setConductorId(v); setConductorLibre(""); }}
+        onLibreChange={(v) => { setConductorLibre(v); setConductorId(""); }}
+        placeholder="Chofer"
+        options={conductores}
+        getLabel={(o) => o.nombre}
+      />
+      <Input
+        value={destino}
+        onChange={(e) => setDestino(e.target.value)}
+        onKeyDown={teclas}
+        list="destinos-vacios"
+        placeholder="Destino"
+        className="h-8 rounded-lg text-sm"
+      />
+      <Input
+        value={nota}
+        onChange={(e) => setNota(e.target.value)}
+        onKeyDown={teclas}
+        placeholder="Nota (opcional)"
+        className="h-8 rounded-lg text-sm"
+      />
+      {error && <p className="text-[11px] font-bold text-red-600 dark:text-red-400">{error}</p>}
+      <div className="flex gap-1.5">
+        <Button
+          onClick={guardar}
+          disabled={guardando}
+          className="flex-1 h-8 rounded-lg text-xs font-bold gap-1 bg-gm-primary text-black hover:bg-gm-primary/90"
+        >
+          {guardando ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+          Guardar
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Cerrar captura rápida"
+          className="h-8 w-8 rounded-lg text-muted-foreground"
+          onClick={cerrar}
+        >
+          <X className="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// Tarjeta compacta de contenedor. Se usa en el tablero semanal, en rezagados,
+// en resultados de búsqueda y en la vista de lista (con mostrarFecha).
+function TarjetaVacio({ c, ctx, mostrarFecha = false }) {
+  const est = getEstatus(c.estatus);
+  const esFull = c.modalidad === "full" && c.numero_contenedor_2;
+  const tieneChoferCarga = c.conductor_carga_id != null || !!c.conductor_carga_libre;
+  const tieneChoferEntrega = c.conductor_entrega_id != null || !!c.conductor_entrega_libre;
+  const cliente = c.cliente_id ? ctx.getClienteName(c.cliente_id) : null;
+
+  return (
+    <div className="flex bg-card border border-border rounded-xl overflow-hidden hover:shadow-md transition-shadow duration-200">
+      <div className={`w-1 shrink-0 ${est.stripe}`} />
+      <div className="flex-1 min-w-0 p-2.5">
+        <div className="flex items-start justify-between gap-1 mb-1">
+          <div className="min-w-0">
+            <p className="text-sm font-black tracking-tight text-foreground leading-snug break-all">
+              {c.numero_contenedor}
+              {esFull && (
+                <>
+                  <span className="text-muted-foreground/50"> + </span>
+                  {c.numero_contenedor_2}
+                  <span className="ml-1.5 inline-flex items-center align-middle text-[9px] font-black px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">FULL</span>
+                </>
+              )}
+            </p>
+            {mostrarFecha && (
+              <p className="text-[10px] font-bold text-muted-foreground mt-0.5">
+                Cargado {ctx.formatearFecha(c.fecha_carga)}
+              </p>
+            )}
+          </div>
+          <div className="flex items-center shrink-0 -mr-1 -mt-1">
+            {c.fotos_urls?.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label={`Ver ${c.fotos_urls.length} foto(s)`}
+                title={`Ver fotos (${c.fotos_urls.length})`}
+                className="rounded-lg h-7 px-1.5 gap-0.5 cursor-pointer text-muted-foreground hover:text-foreground"
+                onClick={() => ctx.onFotos(c.fotos_urls)}
+              >
+                <Images className="w-3.5 h-3.5" />
+                <span className="text-[10px] font-bold">{c.fotos_urls.length}</span>
+              </Button>
+            )}
+            <Button variant="ghost" size="sm" aria-label="Editar" className="rounded-lg h-7 w-7 p-0 cursor-pointer text-muted-foreground hover:text-foreground" onClick={() => ctx.onEditar(c)}>
+              <Edit className="w-3.5 h-3.5" />
+            </Button>
+            <Button variant="ghost" size="sm" aria-label="Eliminar" className="rounded-lg h-7 w-7 p-0 text-red-500/70 hover:text-red-500 hover:bg-red-500/10 cursor-pointer" onClick={() => ctx.onEliminar(c.id)}>
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-0.5">
+          {tieneChoferCarga && (
+            <div className="flex items-center gap-1 text-xs text-foreground font-medium">
+              <User className="w-3 h-3 shrink-0 text-muted-foreground" />
+              <span className="truncate">{ctx.showConductor(c.conductor_carga_id, c.conductor_carga_libre)}</span>
+            </div>
+          )}
+          {(c.destino || cliente) && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <MapPin className="w-3 h-3 shrink-0" />
+              <span className="truncate">{[c.destino, cliente].filter(Boolean).join(" · ")}</span>
+            </div>
+          )}
+          {c.notas && (
+            <div className="flex items-start gap-1 text-[11px] text-muted-foreground italic">
+              <StickyNote className="w-3 h-3 shrink-0 mt-0.5" />
+              <span className="line-clamp-2">{c.notas}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-2">
+          <Popover open={ctx.popoverEstatus === c.id} onOpenChange={(open) => ctx.setPopoverEstatus(open ? c.id : null)}>
+            <PopoverTrigger asChild>
+              <button className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full cursor-pointer hover:opacity-80 transition-opacity ${est.badge}`}>
+                {est.corto} <ChevronDown className="w-3 h-3" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-1.5" align="start" side="bottom">
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2 py-1 mb-0.5">Cambiar estatus</p>
+              {ESTATUS_VACIOS.map((e) => (
+                <button
+                  key={e.value}
+                  onClick={() => { ctx.onCambiarEstatus(c.id, e.value); ctx.setPopoverEstatus(null); }}
+                  className="w-full text-left px-2 py-1.5 rounded-lg hover:bg-muted transition-colors flex items-center justify-between gap-2 cursor-pointer"
+                >
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${e.badge}`}>{e.label}</span>
+                  {c.estatus === e.value && <Check className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
+                </button>
+              ))}
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        {c.estatus === "pendiente_vacio" && (
+          <>
+            {tieneChoferEntrega && (
+              <p className="mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground">
+                <Clock className="w-3 h-3 shrink-0" />
+                <span className="truncate">
+                  Prog: {ctx.showConductor(c.conductor_entrega_id, c.conductor_entrega_libre)}
+                  {c.lugar_entrega_vacio ? ` · ${c.lugar_entrega_vacio}` : ""}
+                  {c.entrega_con_cita && c.horario_cita ? ` · cita ${c.horario_cita}` : ""}
+                </span>
+              </p>
+            )}
+            <button
+              onClick={() => ctx.onEntregar(c)}
+              className="mt-1.5 w-full h-8 rounded-lg border border-dashed border-emerald-400/70 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-colors cursor-pointer"
+            >
+              <PackageOpen className="w-3.5 h-3.5" /> Entregar vacío
+            </button>
+          </>
+        )}
+
+        {c.estatus === "vacio_entregado" && tieneChoferEntrega && (
+          <div className="mt-1.5 pt-1.5 border-t border-border/60 flex items-start gap-1 text-[11px] text-emerald-700 dark:text-emerald-400">
+            <PackageOpen className="w-3 h-3 shrink-0 mt-0.5" />
+            <span className="min-w-0">
+              Entregó <span className="font-bold">{ctx.showConductor(c.conductor_entrega_id, c.conductor_entrega_libre)}</span>
+              {c.lugar_entrega_vacio ? ` · ${c.lugar_entrega_vacio}` : ""}
+              {c.fecha_entrega_vacio ? ` · ${ctx.formatearFecha(c.fecha_entrega_vacio)}` : ""}
+              {c.entrega_con_cita && c.horario_cita ? ` · cita ${c.horario_cita}` : ""}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function ControlVacios() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  const [vista, setVista] = useState("semana");
+  const [lunes, setLunes] = useState(() => getLunes(new Date()));
+  const [verRezagados, setVerRezagados] = useState(false);
 
   const [dialogAbierto, setDialogAbierto] = useState(false);
   const [esEdicion, setEsEdicion] = useState(false);
@@ -219,17 +497,23 @@ export default function ControlVacios() {
   const [popoverEstatus, setPopoverEstatus] = useState(null);
   const [fotoVisor, setFotoVisor] = useState(null);
   const [galeriaFotos, setGaleriaFotos] = useState(null);
-  const [dialogEntrega, setDialogEntrega] = useState(false);
-  const [entregaData, setEntregaData] = useState(FORM_ENTREGA);
   const [fotoAEliminar, setFotoAEliminar] = useState(null);
   const [subiendoFotos, setSubiendoFotos] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
+  // Remonta los selects de entrega cuando se copia el equipo de carga, para que
+  // SelectCatalogoLibre re-evalúe su modo lista/libre con los valores copiados.
+  const [copiaTick, setCopiaTick] = useState(0);
+
+  // Entrega rápida (1 tap desde la tarjeta): registra quién/dónde/cuándo y
+  // marca el estatus como vacio_entregado en una sola operación.
+  const [entregaDe, setEntregaDe] = useState(null);
+  const [entregaForm, setEntregaForm] = useState(null);
 
   // URLs subidas a Storage durante esta sesión de edición pero aún no guardadas en BD.
   // Si se quitan o se cancela el diálogo, se borran del bucket para no dejar archivos muertos.
   const fotosSubidasSesion = useRef(new Set());
 
-  // Filtros
+  // Filtros (vista lista)
   const [busqueda, setBusqueda] = useState("");
   const [filtroEstatus, setFiltroEstatus] = useState("pendiente_vacio");
   const [filtroConductor, setFiltroConductor] = useState("todos");
@@ -288,12 +572,10 @@ export default function ControlVacios() {
     const c = camiones.find((x) => String(x.id) === String(id));
     return c ? `${c.nombre}${c.placas ? ` (${c.placas})` : ""}` : "—";
   };
-  const getRemolquePlacas = (id) => remolques.find((r) => String(r.id) === String(id))?.placas || "—";
 
   // Despliegue: usa el catálogo si hay ID; si no, el texto libre (externo) con marca "(ext.)".
   const showConductor = (id, libre) => (id != null ? getConductorName(id) : (libre?.trim() ? `${libre} (ext.)` : "—"));
   const showCamion = (id, libre) => (id != null ? getCamionName(id) : (libre?.trim() ? `${libre} (ext.)` : "—"));
-  const showRemolque = (id, libre) => (id != null ? getRemolquePlacas(id) : (libre?.trim() || null));
 
   const formatearFecha = (s) => {
     if (!s) return "—";
@@ -304,14 +586,111 @@ export default function ControlVacios() {
     }
   };
 
+  // ---------- Semana ----------
+  const hoyStr = localDateStr(new Date());
+  const lunesStr = localDateStr(lunes);
+  const esSemanaActual = localDateStr(getLunes(new Date())) === lunesStr;
+
+  const dias = useMemo(
+    () =>
+      Array.from({ length: 7 }, (_, i) => {
+        const fecha = addDays(lunes, i);
+        return { nombre: DIAS_SEMANA[i], fecha, fechaStr: localDateStr(fecha) };
+      }),
+    [lunes]
+  );
+
+  const porDia = useMemo(() => {
+    const map = {};
+    for (const c of contenedores) {
+      if (!c.fecha_carga) continue;
+      (map[c.fecha_carga] ||= []).push(c);
+    }
+    for (const k in map) {
+      map[k].sort((a, b) => (a.created_at || "").localeCompare(b.created_at || ""));
+    }
+    return map;
+  }, [contenedores]);
+
+  // Domingo solo se muestra si tiene registros (la operación normal es L-S, como en papel).
+  const diasVisibles = dias.filter(
+    (d, i) => i < 6 || (porDia[d.fechaStr]?.length || 0) > 0 || d.fechaStr === hoyStr
+  );
+
+  // Pendientes cargados antes de la semana visible: es lo que en papel se pierde
+  // al voltear la hoja. Siempre visibles como banner.
+  const rezagados = useMemo(
+    () => contenedores.filter((c) => c.estatus === "pendiente_vacio" && c.fecha_carga && c.fecha_carga < lunesStr),
+    [contenedores, lunesStr]
+  );
+
+  const contadores = useMemo(() => {
+    const acc = {};
+    for (const e of ESTATUS_VACIOS) acc[e.value] = 0;
+    for (const c of contenedores) {
+      if (acc[c.estatus] != null) acc[c.estatus] += 1;
+    }
+    return acc;
+  }, [contenedores]);
+
+  const destinosSugeridos = useMemo(
+    () => [...new Set(contenedores.map((c) => c.destino?.trim()).filter(Boolean))].sort(),
+    [contenedores]
+  );
+  const lugaresSugeridos = useMemo(
+    () => [...new Set(contenedores.map((c) => c.lugar_entrega_vacio?.trim()).filter(Boolean))].sort(),
+    [contenedores]
+  );
+
+  // ---------- Búsqueda global (todo el historial, ignora semana y vista) ----------
+  const textoBusqueda = busqueda.trim().toLowerCase();
+  const resultadosBusqueda = useMemo(() => {
+    if (!textoBusqueda) return [];
+    return contenedores.filter((c) => {
+      const blob = [
+        c.numero_contenedor,
+        c.numero_contenedor_2,
+        c.destino,
+        c.notas,
+        c.lugar_entrega_vacio,
+        c.conductor_carga_libre,
+        c.conductor_entrega_libre,
+        c.conductor_carga_id != null ? getConductorName(c.conductor_carga_id) : "",
+        c.cliente_id ? getClienteName(c.cliente_id) : "",
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return blob.includes(textoBusqueda);
+    });
+  }, [contenedores, textoBusqueda, conductores, clientes]);
+
+  // ---------- Lista (historial completo con filtros; pendientes más viejos primero) ----------
+  const listaItems = useMemo(() => {
+    const arr = contenedores.filter((c) => {
+      if (filtroEstatus !== "todos" && c.estatus !== filtroEstatus) return false;
+      if (filtroConductor !== "todos" && String(c.conductor_carga_id) !== filtroConductor) return false;
+      return true;
+    });
+    arr.sort((a, b) => {
+      const ap = a.estatus === "pendiente_vacio";
+      const bp = b.estatus === "pendiente_vacio";
+      if (ap !== bp) return ap ? -1 : 1;
+      if (ap) return (a.fecha_carga || "").localeCompare(b.fecha_carga || "");
+      return (b.fecha_carga || "").localeCompare(a.fecha_carga || "");
+    });
+    return arr;
+  }, [contenedores, filtroEstatus, filtroConductor]);
+
+  // ---------- Mutations ----------
   const guardarMutation = useMutation({
     mutationFn: async (datos) => {
       const esFull = datos.modalidad === "full";
       const payload = {
         id: datos.id,
         modalidad: esFull ? "full" : "sencillo",
-        numero_contenedor: datos.numero_contenedor.trim(),
-        numero_contenedor_2: esFull ? (datos.numero_contenedor_2?.trim() || null) : null,
+        numero_contenedor: datos.numero_contenedor.trim().toUpperCase(),
+        numero_contenedor_2: esFull ? (datos.numero_contenedor_2?.trim().toUpperCase() || null) : null,
         fecha_carga: datos.fecha_carga || null,
         cliente_id: datos.cliente_id || null,
         destino: datos.destino?.trim() || null,
@@ -373,6 +752,35 @@ export default function ControlVacios() {
     onError: (err) => setErrorMsg(err.message),
   });
 
+  const quickAddMutation = useMutation({
+    mutationFn: async (payload) => {
+      const { error } = await supabase.from("contenedores_vacios").insert(payload);
+      if (error) throw error;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["controlVacios"] });
+      toast({
+        title: "Contenedor agregado",
+        description: `${variables.numero_contenedor}${variables.numero_contenedor_2 ? ` + ${variables.numero_contenedor_2}` : ""} · ${formatearFecha(variables.fecha_carga)}`,
+      });
+    },
+    onError: (err) =>
+      toast({
+        variant: "destructive",
+        title: "Error al agregar contenedor",
+        description: err?.message || "No se pudo guardar el contenedor.",
+      }),
+  });
+
+  const handleQuickAdd = async (payload) => {
+    try {
+      await quickAddMutation.mutateAsync(payload);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const actualizarEstatusMutation = useMutation({
     mutationFn: async ({ id, estatus }) => {
       const { error } = await supabase
@@ -397,42 +805,35 @@ export default function ControlVacios() {
       }),
   });
 
-  const guardarEntregaMutation = useMutation({
-    mutationFn: async (d) => {
+  const entregaRapidaMutation = useMutation({
+    mutationFn: async ({ id, form }) => {
       const { error } = await supabase
         .from("contenedores_vacios")
         .update({
-          conductor_entrega_id: d.conductor_entrega_id ? parseInt(d.conductor_entrega_id, 10) : null,
-          conductor_entrega_libre: d.conductor_entrega_libre?.trim() || null,
-          camion_entrega_id: d.camion_entrega_id ? parseInt(d.camion_entrega_id, 10) : null,
-          camion_entrega_libre: d.camion_entrega_libre?.trim() || null,
-          remolque_entrega_id: d.remolque_entrega_id ? parseInt(d.remolque_entrega_id, 10) : null,
-          remolque_entrega_libre: d.remolque_entrega_libre?.trim() || null,
-          remolque_entrega_id_2: d.modalidad === "full" && d.remolque_entrega_id_2 ? parseInt(d.remolque_entrega_id_2, 10) : null,
-          remolque_entrega_libre_2: d.modalidad === "full" ? (d.remolque_entrega_libre_2?.trim() || null) : null,
-          fecha_entrega_vacio: d.fecha_entrega_vacio || null,
-          lugar_entrega_vacio: d.lugar_entrega_vacio?.trim() || null,
-          entrega_con_cita: !!d.entrega_con_cita,
-          horario_cita: d.entrega_con_cita ? (d.horario_cita?.trim() || null) : null,
+          conductor_entrega_id: form.conductor_entrega_id ? parseInt(form.conductor_entrega_id, 10) : null,
+          conductor_entrega_libre: form.conductor_entrega_libre?.trim() || null,
+          camion_entrega_id: form.camion_entrega_id ? parseInt(form.camion_entrega_id, 10) : null,
+          camion_entrega_libre: form.camion_entrega_libre?.trim() || null,
+          remolque_entrega_id: form.remolque_entrega_id ? parseInt(form.remolque_entrega_id, 10) : null,
+          remolque_entrega_libre: form.remolque_entrega_libre?.trim() || null,
+          remolque_entrega_id_2: form.remolque_entrega_id_2 ? parseInt(form.remolque_entrega_id_2, 10) : null,
+          remolque_entrega_libre_2: form.remolque_entrega_libre_2?.trim() || null,
+          fecha_entrega_vacio: form.fecha_entrega_vacio || null,
+          lugar_entrega_vacio: form.lugar_entrega_vacio?.trim() || null,
+          entrega_con_cita: !!form.entrega_con_cita,
+          horario_cita: form.entrega_con_cita ? (form.horario_cita?.trim() || null) : null,
+          estatus: "vacio_entregado",
         })
-        .eq("id", d.id);
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["controlVacios"] });
-      setDialogEntrega(false);
+      setEntregaDe(null);
+      toast({ title: "Vacío entregado", description: "Se registró la entrega y se actualizó el estatus." });
     },
     onError: (err) => setErrorMsg(err.message),
   });
-
-  const handleGuardarEntrega = () => {
-    setErrorMsg(null);
-    if (!entregaData.conductor_entrega_id && !entregaData.conductor_entrega_libre?.trim()) {
-      setErrorMsg("Indica el conductor que entrega el vacío (de la lista o externo).");
-      return;
-    }
-    guardarEntregaMutation.mutate(entregaData);
-  };
 
   const eliminarMutation = useMutation({
     mutationFn: async (id) => {
@@ -464,6 +865,7 @@ export default function ControlVacios() {
     },
   });
 
+  // ---------- Handlers ----------
   // Al cerrar el diálogo sin guardar, borra del Storage las fotos subidas en esta
   // sesión que nunca se persistieron, para no dejar archivos muertos.
   const cerrarDialogAlta = async (open) => {
@@ -515,7 +917,7 @@ export default function ControlVacios() {
       remolque_carga_libre: c.remolque_carga_libre || "",
       remolque_carga_id_2: c.remolque_carga_id_2 != null ? String(c.remolque_carga_id_2) : "",
       remolque_carga_libre_2: c.remolque_carga_libre_2 || "",
-      estatus: c.estatus || "cargado",
+      estatus: c.estatus || "pendiente_vacio",
       conductor_entrega_id: c.conductor_entrega_id != null ? String(c.conductor_entrega_id) : "",
       conductor_entrega_libre: c.conductor_entrega_libre || "",
       camion_entrega_id: c.camion_entrega_id != null ? String(c.camion_entrega_id) : "",
@@ -534,21 +936,11 @@ export default function ControlVacios() {
     setDialogAbierto(true);
   };
 
-  const abrirEntrega = (c) => {
+  const abrirEntregaRapida = (c) => {
     setErrorMsg(null);
-    setEntregaData({
-      id: c.id,
-      modalidad: c.modalidad || "sencillo",
-      numero_contenedor: c.numero_contenedor || "",
-      numero_contenedor_2: c.numero_contenedor_2 || "",
-      conductor_carga_id: c.conductor_carga_id != null ? String(c.conductor_carga_id) : "",
-      conductor_carga_libre: c.conductor_carga_libre || "",
-      camion_carga_id: c.camion_carga_id != null ? String(c.camion_carga_id) : "",
-      camion_carga_libre: c.camion_carga_libre || "",
-      remolque_carga_id: c.remolque_carga_id != null ? String(c.remolque_carga_id) : "",
-      remolque_carga_libre: c.remolque_carga_libre || "",
-      remolque_carga_id_2: c.remolque_carga_id_2 != null ? String(c.remolque_carga_id_2) : "",
-      remolque_carga_libre_2: c.remolque_carga_libre_2 || "",
+    setCopiaTick(0);
+    setEntregaDe(c);
+    setEntregaForm({
       conductor_entrega_id: c.conductor_entrega_id != null ? String(c.conductor_entrega_id) : "",
       conductor_entrega_libre: c.conductor_entrega_libre || "",
       camion_entrega_id: c.camion_entrega_id != null ? String(c.camion_entrega_id) : "",
@@ -557,12 +949,36 @@ export default function ControlVacios() {
       remolque_entrega_libre: c.remolque_entrega_libre || "",
       remolque_entrega_id_2: c.remolque_entrega_id_2 != null ? String(c.remolque_entrega_id_2) : "",
       remolque_entrega_libre_2: c.remolque_entrega_libre_2 || "",
-      fecha_entrega_vacio: c.fecha_entrega_vacio || "",
+      fecha_entrega_vacio: c.fecha_entrega_vacio || localDateStr(new Date()),
       lugar_entrega_vacio: c.lugar_entrega_vacio || "",
       entrega_con_cita: !!c.entrega_con_cita,
       horario_cita: c.horario_cita || "",
     });
-    setDialogEntrega(true);
+  };
+
+  const copiarEquipoCarga = () => {
+    if (!entregaDe) return;
+    setEntregaForm((f) => ({
+      ...f,
+      conductor_entrega_id: entregaDe.conductor_carga_id != null ? String(entregaDe.conductor_carga_id) : "",
+      conductor_entrega_libre: entregaDe.conductor_carga_libre || "",
+      camion_entrega_id: entregaDe.camion_carga_id != null ? String(entregaDe.camion_carga_id) : "",
+      camion_entrega_libre: entregaDe.camion_carga_libre || "",
+      remolque_entrega_id: entregaDe.remolque_carga_id != null ? String(entregaDe.remolque_carga_id) : "",
+      remolque_entrega_libre: entregaDe.remolque_carga_libre || "",
+      remolque_entrega_id_2: entregaDe.remolque_carga_id_2 != null ? String(entregaDe.remolque_carga_id_2) : "",
+      remolque_entrega_libre_2: entregaDe.remolque_carga_libre_2 || "",
+    }));
+    setCopiaTick((t) => t + 1);
+  };
+
+  const handleConfirmarEntrega = () => {
+    setErrorMsg(null);
+    if (!entregaForm.conductor_entrega_id && !entregaForm.conductor_entrega_libre?.trim()) {
+      setErrorMsg("Indica el conductor que entrega el vacío (de la lista o externo).");
+      return;
+    }
+    entregaRapidaMutation.mutate({ id: entregaDe.id, form: entregaForm });
   };
 
   const handleGuardar = () => {
@@ -633,33 +1049,35 @@ export default function ControlVacios() {
     }
   };
 
-  const contadores = useMemo(() => {
-    const acc = {};
-    for (const e of ESTATUS_VACIOS) acc[e.value] = 0;
-    for (const c of contenedores) {
-      if (acc[c.estatus] != null) acc[c.estatus] += 1;
-    }
-    return acc;
-  }, [contenedores]);
+  // Contexto compartido con las tarjetas (helpers + acciones).
+  const ctx = {
+    getClienteName,
+    showConductor,
+    formatearFecha,
+    popoverEstatus,
+    setPopoverEstatus,
+    onEditar: abrirEditar,
+    onEliminar: setContenedorAEliminar,
+    onFotos: setGaleriaFotos,
+    onEntregar: abrirEntregaRapida,
+    onCambiarEstatus: (id, estatus) => actualizarEstatusMutation.mutate({ id, estatus }),
+  };
 
-  const listaFiltrada = useMemo(() => {
-    return contenedores.filter((c) => {
-      if (filtroEstatus !== "todos" && c.estatus !== filtroEstatus) return false;
-      if (filtroConductor !== "todos" && String(c.conductor_carga_id) !== filtroConductor) return false;
-      if (busqueda.trim()) {
-        const q = busqueda.trim().toLowerCase();
-        const enContenedor = (c.numero_contenedor || "").toLowerCase().includes(q)
-          || (c.numero_contenedor_2 || "").toLowerCase().includes(q);
-        if (!enContenedor) return false;
-      }
-      return true;
-    });
-  }, [contenedores, filtroEstatus, filtroConductor, busqueda]);
+  const rangoSemana = `${format(lunes, "dd MMM", { locale: es })} – ${format(addDays(lunes, 5), "dd MMM yyyy", { locale: es })}`;
+
+  const gridTarjetas = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3";
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
+    <div className="p-4 md:p-8 max-w-[1600px] mx-auto">
+      <datalist id="destinos-vacios">
+        {destinosSugeridos.map((d) => <option key={d} value={d} />)}
+      </datalist>
+      <datalist id="lugares-vacios">
+        {lugaresSugeridos.map((l) => <option key={l} value={l} />)}
+      </datalist>
+
       {/* Encabezado */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-gm-primary/15 flex items-center justify-center">
             <Container className="w-6 h-6 text-yellow-600" />
@@ -676,14 +1094,12 @@ export default function ControlVacios() {
         </Button>
       </div>
 
-
-      {/* Contadores por estatus */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        {/* Tarjeta TODOS */}
+      {/* Contadores por estatus (globales; llevan a la lista filtrada) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         <button
-          onClick={() => setFiltroEstatus("todos")}
-          className={`text-left p-3 rounded-2xl border transition-all ${
-            filtroEstatus === "todos" ? "ring-2 ring-gm-primary bg-gm-primary/5 border-gm-primary/30" : "bg-card border-border"
+          onClick={() => { setFiltroEstatus("todos"); setVista("lista"); }}
+          className={`text-left p-3 rounded-2xl border transition-all cursor-pointer ${
+            vista === "lista" && filtroEstatus === "todos" ? "ring-2 ring-gm-primary bg-gm-primary/5 border-gm-primary/30" : "bg-card border-border hover:border-gm-primary/40"
           }`}
         >
           <p className="text-2xl font-black text-foreground">{contenedores.length}</p>
@@ -692,205 +1108,231 @@ export default function ControlVacios() {
         {ESTATUS_VACIOS.map((e) => (
           <button
             key={e.value}
-            onClick={() => setFiltroEstatus(filtroEstatus === e.value ? "todos" : e.value)}
-            className={`text-left p-3 rounded-2xl border transition-all ${
-              filtroEstatus === e.value ? "ring-2 ring-gm-primary" : ""
-            } ${e.value === "pendiente_vacio" ? "bg-orange-50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-800" : "bg-card border-border"}`}
+            onClick={() => { setFiltroEstatus(e.value); setVista("lista"); }}
+            className={`text-left p-3 rounded-2xl border transition-all cursor-pointer ${
+              vista === "lista" && filtroEstatus === e.value ? "ring-2 ring-gm-primary" : ""
+            } ${e.value === "pendiente_vacio" ? "bg-orange-50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-800" : "bg-card border-border hover:border-gm-primary/40"}`}
           >
             <p className="text-2xl font-black text-foreground">{contadores[e.value] || 0}</p>
             <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground leading-tight mt-1">
-              {e.label}
+              {e.corto}
             </p>
           </button>
         ))}
       </div>
 
-      {/* Filtros */}
-      <div className="flex flex-col md:flex-row gap-3 mb-6">
-        <div className="relative flex-1">
+      {/* Toolbar: búsqueda + navegación de semana + vista */}
+      <div className="flex flex-col lg:flex-row lg:items-center gap-3 mb-5">
+        <div className="relative flex-1 min-w-0">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            placeholder="Buscar por número de contenedor..."
+            placeholder="Buscar contenedor, chofer, destino... (todo el historial)"
             className="pl-9 rounded-xl"
           />
+          {busqueda && (
+            <button
+              onClick={() => setBusqueda("")}
+              aria-label="Limpiar búsqueda"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
-        <Select value={filtroConductor} onValueChange={setFiltroConductor}>
-          <SelectTrigger className="rounded-xl md:w-48">
-            <SelectValue placeholder="Conductor" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos los conductores</SelectItem>
-            {conductores.map((c) => (
-              <SelectItem key={c.id} value={String(c.id)}>{c.nombre}</SelectItem>
+
+        <div className="flex flex-wrap items-center gap-3">
+          {vista === "semana" && !busqueda && (
+            <>
+              <div className="inline-flex items-center rounded-xl border border-border bg-card overflow-hidden">
+                <button
+                  onClick={() => setLunes((l) => getLunes(addDays(l, -7)))}
+                  aria-label="Semana anterior"
+                  className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setLunes(getLunes(new Date()))}
+                  className="h-9 px-3 text-xs font-bold border-x border-border text-foreground hover:bg-muted transition-colors cursor-pointer"
+                >
+                  Hoy
+                </button>
+                <button
+                  onClick={() => setLunes((l) => getLunes(addDays(l, 7)))}
+                  aria-label="Semana siguiente"
+                  className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-black text-foreground capitalize">{rangoSemana}</p>
+                {esSemanaActual && (
+                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-gm-primary/15 text-yellow-700 dark:text-yellow-500 border border-gm-primary/30">
+                    Semana actual
+                  </span>
+                )}
+              </div>
+            </>
+          )}
+
+          <div className="inline-flex rounded-xl border border-border bg-card p-0.5 ml-auto lg:ml-0">
+            {[
+              { v: "semana", l: "Semana", icon: CalendarDays },
+              { v: "lista", l: "Lista", icon: List },
+            ].map((m) => (
+              <button
+                key={m.v}
+                onClick={() => setVista(m.v)}
+                className={`inline-flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                  vista === m.v ? "bg-gm-primary text-black shadow-sm" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <m.icon className="w-3.5 h-3.5" /> {m.l}
+              </button>
             ))}
-          </SelectContent>
-        </Select>
+          </div>
+        </div>
       </div>
 
-      {/* Lista */}
       {isLoading ? (
         <div className="flex items-center justify-center py-20 text-muted-foreground">
           <Loader2 className="w-6 h-6 animate-spin mr-2" /> Cargando...
         </div>
-      ) : listaFiltrada.length === 0 ? (
-        <div className="text-center py-20 text-muted-foreground">
-          <Container className="w-12 h-12 mx-auto mb-3 opacity-40" />
-          <p className="font-medium">No hay contenedores que coincidan con los filtros.</p>
+      ) : busqueda ? (
+        /* ---------- Resultados de búsqueda (todo el historial) ---------- */
+        <div>
+          <p className="text-sm font-bold text-muted-foreground mb-3">
+            {resultadosBusqueda.length} resultado(s) para «{busqueda.trim()}» en todo el historial
+          </p>
+          {resultadosBusqueda.length === 0 ? (
+            <div className="text-center py-16 text-muted-foreground">
+              <Container className="w-12 h-12 mx-auto mb-3 opacity-40" />
+              <p className="font-medium">Ningún contenedor coincide con la búsqueda.</p>
+            </div>
+          ) : (
+            <div className={gridTarjetas}>
+              {resultadosBusqueda.map((c) => (
+                <TarjetaVacio key={c.id} c={c} ctx={ctx} mostrarFecha />
+              ))}
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="space-y-3">
-          {listaFiltrada.map((c) => {
-            const est = getEstatus(c.estatus);
-            return (
-              <div key={c.id} className="flex bg-card border border-border rounded-2xl overflow-hidden transition-shadow duration-200 hover:shadow-md">
-                {/* Barra lateral de color por estatus */}
-                <div className={`w-1.5 shrink-0 ${est.stripe}`} />
+      ) : vista === "semana" ? (
+        /* ---------- Tablero semanal (como la hoja de papel) ---------- */
+        <div>
+          {rezagados.length > 0 && (
+            <div className="mb-4 rounded-2xl border border-orange-300/70 dark:border-orange-800 bg-orange-50/60 dark:bg-orange-950/20 overflow-hidden">
+              <button
+                onClick={() => setVerRezagados((v) => !v)}
+                className="w-full flex items-center gap-2 p-3 cursor-pointer"
+              >
+                <AlertTriangle className="w-4 h-4 text-orange-500 shrink-0" />
+                <p className="text-sm font-bold text-orange-800 dark:text-orange-300 text-left flex-1">
+                  {rezagados.length} vacío(s) pendiente(s) de semanas anteriores
+                </p>
+                <ChevronDown className={`w-4 h-4 text-orange-500 shrink-0 transition-transform ${verRezagados ? "rotate-180" : ""}`} />
+              </button>
+              {verRezagados && (
+                <div className={`p-3 pt-0 ${gridTarjetas}`}>
+                  {rezagados.map((c) => (
+                    <TarjetaVacio key={c.id} c={c} ctx={ctx} mostrarFecha />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
-                <div className="flex-1 min-w-0 p-4">
-                  {/* Fila superior */}
-                  <div className="flex items-center justify-between gap-3 mb-3">
-                    {/* Número + badge + fotos */}
-                    <div className="flex items-center gap-2 flex-wrap min-w-0">
-                      <span className="text-lg font-black text-foreground tracking-tight">{c.numero_contenedor}</span>
-                      {c.modalidad === "full" && c.numero_contenedor_2 && (
-                        <>
-                          <span className="text-muted-foreground/50 font-black">+</span>
-                          <span className="text-lg font-black text-foreground tracking-tight">{c.numero_contenedor_2}</span>
-                          <span className="inline-flex items-center text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shrink-0">FULL</span>
-                        </>
-                      )}
-                      <Popover open={popoverEstatus === c.id} onOpenChange={(open) => setPopoverEstatus(open ? c.id : null)}>
-                        <PopoverTrigger asChild>
-                          <button className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full cursor-pointer hover:opacity-80 transition-opacity shrink-0 ${est.badge}`}>
-                            {est.label} <ChevronDown className="w-3 h-3" />
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-56 p-1.5" align="start" side="bottom">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2 py-1 mb-0.5">Cambiar estatus</p>
-                          {ESTATUS_VACIOS.map((e) => (
-                            <button
-                              key={e.value}
-                              onClick={() => { actualizarEstatusMutation.mutate({ id: c.id, estatus: e.value }); setPopoverEstatus(null); }}
-                              className="w-full text-left px-2 py-1.5 rounded-lg hover:bg-muted transition-colors flex items-center justify-between gap-2 cursor-pointer"
-                            >
-                              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${e.badge}`}>{e.label}</span>
-                              {c.estatus === e.value && <Check className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
-                            </button>
-                          ))}
-                        </PopoverContent>
-                      </Popover>
+          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 ${diasVisibles.length > 6 ? "2xl:grid-cols-7" : "2xl:grid-cols-6"}`}>
+            {diasVisibles.map((d) => {
+              const items = porDia[d.fechaStr] || [];
+              const esHoy = d.fechaStr === hoyStr;
+              return (
+                <div
+                  key={d.fechaStr}
+                  className={`rounded-2xl border p-2 flex flex-col gap-2 min-h-[120px] ${
+                    esHoy
+                      ? "border-gm-primary/50 bg-gm-primary/[0.04] ring-1 ring-gm-primary/30"
+                      : "border-border bg-muted/20"
+                  }`}
+                >
+                  <div className="flex items-center justify-between px-1 pt-0.5">
+                    <div className="flex items-baseline gap-1.5 min-w-0">
+                      <p className="text-xs font-black uppercase tracking-wide text-foreground">{d.nombre}</p>
+                      <p className="text-[10px] font-bold text-muted-foreground capitalize">
+                        {format(d.fecha, "dd MMM", { locale: es })}
+                      </p>
                     </div>
-                    {/* Acciones */}
                     <div className="flex items-center gap-1 shrink-0">
-                      {c.fotos_urls?.length > 0 && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          aria-label={`Ver ${c.fotos_urls.length} foto(s)`}
-                          title={`Ver fotos (${c.fotos_urls.length})`}
-                          className="rounded-lg h-8 px-2 gap-1 cursor-pointer text-muted-foreground hover:text-foreground"
-                          onClick={() => setGaleriaFotos(c.fotos_urls)}
-                        >
-                          <Images className="w-3.5 h-3.5" />
-                          <span className="text-[11px] font-bold">{c.fotos_urls.length}</span>
-                        </Button>
+                      {esHoy && (
+                        <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-gm-primary text-black">HOY</span>
                       )}
-                      <Button variant="ghost" size="sm" aria-label="Editar" className="rounded-lg h-8 w-8 p-0 cursor-pointer" onClick={() => abrirEditar(c)}>
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" aria-label="Eliminar" className="rounded-lg h-8 w-8 p-0 text-red-500 hover:bg-red-500/10 cursor-pointer" onClick={() => setContenedorAEliminar(c.id)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      {items.length > 0 && (
+                        <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+                          {items.length}
+                        </span>
+                      )}
                     </div>
                   </div>
 
-                  {/* Cuerpo: dos columnas con etiquetas */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* Columna CARGA */}
-                    <div className="space-y-1.5">
-                      <p className="text-[11px] font-black text-muted-foreground">Cargado · {formatearFecha(c.fecha_carga)}</p>
-                      <div className="flex items-center gap-1.5 text-sm text-foreground font-medium truncate">
-                        <User className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
-                        <span className="truncate">{showConductor(c.conductor_carga_id, c.conductor_carga_libre)}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-sm text-muted-foreground truncate">
-                        <Truck className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">{showCamion(c.camion_carga_id, c.camion_carga_libre)}</span>
-                        {showRemolque(c.remolque_carga_id, c.remolque_carga_libre) && <><span className="text-border shrink-0">·</span><span className="truncate shrink-0">{showRemolque(c.remolque_carga_id, c.remolque_carga_libre)}</span></>}
-                        {c.modalidad === "full" && showRemolque(c.remolque_carga_id_2, c.remolque_carga_libre_2) && <><span className="text-border shrink-0">·</span><span className="truncate shrink-0">{showRemolque(c.remolque_carga_id_2, c.remolque_carga_libre_2)}</span></>}
-                      </div>
-                    </div>
-                    {/* Columna DESTINO */}
-                    <div className="space-y-1.5">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Destino</p>
-                      <div className="flex items-center gap-1.5 text-sm text-foreground font-medium truncate">
-                        <Briefcase className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
-                        <span className="truncate">{getClienteName(c.cliente_id)}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-sm text-muted-foreground truncate">
-                        <MapPin className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">{c.destino || "—"}</span>
-                      </div>
-                    </div>
-                  </div>
+                  <QuickAddVacio
+                    fechaStr={d.fechaStr}
+                    etiquetaDia={d.nombre}
+                    conductores={conductores}
+                    onGuardar={handleQuickAdd}
+                    guardando={quickAddMutation.isPending}
+                  />
 
-                  {/* Footer: entrega de vacío */}
-                  {(c.conductor_entrega_id || c.conductor_entrega_libre) ? (
-                    c.estatus === "vacio_entregado" ? (
-                      <div className="mt-3 pt-3 border-t border-border">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-500">Entregó vacío{c.lugar_entrega_vacio ? ` · ${c.lugar_entrega_vacio}` : ""}</p>
-                          {c.entrega_con_cita && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-                              <Clock className="w-3 h-3" /> Cita{c.horario_cita ? ` ${c.horario_cita}` : ""}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1.5 text-sm text-emerald-700 dark:text-emerald-400 truncate">
-                          <PackageOpen className="w-3.5 h-3.5 shrink-0" />
-                          <span className="truncate font-medium">
-                            {showConductor(c.conductor_entrega_id, c.conductor_entrega_libre)}
-                            <span className="text-emerald-600/70 dark:text-emerald-500/70 font-normal"> · {showCamion(c.camion_entrega_id, c.camion_entrega_libre)}{c.fecha_entrega_vacio ? ` · ${formatearFecha(c.fecha_entrega_vacio)}` : ""}</span>
-                          </span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="mt-3 pt-3 border-t border-dashed border-border">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Entrega programada{c.lugar_entrega_vacio ? ` · ${c.lugar_entrega_vacio}` : ""}</p>
-                          {c.entrega_con_cita && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
-                              <Clock className="w-3 h-3" /> Cita{c.horario_cita ? ` ${c.horario_cita}` : ""}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground truncate">
-                          <User className="w-3.5 h-3.5 shrink-0" />
-                          <span className="truncate">
-                            {showConductor(c.conductor_entrega_id, c.conductor_entrega_libre)}
-                            <span className="font-normal"> · {showCamion(c.camion_entrega_id, c.camion_entrega_libre)}{c.fecha_entrega_vacio ? ` · ${formatearFecha(c.fecha_entrega_vacio)}` : ""}</span>
-                          </span>
-                        </div>
-                      </div>
-                    )
-                  ) : (
-                    <button
-                      onClick={() => abrirEntrega(c)}
-                      className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-emerald-300 dark:border-emerald-800/70 text-emerald-600 dark:text-emerald-400 text-sm font-bold hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-colors cursor-pointer"
-                    >
-                      <PackageOpen className="w-4 h-4" /> Registrar entrega de vacío
-                    </button>
+                  {items.map((c) => (
+                    <TarjetaVacio key={c.id} c={c} ctx={ctx} />
+                  ))}
+                  {items.length === 0 && (
+                    <p className="text-[11px] text-muted-foreground/60 text-center py-2 font-medium">Sin contenedores</p>
                   )}
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        /* ---------- Lista (historial completo; pendientes más viejos primero) ---------- */
+        <div>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+            <Select value={filtroConductor} onValueChange={setFiltroConductor}>
+              <SelectTrigger className="rounded-xl sm:w-56">
+                <SelectValue placeholder="Conductor" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos los conductores</SelectItem>
+                {conductores.map((c) => (
+                  <SelectItem key={c.id} value={String(c.id)}>{c.nombre}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs font-bold text-muted-foreground">
+              {listaItems.length} contenedor(es)
+              {filtroEstatus === "pendiente_vacio" ? " · pendientes más antiguos primero" : ""}
+            </p>
+          </div>
+
+          {listaItems.length === 0 ? (
+            <div className="text-center py-20 text-muted-foreground">
+              <Container className="w-12 h-12 mx-auto mb-3 opacity-40" />
+              <p className="font-medium">No hay contenedores que coincidan con los filtros.</p>
+            </div>
+          ) : (
+            <div className={gridTarjetas}>
+              {listaItems.map((c) => (
+                <TarjetaVacio key={c.id} c={c} ctx={ctx} mostrarFecha />
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      {/* Dialog alta/edición */}
+      {/* Dialog alta/edición (formulario completo) */}
       <Dialog open={dialogAbierto} onOpenChange={cerrarDialogAlta}>
         <DialogContent className="max-w-3xl w-[95vw] max-h-[90vh] overflow-y-auto rounded-3xl">
           <DialogHeader>
@@ -981,6 +1423,7 @@ export default function ControlVacios() {
                   <Input
                     value={formData.destino}
                     onChange={(e) => setFormData((f) => ({ ...f, destino: e.target.value }))}
+                    list="destinos-vacios"
                     placeholder="Ej. SLP, México, Teolayucan"
                     className="rounded-xl mt-1"
                   />
@@ -1075,7 +1518,6 @@ export default function ControlVacios() {
               </Select>
             </div>
 
-            {formData.conductor_entrega_id && (
             <div className="rounded-2xl border border-emerald-200/70 dark:border-emerald-900/40 bg-emerald-50/40 dark:bg-emerald-950/10 p-4">
               <div className="flex items-center justify-between gap-3 mb-3">
                 <div className="flex items-center gap-2">
@@ -1084,16 +1526,23 @@ export default function ControlVacios() {
                   </span>
                   <p className="text-sm font-black text-foreground">Entrega del vacío</p>
                 </div>
-                {formData.conductor_carga_id && (
+                {(formData.conductor_carga_id || formData.conductor_carga_libre) && (
                   <button
                     type="button"
-                    onClick={() => setFormData((f) => ({
-                      ...f,
-                      conductor_entrega_id: f.conductor_carga_id,
-                      camion_entrega_id: f.camion_carga_id,
-                      remolque_entrega_id: f.remolque_carga_id,
-                      remolque_entrega_id_2: f.remolque_carga_id_2,
-                    }))}
+                    onClick={() => {
+                      setFormData((f) => ({
+                        ...f,
+                        conductor_entrega_id: f.conductor_carga_id,
+                        conductor_entrega_libre: f.conductor_carga_libre,
+                        camion_entrega_id: f.camion_carga_id,
+                        camion_entrega_libre: f.camion_carga_libre,
+                        remolque_entrega_id: f.remolque_carga_id,
+                        remolque_entrega_libre: f.remolque_carga_libre,
+                        remolque_entrega_id_2: f.remolque_carga_id_2,
+                        remolque_entrega_libre_2: f.remolque_carga_libre_2,
+                      }));
+                      setCopiaTick((t) => t + 1);
+                    }}
                     className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
                   >
                     Usar mismo chofer de carga
@@ -1104,7 +1553,7 @@ export default function ControlVacios() {
                 <div>
                   <Label className="font-bold">Conductor</Label>
                   <SelectCatalogoLibre
-                    key={`${formData.id}-conductor_entrega`}
+                    key={`${formData.id}-${copiaTick}-conductor_entrega`}
                     idValue={formData.conductor_entrega_id}
                     libreValue={formData.conductor_entrega_libre}
                     onIdChange={(v) => setFormData((f) => ({ ...f, conductor_entrega_id: v, conductor_entrega_libre: "" }))}
@@ -1117,7 +1566,7 @@ export default function ControlVacios() {
                 <div>
                   <Label className="font-bold">Camión</Label>
                   <SelectCatalogoLibre
-                    key={`${formData.id}-camion_entrega`}
+                    key={`${formData.id}-${copiaTick}-camion_entrega`}
                     idValue={formData.camion_entrega_id}
                     libreValue={formData.camion_entrega_libre}
                     onIdChange={(v) => setFormData((f) => ({ ...f, camion_entrega_id: v, camion_entrega_libre: "" }))}
@@ -1130,7 +1579,7 @@ export default function ControlVacios() {
                 <div>
                   <Label className="font-bold">{formData.modalidad === "full" ? "Remolque 1" : "Remolque"}</Label>
                   <SelectCatalogoLibre
-                    key={`${formData.id}-remolque_entrega`}
+                    key={`${formData.id}-${copiaTick}-remolque_entrega`}
                     idValue={formData.remolque_entrega_id}
                     libreValue={formData.remolque_entrega_libre}
                     onIdChange={(v) => setFormData((f) => ({ ...f, remolque_entrega_id: v, remolque_entrega_libre: "" }))}
@@ -1144,7 +1593,7 @@ export default function ControlVacios() {
                   <div>
                     <Label className="font-bold">Remolque 2</Label>
                     <SelectCatalogoLibre
-                      key={`${formData.id}-remolque_entrega_2`}
+                      key={`${formData.id}-${copiaTick}-remolque_entrega_2`}
                       idValue={formData.remolque_entrega_id_2}
                       libreValue={formData.remolque_entrega_libre_2}
                       onIdChange={(v) => setFormData((f) => ({ ...f, remolque_entrega_id_2: v, remolque_entrega_libre_2: "" }))}
@@ -1179,6 +1628,7 @@ export default function ControlVacios() {
                     <Input
                       value={formData.lugar_entrega_vacio}
                       onChange={(e) => setFormData((f) => ({ ...f, lugar_entrega_vacio: e.target.value }))}
+                      list="lugares-vacios"
                       placeholder="Ej. CIMA, SSA, Hutchison..."
                       className="rounded-xl flex-1 min-w-0"
                     />
@@ -1194,7 +1644,6 @@ export default function ControlVacios() {
                 </div>
               </div>
             </div>
-            )}
             </>}
 
             {/* Notas */}
@@ -1273,18 +1722,18 @@ export default function ControlVacios() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog: registrar / editar entrega del vacío */}
-      <Dialog open={dialogEntrega} onOpenChange={setDialogEntrega}>
-        <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] overflow-y-auto rounded-3xl">
+      {/* Dialog: entrega rápida del vacío (1 tap desde la tarjeta) */}
+      <Dialog open={!!entregaDe} onOpenChange={(open) => !open && setEntregaDe(null)}>
+        <DialogContent className="max-w-md w-[95vw] rounded-3xl">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black flex items-center gap-2">
-              <PackageOpen className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-              Entrega del vacío
+            <DialogTitle className="text-xl font-black flex items-center gap-2">
+              <PackageOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              Entrega de vacío
             </DialogTitle>
             <DialogDescription>
-              {entregaData.numero_contenedor
-                ? `Contenedor ${entregaData.numero_contenedor}${entregaData.modalidad === "full" && entregaData.numero_contenedor_2 ? ` + ${entregaData.numero_contenedor_2}` : ""} — quién, cuándo y dónde se entrega el vacío.`
-                : "Quién, cuándo y dónde se entrega el contenedor vacío."}
+              {entregaDe
+                ? `${entregaDe.numero_contenedor}${entregaDe.modalidad === "full" && entregaDe.numero_contenedor_2 ? ` + ${entregaDe.numero_contenedor_2}` : ""} — al guardar se marca como Vacío entregado.`
+                : ""}
             </DialogDescription>
           </DialogHeader>
 
@@ -1294,134 +1743,94 @@ export default function ControlVacios() {
             </Alert>
           )}
 
-          <div className="rounded-2xl border border-emerald-200/70 dark:border-emerald-900/40 bg-emerald-50/40 dark:bg-emerald-950/10 p-4 my-2">
-            {entregaData.conductor_carga_id && (
-              <div className="flex justify-end mb-3">
+          {entregaDe && entregaForm && (
+            <div className="space-y-3">
+              {(entregaDe.conductor_carga_id != null || entregaDe.conductor_carga_libre) && (
                 <button
                   type="button"
-                  onClick={() => setEntregaData((d) => ({
-                    ...d,
-                    conductor_entrega_id: d.conductor_carga_id,
-                    conductor_entrega_libre: d.conductor_carga_libre,
-                    camion_entrega_id: d.camion_carga_id,
-                    camion_entrega_libre: d.camion_carga_libre,
-                    remolque_entrega_id: d.remolque_carga_id,
-                    remolque_entrega_libre: d.remolque_carga_libre,
-                    remolque_entrega_id_2: d.remolque_carga_id_2,
-                    remolque_entrega_libre_2: d.remolque_carga_libre_2,
-                  }))}
-                  className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+                  onClick={copiarEquipoCarga}
+                  className="w-full rounded-xl border border-emerald-300/70 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20 p-2.5 text-left hover:bg-emerald-100/60 dark:hover:bg-emerald-950/40 transition-colors cursor-pointer"
                 >
-                  Usar mismo chofer de carga
+                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-500">
+                    Lo entrega el mismo chofer de la carga
+                  </p>
+                  <p className="text-sm font-bold text-foreground mt-0.5 truncate">
+                    {showConductor(entregaDe.conductor_carga_id, entregaDe.conductor_carga_libre)}
+                    {(entregaDe.camion_carga_id != null || entregaDe.camion_carga_libre) &&
+                      ` · ${showCamion(entregaDe.camion_carga_id, entregaDe.camion_carga_libre)}`}
+                  </p>
                 </button>
-              </div>
-            )}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="font-bold">Conductor *</Label>
-                <SelectCatalogoLibre
-                  key={`${entregaData.id}-conductor_entrega`}
-                  idValue={entregaData.conductor_entrega_id}
-                  libreValue={entregaData.conductor_entrega_libre}
-                  onIdChange={(v) => setEntregaData((d) => ({ ...d, conductor_entrega_id: v, conductor_entrega_libre: "" }))}
-                  onLibreChange={(v) => setEntregaData((d) => ({ ...d, conductor_entrega_libre: v, conductor_entrega_id: "" }))}
-                  placeholder="Conductor"
-                  options={conductores}
-                  getLabel={(o) => o.nombre}
-                />
-              </div>
-              <div>
-                <Label className="font-bold">Camión</Label>
-                <SelectCatalogoLibre
-                  key={`${entregaData.id}-camion_entrega`}
-                  idValue={entregaData.camion_entrega_id}
-                  libreValue={entregaData.camion_entrega_libre}
-                  onIdChange={(v) => setEntregaData((d) => ({ ...d, camion_entrega_id: v, camion_entrega_libre: "" }))}
-                  onLibreChange={(v) => setEntregaData((d) => ({ ...d, camion_entrega_libre: v, camion_entrega_id: "" }))}
-                  placeholder="Camión"
-                  options={camiones}
-                  getLabel={(o) => `${o.nombre}${o.placas ? ` - ${o.placas}` : ""}`}
-                />
-              </div>
-              <div>
-                <Label className="font-bold">{entregaData.modalidad === "full" ? "Remolque 1" : "Remolque"}</Label>
-                <SelectCatalogoLibre
-                  key={`${entregaData.id}-remolque_entrega`}
-                  idValue={entregaData.remolque_entrega_id}
-                  libreValue={entregaData.remolque_entrega_libre}
-                  onIdChange={(v) => setEntregaData((d) => ({ ...d, remolque_entrega_id: v, remolque_entrega_libre: "" }))}
-                  onLibreChange={(v) => setEntregaData((d) => ({ ...d, remolque_entrega_libre: v, remolque_entrega_id: "" }))}
-                  placeholder="Remolque"
-                  options={remolquesChasis}
-                  getLabel={(o) => `${o.placas || o.id}`}
-                />
-              </div>
-              {entregaData.modalidad === "full" && (
-                <div>
-                  <Label className="font-bold">Remolque 2</Label>
-                  <SelectCatalogoLibre
-                    key={`${entregaData.id}-remolque_entrega_2`}
-                    idValue={entregaData.remolque_entrega_id_2}
-                    libreValue={entregaData.remolque_entrega_libre_2}
-                    onIdChange={(v) => setEntregaData((d) => ({ ...d, remolque_entrega_id_2: v, remolque_entrega_libre_2: "" }))}
-                    onLibreChange={(v) => setEntregaData((d) => ({ ...d, remolque_entrega_libre_2: v, remolque_entrega_id_2: "" }))}
-                    placeholder="Remolque"
-                    options={remolquesChasis}
-                    getLabel={(o) => `${o.placas || o.id}`}
-                  />
-                </div>
               )}
+
               <div>
-                <Label className="font-bold">Fecha entrega vacío</Label>
-                <Input
-                  type="date"
-                  value={entregaData.fecha_entrega_vacio}
-                  onChange={(e) => setEntregaData((d) => ({ ...d, fecha_entrega_vacio: e.target.value }))}
-                  className="rounded-xl mt-1"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <div className="flex items-center justify-between gap-3">
-                  <Label className="font-bold">Lugar de entrega</Label>
-                  <label className="flex items-center gap-2 cursor-pointer select-none">
-                    <Checkbox
-                      checked={entregaData.entrega_con_cita}
-                      onCheckedChange={(v) => setEntregaData((d) => ({ ...d, entrega_con_cita: !!v, horario_cita: v ? d.horario_cita : "" }))}
-                    />
-                    <span className="text-sm font-bold text-foreground">Es con cita</span>
-                  </label>
-                </div>
-                <div className="flex gap-3 mt-1">
-                  <Input
-                    value={entregaData.lugar_entrega_vacio}
-                    onChange={(e) => setEntregaData((d) => ({ ...d, lugar_entrega_vacio: e.target.value }))}
-                    placeholder="Ej. CIMA, SSA, Hutchison..."
-                    className="rounded-xl flex-1 min-w-0"
+                <Label className="font-bold">Conductor que entrega *</Label>
+                <div className="mt-1">
+                  <SelectCatalogoLibre
+                    key={`${entregaDe.id}-${copiaTick}-entrega_rapida_conductor`}
+                    idValue={entregaForm.conductor_entrega_id}
+                    libreValue={entregaForm.conductor_entrega_libre}
+                    onIdChange={(v) => setEntregaForm((f) => ({ ...f, conductor_entrega_id: v, conductor_entrega_libre: "" }))}
+                    onLibreChange={(v) => setEntregaForm((f) => ({ ...f, conductor_entrega_libre: v, conductor_entrega_id: "" }))}
+                    placeholder="Conductor"
+                    options={conductores}
+                    getLabel={(o) => o.nombre}
                   />
-                  {entregaData.entrega_con_cita && (
-                    <Input
-                      type="time"
-                      value={entregaData.horario_cita}
-                      onChange={(e) => setEntregaData((d) => ({ ...d, horario_cita: e.target.value }))}
-                      className="rounded-xl w-32 shrink-0"
-                    />
-                  )}
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="font-bold">Fecha</Label>
+                  <Input
+                    type="date"
+                    value={entregaForm.fecha_entrega_vacio}
+                    onChange={(e) => setEntregaForm((f) => ({ ...f, fecha_entrega_vacio: e.target.value }))}
+                    className="rounded-xl mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="font-bold">Lugar</Label>
+                  <Input
+                    value={entregaForm.lugar_entrega_vacio}
+                    onChange={(e) => setEntregaForm((f) => ({ ...f, lugar_entrega_vacio: e.target.value }))}
+                    list="lugares-vacios"
+                    placeholder="Ej. PTD, CIMA, SSA..."
+                    className="rounded-xl mt-1"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <Checkbox
+                    checked={entregaForm.entrega_con_cita}
+                    onCheckedChange={(v) => setEntregaForm((f) => ({ ...f, entrega_con_cita: !!v, horario_cita: v ? f.horario_cita : "" }))}
+                  />
+                  <span className="text-sm font-bold text-foreground">Es con cita</span>
+                </label>
+                {entregaForm.entrega_con_cita && (
+                  <Input
+                    type="time"
+                    value={entregaForm.horario_cita}
+                    onChange={(e) => setEntregaForm((f) => ({ ...f, horario_cita: e.target.value }))}
+                    className="rounded-xl w-28 h-9"
+                  />
+                )}
               </div>
             </div>
-          </div>
+          )}
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" className="rounded-xl font-bold" onClick={() => setDialogEntrega(false)}>
+            <Button variant="outline" className="rounded-xl font-bold" onClick={() => setEntregaDe(null)}>
               Cancelar
             </Button>
             <Button
               className="rounded-xl font-bold gap-2 bg-emerald-600 text-white hover:bg-emerald-700"
-              onClick={handleGuardarEntrega}
-              disabled={guardarEntregaMutation.isPending}
+              onClick={handleConfirmarEntrega}
+              disabled={entregaRapidaMutation.isPending}
             >
-              {guardarEntregaMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-              Guardar entrega
+              {entregaRapidaMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+              Confirmar entrega
             </Button>
           </div>
         </DialogContent>

@@ -1,0 +1,877 @@
+{
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\.mcp.json": {
+    "mtime": 1779898896.2196712,
+    "ast_hash": "869f0e75764648270908f7e5d2678579",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\components.json": {
+    "mtime": 1767807635.2370548,
+    "ast_hash": "2b244abb0827d4bde148f39e03726576",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\deploy-security.ps1": {
+    "mtime": 1781054127.9512584,
+    "ast_hash": "9ab38fcc60af911c8760c43f26eb5c76",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\eslint.config.js": {
+    "mtime": 1779920874.1722193,
+    "ast_hash": "16803a8789f8dae05f166659058e00c3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\jsconfig.json": {
+    "mtime": 1767807635.2370548,
+    "ast_hash": "ac4e81f081600a04ea8728e3ab86f569",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\package.json": {
+    "mtime": 1779303260.8359258,
+    "ast_hash": "2ad566446dc203ed03676ec04ad3fe3a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\postcss.config.js": {
+    "mtime": 1767807635.2370548,
+    "ast_hash": "5b84f4567208c7c747079c0477373231",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\tailwind.config.js": {
+    "mtime": 1778891335.6217084,
+    "ast_hash": "aaf693e0cfb638a3c7bf180f4a66c303",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\vercel.json": {
+    "mtime": 1779291544.9907162,
+    "ast_hash": "d419c450e7922a1b7fcece94d30dbf68",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\vite.config.js": {
+    "mtime": 1779332482.0928056,
+    "ast_hash": "9315c03a4e728d4f65f93d4a286a91f5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\.claude\\settings.json": {
+    "mtime": 1779898902.3940449,
+    "ast_hash": "fc06395accf803ca0e68f579cbc973b1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\.claude\\settings.local.json": {
+    "mtime": 1779906131.4914465,
+    "ast_hash": "10e485195f679116ddd940334b834139",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\.claude\\skills\\ui-ux-pro-max\\scripts\\core.py": {
+    "mtime": 1778861718.3962607,
+    "ast_hash": "3df4734a785963a8242a56c1b926adfd",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\.claude\\skills\\ui-ux-pro-max\\scripts\\design_system.py": {
+    "mtime": 1778861718.3972592,
+    "ast_hash": "08f84d04608a19049c90fc2b1ef314f9",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\.claude\\skills\\ui-ux-pro-max\\scripts\\search.py": {
+    "mtime": 1778861718.3982625,
+    "ast_hash": "8c7e35426fe8f6f3ed91e9dce0ed7af1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\cloudflare-workers\\wialon-proxy\\package.json": {
+    "mtime": 1779245164.1556687,
+    "ast_hash": "1e5897973c3e44bf5aa3602b65c2987b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\cloudflare-workers\\wialon-proxy\\tsconfig.json": {
+    "mtime": 1779245164.1576684,
+    "ast_hash": "9e23f269c6d847af0cbdf32f611bceb5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\cloudflare-workers\\wialon-proxy\\worker-configuration.d.ts": {
+    "mtime": 1779245164.1610124,
+    "ast_hash": "ac9a2aea75015c09ddeb7e9b9b3ffdd6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\cloudflare-workers\\wialon-proxy\\.vscode\\settings.json": {
+    "mtime": 1779245164.1536696,
+    "ast_hash": "622fd87b7597a3416dc869b38e381c97",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\cloudflare-workers\\wialon-proxy\\src\\index.ts": {
+    "mtime": 1781136885.5596216,
+    "ast_hash": "7256c25be8859e0643e86229189b1674",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\cloudflare-workers\\wialon-proxy\\test\\env.d.ts": {
+    "mtime": 1779245164.1566684,
+    "ast_hash": "4f51fb06226929fb2d7c539dbce19fa2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\cloudflare-workers\\wialon-proxy\\test\\index.spec.ts": {
+    "mtime": 1779245164.1576684,
+    "ast_hash": "d1bc50c0dececbe8293af1e649052c40",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\cloudflare-workers\\wialon-proxy\\test\\tsconfig.json": {
+    "mtime": 1779245164.1576684,
+    "ast_hash": "2a63dd7a397a239f369a43e37fca1652",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\App.jsx": {
+    "mtime": 1778891335.5955017,
+    "ast_hash": "8adf2fea4de0a4353495225dc149e493",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\main.jsx": {
+    "mtime": 1780106912.5378032,
+    "ast_hash": "4c2b796147d0cfd47e69ae8e0300f5ca",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\supabaseClient.js": {
+    "mtime": 1778617435.9356275,
+    "ast_hash": "db502393c7d35d3088dae0a08d00da23",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\api\\base44Client.js": {
+    "mtime": 1767807635.2529812,
+    "ast_hash": "83e094e19468eff88ab3ea051714af51",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\api\\entities.js": {
+    "mtime": 1767807635.2529812,
+    "ast_hash": "33b7524d9decf527c4349e816d57d2bb",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\api\\integrations.js": {
+    "mtime": 1767807635.2529812,
+    "ast_hash": "15b5a04e61aaf07c3ac4ae21e7680662",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\Antigravity.jsx": {
+    "mtime": 1778891335.5965018,
+    "ast_hash": "18c09d990585548cf0ef1834140a384e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\Galaxy.jsx": {
+    "mtime": 1778891335.5965018,
+    "ast_hash": "2cc49861ae4ae8d3e5b59ea560bed0f6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\LiquidButton.jsx": {
+    "mtime": 1778891335.5975,
+    "ast_hash": "774040e71989ea89bafb5139a6c388bb",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\LiquidEther.jsx": {
+    "mtime": 1778891335.5975,
+    "ast_hash": "00b3c1c8bf72ac5ed7a35eee74f53517",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\LogoLoop.jsx": {
+    "mtime": 1778891335.598943,
+    "ast_hash": "00f955469c831e8ed09976e6d1f6019b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\MagneticButton.jsx": {
+    "mtime": 1778891335.5999427,
+    "ast_hash": "7ad53427c3277df822912d82424e8afe",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\mode-toggle.jsx": {
+    "mtime": 1778891335.607969,
+    "ast_hash": "1b4bdd5f90719d396d6848da968a9601",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\Particles.jsx": {
+    "mtime": 1778891335.5999427,
+    "ast_hash": "bb0328c8c5ce93a86584cada468b2682",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\SplashScreen.jsx": {
+    "mtime": 1778891335.6009412,
+    "ast_hash": "5367133069c8b48ccb45d6e8c832c093",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\SplitText.jsx": {
+    "mtime": 1778891335.6009412,
+    "ast_hash": "955607b6bcd5b5f49142d30e0dcff550",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\TextType.jsx": {
+    "mtime": 1778891335.6009412,
+    "ast_hash": "62c6886715fca029dae817224e4fa601",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\theme-provider.jsx": {
+    "mtime": 1778891335.608978,
+    "ast_hash": "53dee184a42b2e2951989cf72ba07b63",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\fuel\\AnomaliasCombustible.jsx": {
+    "mtime": 1778891335.6024525,
+    "ast_hash": "729524c069ec510c2c8d2d1880345048",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\fuel\\ColaCarga.jsx": {
+    "mtime": 1778891335.6034584,
+    "ast_hash": "6587f1a20b81ae9fdf9e36f127b9c3af",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\fuel\\FiltrosViajes.jsx": {
+    "mtime": 1779847187.1639383,
+    "ast_hash": "e57743520bc2d83475f785611eb91ee3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\fuel\\GraficoConsumo.jsx": {
+    "mtime": 1778891335.6044583,
+    "ast_hash": "dc9480c04e3bbbc1deff51b652bbdc5c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\fuel\\GraficoEficiencia.jsx": {
+    "mtime": 1778891335.6054585,
+    "ast_hash": "4faa82f0aa96b1d6cd698baeba9a0d02",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\fuel\\QuoteForm.jsx": {
+    "mtime": 1778891335.6054585,
+    "ast_hash": "c31c261cffd4195cde521db5ed61aa25",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\fuel\\RankingConductores.jsx": {
+    "mtime": 1778891335.606459,
+    "ast_hash": "6ef39085fc39bd921719a14e9eabee96",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\fuel\\StatsCard.jsx": {
+    "mtime": 1778891335.606459,
+    "ast_hash": "89a0cab564e74855d3e1bb840cebcd0d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\fuel\\TablaViajes.jsx": {
+    "mtime": 1778891335.607969,
+    "ast_hash": "9117f249a68a1636a067f6502ea6cac1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\fuel\\VisorImagen.jsx": {
+    "mtime": 1780175186.0768905,
+    "ast_hash": "4f917a06e99b603d332a659e87e5d15d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\gps\\AlertasGPS.jsx": {
+    "mtime": 1780457394.9737601,
+    "ast_hash": "a6185056b44913ceecb352102078f4ef",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\gps\\CompartidosGPS.jsx": {
+    "mtime": 1780508882.275388,
+    "ast_hash": "53ac187210fa725939f7c6fb98175d2c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\gps\\constants.js": {
+    "mtime": 1780950171.067207,
+    "ast_hash": "1f6e61057feb6251244b01120fece8ed",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\gps\\GeocercaGPS.jsx": {
+    "mtime": 1779851690.5210106,
+    "ast_hash": "d3b91907f17ccfb62391be07cd39ef0e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\gps\\HistorialGPS.jsx": {
+    "mtime": 1781049864.4440522,
+    "ast_hash": "d1834b73772a65509cf4b222c1d510f7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\gps\\MapaGPS.jsx": {
+    "mtime": 1780167971.3331566,
+    "ast_hash": "5c0cd0768d27a305e98dc258d1a5d108",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\gps\\ModalConfiguracion.jsx": {
+    "mtime": 1781049887.2614264,
+    "ast_hash": "428ea9c03ed84fded2dd05ffd1377a4f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\gps\\ModalRutaViaje.jsx": {
+    "mtime": 1781049944.748639,
+    "ast_hash": "4a8a73d3ebb04f40f1f444992cc24606",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\gps\\PanelCompartir.jsx": {
+    "mtime": 1780108257.3067312,
+    "ast_hash": "966070bbc97166b474e576880336b662",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\gps\\RalentiGPS.jsx": {
+    "mtime": 1779822726.329198,
+    "ast_hash": "37215e30e54e9cbc65c94592f70fab97",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\gps\\ReportesGPS.jsx": {
+    "mtime": 1779245164.169014,
+    "ast_hash": "b25f8db56bbd9057925735a2cbd8844d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\gps\\TooltipUnidad.jsx": {
+    "mtime": 1781049897.900244,
+    "ast_hash": "1aa71ecffb08efc67fec5078ec13b337",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\gps\\unitIconHelper.js": {
+    "mtime": 1779420610.6788003,
+    "ast_hash": "a2c41d613d0b350cc7900871c175a04f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\mantenimiento\\CatalogoServicios.jsx": {
+    "mtime": 1779300003.5762856,
+    "ast_hash": "4d7b54af7ede3750bea356a8e115fa6e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\mantenimiento\\DashboardMantenimiento.jsx": {
+    "mtime": 1781049912.9827497,
+    "ast_hash": "0794c8b0e8874fc93e09c2d6f8e2efa3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\mantenimiento\\OrdenesTrabajoTab.jsx": {
+    "mtime": 1781049930.0905433,
+    "ast_hash": "45eb647f2bb49ac46c717c20598e2d9d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\panel\\ColaCargaCompacta.jsx": {
+    "mtime": 1779920658.4287593,
+    "ast_hash": "ec1d4be52fe06cd8ac7e58a52e3ff995",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\panel\\EstadoFlota.jsx": {
+    "mtime": 1781049807.7617192,
+    "ast_hash": "78755051d9802c86f5ad62f9552f7665",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\panel\\FlotaMantenimiento.jsx": {
+    "mtime": 1781049821.2655666,
+    "ast_hash": "9950ee469cb6acb330e1de87a5d35f68",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\panel\\MiniMapaFlota.jsx": {
+    "mtime": 1779922019.4094667,
+    "ast_hash": "1ee4421bd28279124a71eaa65077b0f4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\panel\\panelGeo.js": {
+    "mtime": 1779920918.7960722,
+    "ast_hash": "b173b0bd14271db722a015877b98fe5f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\panel\\Pendientes.jsx": {
+    "mtime": 1780456213.0297403,
+    "ast_hash": "c1b0f9650c81233b7445e9112deba1bd",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\panel\\PulsoDia.jsx": {
+    "mtime": 1781049833.2732675,
+    "ast_hash": "17abc44645638d2adb805e2d54709605",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\accordion.jsx": {
+    "mtime": 1767807635.2687888,
+    "ast_hash": "415118b06768feb81fcfe52b4e5b7b7d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\alert-dialog.jsx": {
+    "mtime": 1767807635.2687888,
+    "ast_hash": "9a4bd38fdadaeea6bebeb13e466b96df",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\alert.jsx": {
+    "mtime": 1767807635.2687888,
+    "ast_hash": "207fa30ee81ff024e0a05301bcf60626",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\aspect-ratio.jsx": {
+    "mtime": 1767807635.2707555,
+    "ast_hash": "114d53f29a18d0e8b5e48f5ff3811e15",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\avatar.jsx": {
+    "mtime": 1767807635.2707555,
+    "ast_hash": "9d8326a1af018848b6d83e6e60cda080",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\badge.jsx": {
+    "mtime": 1767807635.2707555,
+    "ast_hash": "6d218c99805c24961981e4dba98fdf13",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\breadcrumb.jsx": {
+    "mtime": 1767807635.2707555,
+    "ast_hash": "2e8f5e6af55fae087a46b31fb77d75c0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\button.jsx": {
+    "mtime": 1767807635.2707555,
+    "ast_hash": "afd3f3a33255af465043e628ecce8fb3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\calendar.jsx": {
+    "mtime": 1767807635.2707555,
+    "ast_hash": "c8cb1d68753b689488a6f157d3d37fb0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\card.jsx": {
+    "mtime": 1777565485.866484,
+    "ast_hash": "8767b4ce7687098f41a2b6965ef990c8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\carousel.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "153fe6075e848a12d0e42f712b1695be",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\chart.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "62c5c658db3ebe5a09ee6c00e05848f8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\checkbox.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "36f395a09cf7e827df6c148739416a80",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\collapsible.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "cb66adfc183b69da16a00c9e5ddf1fb2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\command.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "f1dfb05773afa55d2785b91b346d7528",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\context-menu.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "014cb3ebb957f5499ae12b2484544d4b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\dialog.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "97455b588e8823af4d941306870ca7f9",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\drawer.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "55e869c32611f9a7977d03a31be02a70",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\dropdown-menu.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "1c0d0b34a081c3152251822d4ff7d7e2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\form.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "4d8eafb2489a0650780a74aa9edb57ce",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\hover-card.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "79a654eccb12f89d92303cf54b552ae5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\input-otp.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "48841075b2b67182f2cccfcc20c949a2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\input.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "35b99fc05af87a9a54c63343c1f9b6a9",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\label.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "cb2728638eb562697631e4ea71e33450",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\menubar.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "2a82ccb4506e13bdcc04c134ac0c680c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\navigation-menu.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "2f60bd3705afc0eeac8ef39c88a59ce2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\pagination.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "75fb604ebfe91687867cf5f38a44cce7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\popover.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "aba6056fee432694ef142ea999b944ef",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\progress.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "22d643a654bb67d98f99a92ace2e34e0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\radio-group.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "1fb39fa13eff606e2a03004bcb4f1b5e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\resizable.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "da139d29b0894a0ceeb63e13805dcf7d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\scroll-area.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "3a1fc9eb76c5ec28b1f4c2fb0f3ac5ac",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\select.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "4a6549c356a6c126f86bd5eec311bc91",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\separator.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "53ad02ebb72b239bfb1ded455ddec492",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\sheet.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "26dcf15d87abbb3a496eba22f2bfffc7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\sidebar.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "c694426aff27e22917765a23262658a2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\skeleton.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "a643014bf4d04902f452b9c1949e791e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\slider.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "080b174fd379884828befa7ba89701fd",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\sonner.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "033d5b58ae6d9cd4c9cbcdc4a5dc7170",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\switch.jsx": {
+    "mtime": 1767807635.272761,
+    "ast_hash": "d3280805fe8f47cccbe5b623ca95956b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\table.jsx": {
+    "mtime": 1767807635.2844346,
+    "ast_hash": "c62cc8e3aee43f709186522a3097db88",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\tabs.jsx": {
+    "mtime": 1767807635.2844346,
+    "ast_hash": "1b3bfe26cd4927db2f8d9059e85bd87a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\textarea.jsx": {
+    "mtime": 1767807635.2844346,
+    "ast_hash": "852877fef0530fc6378b2cb5b4bd8030",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\toast.jsx": {
+    "mtime": 1767807635.2844346,
+    "ast_hash": "c59f695928a812ec8f8c09c4492d9bf7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\toaster.jsx": {
+    "mtime": 1778556677.7423131,
+    "ast_hash": "22cdac998df8ceb8ac916e1a6b5a7cf4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\toggle-group.jsx": {
+    "mtime": 1767807635.2844346,
+    "ast_hash": "9aabad436f249f3a599513158631cb6f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\toggle.jsx": {
+    "mtime": 1767807635.2844346,
+    "ast_hash": "406eca195f8a55707e72934733aa4b52",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\tooltip.jsx": {
+    "mtime": 1767807635.2844346,
+    "ast_hash": "7b41bcf0b5297401b960a6cdc25f71c0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\ui\\use-toast.jsx": {
+    "mtime": 1778556884.12069,
+    "ast_hash": "cf9fb31c410b50b14482a75770999d3c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\hooks\\use-mobile.jsx": {
+    "mtime": 1767807635.2844346,
+    "ast_hash": "21cadcc97434bd72c2e17fe9cdadb88a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\lib\\rol.js": {
+    "mtime": 1780964783.1323066,
+    "ast_hash": "802579975324e0e319b1de64f37c734f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\lib\\utils.js": {
+    "mtime": 1767807635.2844346,
+    "ast_hash": "69ea1d4d2bd851e4d5110b1e42df0b95",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\lib\\wialonFetch.js": {
+    "mtime": 1781049793.4095483,
+    "ast_hash": "b2a64a5c12f7d109f8b6eae3b8f40356",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\Clientes.jsx": {
+    "mtime": 1780107923.700532,
+    "ast_hash": "9f80b3a4af2fd07cb2e9e611c894913e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\ControlCombustible.jsx": {
+    "mtime": 1779920821.1420393,
+    "ast_hash": "c4b3a9a8f3afb73ebd2577903557d81e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\ControlVacios.jsx": {
+    "mtime": 1783391311.2268395,
+    "ast_hash": "b304bafc110a0612f229bad18185a5a5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\CuentasCliente.jsx": {
+    "mtime": 1781049876.867124,
+    "ast_hash": "e7ccda53e4832f5f1f77c9dce1f22e26",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\DocumentacionLegal.jsx": {
+    "mtime": 1780107953.7440362,
+    "ast_hash": "deaeaa2230196134e18cdce85ecb8149",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\ExpertoLogistica.jsx": {
+    "mtime": 1779760532.6628542,
+    "ast_hash": "d8565c636e5e821bf03cddaee36fb9e4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\FuelCamiones.jsx": {
+    "mtime": 1780107233.9190476,
+    "ast_hash": "0aab80a911c866fbc700bb92a5cf222a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\FuelConductores.jsx": {
+    "mtime": 1782586358.9286911,
+    "ast_hash": "2597d2efe888e5e28a99034e45a44f7c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\FuelProgramaCargas.jsx": {
+    "mtime": 1782410639.7707562,
+    "ast_hash": "7848a9e79aa4c85eb5d1c9f2788790bd",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\FuelRegistrarViaje.jsx": {
+    "mtime": 1781049965.3678813,
+    "ast_hash": "dfe32ddcddff25d80afd3a91331533e5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\FuelRemolques.jsx": {
+    "mtime": 1780107282.8055966,
+    "ast_hash": "1f4bba486507926153a7cfece9ebd53d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\FuelViajes.jsx": {
+    "mtime": 1782761120.3559618,
+    "ast_hash": "45a92fd90c9c1953da88c11f4b97fb31",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\HistorialPublico.jsx": {
+    "mtime": 1781049682.231207,
+    "ast_hash": "9745937f93de0f9715406405fc0c4436",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\Home.jsx": {
+    "mtime": 1779764334.8218627,
+    "ast_hash": "acd8f5491f15e2451a695b5aa26b007a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\IAAuditorChat.jsx": {
+    "mtime": 1778891335.616493,
+    "ast_hash": "5017d62573c5a2743e8822ce79ebad44",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\index.jsx": {
+    "mtime": 1780965031.0040064,
+    "ast_hash": "b04221d5b8cb03fc59ac24cc62f1d18d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\Layout.jsx": {
+    "mtime": 1780966051.3667068,
+    "ast_hash": "350a7b2fb4c3215cc7fc3690191da64d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\Liquidaciones.jsx": {
+    "mtime": 1783201893.6722577,
+    "ast_hash": "fdf5924e9a1a5f13f5c76f4ed3e3a167",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\Login.jsx": {
+    "mtime": 1780965084.54487,
+    "ast_hash": "c16d60abb3719a70f7d9c0c028fdb488",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\Mantenimiento.jsx": {
+    "mtime": 1779315744.8426678,
+    "ast_hash": "4b04b685e729558ad219b4a90a17b92b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\PortalCliente.jsx": {
+    "mtime": 1780964888.1161518,
+    "ast_hash": "eb14df4233fd22fefa3cc457df26b1fa",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\PortalRoute.jsx": {
+    "mtime": 1780964807.1581833,
+    "ast_hash": "5f9d70f7082a7fd6eb172827d5f448b4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\ProtectedRoute.jsx": {
+    "mtime": 1780964795.931549,
+    "ast_hash": "5c00b3738ee2c54234f2a957c9df8225",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\RastreoGPS.jsx": {
+    "mtime": 1781049842.3954291,
+    "ast_hash": "58808f90185931f7e6734b6e96904f97",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\RastreoPublico.jsx": {
+    "mtime": 1781049665.3247702,
+    "ast_hash": "1140a949950e62f8bbac7024964273b3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\Unidades.jsx": {
+    "mtime": 1778891335.6197066,
+    "ast_hash": "2ade3ef98f0567eab5bf836db21a0826",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\utils\\index.ts": {
+    "mtime": 1767807635.2844346,
+    "ast_hash": "83c2cd983a6c8aa563e9557d5b0731c1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\supabase\\functions\\admin-cuentas-cliente\\index.ts": {
+    "mtime": 1780964711.6961784,
+    "ast_hash": "e22e140177a32a273c71502f43373d34",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\supabase\\functions\\analyze-logistics\\index.ts": {
+    "mtime": 1779760926.876582,
+    "ast_hash": "10c1c0a93d4c30014c4b2961ce2f9739",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\supabase\\functions\\contact-form\\deno.json": {
+    "mtime": 1767807635.2844346,
+    "ast_hash": "3506adae3dbaeaafdbf318b1834cb116",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\supabase\\functions\\contact-form\\index.ts": {
+    "mtime": 1781050058.6187282,
+    "ast_hash": "a90da33ab46e3af779ee669014869314",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\supabase\\functions\\rastreo-cliente\\index.ts": {
+    "mtime": 1781049766.0708055,
+    "ast_hash": "e5af0c9de9cfa244b371d58ba746d8e4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\supabase\\functions\\wialon-proxy\\index.ts": {
+    "mtime": 1779245164.173361,
+    "ast_hash": "5b9fc23ae8f12f215e857f9619e7cabf",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\index.html": {
+    "mtime": 1779304124.0888348,
+    "ast_hash": "8d71f47baa3c35dd01eeccacfa47b218",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\panel-mockup.html": {
+    "mtime": 1779919690.6139605,
+    "ast_hash": "f1885c9b9dc94b3bdb9bcd9631e34e52",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\README.md": {
+    "mtime": 1767807635.2370548,
+    "ast_hash": "fc4f2d1ceff0bb7cc25585c277913e68",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\.claude\\agents\\backend.md": {
+    "mtime": 1778734550.9683423,
+    "ast_hash": "deb9c0f9aea425e0f7c093777fe25b8a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\.claude\\agents\\landing.md": {
+    "mtime": 1778734543.3269498,
+    "ast_hash": "ef37d660807e146e726d12a419dd21d1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\.claude\\agents\\sistema.md": {
+    "mtime": 1778734546.9379144,
+    "ast_hash": "5f763b4e6fab0c5d108450766e9a1972",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\.claude\\skills\\debug-issue\\skill.md": {
+    "mtime": 1779898896.2382112,
+    "ast_hash": "83266930cd7096aee27fd30edc55c85f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\.claude\\skills\\explore-codebase\\skill.md": {
+    "mtime": 1779898896.2362132,
+    "ast_hash": "b70f59c577a3ce3a3e72d8c61ce3469a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\.claude\\skills\\refactor-safely\\skill.md": {
+    "mtime": 1779898896.2382112,
+    "ast_hash": "de0e5b1c85bd387821268d0f9411a778",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\.claude\\skills\\review-changes\\skill.md": {
+    "mtime": 1779898896.2372115,
+    "ast_hash": "1ce0725b638aed739326a7687c7fffb0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\.claude\\skills\\ui-ux-pro-max\\SKILL.md": {
+    "mtime": 1778861727.396492,
+    "ast_hash": "e092c3924799d4fc4194f994d8394cc3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\cloudflare-workers\\wialon-proxy\\AGENTS.md": {
+    "mtime": 1779245164.1536696,
+    "ast_hash": "f32cd92d37bb40f567da7617bdb581cd",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\public\\img\\icono-pwa.png": {
+    "mtime": 1767814453.9168806,
+    "ast_hash": "911e0adfe3d36ba86d970f1aa4aec781",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\public\\img\\LOGO.PNG": {
+    "mtime": 1767807635.2529812,
+    "ast_hash": "65bd8666034ab51ed081fbcbf63884a4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\public\\vid\\loop.mp4": {
+    "mtime": 1778808395.2208347,
+    "ast_hash": "8c15bff5abd62d13e237b38674c4a4fe",
+    "semantic_hash": ""
+  }
+}
