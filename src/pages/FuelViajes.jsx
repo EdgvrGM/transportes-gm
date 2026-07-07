@@ -76,8 +76,9 @@ import "leaflet/dist/leaflet.css";
 import ModalRutaViaje from "@/components/gps/ModalRutaViaje";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { useToast } from "@/components/ui/use-toast";
 
-const FECHA_LIMITE_ARCHIVO = "2026-04-24";
+import { FECHA_LIMITE_ARCHIVO } from "@/lib/archivo";
 
 function FitBounds({ points }) {
   const map = useMap();
@@ -308,6 +309,7 @@ export default function FuelViajes() {
   const location = useLocation();
   const stateData = location.state || {};
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [fechaInicio, setFechaInicio] = useState(stateData.fechaInicio || "");
   const [fechaFin, setFechaFin] = useState(stateData.fechaFin || "");
   const [conductorFiltro, setConductorFiltro] = useState(
@@ -319,7 +321,8 @@ export default function FuelViajes() {
   const [periodoFiltro, setPeriodoFiltro] = useState(
     stateData.periodoFiltro || "todos",
   );
-  const [soloSinVincular, setSoloSinVincular] = useState(false);
+  const [soloSinVincular, setSoloSinVincular] = useState(!!stateData.soloSinVincular);
+  const [soloSinCombustible, setSoloSinCombustible] = useState(!!stateData.soloSinCombustible);
   const [viajeAEliminar, setViajeAEliminar] = useState(null);
 
   // --- Estado para modal PDF de rendimientos ---
@@ -777,7 +780,7 @@ export default function FuelViajes() {
       cerrarDialog();
     },
     onError: (err) => {
-      window.alert("Error al guardar: " + err.message);
+      toast({ variant: "destructive", title: "Error al guardar", description: err.message });
     },
   });
 
@@ -827,6 +830,8 @@ export default function FuelViajes() {
           !rutaPrincipal.toLowerCase().includes(rutaFiltro.toLowerCase())
         )
           cumpleFiltros = false;
+        if (soloSinCombustible && (parseFloat(viaje.litros_combustible) || 0) > 0)
+          cumpleFiltros = false;
         if (soloSinVincular) {
           // "Sin vincular" = el programa de cargas no lo reconoce ni por FK ni por fallback
           // (mismo criterio que getRegisteredTrip en FuelProgramaCargas).
@@ -870,6 +875,7 @@ export default function FuelViajes() {
       clienteFiltro,
       rutaFiltro,
       soloSinVincular,
+      soloSinCombustible,
       clientes,
       viajesRegistrados,
     ],
@@ -877,6 +883,7 @@ export default function FuelViajes() {
 
   const limpiarFiltros = () => {
     setSoloSinVincular(false);
+    setSoloSinCombustible(false);
     setFechaInicio("");
     setFechaFin("");
     setConductorFiltro("todos");
@@ -1559,7 +1566,7 @@ export default function FuelViajes() {
     );
 
   return (
-    <div className="p-4 md:p-8 bg-slate-50 dark:bg-background min-h-screen transition-colors duration-300">
+    <div className="p-4 md:p-8 bg-background min-h-screen transition-colors duration-300">
       <div className="max-w-[1600px] mx-auto">
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -1572,7 +1579,7 @@ export default function FuelViajes() {
           </div>
           <Button
             onClick={() => setModalPdfAbierto(true)}
-            className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-5 h-11 rounded-xl shadow-lg shrink-0"
+            className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-5 h-11 rounded-xl shadow-lg shrink-0"
           >
             <BarChart2 className="w-4 h-4" />
             Exportar Rendimientos PDF
@@ -1584,7 +1591,7 @@ export default function FuelViajes() {
           <DialogContent className="w-[95vw] max-w-md">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-lg font-bold">
-                <TrendingUp className="w-5 h-5 text-indigo-500" />
+                <TrendingUp className="w-5 h-5 text-yellow-600" />
                 Exportar Rendimientos PDF
               </DialogTitle>
             </DialogHeader>
@@ -1604,7 +1611,7 @@ export default function FuelViajes() {
                       type="button"
                       variant={pdfModo === val ? "default" : "outline"}
                       onClick={() => setPdfModo(val)}
-                      className={`h-11 rounded-xl gap-2 ${pdfModo === val ? "bg-indigo-600 hover:bg-indigo-700 text-white" : ""}`}
+                      className="h-11 rounded-xl gap-2"
                     >
                       <Icon className="w-4 h-4" />
                       {label}
@@ -1870,6 +1877,8 @@ export default function FuelViajes() {
             setPeriodoFiltro={setPeriodoFiltro}
             soloSinVincular={soloSinVincular}
             setSoloSinVincular={setSoloSinVincular}
+            soloSinCombustible={soloSinCombustible}
+            setSoloSinCombustible={setSoloSinCombustible}
             conductores={conductores}
             camiones={camiones}
             clientes={clientes}

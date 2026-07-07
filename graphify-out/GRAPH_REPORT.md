@@ -1,16 +1,16 @@
-# Graph Report - transportes-gm  (2026-07-06)
+# Graph Report - transportes-gm  (2026-07-07)
 
 ## Corpus Check
-- 170 files · ~379,456 words
+- 173 files · ~380,198 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1992 nodes · 2019 edges · 135 communities (99 shown, 36 thin omitted)
-- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 63 edges (avg confidence: 0.8)
+- 2023 nodes · 2059 edges · 141 communities (102 shown, 39 thin omitted)
+- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 71 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `a3e2b8ba`
+- Built from commit: `388749cb`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -69,6 +69,7 @@
 - [[_COMMUNITY_Community 51|Community 51]]
 - [[_COMMUNITY_Community 52|Community 52]]
 - [[_COMMUNITY_Community 53|Community 53]]
+- [[_COMMUNITY_Community 54|Community 54]]
 - [[_COMMUNITY_Community 55|Community 55]]
 - [[_COMMUNITY_Community 56|Community 56]]
 - [[_COMMUNITY_Community 57|Community 57]]
@@ -121,6 +122,10 @@
 - [[_COMMUNITY_Community 123|Community 123]]
 - [[_COMMUNITY_Community 124|Community 124]]
 - [[_COMMUNITY_Community 125|Community 125]]
+- [[_COMMUNITY_Community 135|Community 135]]
+- [[_COMMUNITY_Community 136|Community 136]]
+- [[_COMMUNITY_Community 137|Community 137]]
+- [[_COMMUNITY_Community 138|Community 138]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `cn()` - 27 edges
@@ -128,11 +133,11 @@
 3. `compilerOptions` - 16 edges
 4. `UI/UX Pro Max - Design Intelligence` - 13 edges
 5. `str` - 12 edges
-6. `DesignSystemGenerator` - 11 edges
-7. `useToast()` - 10 edges
+6. `useToast()` - 12 edges
+7. `DesignSystemGenerator` - 11 edges
 8. `generate_design_system()` - 9 edges
-9. `Quick Reference` - 9 edges
-10. `_search_csv()` - 8 edges
+9. `wialonFetch()` - 9 edges
+10. `Quick Reference` - 9 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `wialonFetch()` --calls--> `fetch()`  [INFERRED]
@@ -146,7 +151,7 @@
 - `wialonLogout()` --calls--> `fetch()`  [INFERRED]
   supabase/functions/wialon-proxy/index.ts → cloudflare-workers/wialon-proxy/src/index.ts
 
-## Communities (135 total, 36 thin omitted)
+## Communities (141 total, 39 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.00
@@ -165,16 +170,16 @@ Cohesion: 0.08
 Nodes (39): Autorizacion, autorizar(), corsHeaders, distanciaMetros(), ejecutarGeocerca(), ejecutarRalenti(), Env, esCuentaCliente() (+31 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.05
-Nodes (17): DURACIONES_SHARE, fetchHistory(), HistorialGPS(), toDatetimeLocal(), today, yesterday, fetchWialonUnits(), wialonFetch() (+9 more)
+Cohesion: 0.07
+Nodes (13): fetchHistory(), fetchWialonUnits(), wialonFetch(), fetchPositions(), COUNTER_VARIANTS, fetchPositions(), fetchPositions(), fetchPositions() (+5 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.07
 Nodes (25): Sidebar, SidebarContent, SidebarContext, SidebarFooter, SidebarGroup, SidebarGroupAction, SidebarGroupContent, SidebarGroupLabel (+17 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.07
-Nodes (26): devDependencies, autoprefixer, eslint, @eslint/js, eslint-plugin-react, eslint-plugin-react-hooks, eslint-plugin-react-refresh, @flydotio/dockerfile (+18 more)
+Cohesion: 0.12
+Nodes (17): devDependencies, autoprefixer, eslint, @eslint/js, eslint-plugin-react, eslint-plugin-react-hooks, eslint-plugin-react-refresh, @flydotio/dockerfile (+9 more)
 
 ### Community 7 - "Community 7"
 Cohesion: 0.09
@@ -182,7 +187,7 @@ Nodes (10): DefaultIcon, endIcon, excesoIcon, FILTROS_RUTA, MapaGPS(), startIcon
 
 ### Community 8 - "Community 8"
 Cohesion: 0.10
-Nodes (10): Clientes(), CuentasCliente(), EditDialog(), FuelCamiones(), FuelConductores(), FuelRemolques(), EMPTY_ARRAY, Liquidaciones() (+2 more)
+Nodes (10): Clientes(), EditDialog(), FuelCamiones(), FuelConductores(), FuelProgramaCargas(), FuelViajes(), EMPTY_ARRAY, Liquidaciones() (+2 more)
 
 ### Community 9 - "Community 9"
 Cohesion: 0.11
@@ -193,8 +198,8 @@ Cohesion: 0.11
 Nodes (17): aliases, components, hooks, lib, ui, utils, iconLibrary, rsc (+9 more)
 
 ### Community 11 - "Community 11"
-Cohesion: 0.12
-Nodes (3): _getCurrentPage(), Pages, PagesContent()
+Cohesion: 0.05
+Nodes (25): Clientes, ControlCombustible, ControlVacios, CuentasCliente, DocumentacionLegal, ExpertoLogistica, FuelCamiones, FuelConductores (+17 more)
 
 ### Community 12 - "Community 12"
 Cohesion: 0.12
@@ -211,10 +216,6 @@ Nodes (15): devDependencies, @cloudflare/vitest-pool-workers, @types/node, types
 ### Community 15 - "Community 15"
 Cohesion: 0.16
 Nodes (7): CAMION_FIELDS, CONDUCTOR_FIELDS, getBadgeClasses(), getBadgeLabel(), getEstadoVencimiento(), REMOLQUE_FIELDS, StatusBadge()
-
-### Community 16 - "Community 16"
-Cohesion: 0.16
-Nodes (6): CENTRO_MX, estaEnRalenti(), tiempoDesde(), TooltipUnidad(), localDateStr(), PortalCliente()
 
 ### Community 17 - "Community 17"
 Cohesion: 0.20
@@ -242,7 +243,7 @@ Nodes (12): code:bash (python3 skills/ui-ux-pro-max/scripts/search.py "<keyword>
 
 ### Community 23 - "Community 23"
 Cohesion: 0.22
-Nodes (4): DIAS_SEMANA, PLANTILLA_VACIA, SYSTEM_PAGES, TrailerIcon()
+Nodes (5): DIAS_SEMANA, PLANTILLA_VACIA, FuelRemolques(), SYSTEM_PAGES, TrailerIcon()
 
 ### Community 24 - "Community 24"
 Cohesion: 0.25
@@ -356,6 +357,10 @@ Nodes (6): DialogContent, DialogDescription, DialogFooter(), DialogHeader(), Dia
 Cohesion: 0.47
 Nodes (4): fmtFecha(), generarDatosMock(), REPORTES, ReportesGPS()
 
+### Community 54 - "Community 54"
+Cohesion: 0.20
+Nodes (9): name, private, scripts, build, dev, lint, preview, type (+1 more)
+
 ### Community 55 - "Community 55"
 Cohesion: 0.33
 Nodes (5): compilerOptions, types, exclude, extends, include
@@ -428,24 +433,32 @@ Nodes (3): TabsContent, TabsList, TabsTrigger
 Cohesion: 0.50
 Nodes (3): ToggleGroup, ToggleGroupContext, ToggleGroupItem
 
+### Community 135 - "Community 135"
+Cohesion: 0.25
+Nodes (5): DURACIONES_SHARE, HistorialGPS(), toDatetimeLocal(), today, yesterday
+
+### Community 136 - "Community 136"
+Cohesion: 0.33
+Nodes (4): CENTRO_MX, estaEnRalenti(), tiempoDesde(), TooltipUnidad()
+
 ## Knowledge Gaps
-- **1453 isolated node(s):** `C:\Users\Joker\AppData\Local\Programs\Python\Python314\python.exe`, `$schema`, `style`, `rsc`, `tsx` (+1448 more)
+- **1475 isolated node(s):** `C:\Users\Joker\AppData\Local\Programs\Python\Python314\python.exe`, `$schema`, `style`, `rsc`, `tsx` (+1470 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **36 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **39 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `wialonFetch()` connect `Community 4` to `Community 3`?**
-  _High betweenness centrality (0.012) - this node is a cross-community bridge._
+  _High betweenness centrality (0.008) - this node is a cross-community bridge._
 - **Why does `fetch()` connect `Community 3` to `Community 4`?**
-  _High betweenness centrality (0.006) - this node is a cross-community bridge._
+  _High betweenness centrality (0.005) - this node is a cross-community bridge._
 - **Are the 26 inferred relationships involving `cn()` (e.g. with `LiquidButton()` and `MagneticButton()`) actually correct?**
   _`cn()` has 26 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 5 inferred relationships involving `fetch()` (e.g. with `wialonFetch()` and `wialonGetHistory()`) actually correct?**
   _`fetch()` has 5 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `C:\Users\Joker\AppData\Local\Programs\Python\Python314\python.exe`, `$schema`, `style` to the rest of the system?**
-  _1479 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _1501 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
   _Cohesion score 0.002072538860103627 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**

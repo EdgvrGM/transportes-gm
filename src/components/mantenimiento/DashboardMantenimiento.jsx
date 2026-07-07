@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Loader2, Wrench, Clock, CheckCircle2, DollarSign, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { localDateStr } from "@/lib/fechas";
 
 const ESTADOS = [
   { value: "abierta", label: "Abierta", className: "bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700" },
@@ -73,7 +74,7 @@ export default function DashboardMantenimiento({ onVerOrdenes }) {
   });
 
   const ahora = new Date();
-  const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1).toISOString().split("T")[0];
+  const inicioMes = localDateStr(new Date(ahora.getFullYear(), ahora.getMonth(), 1));
 
   const otAbiertas = ordenes.filter((o) => ["abierta", "en_progreso", "en_espera"].includes(o.estado));
   const otEnTaller = ordenes.filter((o) => o.estado === "en_progreso");

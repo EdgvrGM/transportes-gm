@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/supabaseClient";
 import { wialonFetch } from "@/lib/wialonFetch";
+import { localDateStr } from "@/lib/fechas";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Edit, Trash2, Loader2, X, ChevronLeft, ChevronRight, CheckCircle2, CheckCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -59,7 +60,7 @@ const FORM_VACIO = {
   tipo: "preventivo",
   catalogo_servicio_id: "",
   taller: "",
-  fecha_entrada: new Date().toISOString().split("T")[0],
+  fecha_entrada: "",
   fecha_salida_estimada: "",
   notas: "",
   estado: "abierta",
@@ -321,7 +322,7 @@ export default function OrdenesTrabajoTab() {
 
   const abrirCrear = () => {
     setOtEditando(null);
-    setFormData({ ...FORM_VACIO, fecha_entrada: new Date().toISOString().split("T")[0] });
+    setFormData({ ...FORM_VACIO, fecha_entrada: localDateStr(new Date()) });
     setLineas([]);
     setFormError(null);
     setPaso(1);
@@ -403,7 +404,7 @@ export default function OrdenesTrabajoTab() {
     setFormError(null);
     const finalFormData = { ...formData };
     if (finalFormData.estado === "completada" && !finalFormData.fecha_salida_real) {
-      finalFormData.fecha_salida_real = new Date().toISOString().split("T")[0];
+      finalFormData.fecha_salida_real = localDateStr(new Date());
     }
     try {
       if (otEditando) {
@@ -413,6 +414,7 @@ export default function OrdenesTrabajoTab() {
         await crearMutation.mutateAsync({ formData: finalFormData, lineas, numero });
       }
       queryClient.invalidateQueries({ queryKey: ["ordenes-trabajo"] });
+      queryClient.invalidateQueries({ queryKey: ["panel-ordenes"] });
       cerrarDialog();
     } catch (err) {
       setFormError(err.message ?? "Error al guardar");
@@ -421,7 +423,7 @@ export default function OrdenesTrabajoTab() {
 
   const abrirCompletar = (ot) => {
     setOtACompletar(ot);
-    setFormCompletar({ fecha_salida_real: new Date().toISOString().split("T")[0], costo_total_real: "", notas_finales: "" });
+    setFormCompletar({ fecha_salida_real: localDateStr(new Date()), costo_total_real: "", notas_finales: "" });
     setCompletarError(null);
   };
 
@@ -432,12 +434,13 @@ export default function OrdenesTrabajoTab() {
     try {
       await completarMutation.mutateAsync({
         id: otACompletar.id,
-        fecha_salida_real: formCompletar.fecha_salida_real || new Date().toISOString().split("T")[0],
+        fecha_salida_real: formCompletar.fecha_salida_real || localDateStr(new Date()),
         costo_total_real: formCompletar.costo_total_real,
         notasBase: otACompletar.notas,
         notas_finales: formCompletar.notas_finales,
       });
       queryClient.invalidateQueries({ queryKey: ["ordenes-trabajo"] });
+      queryClient.invalidateQueries({ queryKey: ["panel-ordenes"] });
       cerrarCompletar();
     } catch (err) {
       setCompletarError(err.message ?? "Error al completar la orden");
@@ -451,6 +454,7 @@ export default function OrdenesTrabajoTab() {
     try {
       await eliminarMutation.mutateAsync(otAEliminar.id);
       queryClient.invalidateQueries({ queryKey: ["ordenes-trabajo"] });
+      queryClient.invalidateQueries({ queryKey: ["panel-ordenes"] });
       setOtAEliminar(null);
     } catch (err) {
       setDeleteError(err.message ?? "Error al eliminar");

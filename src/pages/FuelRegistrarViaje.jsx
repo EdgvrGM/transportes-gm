@@ -479,7 +479,7 @@ export default function FuelRegistrarViaje() {
   const eficiencia = litrosVal > 0 ? (kmTotales / litrosVal).toFixed(2) : "-";
 
   return (
-    <div className="p-4 md:p-8 bg-slate-50 dark:bg-background min-h-screen transition-colors duration-300">
+    <div className="p-4 md:p-8 bg-background min-h-screen transition-colors duration-300">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-4 mb-8">
           <Button

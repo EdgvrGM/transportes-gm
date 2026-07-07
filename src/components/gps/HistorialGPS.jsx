@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { WIALON_PROXY_URL, VELOCIDAD_EXCESO } from "@/components/gps/constants";
 import { wialonFetch } from "@/lib/wialonFetch";
+import { localDateStr } from "@/lib/fechas";
 
 const DURACIONES_SHARE = [
   { label: "4h",  horas: 4 },
@@ -17,16 +18,6 @@ const DURACIONES_SHARE = [
   { label: "3d",  horas: 72 },
   { label: "7d",  horas: 168 },
 ];
-
-function localDateStr(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-
-const today     = localDateStr(new Date());
-const yesterday = localDateStr(new Date(Date.now() - 86400000));
 
 function toDatetimeLocal(date, time) {
   return `${date}T${time}`;
@@ -65,6 +56,10 @@ function haversineKm(lat1, lng1, lat2, lng2) {
 
 export default function HistorialGPS({ positions = [], onHistorialCargado, onPuntoActivo, onReproduciendo, onIconoUnidad }) {
   const [unitId,     setUnitId]     = useState("");
+  // Dentro del componente para que HOY/AYER no queden congelados a la fecha
+  // en que se cargó la app (las constantes de módulo se evalúan una sola vez).
+  const today = localDateStr(new Date());
+  const yesterday = localDateStr(new Date(Date.now() - 86400000));
   const [fromDt,     setFromDt]     = useState(toDatetimeLocal(today, "00:00"));
   const [toDt,       setToDt]       = useState(toDatetimeLocal(today, "23:59"));
   const [fetchCount, setFetchCount] = useState(0);

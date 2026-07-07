@@ -56,8 +56,9 @@ import {
   AlertTriangle,
   StickyNote,
 } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { localDateStr, formatearFecha } from "@/lib/fechas";
 import VisorImagen from "@/components/fuel/VisorImagen";
 
 const ESTATUS_VACIOS = [
@@ -69,13 +70,6 @@ const ESTATUS_VACIOS = [
 const getEstatus = (v) => ESTATUS_VACIOS.find((e) => e.value === v) || ESTATUS_VACIOS[0];
 
 const DIAS_SEMANA = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-
-function localDateStr(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
 
 function getLunes(d) {
   const x = new Date(d);
@@ -577,15 +571,6 @@ export default function ControlVacios() {
   const showConductor = (id, libre) => (id != null ? getConductorName(id) : (libre?.trim() ? `${libre} (ext.)` : "—"));
   const showCamion = (id, libre) => (id != null ? getCamionName(id) : (libre?.trim() ? `${libre} (ext.)` : "—"));
 
-  const formatearFecha = (s) => {
-    if (!s) return "—";
-    try {
-      return format(parseISO(s), "dd MMM yyyy", { locale: es });
-    } catch {
-      return s;
-    }
-  };
-
   // ---------- Semana ----------
   const hoyStr = localDateStr(new Date());
   const lunesStr = localDateStr(lunes);
@@ -747,6 +732,7 @@ export default function ControlVacios() {
     onSuccess: () => {
       fotosSubidasSesion.current.clear();
       queryClient.invalidateQueries({ queryKey: ["controlVacios"] });
+      queryClient.invalidateQueries({ queryKey: ["panel-vacios-pendientes"] });
       setDialogAbierto(false);
     },
     onError: (err) => setErrorMsg(err.message),
@@ -759,6 +745,7 @@ export default function ControlVacios() {
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["controlVacios"] });
+      queryClient.invalidateQueries({ queryKey: ["panel-vacios-pendientes"] });
       toast({
         title: "Contenedor agregado",
         description: `${variables.numero_contenedor}${variables.numero_contenedor_2 ? ` + ${variables.numero_contenedor_2}` : ""} · ${formatearFecha(variables.fecha_carga)}`,
@@ -791,6 +778,7 @@ export default function ControlVacios() {
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["controlVacios"] });
+      queryClient.invalidateQueries({ queryKey: ["panel-vacios-pendientes"] });
       const label = ESTATUS_VACIOS.find((e) => e.value === variables?.estatus)?.label;
       toast({
         title: "Estatus actualizado",
@@ -829,6 +817,7 @@ export default function ControlVacios() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["controlVacios"] });
+      queryClient.invalidateQueries({ queryKey: ["panel-vacios-pendientes"] });
       setEntregaDe(null);
       toast({ title: "Vacío entregado", description: "Se registró la entrega y se actualizó el estatus." });
     },
@@ -852,6 +841,7 @@ export default function ControlVacios() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["controlVacios"] });
+      queryClient.invalidateQueries({ queryKey: ["panel-vacios-pendientes"] });
       setContenedorAEliminar(null);
       toast({ title: "Contenedor eliminado", description: "El registro se eliminó correctamente." });
     },

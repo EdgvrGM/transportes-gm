@@ -13,12 +13,13 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [verPassword, setVerPassword] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -48,15 +49,20 @@ export default function Login() {
         sessionStorage.setItem("showSplash", "1");
         navigate("/controlcombustible");
       }
-    } catch (_error) {
-      setError("Credenciales inválidas. Por favor, inténtalo de nuevo.");
+    } catch (err) {
+      const esRed = err?.message?.toLowerCase().includes("fetch") || err?.status >= 500;
+      setError(
+        esRed
+          ? "No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo."
+          : "Correo o contraseña incorrectos. Inténtalo de nuevo."
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-background p-4 transition-colors duration-300">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 transition-colors duration-300">
       <Card className="w-full max-w-md shadow-2xl border-none bg-card">
         <CardHeader className="text-center">
           <div className="flex justify-center items-center mb-0 -mt-2">
@@ -70,7 +76,7 @@ export default function Login() {
             Iniciar Sesión
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            Sistema de Control de Combustible
+            Sistema de Gestión Integral
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -90,18 +96,28 @@ export default function Login() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" classname="text-foreground">
+              <Label htmlFor="password" className="text-foreground">
                 Contraseña
               </Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="bg-background border-input text-foreground"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={verPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="bg-background border-input text-foreground pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setVerPassword((v) => !v)}
+                  aria-label={verPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {verPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
             {error && (
               <Alert variant="destructive">

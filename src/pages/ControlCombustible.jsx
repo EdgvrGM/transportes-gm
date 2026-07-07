@@ -30,7 +30,7 @@ export default function ControlCombustible() {
   const fechaLabel = format(now, "EEE dd MMM", { locale: es });
 
   return (
-    <div className="p-4 md:p-8 bg-slate-50 dark:bg-background min-h-screen transition-colors duration-300">
+    <div className="p-4 md:p-8 bg-background min-h-screen transition-colors duration-300">
       <div className="max-w-[1600px] mx-auto space-y-5">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
@@ -52,7 +52,8 @@ export default function ControlCombustible() {
             <button
               onClick={refresh}
               disabled={refreshing}
-              className="p-2 rounded-lg bg-card border border-border hover:bg-muted/50 transition disabled:opacity-50"
+              aria-label="Actualizar datos del panel"
+              className="p-2 rounded-lg bg-card border border-border hover:bg-muted/50 transition disabled:opacity-50 cursor-pointer"
               title="Actualizar"
             >
               <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />

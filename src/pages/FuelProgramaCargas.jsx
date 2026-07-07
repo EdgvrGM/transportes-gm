@@ -65,8 +65,9 @@ import { es } from "date-fns/locale";
 import { TrailerIcon } from "./Layout";
 import ModalRutaViaje from "@/components/gps/ModalRutaViaje";
 import VisorImagen from "@/components/fuel/VisorImagen";
+import { useToast } from "@/components/ui/use-toast";
 
-const FECHA_LIMITE_ARCHIVO = '2026-04-24';
+import { FECHA_LIMITE_ARCHIVO } from "@/lib/archivo";
 
 const DIAS_SEMANA = [
   "Lunes",
@@ -81,7 +82,7 @@ const PLANTILLA_VACIA = DIAS_SEMANA.reduce(
   {},
 );
 
-const ProgramCard = ({ prog, onVer, totalViajes }) => {
+const ProgramCard = ({ prog, onVer, totalViajes, archivado = false }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [tilt, setTilt] = useState({
     cardX: 0,
@@ -125,7 +126,7 @@ const ProgramCard = ({ prog, onVer, totalViajes }) => {
         ...transitionStyle,
       }}
     >
-      <Card className="relative border border-slate-200 dark:border-zinc-800 shadow-md hover:shadow-2xl hover:shadow-primary/10 bg-white dark:bg-zinc-950 rounded-[1.5rem] overflow-hidden flex flex-col h-full z-10 pointer-events-auto">
+      <Card className={`relative border border-slate-200 dark:border-zinc-800 shadow-md hover:shadow-2xl hover:shadow-primary/10 bg-white dark:bg-zinc-950 rounded-[1.5rem] overflow-hidden flex flex-col h-full z-10 pointer-events-auto ${archivado ? "opacity-60" : ""}`}>
         <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 to-cyan-400 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-out z-20" />
         <CardHeader
           className="bg-slate-100 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 p-6 pb-5 relative overflow-hidden z-10"
@@ -133,6 +134,11 @@ const ProgramCard = ({ prog, onVer, totalViajes }) => {
         >
           <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors duration-500" />
           <div className="space-y-1.5 text-center relative z-10 py-4">
+            {archivado && (
+              <span className="inline-flex items-center text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-muted text-muted-foreground border border-border">
+                Archivada
+              </span>
+            )}
             <CardTitle className="text-2xl font-black text-slate-800 dark:text-slate-100 group-hover:text-primary transition-colors duration-300">
               {prog.titulo || "Sin Título"}
             </CardTitle>
@@ -204,6 +210,7 @@ async function limpiarFotosDeViajes(viajeIds) {
 export default function FuelProgramaCargas() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [dialogAbierto, setDialogAbierto] = useState(false);
   const [dialogVerAbierto, setDialogVerAbierto] = useState(false);
   const [semanaAEliminar, setSemanaAEliminar] = useState(null);
@@ -630,7 +637,7 @@ export default function FuelProgramaCargas() {
       setFotoCargando(null);
     },
     onError: (err) => {
-      alert("Error al subir foto: " + err.message);
+      toast({ variant: "destructive", title: "Error al subir foto", description: err.message });
       setFotoCargando(null);
     }
   });
@@ -732,7 +739,10 @@ export default function FuelProgramaCargas() {
   const abrirDialogVer = (programa) => {
     // Bloqueo de datos archivados
     if (programa.fecha_inicio < FECHA_LIMITE_ARCHIVO) {
-      alert("Estos datos han sido archivados para optimizar el rendimiento. Contacte al administrador para consultas históricas.");
+      toast({
+        title: "Semana archivada",
+        description: "Los datos anteriores al corte de archivo no están disponibles en línea. Contacta al administrador para consultas históricas.",
+      });
       return;
     }
     setProgramaSeleccionado(programa);
@@ -935,7 +945,7 @@ export default function FuelProgramaCargas() {
     );
 
   return (
-    <div className="p-4 md:p-8 bg-slate-50 dark:bg-background min-h-screen transition-colors duration-300">
+    <div className="p-4 md:p-8 bg-background min-h-screen transition-colors duration-300">
       <div className="max-w-[1600px] mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
           <div>
@@ -954,19 +964,33 @@ export default function FuelProgramaCargas() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {programas.map((prog) => (
-            <ProgramCard
-              key={prog.id}
-              prog={prog}
-              onVer={abrirDialogVer}
-              totalViajes={Object.values(prog.programacion || {}).reduce(
-                (acc, v) => acc + (v?.length || 0),
-                0,
-              )}
-            />
-          ))}
-        </div>
+        {programas.length === 0 ? (
+          <div className="text-center py-24 text-muted-foreground border border-dashed border-border rounded-3xl">
+            <p className="font-bold text-foreground mb-1">Aún no hay semanas programadas</p>
+            <p className="text-sm mb-6">Crea la primera semana para empezar a programar cargas.</p>
+            <Button
+              onClick={() => setConfirmarNuevaSemana(true)}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-xl font-bold"
+            >
+              <Plus className="w-4 h-4" /> Nueva Semana
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {programas.map((prog) => (
+              <ProgramCard
+                key={prog.id}
+                prog={prog}
+                onVer={abrirDialogVer}
+                archivado={prog.fecha_inicio < FECHA_LIMITE_ARCHIVO}
+                totalViajes={Object.values(prog.programacion || {}).reduce(
+                  (acc, v) => acc + (v?.length || 0),
+                  0,
+                )}
+              />
+            ))}
+          </div>
+        )}
 
         {/* --- MODAL DETALLES --- */}
         <Dialog open={dialogVerAbierto} onOpenChange={setDialogVerAbierto}>
@@ -1121,22 +1145,22 @@ export default function FuelProgramaCargas() {
                                     setViajeConsumoSeleccionado(registeredViaje);
                                     setDialogConsumoAbierto(true);
                                   }}
-                                  className="min-h-[2.25rem] h-auto py-2 px-4 md:px-6 gap-2 border-green-200 text-green-700 bg-green-50/50 hover:bg-green-100 dark:border-green-900/30 dark:text-green-400 dark:bg-green-900/20 dark:hover:bg-green-900/40 rounded-xl font-black text-[10px] shadow-sm active:scale-95 transition-all text-center whitespace-normal"
+                                  className="h-auto py-1.5 px-3 gap-2 border-green-200 text-green-700 bg-green-50/50 hover:bg-green-100 dark:border-green-900/30 dark:text-green-400 dark:bg-green-900/20 dark:hover:bg-green-900/40 rounded-lg font-black text-xs shadow-sm active:scale-95 transition-all text-center whitespace-normal"
                                 >
                                   <Eye className="w-3.5 h-3.5" />
-                                  <span>VER DETALLES DE CONSUMO</span>
+                                  <span>Ver detalles de consumo</span>
                                 </Button>
                               );
                             } else {
-                              let btnLabel = "COMPLETAR REGISTRO";
+                              let btnLabel = "Completar registro";
                               let btnIcon = <Edit className="w-3.5 h-3.5" />;
                               let btnClass = "border-orange-200 text-orange-700 bg-orange-50/50 hover:bg-orange-100 dark:border-orange-900/30 dark:text-orange-400 dark:bg-orange-900/20";
                               if (!hasFuel && hasTolls) {
-                                btnLabel = "REGISTRAR COMBUSTIBLE";
+                                btnLabel = "Registrar combustible";
                                 btnIcon = <Fuel className="w-3.5 h-3.5" />;
                                 btnClass = "border-amber-200 text-amber-700 bg-amber-50/50 hover:bg-amber-100 dark:border-amber-900/30 dark:text-amber-400 dark:bg-amber-900/20";
                               } else if (hasFuel && !hasTolls) {
-                                btnLabel = "REGISTRAR CASETAS";
+                                btnLabel = "Registrar casetas";
                                 btnIcon = <Ticket className="w-3.5 h-3.5" />;
                                 btnClass = "border-indigo-200 text-indigo-700 bg-indigo-50/50 hover:bg-indigo-100 dark:border-indigo-900/30 dark:text-indigo-400 dark:bg-indigo-900/20";
                               }
@@ -1144,7 +1168,7 @@ export default function FuelProgramaCargas() {
                                 <Button
                                   variant="outline"
                                   onClick={() => handleRegistrarCombustible(viaje)}
-                                  className={`min-h-[2.25rem] h-auto py-2 px-4 md:px-6 gap-2 rounded-xl font-black text-[10px] shadow-sm active:scale-95 transition-all text-center whitespace-normal ${btnClass}`}
+                                  className={`h-auto py-1.5 px-3 gap-2 rounded-lg font-black text-xs shadow-sm active:scale-95 transition-all text-center whitespace-normal ${btnClass}`}
                                 >
                                   {btnIcon}
                                   <span>{btnLabel}</span>
@@ -1156,10 +1180,10 @@ export default function FuelProgramaCargas() {
                               <Button
                                 variant="outline"
                                 onClick={() => handleRegistrarCombustible(viaje)}
-                                className="min-h-[2.25rem] h-auto py-2 px-4 md:px-6 border-orange-200 text-orange-600 hover:bg-orange-50 dark:border-orange-900/30 dark:text-orange-400 dark:bg-orange-900/20 dark:hover:bg-orange-900/40 rounded-xl font-black text-[10px] gap-2 shadow-sm active:scale-95 transition-all text-center whitespace-normal"
+                                className="h-auto py-1.5 px-3 border-orange-200 text-orange-600 hover:bg-orange-50 dark:border-orange-900/30 dark:text-orange-400 dark:bg-orange-900/20 dark:hover:bg-orange-900/40 rounded-lg font-black text-xs gap-2 shadow-sm active:scale-95 transition-all text-center whitespace-normal"
                               >
                                 <Plus className="w-4 h-4" />
-                                <span>REGISTRAR CONSUMOS DE COMBUSTIBLE Y CASETAS</span>
+                                <span>Registrar combustible y casetas</span>
                               </Button>
                             );
                           }
@@ -1170,14 +1194,14 @@ export default function FuelProgramaCargas() {
                               <div className="md:absolute md:left-0 flex items-center justify-center w-full md:w-auto gap-2">
                                 <button
                                   onClick={() => handleAbrirGestorEvidencias(viaje)}
-                                  className={`inline-flex items-center px-3 py-1.5 rounded-lg text-[10px] font-black transition-all hover:scale-105 shadow-sm border ${
+                                  className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-black transition-colors shadow-sm border ${
                                     todasEntregadas
                                       ? "bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-800"
                                       : "bg-red-50 text-red-600 border-red-200 hover:bg-red-100 dark:bg-red-900/40 dark:text-red-400 dark:border-red-800"
                                   }`}
                                 >
                                   {todasEntregadas ? <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> : <Clock className="w-3.5 h-3.5 mr-1.5" />}
-                                  {todasEntregadas ? "EVIDENCIA: ENTREGADA" : "EVIDENCIA: SIN ENTREGAR"}
+                                  {todasEntregadas ? "Evidencia entregada" : "Evidencia sin entregar"}
                                 </button>
                               </div>
 
@@ -1186,7 +1210,7 @@ export default function FuelProgramaCargas() {
                                 {mainButton}
                                 {registeredViaje && registeredViaje.km_por_litro && parseFloat(registeredViaje.km_por_litro) > 0 ? (
                                   <div
-                                    className={`inline-flex items-center px-3 py-1.5 rounded-lg text-[10px] font-black border shadow-sm ${
+                                    className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-black border shadow-sm ${
                                       registeredViaje.km_por_litro > 2.25
                                         ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800"
                                         : registeredViaje.km_por_litro >= 2.0
@@ -1194,8 +1218,8 @@ export default function FuelProgramaCargas() {
                                         : "bg-red-50 text-red-600 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
                                     }`}
                                   >
-                                    <Fuel className="w-3.5 h-3.5 mr-1.5 text-primary" />
-                                    {registeredViaje.km_por_litro.toFixed(2)} KM/L
+                                    <Fuel className="w-3.5 h-3.5 mr-1.5 text-foreground" />
+                                    {registeredViaje.km_por_litro.toFixed(2)} km/L
                                   </div>
                                 ) : null}
                               </div>
@@ -1206,10 +1230,10 @@ export default function FuelProgramaCargas() {
                                   <Button
                                     variant="outline"
                                     onClick={() => setViajeRutaSeleccionado(registeredViaje)}
-                                    className="min-h-[2.25rem] h-auto py-2 px-4 gap-2 border-blue-200 text-blue-700 bg-blue-50/50 hover:bg-blue-100 dark:border-blue-900/30 dark:text-blue-400 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 rounded-xl font-black text-[10px] shadow-sm active:scale-95 transition-all"
+                                    className="h-auto py-1.5 px-3 gap-2 border-blue-200 text-blue-700 bg-blue-50/50 hover:bg-blue-100 dark:border-blue-900/30 dark:text-blue-400 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 rounded-lg font-black text-xs shadow-sm active:scale-95 transition-all"
                                   >
                                     <Route className="w-3.5 h-3.5" />
-                                    <span>VER RUTA</span>
+                                    <span>Ver ruta</span>
                                   </Button>
                                 </div>
                               )}

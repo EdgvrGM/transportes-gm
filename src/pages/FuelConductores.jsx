@@ -39,7 +39,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { Plus, Edit, Phone, CreditCard, Loader2, Trash2, User } from "lucide-react";
 
-const FECHA_LIMITE_ARCHIVO = '2026-04-24';
+import { FECHA_LIMITE_ARCHIVO } from "@/lib/archivo";
 
 export default function FuelConductores() {
   const queryClient = useQueryClient();
@@ -261,7 +261,7 @@ export default function FuelConductores() {
   }
 
   return (
-    <div className="p-4 md:p-8 bg-slate-50 dark:bg-background min-h-screen transition-colors duration-300">
+    <div className="p-4 md:p-8 bg-background min-h-screen transition-colors duration-300">
       <div className="max-w-[1600px] mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
           <div>

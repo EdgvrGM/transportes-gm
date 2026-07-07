@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Filter, X, Calendar, Link2Off } from "lucide-react";
+import { Filter, X, Calendar, Link2Off, Fuel } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
 // TODO: agregar JSDoc de props
@@ -29,6 +29,8 @@ export default function FiltrosViajes({
   setPeriodoFiltro,
   soloSinVincular,
   setSoloSinVincular,
+  soloSinCombustible,
+  setSoloSinCombustible,
   conductores = [],
   camiones = [],
   clientes = [],
@@ -203,20 +205,37 @@ export default function FiltrosViajes({
               <label className="text-sm font-medium text-foreground opacity-0 select-none">
                 &nbsp;
               </label>
-              <div className="flex items-center gap-2 h-10">
-                <Checkbox
-                  id="solo-sin-vincular"
-                  checked={soloSinVincular}
-                  onCheckedChange={setSoloSinVincular}
-                />
-                <label
-                  htmlFor="solo-sin-vincular"
-                  className="flex items-center gap-1.5 text-sm font-medium text-foreground cursor-pointer select-none whitespace-nowrap"
-                  title="Viajes que el programa de cargas no reconoce: sin FK directo y sin match por fecha+conductor+camión"
-                >
-                  <Link2Off className="w-4 h-4 text-orange-500" />
-                  Sin vincular al programa
-                </label>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2 h-5">
+                  <Checkbox
+                    id="solo-sin-vincular"
+                    checked={soloSinVincular}
+                    onCheckedChange={setSoloSinVincular}
+                  />
+                  <label
+                    htmlFor="solo-sin-vincular"
+                    className="flex items-center gap-1.5 text-sm font-medium text-foreground cursor-pointer select-none whitespace-nowrap"
+                    title="Viajes que el programa de cargas no reconoce: sin FK directo y sin match por fecha+conductor+camión"
+                  >
+                    <Link2Off className="w-4 h-4 text-orange-500" />
+                    Sin vincular al programa
+                  </label>
+                </div>
+                <div className="flex items-center gap-2 h-5">
+                  <Checkbox
+                    id="solo-sin-combustible"
+                    checked={soloSinCombustible}
+                    onCheckedChange={setSoloSinCombustible}
+                  />
+                  <label
+                    htmlFor="solo-sin-combustible"
+                    className="flex items-center gap-1.5 text-sm font-medium text-foreground cursor-pointer select-none whitespace-nowrap"
+                    title="Viajes sin litros de combustible capturados"
+                  >
+                    <Fuel className="w-4 h-4 text-amber-500" />
+                    Sin combustible registrado
+                  </label>
+                </div>
               </div>
             </div>
           </div>

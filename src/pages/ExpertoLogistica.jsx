@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Send, Loader2, Sparkles, Bot, User, Database, ChevronDown } from "lucide-react";
 
 // ── Renderizador de Markdown ──────────────────────────────────────────────
-const FECHA_LIMITE_ARCHIVO = '2026-04-24';
+import { FECHA_LIMITE_ARCHIVO } from "@/lib/archivo";
+import { localDateStr } from "@/lib/fechas";
 
 function MarkdownMessage({ content }) {
   const parseInline = (text) => {
@@ -150,7 +151,7 @@ export default function ExpertoLogistica() {
       // Calcular rango de 30 días para comparativas
       const fechaLimite30 = new Date();
       fechaLimite30.setDate(fechaLimite30.getDate() - 30);
-      const fechaISO30 = fechaLimite30.toISOString().split('T')[0];
+      const fechaISO30 = localDateStr(fechaLimite30);
 
       // Obtener viajes reales (consumos registrados)
       let viajesQuery = supabase
@@ -377,7 +378,7 @@ export default function ExpertoLogistica() {
         body: { 
           auditData: contexto, 
           userQuestion: msg,
-          fechaActual: now.toISOString().split('T')[0],
+          fechaActual: localDateStr(now),
           diaSemana: now.toLocaleDateString('es-MX', { weekday: 'long' })
         },
       });

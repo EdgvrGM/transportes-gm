@@ -4,9 +4,7 @@ import { supabase } from "@/supabaseClient";
 import { FileText, Download, Loader2, BarChart3, Clock, AlertTriangle, Truck } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-
-const today     = new Date().toISOString().split("T")[0];
-const lastMonth = new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
+import { localDateStr } from "@/lib/fechas";
 
 function fmtDuracion(minutos) {
   if (minutos < 60) return `${minutos} min`;
@@ -68,6 +66,9 @@ const REPORTES = [
 
 export default function ReportesGPS() {
   const [tipoReporte, setTipoReporte] = useState("kilometraje");
+  // Dentro del componente para que cada visita use la fecha actual (no la de carga de la app).
+  const today = localDateStr(new Date());
+  const lastMonth = localDateStr(new Date(Date.now() - 30 * 86400000));
   const [from, setFrom] = useState(lastMonth);
   const [to,   setTo]   = useState(today);
   const [generando, setGenerando] = useState(false);

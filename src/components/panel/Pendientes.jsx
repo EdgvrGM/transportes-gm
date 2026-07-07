@@ -4,9 +4,10 @@ import { supabase } from "@/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { differenceInDays, parseISO } from "date-fns";
+import { localDateStr, formatearFecha } from "@/lib/fechas";
 import { Inbox, Fuel, Link2, Wrench, FileWarning, ChevronRight, Check, Container } from "lucide-react";
 
-const FECHA_LIMITE_ARCHIVO = "2026-04-24";
+import { FECHA_LIMITE_ARCHIVO } from "@/lib/archivo";
 
 function PendingRow({ icon: Icon, iconBg, iconColor, title, subtitle, count, onClick, accentColor }) {
   const empty = count === 0;
@@ -99,13 +100,24 @@ export default function Pendientes() {
   const stats = useMemo(() => {
     const sinCombustible = viajes.filter((v) => !v.litros_combustible || parseFloat(v.litros_combustible) <= 0);
 
+    // Mismo criterio de fallback que getRegisteredTrip / el filtro de FuelViajes
+    // (fecha + conductor + camión), para que el contador del panel coincida con
+    // lo que muestra la página al abrirla.
+    const diasMap = { Lunes: 0, Martes: 1, "Miércoles": 2, Jueves: 3, Viernes: 4, "Sábado": 5 };
     const flatProgramados = [];
     programas.forEach((prog) => {
       const programacion = prog.programacion || {};
-      Object.values(programacion).forEach((dias) => {
-        if (Array.isArray(dias)) {
-          dias.forEach((pv) => flatProgramados.push(pv));
+      Object.entries(programacion).forEach(([dia, dias]) => {
+        if (!Array.isArray(dias)) return;
+        let fechaDia = null;
+        try {
+          const base = parseISO(prog.fecha_inicio);
+          base.setDate(base.getDate() + (diasMap[dia] ?? 0));
+          fechaDia = localDateStr(base);
+        } catch (_e) {
+          // programa sin fecha válida — se compara solo por conductor+camión
         }
+        dias.forEach((pv) => flatProgramados.push({ ...pv, fecha: fechaDia }));
       });
     });
 
@@ -113,6 +125,7 @@ export default function Pendientes() {
       if (v.viaje_registrado_id) return false;
       const tieneMatch = flatProgramados.some(
         (pv) =>
+          (pv.fecha == null || pv.fecha === v.fecha) &&
           String(pv.conductor) === String(v.conductor_id) &&
           String(pv.camion) === String(v.camion_id)
       );
@@ -176,7 +189,7 @@ export default function Pendientes() {
     return {
       sinCombustible: sinCombustible.length,
       sinCombustibleSubtitle: fechaMasAntigua
-        ? `Más antiguo: ${fechaMasAntigua} · ${diasDesdeMasAntiguo} días sin capturar`
+        ? `Más antiguo: ${formatearFecha(fechaMasAntigua)} · ${diasDesdeMasAntiguo} días sin capturar`
         : "Todos los viajes con combustible registrado",
       sinVincular: sinVincular.length,
       sinVincularSubtitle:
@@ -234,7 +247,7 @@ export default function Pendientes() {
           title="Viajes sin combustible registrado"
           subtitle={stats.sinCombustibleSubtitle}
           count={stats.sinCombustible}
-          onClick={() => navigate(createPageUrl("FuelViajes"))}
+          onClick={() => navigate(createPageUrl("FuelViajes"), { state: { soloSinCombustible: true } })}
         />
         <PendingRow
           icon={Link2}
@@ -244,7 +257,7 @@ export default function Pendientes() {
           title="Viajes sin vincular al programa"
           subtitle={stats.sinVincularSubtitle}
           count={stats.sinVincular}
-          onClick={() => navigate(createPageUrl("FuelViajes"))}
+          onClick={() => navigate(createPageUrl("FuelViajes"), { state: { soloSinVincular: true } })}
         />
         <PendingRow
           icon={Wrench}

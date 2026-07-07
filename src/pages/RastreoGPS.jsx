@@ -17,6 +17,7 @@ import {
   RASTRO_MAX, POLL_POSITIONS_MS, POLL_ALERTAS_MS, estaEnRalenti,
 } from "@/components/gps/constants";
 import { wialonFetch } from "@/lib/wialonFetch";
+import { localDateStr } from "@/lib/fechas";
 
 async function fetchPositions(unidadesInactivas = []) {
   const exclude = unidadesInactivas.join(",");
@@ -262,7 +263,7 @@ export default function RastreoGPS() {
   const { data: eventosGeocercaHoy = 0 } = useQuery({
     queryKey: ["geocerca-count"],
     queryFn: async () => {
-      const hoy = new Date().toISOString().split("T")[0];
+      const hoy = localDateStr(new Date());
       const { count, error } = await supabase
         .from("EventoGeocerca")
         .select("*", { count: "exact", head: true })

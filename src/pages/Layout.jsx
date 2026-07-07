@@ -22,6 +22,7 @@ import {
   Navigation,
   Wrench,
   Container,
+  KeyRound,
 } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
 
@@ -121,13 +122,13 @@ export default function Layout({ children, currentPageName }) {
     flex items-center gap-3 px-4 py-2.5 rounded-xl mb-1 ml-4 transition-all duration-200 text-sm
     ${
       isActive
-        ? "bg-primary/10 text-primary font-bold border-l-2 border-primary rounded-l-none dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500"
+        ? "bg-primary/10 text-yellow-700 dark:text-yellow-500 font-bold border-l-2 border-primary rounded-l-none"
         : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
     }
   `;
 
   return (
-    <div className="min-h-screen flex bg-slate-50 dark:bg-background transition-colors duration-300 relative">
+    <div className="min-h-screen flex bg-background transition-colors duration-300 relative">
       {/* TOP BAR MÓVIL */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-card border-b border-border z-40 flex items-center justify-between px-4 shadow-sm">
         <div className="flex items-center gap-2">
@@ -138,6 +139,7 @@ export default function Layout({ children, currentPageName }) {
         </div>
         <button
           onClick={() => setIsMobileMenuOpen(true)}
+          aria-label="Abrir menú"
           className="p-2 text-foreground hover:bg-muted rounded-md transition-colors"
         >
           <Menu className="w-6 h-6" />
@@ -159,6 +161,7 @@ export default function Layout({ children, currentPageName }) {
         <div className="border-b border-border p-6 relative">
           <button
             onClick={() => setIsMobileMenuOpen(false)}
+            aria-label="Cerrar menú"
             className="absolute top-4 right-4 md:hidden text-muted-foreground hover:text-foreground p-1 hover:bg-muted rounded-md transition-colors"
           >
             <X className="w-5 h-5" />
@@ -318,6 +321,15 @@ export default function Layout({ children, currentPageName }) {
                   >
                     <TrailerIcon className="w-4 h-4" />
                     <span>Remolques</span>
+                  </Link>
+                  <Link
+                    to={createPageUrl("CuentasCliente")}
+                    className={subItemClass(
+                      location.pathname === createPageUrl("CuentasCliente"),
+                    )}
+                  >
+                    <KeyRound className="w-4 h-4" />
+                    <span>Cuentas Portal</span>
                   </Link>
                 </div>
               )}

@@ -6,17 +6,12 @@ import { supabase } from "@/supabaseClient";
 import { createUnitIcon } from "@/components/gps/unitIconHelper";
 import { estaEnRalenti, CENTRO_MX, WIALON_IMG_BASE, POLL_POSITIONS_MS, VELOCIDAD_EXCESO } from "@/components/gps/constants";
 import { LogOut, Navigation, MapPin, Play, Pause, Loader2, Truck } from "lucide-react";
+import { localDateStr } from "@/lib/fechas";
 
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 L.Marker.prototype.options.icon = L.icon({ iconUrl: icon, shadowUrl: iconShadow, iconSize: [25, 41], iconAnchor: [12, 41] });
 
-function localDateStr(d) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
 function haversineKm(a, b) {
   const R = 6371, dLat = ((b.lat - a.lat) * Math.PI) / 180, dLng = ((b.lng - a.lng) * Math.PI) / 180;
   const x = Math.sin(dLat / 2) ** 2 + Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;

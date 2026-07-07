@@ -6,8 +6,9 @@ import { createPageUrl } from "@/utils";
 import { format, parseISO, addDays, isWithinInterval } from "date-fns";
 import { es } from "date-fns/locale";
 import { CalendarClock, CheckCircle2, Navigation2, Clock3, ArrowRight } from "lucide-react";
-import { WIALON_PROXY_URL, POLL_POSITIONS_MS } from "@/components/gps/constants";
-import { wialonFetch } from "@/lib/wialonFetch";
+import { POLL_POSITIONS_MS } from "@/components/gps/constants";
+import { localDateStr } from "@/lib/fechas";
+import { fetchPositions } from "./fetchPositions";
 import { estaEnPatio } from "./panelGeo";
 
 const DIAS_SEMANA = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
@@ -18,23 +19,6 @@ function diaSemanaDe(date) {
   return DIAS_SEMANA[idx - 1];
 }
 
-function localDateStr(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-
-async function fetchPositions(unidadesInactivas = []) {
-  const exclude = unidadesInactivas.join(",");
-  const url = exclude
-    ? `${WIALON_PROXY_URL}?action=positions&exclude=${exclude}`
-    : `${WIALON_PROXY_URL}?action=positions`;
-  const r = await wialonFetch(url);
-  if (!r.ok) return [];
-  const data = await r.json();
-  return Array.isArray(data) ? data : [];
-}
 
 export default function PulsoDia() {
   const navigate = useNavigate();

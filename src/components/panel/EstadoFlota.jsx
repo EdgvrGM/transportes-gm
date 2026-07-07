@@ -3,29 +3,17 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { supabase } from "@/supabaseClient";
-import { wialonFetch } from "@/lib/wialonFetch";
 import { Radar, Map, BellRing, Gauge, ArrowUpRight } from "lucide-react";
 import MiniMapaFlota from "./MiniMapaFlota";
 import { estaEnPatio } from "./panelGeo";
+import { fetchPositions } from "./fetchPositions";
 import {
-  WIALON_PROXY_URL,
   POLL_POSITIONS_MS,
   POLL_ALERTAS_MS,
   VELOCIDAD_ALERTA,
 } from "@/components/gps/constants";
 
 const SIN_SENAL_MS = 30 * 60 * 1000;
-
-async function fetchPositions(unidadesInactivas = []) {
-  const exclude = unidadesInactivas.join(",");
-  const url = exclude
-    ? `${WIALON_PROXY_URL}?action=positions&exclude=${exclude}`
-    : `${WIALON_PROXY_URL}?action=positions`;
-  const r = await wialonFetch(url);
-  if (!r.ok) throw new Error("No se pudieron cargar posiciones");
-  const data = await r.json();
-  return Array.isArray(data) ? data : [];
-}
 
 const COUNTER_VARIANTS = {
   green: "hover:border-green-500/40 hover:bg-green-500/5",
@@ -38,7 +26,7 @@ function Counter({ count, label, variant, dotClass, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border transition ${COUNTER_VARIANTS[variant]}`}
+      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border transition cursor-pointer ${COUNTER_VARIANTS[variant]}`}
     >
       <span className={`inline-block w-2 h-2 rounded-full ${dotClass}`}></span>
       <span className="text-lg font-black leading-none text-foreground">{count}</span>
@@ -145,7 +133,7 @@ export default function EstadoFlota() {
 
         <button
           onClick={abrirGPS}
-          className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gm-primary text-zinc-900 font-bold text-xs uppercase tracking-wider hover:brightness-110 transition shadow-sm"
+          className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gm-primary text-black font-bold text-xs uppercase tracking-wider hover:brightness-110 transition shadow-sm cursor-pointer"
         >
           <Map className="w-3.5 h-3.5" /> Abrir GPS
         </button>

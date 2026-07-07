@@ -40,7 +40,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Loader2, Plus, Edit, Trash2, Package } from "lucide-react";
 import { TrailerIcon } from "./Layout";
 
-const FECHA_LIMITE_ARCHIVO = '2026-04-24';
+import { FECHA_LIMITE_ARCHIVO } from "@/lib/archivo";
 
 export default function FuelRemolques() {
   const queryClient = useQueryClient();
@@ -157,7 +157,7 @@ export default function FuelRemolques() {
     );
 
   return (
-    <div className="p-4 md:p-8 bg-slate-50 dark:bg-background min-h-screen transition-colors duration-300">
+    <div className="p-4 md:p-8 bg-background min-h-screen transition-colors duration-300">
       <div className="max-w-[1600px] mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
           <div>

@@ -450,7 +450,7 @@ export default function Liquidaciones() {
   }
 
   return (
-    <div className="p-4 md:p-8 bg-slate-50 dark:bg-background min-h-screen transition-colors duration-300">
+    <div className="p-4 md:p-8 bg-background min-h-screen transition-colors duration-300">
       <div className="max-w-6xl mx-auto space-y-6">
         
         {/* Encabezado */}
@@ -463,14 +463,21 @@ export default function Liquidaciones() {
               Cálculo de nómina, comisiones y generación de PDF
             </p>
           </div>
-          <Button 
-            onClick={() => guardarLiquidacion.mutate()} 
-            disabled={!conductorId || !infoSemana || guardarLiquidacion.isPending}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2 font-bold px-6 h-12 rounded-xl shadow-lg"
-          >
-            {guardarLiquidacion.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
-            Finalizar y Generar PDF
-          </Button>
+          <div className="flex flex-col items-stretch md:items-end gap-1.5">
+            <Button
+              onClick={() => guardarLiquidacion.mutate()}
+              disabled={!conductorId || !infoSemana || guardarLiquidacion.isPending}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 font-bold px-6 h-12 rounded-xl shadow-lg"
+            >
+              {guardarLiquidacion.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+              Finalizar y Generar PDF
+            </Button>
+            {(!conductorId || !infoSemana) && (
+              <p className="text-[11px] font-medium text-muted-foreground">
+                Selecciona semana y conductor para habilitar
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Filtros */}
