@@ -271,6 +271,13 @@ export default function FuelProgramaCargas() {
       return data || [];
     },
   });
+  const { data: conductoresTodos = [] } = useQuery({
+    queryKey: ["conductoresTodos"],
+    queryFn: async () => {
+      const { data } = await supabase.from("Conductor").select("*");
+      return data || [];
+    },
+  });
   const { data: camiones = [] } = useQuery({
     queryKey: ["camiones"],
     queryFn: async () => {
@@ -811,7 +818,7 @@ export default function FuelProgramaCargas() {
   const getClienteName = (id) =>
     clientes.find((c) => String(c.id) === String(id))?.nombre || id || "N/A";
   const getConductorName = (id) =>
-    conductores.find((c) => String(c.id) === String(id))?.nombre || "N/A";
+    conductoresTodos.find((c) => String(c.id) === String(id))?.nombre || "N/A";
   const getCamionName = (id) => {
     const c = camiones.find((c) => String(c.id) === String(id));
     return c ? `${c.nombre} (${c.placas})` : "N/A";
@@ -858,7 +865,7 @@ export default function FuelProgramaCargas() {
     const fechaInicio = parseISO(programaSeleccionado.fecha_inicio);
     const fechaViaje = addDays(fechaInicio, indexDia);
     
-    const conductor = conductores.find(c => String(c.id) === String(viaje.conductor));
+    const conductor = conductoresTodos.find(c => String(c.id) === String(viaje.conductor));
     const camion = camiones.find(c => String(c.id) === String(viaje.camion));
 
     navigate(createPageUrl("FuelRegistrarViaje"), {
