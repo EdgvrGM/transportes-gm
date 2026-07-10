@@ -1467,13 +1467,6 @@ export default function FuelViajes() {
           accent: [109, 100, 255],
         },
         {
-          label: "KILÓMETROS",
-          valor: `${formatPdfNum(totalKmGlobal).replace(".00", "")}`,
-          sub: "km recorridos",
-          bg: [109, 40, 217],
-          accent: [139, 70, 247],
-        },
-        {
           label: "RENDIMIENTO PROM.",
           valor:
             totalLitrosGlobal > 0
@@ -1499,6 +1492,16 @@ export default function FuelViajes() {
               : rendimientoGlobal >= 2.0
                 ? [234, 179, 8]
                 : [239, 68, 68],
+        },
+        {
+          label: "COSTO CASETAS",
+          valor:
+            totalCasetasGlobal > 0
+              ? `$${formatPdfNum(totalCasetasGlobal)}`
+              : "N/R",
+          sub: "casetas total",
+          bg: [109, 40, 217],
+          accent: [139, 70, 247],
         },
         {
           label: "COSTO DIESEL",
