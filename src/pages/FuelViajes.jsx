@@ -61,6 +61,7 @@ import {
   Download,
   BarChart2,
   TrendingUp,
+  FileSpreadsheet,
 } from "lucide-react";
 import { format, getISOWeek, getYear } from "date-fns";
 import { es } from "date-fns/locale";
@@ -1102,101 +1103,141 @@ export default function FuelViajes() {
     return int.replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "." + dec;
   };
 
-  const generarRendimientoPDF = async () => {
+  // Resuelve la selección del modal (modo, entidad, choferes, rango) a los datos
+  // del reporte. Compartido por la exportación a PDF y a hoja de cálculo para que
+  // ambos apliquen exactamente los mismos filtros y totales.
+  const construirDatosRendimiento = () => {
     const isCamionMode = pdfModo === "camion";
     const choferesIds = pdfChoferesIds.map(String);
     const pdfEntidadId = isCamionMode ? pdfCamionId : pdfConductorId;
 
-    if (!pdfFechaInicio || !pdfFechaFin || !pdfEntidadId) return;
+    if (!pdfFechaInicio || !pdfFechaFin || !pdfEntidadId) return null;
 
     const camionTodos = isCamionMode && pdfEntidadId === "todos";
     const choferTodos = !isCamionMode && pdfEntidadId === "todos";
     const camionEspecifico = isCamionMode && !camionTodos;
     // Camión específico exige al menos un chofer marcado
-    if (camionEspecifico && choferesIds.length === 0) return;
+    if (camionEspecifico && choferesIds.length === 0) return null;
+
+    // colEntidad = columna agrupadora del layout general:
+    //  "camion" → todas las unidades · "chofer" → general de choferes o un
+    //  camión con 2+ choferes · null → layout individual (1 chofer)
+    let colEntidad = null;
+    if (camionTodos) colEntidad = "camion";
+    else if (choferTodos) colEntidad = "chofer";
+    else if (camionEspecifico && choferesIds.length > 1) colEntidad = "chofer";
+    const isGeneral = colEntidad !== null;
+    const isColCamion = colEntidad === "camion";
+
+    const camionSel = camionEspecifico
+      ? camiones.find((c) => String(c.id) === pdfEntidadId)
+      : null;
+    if (camionEspecifico && !camionSel) return null;
+
+    let entidadNombre;
+    if (camionTodos) entidadNombre = "Todas las unidades";
+    else if (choferTodos) entidadNombre = "Todos los choferes";
+    else if (camionEspecifico)
+      entidadNombre = `${camionSel.nombre}${camionSel.placas ? ` (${camionSel.placas})` : ""}`;
+    else {
+      const conductor = conductores.find((c) => String(c.id) === pdfEntidadId);
+      if (!conductor) return null;
+      entidadNombre = conductor.nombre;
+    }
+
+    // Subtítulo de choferes (solo camión específico)
+    let choferesTexto = "";
+    if (camionEspecifico) {
+      const todosDelCamion =
+        choferesDelCamion.length > 0 &&
+        choferesIds.length === choferesDelCamion.length;
+      if (todosDelCamion) {
+        choferesTexto = "Todos";
+      } else {
+        const nombres = choferesIds
+          .map(
+            (id) =>
+              conductores.find((c) => String(c.id) === id)?.nombre ||
+              choferesDelCamion.find((c) => c.id === id)?.nombre ||
+              "",
+          )
+          .filter(Boolean);
+        choferesTexto =
+          nombres.length <= 3
+            ? nombres.join(", ")
+            : `${choferesIds.length} seleccionados`;
+      }
+    }
+
+    // Filtrar viajes: chofer / todos los choferes / camión (todas o con choferes)
+    const viajesChofer = viajes
+      .filter((v) => {
+        const fechaV = v.fecha ? v.fecha.split("T")[0] : "";
+        let matchEntidad;
+        if (isCamionMode) {
+          matchEntidad = camionTodos
+            ? true
+            : String(v.camion_id) === pdfEntidadId &&
+              choferesIds.includes(String(v.conductor_id));
+        } else {
+          matchEntidad = choferTodos || String(v.conductor_id) === pdfEntidadId;
+        }
+        return (
+          matchEntidad &&
+          fechaV >= pdfFechaInicio &&
+          fechaV <= pdfFechaFin
+        );
+      })
+      .sort((a, b) => {
+        if (isGeneral) {
+          const campo = isColCamion ? "camion_nombre" : "conductor_nombre";
+          const nombreA = (a[campo] || "").trim().toLowerCase();
+          const nombreB = (b[campo] || "").trim().toLowerCase();
+          const cmpNombre = nombreA.localeCompare(nombreB, "es");
+          if (cmpNombre !== 0) return cmpNombre;
+        }
+        return (a.fecha || "").localeCompare(b.fecha || "");
+      });
+
+    const totalKmGlobal = viajesChofer.reduce(
+      (s, v) => s + (v.kilometros_total || 0),
+      0,
+    );
+    const totalLitrosGlobal = viajesChofer.reduce(
+      (s, v) => s + (v.litros_combustible || 0),
+      0,
+    );
+    const totalCasetasGlobal = viajesChofer.reduce(
+      (s, v) => s + (v.casetas_ida || 0) + (v.casetas_regreso || 0),
+      0,
+    );
+    const totalCostoGlobal = viajesChofer.reduce(
+      (s, v) => s + (v.costo_combustible || 0),
+      0,
+    );
+    const rendimientoGlobal =
+      totalLitrosGlobal > 0 ? totalKmGlobal / totalLitrosGlobal : 0;
+
+    return {
+      isCamionMode, camionTodos, choferTodos, camionEspecifico,
+      isGeneral, isColCamion, entidadNombre, choferesTexto, viajesChofer,
+      totalKmGlobal, totalLitrosGlobal, totalCasetasGlobal, totalCostoGlobal,
+      rendimientoGlobal,
+    };
+  };
+
+  const generarRendimientoPDF = async () => {
+    const datos = construirDatosRendimiento();
+    if (!datos) return;
+    const {
+      isCamionMode, camionTodos, choferTodos, camionEspecifico,
+      isGeneral, isColCamion, entidadNombre, choferesTexto, viajesChofer,
+      totalKmGlobal, totalLitrosGlobal, totalCasetasGlobal, totalCostoGlobal,
+      rendimientoGlobal,
+    } = datos;
 
     setPdfGenerando(true);
     try {
-      // colEntidad = columna agrupadora del layout general:
-      //  "camion" → todas las unidades · "chofer" → general de choferes o un
-      //  camión con 2+ choferes · null → layout individual (1 chofer)
-      let colEntidad = null;
-      if (camionTodos) colEntidad = "camion";
-      else if (choferTodos) colEntidad = "chofer";
-      else if (camionEspecifico && choferesIds.length > 1) colEntidad = "chofer";
-      const isGeneral = colEntidad !== null;
-      const isColCamion = colEntidad === "camion";
-
-      const camionSel = camionEspecifico
-        ? camiones.find((c) => String(c.id) === pdfEntidadId)
-        : null;
-      if (camionEspecifico && !camionSel) return;
-
-      let entidadNombre;
-      if (camionTodos) entidadNombre = "Todas las unidades";
-      else if (choferTodos) entidadNombre = "Todos los choferes";
-      else if (camionEspecifico)
-        entidadNombre = `${camionSel.nombre}${camionSel.placas ? ` (${camionSel.placas})` : ""}`;
-      else {
-        const conductor = conductores.find((c) => String(c.id) === pdfEntidadId);
-        if (!conductor) return;
-        entidadNombre = conductor.nombre;
-      }
-
-      // Subtítulo de choferes (solo camión específico)
-      let choferesTexto = "";
-      if (camionEspecifico) {
-        const todosDelCamion =
-          choferesDelCamion.length > 0 &&
-          choferesIds.length === choferesDelCamion.length;
-        if (todosDelCamion) {
-          choferesTexto = "Todos";
-        } else {
-          const nombres = choferesIds
-            .map(
-              (id) =>
-                conductores.find((c) => String(c.id) === id)?.nombre ||
-                choferesDelCamion.find((c) => c.id === id)?.nombre ||
-                "",
-            )
-            .filter(Boolean);
-          choferesTexto =
-            nombres.length <= 3
-              ? nombres.join(", ")
-              : `${choferesIds.length} seleccionados`;
-        }
-      }
-
-      // Filtrar viajes: chofer / todos los choferes / camión (todas o con choferes)
-      const viajesChofer = viajes
-        .filter((v) => {
-          const fechaV = v.fecha ? v.fecha.split("T")[0] : "";
-          let matchEntidad;
-          if (isCamionMode) {
-            matchEntidad = camionTodos
-              ? true
-              : String(v.camion_id) === pdfEntidadId &&
-                choferesIds.includes(String(v.conductor_id));
-          } else {
-            matchEntidad = choferTodos || String(v.conductor_id) === pdfEntidadId;
-          }
-          return (
-            matchEntidad &&
-            fechaV >= pdfFechaInicio &&
-            fechaV <= pdfFechaFin
-          );
-        })
-        .sort((a, b) => {
-          if (isGeneral) {
-            const campo = isColCamion ? "camion_nombre" : "conductor_nombre";
-            const nombreA = (a[campo] || "").trim().toLowerCase();
-            const nombreB = (b[campo] || "").trim().toLowerCase();
-            const cmpNombre = nombreA.localeCompare(nombreB, "es");
-            if (cmpNombre !== 0) return cmpNombre;
-          }
-          return (a.fecha || "").localeCompare(b.fecha || "");
-        });
-
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.width;
       let logoBottomY = 10;
@@ -1242,26 +1283,6 @@ export default function FuelViajes() {
         infoY + infoOffset + 7,
       );
       const tablaStartY = infoY + infoOffset + 15;
-
-      // Cálculos globales
-      const totalKmGlobal = viajesChofer.reduce(
-        (s, v) => s + (v.kilometros_total || 0),
-        0,
-      );
-      const totalLitrosGlobal = viajesChofer.reduce(
-        (s, v) => s + (v.litros_combustible || 0),
-        0,
-      );
-      const totalCasetasGlobal = viajesChofer.reduce(
-        (s, v) => s + (v.casetas_ida || 0) + (v.casetas_regreso || 0),
-        0,
-      );
-      const totalCostoGlobal = viajesChofer.reduce(
-        (s, v) => s + (v.costo_combustible || 0),
-        0,
-      );
-      const rendimientoGlobal =
-        totalLitrosGlobal > 0 ? totalKmGlobal / totalLitrosGlobal : 0;
 
       // Tabla de viajes
       const headers = isGeneral
@@ -1559,6 +1580,127 @@ export default function FuelViajes() {
     }
   };
 
+  // ─── EXPORTACIÓN A HOJA DE CÁLCULO (CSV) ─────────────────────────────────
+  // Mismos filtros y totales que el PDF, pero con valores numéricos crudos (sin
+  // "$", "km" ni separadores de miles) para que Excel / Google Sheets los trate
+  // como números y se puedan sumar y graficar.
+  const exportarRendimientoCSV = () => {
+    const datos = construirDatosRendimiento();
+    if (!datos) return;
+    const {
+      isCamionMode, camionTodos, choferTodos, camionEspecifico,
+      isGeneral, isColCamion, entidadNombre, choferesTexto, viajesChofer,
+      totalKmGlobal, totalLitrosGlobal, totalCasetasGlobal, totalCostoGlobal,
+      rendimientoGlobal,
+    } = datos;
+
+    // Un número vacío se exporta como celda vacía, no como 0: distingue
+    // "sin dato capturado" de "cero real" al hacer promedios en la hoja.
+    const num = (n) => (n > 0 ? String(Number(n.toFixed(2))) : "");
+    const esc = (v) => {
+      const s = String(v ?? "");
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const fila = (celdas) => celdas.map(esc).join(",");
+
+    const titulo = camionTodos
+      ? "Reporte de Rendimientos por Unidad"
+      : choferTodos
+        ? "Reporte de Rendimientos General"
+        : "Reporte de Rendimientos";
+
+    const lineas = [];
+    // `sep=,` fuerza a Excel a usar la coma como separador de campos aunque el
+    // locale del sistema (es-MX) espere punto y coma.
+    lineas.push("sep=,");
+    lineas.push(fila([titulo]));
+    lineas.push(fila([isCamionMode ? "Unidad" : "Operador", entidadNombre]));
+    if (camionEspecifico) lineas.push(fila(["Choferes", choferesTexto]));
+    lineas.push(fila(["Período", `${pdfFechaInicio} al ${pdfFechaFin}`]));
+    lineas.push(fila(["Fecha de emisión", format(new Date(), "dd/MM/yyyy HH:mm")]));
+    lineas.push("");
+
+    const headers = isGeneral
+      ? ["Fecha", isColCamion ? "Camión" : "Chofer", "Ruta", "Kilómetros", "Litros", "Rendimiento (km/L)", "Casetas (MXN)", "Costo Diesel (MXN)"]
+      : ["Fecha", "Ruta", "Tipo", "Kilómetros", "Litros", "Rendimiento (km/L)", "Casetas (MXN)", "Costo Diesel (MXN)"];
+    lineas.push(fila(headers));
+
+    for (const v of viajesChofer) {
+      const km = v.kilometros_total || 0;
+      const litros = v.litros_combustible || 0;
+      const rend = v.km_por_litro || (litros > 0 ? km / litros : 0);
+      const casetas = (v.casetas_ida || 0) + (v.casetas_regreso || 0);
+      const fecha = v.fecha ? v.fecha.split("T")[0] : "";
+      const ruta = v.ruta_ida || v.ruta || "";
+
+      const entidadCol = isColCamion
+        ? v.camion_nombre
+          ? `${v.camion_nombre}${v.camion_placas ? ` ${v.camion_placas}` : ""}`
+          : ""
+        : v.conductor_nombre || "";
+
+      lineas.push(
+        fila(
+          isGeneral
+            ? [fecha, entidadCol, ruta, num(km), num(litros), num(rend), num(casetas), num(v.costo_combustible || 0)]
+            : [fecha, ruta, v.tipo_viaje || "Sencillo", num(km), num(litros), num(rend), num(casetas), num(v.costo_combustible || 0)],
+        ),
+      );
+    }
+
+    if (viajesChofer.length === 0) {
+      lineas.push(fila(["Sin viajes en este rango"]));
+    }
+
+    // Fila de totales. Ambos layouts tienen 3 columnas de texto antes de las
+    // numéricas, así que el relleno es el mismo.
+    lineas.push(
+      fila([
+        "TOTALES",
+        "",
+        "",
+        num(totalKmGlobal),
+        num(totalLitrosGlobal),
+        num(rendimientoGlobal),
+        num(totalCasetasGlobal),
+        num(totalCostoGlobal),
+      ]),
+    );
+
+    lineas.push("");
+    lineas.push(fila(["RESUMEN DEL PERÍODO"]));
+    lineas.push(fila(["Total viajes", viajesChofer.length]));
+    lineas.push(fila(["Rendimiento promedio (km/L)", num(rendimientoGlobal)]));
+    lineas.push(fila(["Costo casetas (MXN)", num(totalCasetasGlobal)]));
+    lineas.push(fila(["Costo diesel (MXN)", num(totalCostoGlobal)]));
+
+    const nombreArchivo = camionTodos
+      ? `Rendimientos_Unidades_${pdfFechaInicio}_${pdfFechaFin}.csv`
+      : choferTodos
+        ? `Rendimientos_General_${pdfFechaInicio}_${pdfFechaFin}.csv`
+        : `Rendimientos_${entidadNombre.replace(/[ ()]/g, "_")}_${pdfFechaInicio}_${pdfFechaFin}.csv`;
+
+    // BOM UTF-8: sin él, Excel muestra los acentos corruptos (Kilómetros → KilÃ³metros).
+    const blob = new Blob(["﻿" + lineas.join("\r\n")], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = nombreArchivo;
+    a.click();
+    URL.revokeObjectURL(url);
+    setModalPdfAbierto(false);
+  };
+
+  const exportacionDeshabilitada =
+    (pdfModo === "camion"
+      ? !pdfCamionId || (pdfCamionId !== "todos" && pdfChoferesIds.length === 0)
+      : !pdfConductorId) ||
+    !pdfFechaInicio ||
+    !pdfFechaFin ||
+    pdfGenerando;
+
   const clienteDelFormData = getClienteDelViaje(formData);
 
   if (isLoading)
@@ -1585,17 +1727,17 @@ export default function FuelViajes() {
             className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-5 h-11 rounded-xl shadow-lg shrink-0"
           >
             <BarChart2 className="w-4 h-4" />
-            Exportar Rendimientos PDF
+            Exportar Rendimientos
           </Button>
         </div>
 
-        {/* ── MODAL: Exportar Rendimientos PDF ── */}
+        {/* ── MODAL: Exportar Rendimientos (PDF / hoja de cálculo) ── */}
         <Dialog open={modalPdfAbierto} onOpenChange={setModalPdfAbierto}>
-          <DialogContent className="w-[95vw] max-w-md">
+          <DialogContent className="w-[95vw] max-w-lg">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-lg font-bold">
                 <TrendingUp className="w-5 h-5 text-yellow-600" />
-                Exportar Rendimientos PDF
+                Exportar Rendimientos
               </DialogTitle>
             </DialogHeader>
 
@@ -1830,7 +1972,7 @@ export default function FuelViajes() {
                 })()}
             </div>
 
-            <DialogFooter className="gap-2 sm:gap-0">
+            <DialogFooter className="gap-2 sm:gap-2">
               <Button
                 variant="ghost"
                 onClick={() => setModalPdfAbierto(false)}
@@ -1839,17 +1981,18 @@ export default function FuelViajes() {
                 Cancelar
               </Button>
               <Button
+                variant="outline"
+                onClick={exportarRendimientoCSV}
+                disabled={exportacionDeshabilitada}
+                className="gap-2 font-bold rounded-xl px-5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                Hoja de cálculo
+              </Button>
+              <Button
                 onClick={generarRendimientoPDF}
-                disabled={
-                  (pdfModo === "camion"
-                    ? !pdfCamionId ||
-                      (pdfCamionId !== "todos" && pdfChoferesIds.length === 0)
-                    : !pdfConductorId) ||
-                  !pdfFechaInicio ||
-                  !pdfFechaFin ||
-                  pdfGenerando
-                }
-                className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl px-6"
+                disabled={exportacionDeshabilitada}
+                className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl px-6"
               >
                 {pdfGenerando ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
