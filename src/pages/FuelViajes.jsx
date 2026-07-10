@@ -335,6 +335,7 @@ export default function FuelViajes() {
   const [pdfFechaInicio, setPdfFechaInicio] = useState("");
   const [pdfFechaFin, setPdfFechaFin] = useState("");
   const [pdfGenerando, setPdfGenerando] = useState(false);
+  const [excelGenerando, setExcelGenerando] = useState(false);
   const logoRef = useRef(null);
 
   useEffect(() => {
@@ -1580,11 +1581,11 @@ export default function FuelViajes() {
     }
   };
 
-  // ─── EXPORTACIÓN A HOJA DE CÁLCULO (CSV) ─────────────────────────────────
-  // Mismos filtros y totales que el PDF, pero con valores numéricos crudos (sin
-  // "$", "km" ni separadores de miles) para que Excel / Google Sheets los trate
-  // como números y se puedan sumar y graficar.
-  const exportarRendimientoCSV = () => {
+  // ─── EXPORTACIÓN A HOJA DE CÁLCULO (.xlsx con formato) ───────────────────
+  // Mismos filtros y totales que el PDF, pero los valores se escriben como
+  // NÚMEROS (no texto): el formato de celda pone "$" y separadores de miles, así
+  // que se pueden sumar, promediar y graficar dentro de la hoja.
+  const exportarRendimientoExcel = async () => {
     const datos = construirDatosRendimiento();
     if (!datos) return;
     const {
@@ -1594,103 +1595,230 @@ export default function FuelViajes() {
       rendimientoGlobal,
     } = datos;
 
-    // Un número vacío se exporta como celda vacía, no como 0: distingue
-    // "sin dato capturado" de "cero real" al hacer promedios en la hoja.
-    const num = (n) => (n > 0 ? String(Number(n.toFixed(2))) : "");
-    const esc = (v) => {
-      const s = String(v ?? "");
-      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-    };
-    const fila = (celdas) => celdas.map(esc).join(",");
+    setExcelGenerando(true);
+    try {
+      // Import dinámico: ExcelJS (~1 MB) solo se descarga al exportar.
+      const ExcelJS = (await import("exceljs")).default;
 
-    const titulo = camionTodos
-      ? "Reporte de Rendimientos por Unidad"
-      : choferTodos
-        ? "Reporte de Rendimientos General"
-        : "Reporte de Rendimientos";
+      // Un valor ausente va como celda vacía (null), no como 0: distingue
+      // "sin dato capturado" de "cero real" al promediar en la hoja.
+      const n = (v) => (v > 0 ? Number(v.toFixed(2)) : null);
 
-    const lineas = [];
-    // `sep=,` fuerza a Excel a usar la coma como separador de campos aunque el
-    // locale del sistema (es-MX) espere punto y coma.
-    lineas.push("sep=,");
-    lineas.push(fila([titulo]));
-    lineas.push(fila([isCamionMode ? "Unidad" : "Operador", entidadNombre]));
-    if (camionEspecifico) lineas.push(fila(["Choferes", choferesTexto]));
-    lineas.push(fila(["Período", `${pdfFechaInicio} al ${pdfFechaFin}`]));
-    lineas.push(fila(["Fecha de emisión", format(new Date(), "dd/MM/yyyy HH:mm")]));
-    lineas.push("");
+      const AMARILLO = "FFEAB308"; // gm-primary
+      const VERDE = "FF15803D";
+      const AMBAR = "FFA16207";
+      const ROJO = "FFB91C1C";
+      const colorRend = (r) => (r > 2.25 ? VERDE : r >= 2.0 ? AMBAR : ROJO);
 
-    const headers = isGeneral
-      ? ["Fecha", isColCamion ? "Camión" : "Chofer", "Ruta", "Kilómetros", "Litros", "Rendimiento (km/L)", "Casetas (MXN)", "Costo Diesel (MXN)"]
-      : ["Fecha", "Ruta", "Tipo", "Kilómetros", "Litros", "Rendimiento (km/L)", "Casetas (MXN)", "Costo Diesel (MXN)"];
-    lineas.push(fila(headers));
+      const FMT_NUM = "#,##0.00";
+      const FMT_MXN = '"$"#,##0.00';
 
-    for (const v of viajesChofer) {
-      const km = v.kilometros_total || 0;
-      const litros = v.litros_combustible || 0;
-      const rend = v.km_por_litro || (litros > 0 ? km / litros : 0);
-      const casetas = (v.casetas_ida || 0) + (v.casetas_regreso || 0);
-      const fecha = v.fecha ? v.fecha.split("T")[0] : "";
-      const ruta = v.ruta_ida || v.ruta || "";
+      const wb = new ExcelJS.Workbook();
+      wb.creator = "Transportes GM";
+      wb.created = new Date();
+      const ws = wb.addWorksheet("Rendimientos", {
+        views: [{ showGridLines: false }],
+        pageSetup: {
+          orientation: "landscape",
+          fitToPage: true,
+          fitToWidth: 1,
+          fitToHeight: 0,
+          margins: { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3 },
+        },
+      });
 
-      const entidadCol = isColCamion
-        ? v.camion_nombre
-          ? `${v.camion_nombre}${v.camion_placas ? ` ${v.camion_placas}` : ""}`
-          : ""
-        : v.conductor_nombre || "";
+      const columnas = isGeneral
+        ? [
+            { h: "Fecha", w: 12 },
+            { h: isColCamion ? "Camión" : "Chofer", w: 24 },
+            { h: "Ruta", w: 34 },
+            { h: "Kilómetros", w: 14, fmt: FMT_NUM },
+            { h: "Litros", w: 12, fmt: FMT_NUM },
+            { h: "Rendimiento (km/L)", w: 18, fmt: FMT_NUM },
+            { h: "Casetas", w: 14, fmt: FMT_MXN },
+            { h: "Costo Diesel", w: 16, fmt: FMT_MXN },
+          ]
+        : [
+            { h: "Fecha", w: 12 },
+            { h: "Ruta", w: 38 },
+            { h: "Tipo", w: 14 },
+            { h: "Kilómetros", w: 14, fmt: FMT_NUM },
+            { h: "Litros", w: 12, fmt: FMT_NUM },
+            { h: "Rendimiento (km/L)", w: 18, fmt: FMT_NUM },
+            { h: "Casetas", w: 14, fmt: FMT_MXN },
+            { h: "Costo Diesel", w: 16, fmt: FMT_MXN },
+          ];
+      const nCols = columnas.length;
+      ws.columns = columnas.map((c) => ({ width: c.w }));
+      const ultimaCol = String.fromCharCode(64 + nCols); // 8 → "H"
+      const merge = (r) => ws.mergeCells(`A${r}:${ultimaCol}${r}`);
 
-      lineas.push(
-        fila(
-          isGeneral
-            ? [fecha, entidadCol, ruta, num(km), num(litros), num(rend), num(casetas), num(v.costo_combustible || 0)]
-            : [fecha, ruta, v.tipo_viaje || "Sencillo", num(km), num(litros), num(rend), num(casetas), num(v.costo_combustible || 0)],
-        ),
-      );
+      // ── Encabezado ──
+      const titulo = camionTodos
+        ? "Reporte de Rendimientos por Unidad"
+        : choferTodos
+          ? "Reporte de Rendimientos General"
+          : "Reporte de Rendimientos";
+
+      const rTitulo = ws.addRow([titulo]);
+      merge(rTitulo.number);
+      rTitulo.height = 26;
+      rTitulo.getCell(1).font = { bold: true, size: 15, color: { argb: "FF1E1B16" } };
+      rTitulo.getCell(1).alignment = { vertical: "middle" };
+
+      const meta = [
+        [isCamionMode ? "Unidad:" : "Operador:", entidadNombre],
+        ...(camionEspecifico ? [["Choferes:", choferesTexto]] : []),
+        ["Período:", `${pdfFechaInicio} al ${pdfFechaFin}`],
+        ["Emitido:", format(new Date(), "dd/MM/yyyy HH:mm")],
+      ];
+      for (const [etiqueta, valor] of meta) {
+        const r = ws.addRow([etiqueta, valor]);
+        r.getCell(1).font = { bold: true, size: 10, color: { argb: "FF6B7280" } };
+        r.getCell(2).font = { size: 10, color: { argb: "FF1E1B16" } };
+      }
+      ws.addRow([]);
+
+      // ── Cabecera de la tabla ──
+      const rHead = ws.addRow(columnas.map((c) => c.h));
+      const filaHead = rHead.number;
+      rHead.height = 20;
+      rHead.eachCell((cell) => {
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: AMARILLO } };
+        cell.font = { bold: true, size: 10, color: { argb: "FF1E1B16" } };
+        cell.alignment = { horizontal: "center", vertical: "middle" };
+        cell.border = {
+          top: { style: "thin", color: { argb: "FFCA9A04" } },
+          bottom: { style: "thin", color: { argb: "FFCA9A04" } },
+          left: { style: "thin", color: { argb: "FFCA9A04" } },
+          right: { style: "thin", color: { argb: "FFCA9A04" } },
+        };
+      });
+
+      // ── Filas de viajes ──
+      for (const [i, v] of viajesChofer.entries()) {
+        const km = v.kilometros_total || 0;
+        const litros = v.litros_combustible || 0;
+        const rend = v.km_por_litro || (litros > 0 ? km / litros : 0);
+        const casetas = (v.casetas_ida || 0) + (v.casetas_regreso || 0);
+        const fecha = v.fecha ? v.fecha.split("T")[0] : "";
+        const ruta = v.ruta_ida || v.ruta || "";
+        const entidadCol = isColCamion
+          ? v.camion_nombre
+            ? `${v.camion_nombre}${v.camion_placas ? ` ${v.camion_placas}` : ""}`
+            : ""
+          : v.conductor_nombre || "";
+
+        const valores = isGeneral
+          ? [fecha, entidadCol, ruta, n(km), n(litros), n(rend), n(casetas), n(v.costo_combustible || 0)]
+          : [fecha, ruta, v.tipo_viaje || "Sencillo", n(km), n(litros), n(rend), n(casetas), n(v.costo_combustible || 0)];
+
+        const r = ws.addRow(valores);
+        const zebra = i % 2 === 1;
+        r.eachCell({ includeEmpty: true }, (cell, col) => {
+          cell.font = { size: 10 };
+          if (zebra) {
+            cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8F8F6" } };
+          }
+          cell.border = { bottom: { style: "hair", color: { argb: "FFE5E5E0" } } };
+          const fmt = columnas[col - 1]?.fmt;
+          if (fmt) {
+            cell.numFmt = fmt;
+            cell.alignment = { horizontal: "right" };
+          }
+        });
+        // Rendimiento coloreado por eficiencia (mismos umbrales que el PDF).
+        if (litros > 0) {
+          const celdaRend = r.getCell(6);
+          celdaRend.font = { size: 10, bold: true, color: { argb: colorRend(rend) } };
+        }
+      }
+
+      if (viajesChofer.length === 0) {
+        const r = ws.addRow(["Sin viajes en este rango"]);
+        merge(r.number);
+        r.getCell(1).font = { italic: true, size: 10, color: { argb: "FF9CA3AF" } };
+        r.getCell(1).alignment = { horizontal: "center" };
+      }
+
+      // ── Fila de totales ──
+      const rTot = ws.addRow([
+        "TOTALES", "", "",
+        n(totalKmGlobal), n(totalLitrosGlobal), n(rendimientoGlobal),
+        n(totalCasetasGlobal), n(totalCostoGlobal),
+      ]);
+      rTot.height = 20;
+      rTot.eachCell({ includeEmpty: true }, (cell, col) => {
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFDF6DC" } };
+        cell.font = { bold: true, size: 10, color: { argb: "FF1E1B16" } };
+        cell.border = { top: { style: "double", color: { argb: AMARILLO } } };
+        const fmt = columnas[col - 1]?.fmt;
+        if (fmt) {
+          cell.numFmt = fmt;
+          cell.alignment = { horizontal: "right" };
+        }
+      });
+      const filaTotales = rTot.number;
+
+      // Congelar la cabecera y activar el autofiltro sobre la tabla.
+      ws.views = [{ state: "frozen", ySplit: filaHead, showGridLines: false }];
+      ws.autoFilter = {
+        from: { row: filaHead, column: 1 },
+        to: { row: Math.max(filaHead, filaTotales - 1), column: nCols },
+      };
+      ws.pageSetup.printTitlesRow = `${filaHead}:${filaHead}`;
+
+      // ── Resumen del período ──
+      ws.addRow([]);
+      const rResTitulo = ws.addRow(["RESUMEN DEL PERÍODO"]);
+      merge(rResTitulo.number);
+      rResTitulo.getCell(1).font = { bold: true, size: 10, color: { argb: "FF6B7280" } };
+
+      const resumen = [
+        ["Total viajes", viajesChofer.length, null, "FF4F46E5"],
+        ["Rendimiento promedio (km/L)", n(rendimientoGlobal), FMT_NUM, colorRend(rendimientoGlobal)],
+        ["Costo casetas", n(totalCasetasGlobal), FMT_MXN, "FF6D28D9"],
+        ["Costo diesel", n(totalCostoGlobal), FMT_MXN, "FF0F766E"],
+      ];
+      for (const [etiqueta, valor, fmt, color] of resumen) {
+        const r = ws.addRow([etiqueta, valor]);
+        r.height = 18;
+        const cEtiqueta = r.getCell(1);
+        const cValor = r.getCell(2);
+        cEtiqueta.fill = { type: "pattern", pattern: "solid", fgColor: { argb: color } };
+        cEtiqueta.font = { bold: true, size: 10, color: { argb: "FFFFFFFF" } };
+        cEtiqueta.alignment = { horizontal: "left", indent: 1 };
+        cValor.font = { bold: true, size: 11, color: { argb: color } };
+        cValor.alignment = { horizontal: "left", indent: 1 };
+        if (fmt) cValor.numFmt = fmt;
+      }
+
+      const nombreArchivo = camionTodos
+        ? `Rendimientos_Unidades_${pdfFechaInicio}_${pdfFechaFin}.xlsx`
+        : choferTodos
+          ? `Rendimientos_General_${pdfFechaInicio}_${pdfFechaFin}.xlsx`
+          : `Rendimientos_${entidadNombre.replace(/[ ()]/g, "_")}_${pdfFechaInicio}_${pdfFechaFin}.xlsx`;
+
+      const buffer = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = nombreArchivo;
+      a.click();
+      URL.revokeObjectURL(url);
+      setModalPdfAbierto(false);
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Error al generar la hoja de cálculo",
+        description: err?.message || "No se pudo crear el archivo.",
+      });
+    } finally {
+      setExcelGenerando(false);
     }
-
-    if (viajesChofer.length === 0) {
-      lineas.push(fila(["Sin viajes en este rango"]));
-    }
-
-    // Fila de totales. Ambos layouts tienen 3 columnas de texto antes de las
-    // numéricas, así que el relleno es el mismo.
-    lineas.push(
-      fila([
-        "TOTALES",
-        "",
-        "",
-        num(totalKmGlobal),
-        num(totalLitrosGlobal),
-        num(rendimientoGlobal),
-        num(totalCasetasGlobal),
-        num(totalCostoGlobal),
-      ]),
-    );
-
-    lineas.push("");
-    lineas.push(fila(["RESUMEN DEL PERÍODO"]));
-    lineas.push(fila(["Total viajes", viajesChofer.length]));
-    lineas.push(fila(["Rendimiento promedio (km/L)", num(rendimientoGlobal)]));
-    lineas.push(fila(["Costo casetas (MXN)", num(totalCasetasGlobal)]));
-    lineas.push(fila(["Costo diesel (MXN)", num(totalCostoGlobal)]));
-
-    const nombreArchivo = camionTodos
-      ? `Rendimientos_Unidades_${pdfFechaInicio}_${pdfFechaFin}.csv`
-      : choferTodos
-        ? `Rendimientos_General_${pdfFechaInicio}_${pdfFechaFin}.csv`
-        : `Rendimientos_${entidadNombre.replace(/[ ()]/g, "_")}_${pdfFechaInicio}_${pdfFechaFin}.csv`;
-
-    // BOM UTF-8: sin él, Excel muestra los acentos corruptos (Kilómetros → KilÃ³metros).
-    const blob = new Blob(["﻿" + lineas.join("\r\n")], {
-      type: "text/csv;charset=utf-8;",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = nombreArchivo;
-    a.click();
-    URL.revokeObjectURL(url);
-    setModalPdfAbierto(false);
   };
 
   const exportacionDeshabilitada =
@@ -1699,7 +1827,8 @@ export default function FuelViajes() {
       : !pdfConductorId) ||
     !pdfFechaInicio ||
     !pdfFechaFin ||
-    pdfGenerando;
+    pdfGenerando ||
+    excelGenerando;
 
   const clienteDelFormData = getClienteDelViaje(formData);
 
@@ -1982,11 +2111,15 @@ export default function FuelViajes() {
               </Button>
               <Button
                 variant="outline"
-                onClick={exportarRendimientoCSV}
+                onClick={exportarRendimientoExcel}
                 disabled={exportacionDeshabilitada}
                 className="gap-2 font-bold rounded-xl px-5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
               >
-                <FileSpreadsheet className="w-4 h-4" />
+                {excelGenerando ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <FileSpreadsheet className="w-4 h-4" />
+                )}
                 Hoja de cálculo
               </Button>
               <Button
