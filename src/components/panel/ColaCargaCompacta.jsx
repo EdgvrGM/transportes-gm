@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { format, parseISO, addDays } from "date-fns";
 import { ListChecks, AlertCircle, CheckCircle2, Fuel, Edit3, ArrowRight, Sparkles } from "lucide-react";
+import { FECHA_LIMITE_ARCHIVO } from "@/lib/archivo";
 
 const DIAS_SEMANA = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 const DIA_CORTO = { Lunes: "Lun", Martes: "Mar", Miércoles: "Mié", Jueves: "Jue", Viernes: "Vie", Sábado: "Sáb" };
@@ -29,7 +30,7 @@ export default function ColaCargaCompacta() {
   const { data: viajes = [], isLoading: loadingViajes } = useQuery({
     queryKey: ["panel-viajes"],
     queryFn: async () => {
-      const { data } = await supabase.from("Viaje").select("id, fecha, conductor_id, camion_id, remolque_id, litros_combustible, casetas_ida, casetas_regreso");
+      const { data } = await supabase.from("Viaje").select("id, fecha, conductor_id, camion_id, remolque_id, litros_combustible, casetas_ida, casetas_regreso, viaje_registrado_id");
       return data || [];
     },
   });
@@ -54,9 +55,16 @@ export default function ColaCargaCompacta() {
   const getCamion = (id) => camiones.find((c) => String(c.id) === String(id));
 
   const { pendientes, registrados, programaActivo } = useMemo(() => {
-    if (!programas.length) return { pendientes: [], registrados: [], programaActivo: null };
+    // Excluir semanas archivadas (igual que la página de Programa de Cargas). Sin
+    // esto, un programa viejo cuyos viajes ya fueron archivados aparece con TODOS
+    // sus viajes como "pendientes" fantasma y la cola se queda clavada en esa
+    // semana antigua sin mostrar nunca la actual.
+    const programasVigentes = programas.filter(
+      (p) => p.fecha_inicio >= FECHA_LIMITE_ARCHIVO
+    );
+    if (!programasVigentes.length) return { pendientes: [], registrados: [], programaActivo: null };
 
-    const programasOrdenados = [...programas].sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio));
+    const programasOrdenados = [...programasVigentes].sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio));
 
     for (const prog of programasOrdenados) {
       const fechaInicio = parseISO(prog.fecha_inicio);
@@ -70,14 +78,28 @@ export default function ColaCargaCompacta() {
 
       const p = [], r = [];
       flat.forEach((pv) => {
-        const match = viajes.find(
-          (v) =>
-            v.fecha &&
-            v.fecha.startsWith(pv.fecha) &&
-            String(v.conductor_id) === String(pv.conductor) &&
-            String(v.camion_id) === String(pv.camion) &&
-            (!pv.remolque || !v.remolque_id || String(v.remolque_id) === String(pv.remolque))
-        );
+        // 1. Match por FK (viaje_registrado_id): es el vínculo exacto que se fija
+        //    al registrar el combustible desde el programa. Sobrevive a cambios
+        //    posteriores de fecha, chofer o camión — así un viaje ya registrado
+        //    se reconoce aunque le hayan cambiado la unidad o el operador.
+        let match = pv.id != null
+          ? viajes.find(
+              (v) => v.viaje_registrado_id != null &&
+                String(v.viaje_registrado_id) === String(pv.id)
+            )
+          : null;
+        // 2. Respaldo por fecha+chofer+camión para viajes registrados antes de
+        //    que existiera el vínculo por FK (legacy, sin viaje_registrado_id).
+        if (!match) {
+          match = viajes.find(
+            (v) =>
+              v.fecha &&
+              v.fecha.startsWith(pv.fecha) &&
+              String(v.conductor_id) === String(pv.conductor) &&
+              String(v.camion_id) === String(pv.camion) &&
+              (!pv.remolque || !v.remolque_id || String(v.remolque_id) === String(pv.remolque))
+          );
+        }
         if (match) {
           const hasFuel = parseFloat(match.litros_combustible || 0) > 0;
           const hasTolls = match.casetas_ida !== null && match.casetas_regreso !== null;
@@ -94,9 +116,15 @@ export default function ColaCargaCompacta() {
       }
     }
 
-    // Sin pendientes: usar la semana más reciente para metadata
+    // Sin pendientes: usar la semana más reciente. Todos sus viajes cuentan como
+    // registrados para que los contadores y el pie ("N viajes esta semana") no
+    // queden en cero en el estado "¡Todo al día!".
     const masReciente = programasOrdenados[programasOrdenados.length - 1];
-    return { pendientes: [], registrados: [], programaActivo: masReciente };
+    const r = [];
+    DIAS_SEMANA.forEach((dia) => {
+      ((masReciente.programacion || {})[dia] || []).forEach((v) => r.push(v));
+    });
+    return { pendientes: [], registrados: r, programaActivo: masReciente };
   }, [programas, viajes]);
 
   const handleRegistrar = (viaje) => {
