@@ -1458,6 +1458,17 @@ export default function FuelViajes() {
 
       let finalY = doc.lastAutoTable.finalY + 10;
 
+      // El bloque "RESUMEN DEL PERÍODO" (separador + 4 tarjetas de 36 de alto)
+      // se dibuja con doc.rect en coordenadas absolutas y autoTable no lo pagina
+      // por nosotros: si no cabe entero antes del margen inferior, forzar salto
+      // de página para que no quede recortado en el borde de la hoja actual.
+      const pageHeight = doc.internal.pageSize.height;
+      const resumenAltoNecesario = 12 + 36 + 14; // separador+título, tarjetas, margen inferior
+      if (finalY + resumenAltoNecesario > pageHeight) {
+        doc.addPage();
+        finalY = 20;
+      }
+
       // ── Separador con título de sección ──
       doc.setDrawColor(200, 200, 210);
       doc.setLineWidth(0.4);
