@@ -60,7 +60,7 @@ import {
   ImageIcon,
   Route,
 } from "lucide-react";
-import { format, addDays, parseISO, getISOWeek } from "date-fns";
+import { format, addDays, parseISO, differenceInCalendarDays } from "date-fns";
 import { es } from "date-fns/locale";
 import { TrailerIcon } from "./Layout";
 import ModalRutaViaje from "@/components/gps/ModalRutaViaje";
@@ -68,19 +68,18 @@ import VisorImagen from "@/components/fuel/VisorImagen";
 import { useToast } from "@/components/ui/use-toast";
 
 import { FECHA_LIMITE_ARCHIVO } from "@/lib/archivo";
+import {
+  DIAS_POR_SEMANA,
+  diasDeSemana,
+  nombreDia,
+  numeroSemana,
+  offsetDia,
+  plantillaVacia,
+  remapearProgramacion,
+} from "@/lib/semana";
 
-const DIAS_SEMANA = [
-  "Lunes",
-  "Martes",
-  "Miércoles",
-  "Jueves",
-  "Viernes",
-  "Sábado",
-];
-const PLANTILLA_VACIA = DIAS_SEMANA.reduce(
-  (acc, dia) => ({ ...acc, [dia]: [] }),
-  {},
-);
+// Orden que se muestra mientras el usuario no ha elegido fecha de inicio.
+const DIAS_NUEVA_SEMANA = diasDeSemana();
 
 const ProgramCard = ({ prog, onVer, totalViajes, archivado = false }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -217,8 +216,8 @@ export default function FuelProgramaCargas() {
   const [viajeAEliminar, setViajeAEliminar] = useState(null); // { index, dia }
   const [confirmarNuevaSemana, setConfirmarNuevaSemana] = useState(false);
   const [programaSeleccionado, setProgramaSeleccionado] = useState(null);
-  const [diaActivo, setDiaActivo] = useState("Lunes");
-  const [diaVerActivo, setDiaVerActivo] = useState("Lunes");
+  const [diaActivo, setDiaActivo] = useState(DIAS_NUEVA_SEMANA[0]);
+  const [diaVerActivo, setDiaVerActivo] = useState(DIAS_NUEVA_SEMANA[0]);
   const [dialogConsumoAbierto, setDialogConsumoAbierto] = useState(false);
   const [viajeConsumoSeleccionado, setViajeConsumoSeleccionado] = useState(null);
   const [dialogEvidenciaAbierto, setDialogEvidenciaAbierto] = useState(false);
@@ -236,7 +235,7 @@ export default function FuelProgramaCargas() {
     titulo: "",
     fecha_inicio: "",
     fecha_fin: "",
-    programacion: JSON.parse(JSON.stringify(PLANTILLA_VACIA)),
+    programacion: plantillaVacia(),
   });
 
   const { data: programas = [], isLoading } = useQuery({
@@ -310,9 +309,6 @@ export default function FuelProgramaCargas() {
         );
 
         if (hasLegacyTrips) {
-          const diasMap = {
-            Lunes: 0, Martes: 1, "Miércoles": 2, Jueves: 3, Viernes: 4, Sábado: 5,
-          };
           const fechaInicio = programaSeleccionado.fecha_inicio
             ? new Date(programaSeleccionado.fecha_inicio + "T12:00:00")
             : null;
@@ -320,7 +316,7 @@ export default function FuelProgramaCargas() {
           const viajesRows = [];
           for (const [dia, viajesDia] of Object.entries(legacyData)) {
             if (!Array.isArray(viajesDia)) continue;
-            const offsetDia = diasMap[dia] ?? 0;
+            const offset = offsetDia(programaSeleccionado.fecha_inicio, dia);
 
             for (const viaje of viajesDia) {
               if (!viaje.conductor || !viaje.camion || !viaje.cliente) continue;
@@ -328,7 +324,7 @@ export default function FuelProgramaCargas() {
               let fechaViaje = null;
               if (fechaInicio) {
                 const d = new Date(fechaInicio);
-                d.setDate(d.getDate() + offsetDia);
+                d.setDate(d.getDate() + offset);
                 fechaViaje = format(d, "yyyy-MM-dd");
               }
 
@@ -421,14 +417,12 @@ export default function FuelProgramaCargas() {
         }
 
         // 2. Construir registros para viajes_registrados desde la programación
-        const diasMap = {
-          Lunes: 0, Martes: 1, "Miércoles": 2, Jueves: 3, Viernes: 4, Sábado: 5,
-        };
         const fechaInicio = datos.fecha_inicio ? new Date(datos.fecha_inicio + "T12:00:00") : null;
 
         const viajesRows = [];
         for (const [dia, viajesDia] of Object.entries(datos.programacion)) {
-          const offsetDia = diasMap[dia] ?? 0;
+          if (!Array.isArray(viajesDia)) continue;
+          const offset = offsetDia(datos.fecha_inicio, dia);
           for (const viaje of viajesDia) {
             if (!viaje.conductor && !viaje.camion && !viaje.cliente) continue;
 
@@ -436,7 +430,7 @@ export default function FuelProgramaCargas() {
             let fechaViaje = null;
             if (fechaInicio) {
               const d = new Date(fechaInicio);
-              d.setDate(d.getDate() + offsetDia);
+              d.setDate(d.getDate() + offset);
               fechaViaje = format(d, "yyyy-MM-dd");
             }
 
@@ -690,9 +684,9 @@ export default function FuelProgramaCargas() {
       titulo: "",
       fecha_inicio: "",
       fecha_fin: "",
-      programacion: JSON.parse(JSON.stringify(PLANTILLA_VACIA)),
+      programacion: plantillaVacia(),
     });
-    setDiaActivo("Lunes");
+    setDiaActivo(DIAS_NUEVA_SEMANA[0]);
     setDialogAbierto(true);
   };
 
@@ -706,19 +700,21 @@ export default function FuelProgramaCargas() {
       .select("*")
       .eq("programa_id", programa.id);
 
-    let programacionUI = JSON.parse(JSON.stringify(PLANTILLA_VACIA));
-    
+    const dias = diasDeSemana(programa.fecha_inicio);
+    let programacionUI = plantillaVacia(programa.fecha_inicio);
+
     if (realTrips && realTrips.length > 0) {
+      const fInicio = new Date(programa.fecha_inicio + "T12:00:00");
       realTrips.forEach(rt => {
-        // Encontrar en qué pestaña de día va basado en la fecha del viaje
-        const date = new Date(rt.fecha_viaje + "T12:00:00");
-        const fInicio = new Date(programa.fecha_inicio + "T12:00:00");
-        const diffTime = Math.abs(date - fInicio);
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        const diasInvertidos = { 0: "Lunes", 1: "Martes", 2: "Miércoles", 3: "Jueves", 4: "Viernes", 5: "Sábado" };
-        const nombreDia = diasInvertidos[diffDays] || "Lunes";
-        
-        programacionUI[nombreDia].push({
+        // Encontrar en qué pestaña de día va basado en la fecha del viaje.
+        // Un viaje fuera del rango de la semana cae en el primer día.
+        const diff = differenceInCalendarDays(
+          new Date(rt.fecha_viaje + "T12:00:00"),
+          fInicio,
+        );
+        const nombre = dias[diff] || dias[0];
+
+        programacionUI[nombre].push({
           id: rt.id, // UUID real
           cliente: rt.cliente_id || "",
           conductor: rt.conductor_id ? String(rt.conductor_id) : "",
@@ -731,7 +727,7 @@ export default function FuelProgramaCargas() {
       });
     } else {
       // Fallback a legacy si no hay registros relacionales aún
-      programacionUI = programa.programacion || JSON.parse(JSON.stringify(PLANTILLA_VACIA));
+      programacionUI = programa.programacion || plantillaVacia(programa.fecha_inicio);
     }
 
     setFormData({
@@ -753,9 +749,9 @@ export default function FuelProgramaCargas() {
       return;
     }
     setProgramaSeleccionado(programa);
+    const dias = diasDeSemana(programa.fecha_inicio);
     const primerDia =
-      DIAS_SEMANA.find((dia) => programa.programacion?.[dia]?.length > 0) ||
-      "Lunes";
+      dias.find((dia) => programa.programacion?.[dia]?.length > 0) || dias[0];
     setDiaVerActivo(primerDia);
     // Invalidar query de viajes_registrados para el nuevo programa
     queryClient.invalidateQueries({ queryKey: ["viajesRegistrados", programa.id] });
@@ -764,21 +760,33 @@ export default function FuelProgramaCargas() {
 
   const handleFechaInicio = (e) => {
     const fInicio = e.target.value;
-    if (fInicio) {
-      const start = parseISO(fInicio);
-      const end = addDays(start, 5);
-      setFormData({
-        ...formData,
-        fecha_inicio: fInicio,
-        fecha_fin: format(end, "yyyy-MM-dd"),
-        titulo: `Semana ${getISOWeek(start)}`,
-      });
-    }
+    if (!fInicio) return;
+
+    const end = addDays(parseISO(fInicio), DIAS_POR_SEMANA - 1);
+    const diasPrevios = diasDeSemana(formData.fecha_inicio);
+    const diasNuevos = diasDeSemana(fInicio);
+
+    setFormData({
+      ...formData,
+      fecha_inicio: fInicio,
+      fecha_fin: format(end, "yyyy-MM-dd"),
+      titulo: `Semana ${numeroSemana(fInicio)}`,
+      // Mover la fecha a otro día de la semana renombra los días: los viajes ya
+      // capturados se reasignan conservando su posición dentro de la semana.
+      programacion: remapearProgramacion(
+        formData.programacion,
+        formData.fecha_inicio,
+        fInicio,
+      ),
+    });
+
+    const idxActivo = diasPrevios.indexOf(diaActivo);
+    setDiaActivo(diasNuevos[idxActivo === -1 ? 0 : idxActivo]);
   };
 
   const agregarViaje = () => {
     const nuevosViajes = [
-      ...formData.programacion[diaActivo],
+      ...(formData.programacion[diaActivo] || []),
       {
         id: Date.now().toString(),
         cliente: "",
@@ -797,7 +805,7 @@ export default function FuelProgramaCargas() {
   };
 
   const actualizarViaje = (index, campo, valor) => {
-    const nuevosViajes = [...formData.programacion[diaActivo]];
+    const nuevosViajes = [...(formData.programacion[diaActivo] || [])];
     nuevosViajes[index][campo] = valor;
     setFormData({
       ...formData,
@@ -806,7 +814,7 @@ export default function FuelProgramaCargas() {
   };
 
   const eliminarViaje = (index, dia = diaActivo) => {
-    const nuevosViajes = formData.programacion[dia].filter(
+    const nuevosViajes = (formData.programacion[dia] || []).filter(
       (_, i) => i !== index,
     );
     setFormData({
@@ -858,13 +866,12 @@ export default function FuelProgramaCargas() {
       return;
     }
 
-    const diasMap = {
-      "Lunes": 0, "Martes": 1, "Miércoles": 2, "Jueves": 3, "Viernes": 4, "Sábado": 5
-    };
-    const indexDia = diasMap[diaVerActivo] || 0;
     const fechaInicio = parseISO(programaSeleccionado.fecha_inicio);
-    const fechaViaje = addDays(fechaInicio, indexDia);
-    
+    const fechaViaje = addDays(
+      fechaInicio,
+      offsetDia(programaSeleccionado.fecha_inicio, diaVerActivo),
+    );
+
     const conductor = conductoresTodos.find(c => String(c.id) === String(viaje.conductor));
     const camion = camiones.find(c => String(c.id) === String(viaje.camion));
 
@@ -898,10 +905,11 @@ export default function FuelProgramaCargas() {
     }
 
     // Fallback por fecha para viajes registrados antes de esta mejora (sin FK).
-    const diasMap = { "Lunes": 0, "Martes": 1, "Miércoles": 2, "Jueves": 3, "Viernes": 4, "Sábado": 5 };
-    const indexDia = diasMap[diaActivo] || 0;
     const fechaInicio = parseISO(programaSeleccionado.fecha_inicio);
-    const fechaViaje = addDays(fechaInicio, indexDia);
+    const fechaViaje = addDays(
+      fechaInicio,
+      offsetDia(programaSeleccionado.fecha_inicio, diaActivo),
+    );
     const fechaStr = format(fechaViaje, "yyyy-MM-dd");
 
     return viajes.find((v) => {
@@ -916,10 +924,11 @@ export default function FuelProgramaCargas() {
 
   const getViajesPorDia = (dia) => {
     if (!programaSeleccionado || !viajesRegistrados) return [];
-    const diasMap = { "Lunes": 0, "Martes": 1, "Miércoles": 2, "Jueves": 3, "Viernes": 4, "Sábado": 5 };
-    const indexDia = diasMap[dia] || 0;
     const fechaInicio = parseISO(programaSeleccionado.fecha_inicio);
-    const fechaDia = format(addDays(fechaInicio, indexDia), "yyyy-MM-dd");
+    const fechaDia = format(
+      addDays(fechaInicio, offsetDia(programaSeleccionado.fecha_inicio, dia)),
+      "yyyy-MM-dd",
+    );
     
     return viajesRegistrados
       .filter(v => v.fecha_viaje && v.fecha_viaje.startsWith(fechaDia))
@@ -1035,8 +1044,8 @@ export default function FuelProgramaCargas() {
             </DialogHeader>
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               <div className="flex p-1 md:p-1.5 bg-card border border-border shadow-sm rounded-2xl overflow-x-auto hide-scrollbar shrink-0 touch-pan-x">
-                {DIAS_SEMANA.map((dia, idx) => {
-                  const fechaDia = programaSeleccionado?.fecha_inicio 
+                {diasDeSemana(programaSeleccionado?.fecha_inicio).map((dia, idx) => {
+                  const fechaDia = programaSeleccionado?.fecha_inicio
                     ? format(addDays(parseISO(programaSeleccionado.fecha_inicio), idx), "d")
                     : "";
                   const count = getViajesPorDia(dia).length;
@@ -1286,7 +1295,7 @@ export default function FuelProgramaCargas() {
               <div className="bg-card p-6 rounded-[1.5rem] border border-border grid grid-cols-1 md:grid-cols-3 gap-6 shadow-sm">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground">
-                    Fecha Inicio (Lunes)
+                    Fecha Inicio ({DIAS_NUEVA_SEMANA[0]})
                   </Label>
                   <div className="relative group/date cursor-pointer" onClick={(e) => e.currentTarget.querySelector('input')?.showPicker()}>
                     <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-hover/date:text-primary transition-colors" />
@@ -1297,6 +1306,16 @@ export default function FuelProgramaCargas() {
                       className="h-11 pl-10 rounded-xl bg-background font-medium border-border/60 cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
                     />
                   </div>
+                  {/* Solo en semanas nuevas: las históricas legítimamente inician en lunes. */}
+                  {!formData.id &&
+                    formData.fecha_inicio &&
+                    nombreDia(formData.fecha_inicio) !== DIAS_NUEVA_SEMANA[0] && (
+                      <p className="text-[10px] font-bold text-amber-600 dark:text-amber-500 leading-snug">
+                        Normalmente la semana inicia en {DIAS_NUEVA_SEMANA[0]}. Esta
+                        correrá de {diasDeSemana(formData.fecha_inicio)[0]} a{" "}
+                        {diasDeSemana(formData.fecha_inicio)[DIAS_POR_SEMANA - 1]}.
+                      </p>
+                    )}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground">
@@ -1327,8 +1346,8 @@ export default function FuelProgramaCargas() {
               </div>
 
               <div className="flex p-1 md:p-1.5 bg-card border border-border shadow-sm rounded-2xl overflow-x-auto hide-scrollbar touch-pan-x">
-                {DIAS_SEMANA.map((dia, idx) => {
-                  const fechaDia = formData.fecha_inicio 
+                {diasDeSemana(formData.fecha_inicio).map((dia, idx) => {
+                  const fechaDia = formData.fecha_inicio
                     ? format(addDays(parseISO(formData.fecha_inicio), idx), "d")
                     : "";
                   const count = formData.programacion[dia]?.length || 0;
@@ -1352,7 +1371,7 @@ export default function FuelProgramaCargas() {
 
               <div className="space-y-4">
                 <div className="border border-border/60 bg-white dark:bg-zinc-950 rounded-2xl overflow-hidden shadow-sm">
-                  {formData.programacion[diaActivo].map((viaje, index, arr) => (
+                  {(formData.programacion[diaActivo] || []).map((viaje, index, arr) => (
                     <div
                       key={viaje.id}
                       className={`relative p-5 md:px-6 md:py-5 flex flex-col md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 items-end transition-all ${

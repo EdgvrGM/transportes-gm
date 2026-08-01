@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { differenceInDays, parseISO } from "date-fns";
 import { localDateStr, formatearFecha } from "@/lib/fechas";
+import { offsetDia } from "@/lib/semana";
 import { Inbox, Fuel, Link2, Wrench, FileWarning, ChevronRight, Check, Container } from "lucide-react";
 
 import { FECHA_LIMITE_ARCHIVO } from "@/lib/archivo";
@@ -103,7 +104,6 @@ export default function Pendientes() {
     // Mismo criterio de fallback que getRegisteredTrip / el filtro de FuelViajes
     // (fecha + conductor + camión), para que el contador del panel coincida con
     // lo que muestra la página al abrirla.
-    const diasMap = { Lunes: 0, Martes: 1, "Miércoles": 2, Jueves: 3, Viernes: 4, "Sábado": 5 };
     const flatProgramados = [];
     programas.forEach((prog) => {
       const programacion = prog.programacion || {};
@@ -112,7 +112,7 @@ export default function Pendientes() {
         let fechaDia = null;
         try {
           const base = parseISO(prog.fecha_inicio);
-          base.setDate(base.getDate() + (diasMap[dia] ?? 0));
+          base.setDate(base.getDate() + offsetDia(prog.fecha_inicio, dia));
           fechaDia = localDateStr(base);
         } catch (_e) {
           // programa sin fecha válida — se compara solo por conductor+camión

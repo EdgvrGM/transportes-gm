@@ -8,7 +8,7 @@ import { Clock, CheckCircle2, Fuel, Truck, User, AlertCircle, MapPin, Edit } fro
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-const DIAS_SEMANA = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+import { diasDeSemana } from "@/lib/semana";
 
 // ── Tarjeta individual con tilt CSS puro (mismo patrón que ProgramCard) ──
 function PendingCard({ viaje, conductor, camion, cliente, handleRegistrar }) {
@@ -190,7 +190,7 @@ export default function ColaCarga() {
       const fechaInicio = parseISO(prog.fecha_inicio);
       const flatProgramados = [];
 
-      DIAS_SEMANA.forEach((dia, indexDia) => {
+      diasDeSemana(prog.fecha_inicio).forEach((dia, indexDia) => {
         const viajesDelDia = prog.programacion[dia] || [];
         const fechaViaje = addDays(fechaInicio, indexDia);
         const fechaStr = format(fechaViaje, "yyyy-MM-dd");
@@ -238,10 +238,9 @@ export default function ColaCarga() {
     // 3. Fallback: Si todo está completo, mostrar la semana más reciente
     if (!finalActivo && programas.length > 0) {
       const masReciente = programasOrdenados[programasOrdenados.length - 1];
-      const fechaInicio = parseISO(masReciente.fecha_inicio);
       const r = [];
-      
-      DIAS_SEMANA.forEach((dia, indexDia) => {
+
+      diasDeSemana(masReciente.fecha_inicio).forEach((dia) => {
         const viajesDelDia = masReciente.programacion[dia] || [];
         viajesDelDia.forEach((v) => {
           r.push(v);

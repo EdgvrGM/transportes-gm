@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { supabase } from "@/supabaseClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { format, parseISO, subDays } from "date-fns";
+import { format, parseISO, subDays, addDays } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   Card,
@@ -32,8 +32,26 @@ import { Loader2, DollarSign, Calculator, FileText, Trash2, Plus, Download, Cale
 import { useToast } from "@/components/ui/use-toast";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { diasDeSemana } from "@/lib/semana";
 
 const EMPTY_ARRAY = [];
+
+// El corte de nómina es SIEMPRE sábado, sin importar en qué día termine el
+// programa de cargas: la semana operativa puede ir Lun-Sáb (histórico) o
+// Dom-Vie (actual), pero los recibos no se mueven. Normaliza fecha_fin al
+// sábado que cierra esa misma semana.
+function sabadoDeCorte(fechaFin) {
+  switch (fechaFin.getDay()) {
+    case 0: return subDays(fechaFin, 1); // Domingo → sábado anterior
+    case 1: return subDays(fechaFin, 2); // Lunes → sábado anterior
+    case 5: return addDays(fechaFin, 1); // Viernes (semana Dom-Vie) → sábado que la cierra
+    default: return fechaFin;            // Sábado: ya es el corte
+  }
+}
+
+function anticiposVacios(fechaInicio) {
+  return diasDeSemana(fechaInicio).reduce((acc, dia) => ({ ...acc, [dia]: 0 }), {});
+}
 
 export default function Liquidaciones() {
   const { toast } = useToast();
@@ -52,9 +70,7 @@ export default function Liquidaciones() {
   // Datos Dinámicos
   const [viajesDetalle, setViajesDetalle] = useState([]);
   const [gastos, setGastos] = useState([]);
-  const [anticipos, setAnticipos] = useState({
-    Lunes: 0, Martes: 0, Miércoles: 0, Jueves: 0, Viernes: 0, Sábado: 0
-  });
+  const [anticipos, setAnticipos] = useState(() => anticiposVacios());
   const [rangoCustom, setRangoCustom] = useState({ activo: false, inicio: "", fin: "" });
   const [conceptosExtrasViajes, setConceptosExtrasViajes] = useState([]);
   const [anticiposExtras, setAnticiposExtras] = useState([]);
@@ -82,19 +98,7 @@ export default function Liquidaciones() {
     const p = programas.find(prog => String(prog.id) === String(semanaId));
     if (!p) return null;
 
-    // Asumimos que el ProgramaCargas termina en Domingo. 
-    // El Sábado de corte es el día antes del fin de la semana del programa.
-    const fechaFinProg = parseISO(p.fecha_fin);
-    let fCorte = fechaFinProg;
-    
-    // Si el fin es domingo (day 0), restamos 1 para ir al sábado. 
-    // Si el sistema ya usa sábados como fin, lo dejamos.
-    if (fechaFinProg.getDay() === 0) { // Domingo
-      fCorte = subDays(fechaFinProg, 1);
-    } else if (fechaFinProg.getDay() === 1) { // Lunes
-      fCorte = subDays(fechaFinProg, 2);
-    }
-
+    const fCorte = sabadoDeCorte(parseISO(p.fecha_fin));
     const inicioPago = subDays(fCorte, 7);
     const finPago = subDays(fCorte, 1);
 
@@ -103,7 +107,8 @@ export default function Liquidaciones() {
       rangoTexto: `Nómina del ${format(inicioPago, "dd/MMM", { locale: es })} al ${format(finPago, "dd/MMM", { locale: es })}`,
       inicioPago: format(inicioPago, "yyyy-MM-dd"),
       finPago: format(finPago, "yyyy-MM-dd"),
-      titulo: p.titulo
+      titulo: p.titulo,
+      fechaInicio: p.fecha_inicio
     };
   }, [semanaId, programas]);
 
@@ -161,7 +166,7 @@ export default function Liquidaciones() {
 
     setViajesDetalle(nuevosViajes);
     setGastos([]);
-    setAnticipos({ Lunes: 0, Martes: 0, Miércoles: 0, Jueves: 0, Viernes: 0, Sábado: 0 });
+    setAnticipos(anticiposVacios(infoSemana.fechaInicio));
     setConceptosExtrasViajes([]);
     setAnticiposExtras([]);
 
@@ -380,7 +385,7 @@ export default function Liquidaciones() {
       .filter(g => g.monto > 0 || g.concepto !== "")
       .map(g => [g.concepto || '-', g.monto > 0 ? `$${formatCurrency(g.monto)}` : '']);
 
-    const diasAnticipos = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+    const diasAnticipos = Object.keys(anticipos);
     const rowsAnticipos = [
       ...diasAnticipos.filter(dia => (anticipos[dia] || 0) > 0).map(dia => [dia, `$${formatCurrency(anticipos[dia])}`]),
       ...anticiposExtras.filter(a => a.monto > 0 || a.concepto !== "").map(a => [a.concepto || '-', `$${formatCurrency(a.monto)}`]),
@@ -498,11 +503,7 @@ export default function Liquidaciones() {
                 </SelectTrigger>
                 <SelectContent>
                   {programas.map((p) => {
-                    const fechaFinProg = parseISO(p.fecha_fin);
-                    let fCorte = fechaFinProg;
-                    if (fechaFinProg.getDay() === 0) fCorte = subDays(fechaFinProg, 1);
-                    else if (fechaFinProg.getDay() === 1) fCorte = subDays(fechaFinProg, 2);
-
+                    const fCorte = sabadoDeCorte(parseISO(p.fecha_fin));
                     const inicioPago = subDays(fCorte, 7);
                     const finPago = subDays(fCorte, 1);
                     const rangoLabel = `${format(inicioPago, "dd/MMM")} al ${format(finPago, "dd/MMM")}`;

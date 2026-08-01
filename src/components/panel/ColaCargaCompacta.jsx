@@ -6,9 +6,7 @@ import { createPageUrl } from "@/utils";
 import { format, parseISO, addDays } from "date-fns";
 import { ListChecks, AlertCircle, CheckCircle2, Fuel, Edit3, ArrowRight, Sparkles } from "lucide-react";
 import { FECHA_LIMITE_ARCHIVO } from "@/lib/archivo";
-
-const DIAS_SEMANA = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-const DIA_CORTO = { Lunes: "Lun", Martes: "Mar", Miércoles: "Mié", Jueves: "Jue", Viernes: "Vie", Sábado: "Sáb" };
+import { abreviaDia, diasDeSemana } from "@/lib/semana";
 
 const MAX_VISIBLES = 5;
 
@@ -69,7 +67,7 @@ export default function ColaCargaCompacta() {
     for (const prog of programasOrdenados) {
       const fechaInicio = parseISO(prog.fecha_inicio);
       const flat = [];
-      DIAS_SEMANA.forEach((dia, idx) => {
+      diasDeSemana(prog.fecha_inicio).forEach((dia, idx) => {
         const dViajes = (prog.programacion || {})[dia] || [];
         const fechaViaje = addDays(fechaInicio, idx);
         const fechaStr = format(fechaViaje, "yyyy-MM-dd");
@@ -121,7 +119,7 @@ export default function ColaCargaCompacta() {
     // queden en cero en el estado "¡Todo al día!".
     const masReciente = programasOrdenados[programasOrdenados.length - 1];
     const r = [];
-    DIAS_SEMANA.forEach((dia) => {
+    diasDeSemana(masReciente.fecha_inicio).forEach((dia) => {
       ((masReciente.programacion || {})[dia] || []).forEach((v) => r.push(v));
     });
     return { pendientes: [], registrados: r, programaActivo: masReciente };
@@ -198,7 +196,7 @@ export default function ColaCargaCompacta() {
           {visibles.map((viaje, i) => {
             const conductor = getConductor(viaje.conductor);
             const camion = getCamion(viaje.camion);
-            const diaCorto = DIA_CORTO[viaje.diaSemana] || viaje.diaSemana?.slice(0, 3);
+            const diaCorto = abreviaDia(viaje.diaSemana);
             const numDia = format(viaje.fechaObj, "dd");
 
             return (

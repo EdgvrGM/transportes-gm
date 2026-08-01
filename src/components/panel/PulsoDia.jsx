@@ -8,16 +8,9 @@ import { es } from "date-fns/locale";
 import { CalendarClock, CheckCircle2, Navigation2, Clock3, ArrowRight } from "lucide-react";
 import { POLL_POSITIONS_MS } from "@/components/gps/constants";
 import { localDateStr } from "@/lib/fechas";
+import { nombreDia } from "@/lib/semana";
 import { fetchPositions } from "./fetchPositions";
 import { estaEnPatio } from "./panelGeo";
-
-const DIAS_SEMANA = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-
-function diaSemanaDe(date) {
-  const idx = date.getDay();
-  if (idx === 0) return null;
-  return DIAS_SEMANA[idx - 1];
-}
 
 
 export default function PulsoDia() {
@@ -75,8 +68,10 @@ export default function PulsoDia() {
   const info = useMemo(() => {
     const hoy = new Date();
     const manana = addDays(hoy, 1);
-    const diaHoy = diaSemanaDe(hoy);
-    const diaManana = diaSemanaDe(manana);
+    // El nombre del día no depende del orden de la semana: si el programa no
+    // incluye ese día, la búsqueda en `programacion` simplemente no encuentra nada.
+    const diaHoy = nombreDia(hoy);
+    const diaManana = nombreDia(manana);
 
     const programaHoy = programas.find((p) => {
       try {
