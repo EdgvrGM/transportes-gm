@@ -306,7 +306,7 @@ export default function CompartidosGPS({ positions = [] }) {
 
       {/* Dialog — nueva sesión */}
       <Dialog open={showNueva} onOpenChange={(open) => !open && cerrarNueva()}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm min-w-0">
           <DialogHeader>
             <DialogTitle>Compartir rastreo</DialogTitle>
           </DialogHeader>
@@ -370,9 +370,9 @@ export default function CompartidosGPS({ positions = [] }) {
               </button>
             </div>
           ) : (
-            <div className="space-y-3">
-              <div className="flex items-center bg-muted rounded-lg px-3 py-2">
-                <span className="text-xs text-muted-foreground truncate font-mono flex-1">
+            <div className="space-y-3 min-w-0">
+              <div className="flex items-center bg-muted rounded-lg px-3 py-2 min-w-0">
+                <span className="text-xs text-muted-foreground truncate font-mono flex-1 min-w-0">
                   {linkNuevo}
                 </span>
               </div>
