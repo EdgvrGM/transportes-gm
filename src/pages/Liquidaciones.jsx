@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { supabase } from "@/supabaseClient";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO, subDays, addDays } from "date-fns";
 import { es } from "date-fns/locale";
 import {
@@ -28,11 +28,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Loader2, DollarSign, Calculator, FileText, Trash2, Plus, Download, CalendarRange, RotateCcw } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { diasDeSemana } from "@/lib/semana";
+import { formatCurrency } from "@/lib/formato";
+import HistorialLiquidaciones from "@/components/liquidaciones/HistorialLiquidaciones";
 
 const EMPTY_ARRAY = [];
 
@@ -55,7 +68,10 @@ function anticiposVacios(fechaInicio) {
 
 export default function Liquidaciones() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const logoRef = useRef(null);
+  const [confirmarReemplazo, setConfirmarReemplazo] = useState(false);
+  const [tab, setTab] = useState("calcular");
 
   useEffect(() => {
     const img = new Image();
@@ -183,12 +199,6 @@ export default function Liquidaciones() {
     return infoSemana?.rangoTexto || "";
   };
 
-  const formatCurrency = (num) => {
-    const n = Number(num) || 0;
-    const [integer, decimal] = n.toFixed(2).split('.');
-    return integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + decimal;
-  };
-
   const formatMetricas = (v) =>
     `${formatCurrency(v.km).replace('.00', '')} km · ${formatCurrency(v.litros).replace('.00', '')} L · ${v.litros > 0 ? v.rendimiento.toFixed(2) + ' km/L' : 'S/D'}`;
 
@@ -262,31 +272,115 @@ export default function Liquidaciones() {
   const totalAnticipos = totalAnticiposDias + totalAnticiposExtras;
   const sueldoNeto = (totalComisiones + totalGastos) - totalAnticipos;
 
+  // ¿Ya hay una liquidación para este operador en esta semana? Sostiene el aviso
+  // en pantalla y el diálogo de reemplazo. Sólo puede haber una: el índice único
+  // (conductor_id, fecha_corte) lo garantiza también en la BD.
+  const { data: liquidacionExistente } = useQuery({
+    queryKey: ["liquidacion_existente", conductorId, infoSemana?.fechaCorte],
+    enabled: !!conductorId && !!infoSemana?.fechaCorte,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("Liquidaciones")
+        .select("id, created_at, updated_at, monto_final, pdf_path")
+        .eq("conductor_id", conductorId)
+        .eq("fecha_corte", infoSemana.fechaCorte)
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      return data;
+    },
+  });
+
   const guardarLiquidacion = useMutation({
     mutationFn: async () => {
-      const data = {
+      const conductor = conductores.find((c) => String(c.id) === String(conductorId));
+      if (!conductor || !infoSemana?.fechaCorte) {
+        throw new Error("Selecciona la semana y el operador antes de finalizar.");
+      }
+
+      const doc = construirPDF();
+      if (!doc) throw new Error("No se pudo generar el PDF.");
+
+      // 1. Archivar el PDF antes de tocar la BD: si el archivo falla, no queda
+      //    una fila apuntando a un documento inexistente. Ruta determinista →
+      //    al reemplazar se sobrescribe y no se acumulan huérfanos.
+      const pdfPath = `${infoSemana.fechaCorte}/${conductorId}.pdf`;
+      const { error: errPdf } = await supabase.storage
+        .from("liquidaciones")
+        .upload(pdfPath, doc.output("blob"), {
+          contentType: "application/pdf",
+          upsert: true,
+        });
+      if (errPdf) throw new Error(`No se pudo archivar el PDF: ${errPdf.message}`);
+
+      const { data: sesion } = await supabase.auth.getUser();
+      const usuarioId = sesion?.user?.id ?? null;
+
+      // 2. Snapshot completo. Es lo que permite reconstruir el recibo y
+      //    responder una aclaración meses después: antes sólo se guardaban
+      //    los totales y el desglose se perdía.
+      const payload = {
         conductor_id: conductorId,
+        conductor_nombre: conductor.nombre,
+        semana_id: semanaId || null,
+        fecha_corte: infoSemana.fechaCorte,
+        periodo_inicio: fechaEfectivaInicio,
+        periodo_fin: fechaEfectivaFin,
         total_comisiones: totalComisiones,
         total_gastos: totalGastos,
         total_anticipos: totalAnticipos,
         monto_final: sueldoNeto,
-        detalle_viajes: { fecha_corte: infoSemana?.fechaCorte, viajes: viajesDetalle }
+        pdf_path: pdfPath,
+        detalle: {
+          viajes: viajesDetalle,
+          gastos,
+          anticipos,
+          anticipos_extras: anticiposExtras,
+          conceptos_extras: conceptosExtrasViajes,
+          rango_personalizado: rangoCustom.activo ? rangoCustom : null,
+          periodo_texto: getRangoFechasTexto(),
+          origen: "app",
+        },
+        detalle_viajes: { fecha_corte: infoSemana.fechaCorte, viajes: viajesDetalle },
       };
-      const { error } = await supabase.from("Liquidaciones").insert([data]);
+
+      const reemplazada = !!liquidacionExistente?.id;
+      const { error } = reemplazada
+        ? await supabase
+            .from("Liquidaciones")
+            .update({ ...payload, updated_at: new Date().toISOString(), updated_by: usuarioId })
+            .eq("id", liquidacionExistente.id)
+        : await supabase
+            .from("Liquidaciones")
+            .insert([{ ...payload, created_by: usuarioId }]);
       if (error) throw new Error(error.message);
+
+      doc.save(nombreArchivoPDF(conductor));
+      return { reemplazada };
     },
-    onSuccess: () => {
-      generarPDF();
-      toast({ title: "Liquidación guardada", description: "El PDF se descargará en tu carpeta de Descargas." });
+    onSuccess: ({ reemplazada }) => {
+      queryClient.invalidateQueries({ queryKey: ["liquidacion_existente"] });
+      queryClient.invalidateQueries({ queryKey: ["historial_liquidaciones"] });
+      toast({
+        title: reemplazada ? "Liquidación reemplazada" : "Liquidación guardada",
+        description: "Queda archivada en el historial y el PDF se descargó.",
+      });
     },
     onError: (err) => {
       toast({ variant: "destructive", title: "Error", description: err.message });
     }
   });
 
-  const generarPDF = () => {
+  const handleFinalizar = () => {
+    if (liquidacionExistente?.id) setConfirmarReemplazo(true);
+    else guardarLiquidacion.mutate();
+  };
+
+  // Construye el documento y lo DEVUELVE sin descargarlo: el mismo doc se sube
+  // a Storage y se descarga, para que el archivo guardado sea byte por byte el
+  // que recibe el operador.
+  const construirPDF = () => {
     const conductor = conductores.find((c) => String(c.id) === String(conductorId));
-    if (!conductor || !infoSemana?.fechaCorte) return;
+    if (!conductor || !infoSemana?.fechaCorte) return null;
 
     const doc = new jsPDF();
     let logoBottomY = 10;
@@ -297,8 +391,11 @@ export default function Liquidaciones() {
       doc.addImage(logoRef.current, 'PNG', 14, 8, logoW, logoH);
       logoBottomY = 8 + logoH;
     }
-    continuarPDF(doc, conductor, logoBottomY);
+    return continuarPDF(doc, conductor, logoBottomY);
   };
+
+  const nombreArchivoPDF = (conductor) =>
+    `Liquidacion_${conductor.nombre.replace(/ /g, "_")}_${infoSemana?.fechaCorte}.pdf`;
 
   const continuarPDF = (doc, conductor, logoBottomY = 28) => {
     const pageWidth = doc.internal.pageSize.width;
@@ -441,7 +538,7 @@ export default function Liquidaciones() {
     doc.line(130, firmaY, 180, firmaY);
     doc.text("Firma Autorización", 155, firmaY + 5, { align: "center" });
 
-    doc.save(`Liquidacion_${conductor.nombre.replace(/ /g, "_")}_${infoSemana?.fechaCorte}.pdf`);
+    return doc;
   };
 
   const isInitialLoading = loadingConductores && conductores.length === 0;
@@ -468,22 +565,36 @@ export default function Liquidaciones() {
               Cálculo de nómina, comisiones y generación de PDF
             </p>
           </div>
+          {tab === "calcular" && (
           <div className="flex flex-col items-stretch md:items-end gap-1.5">
             <Button
-              onClick={() => guardarLiquidacion.mutate()}
+              onClick={handleFinalizar}
               disabled={!conductorId || !infoSemana || guardarLiquidacion.isPending}
               className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 font-bold px-6 h-12 rounded-xl shadow-lg"
             >
               {guardarLiquidacion.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
-              Finalizar y Generar PDF
+              {liquidacionExistente ? "Reemplazar y Generar PDF" : "Finalizar y Generar PDF"}
             </Button>
-            {(!conductorId || !infoSemana) && (
+            {(!conductorId || !infoSemana) ? (
               <p className="text-[11px] font-medium text-muted-foreground">
                 Selecciona semana y conductor para habilitar
               </p>
-            )}
+            ) : liquidacionExistente ? (
+              <p className="text-[11px] font-bold text-amber-600 dark:text-amber-500">
+                Ya existe una liquidación de esta semana por ${formatCurrency(liquidacionExistente.monto_final)}
+              </p>
+            ) : null}
           </div>
+          )}
         </div>
+
+        <Tabs value={tab} onValueChange={setTab} className="w-full">
+          <TabsList className="grid w-full max-w-sm grid-cols-2 h-12 rounded-xl">
+            <TabsTrigger value="calcular" className="rounded-lg font-bold">Calcular</TabsTrigger>
+            <TabsTrigger value="historial" className="rounded-lg font-bold">Historial</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="calcular" className="space-y-6 mt-6">
 
         {/* Filtros */}
         <Card className="shadow-lg border-border bg-card rounded-[1.5rem]">
@@ -506,7 +617,7 @@ export default function Liquidaciones() {
                     const fCorte = sabadoDeCorte(parseISO(p.fecha_fin));
                     const inicioPago = subDays(fCorte, 7);
                     const finPago = subDays(fCorte, 1);
-                    const rangoLabel = `${format(inicioPago, "dd/MMM")} al ${format(finPago, "dd/MMM")}`;
+                    const rangoLabel = `${format(inicioPago, "dd/MMM", { locale: es })} al ${format(finPago, "dd/MMM", { locale: es })}`;
 
                     return (
                       <SelectItem key={p.id} value={String(p.id)} className="py-3 cursor-pointer">
@@ -907,6 +1018,44 @@ export default function Liquidaciones() {
             </div>
           </div>
         )}
+
+          </TabsContent>
+
+          <TabsContent value="historial" className="mt-6">
+            <HistorialLiquidaciones />
+          </TabsContent>
+        </Tabs>
+
+        <AlertDialog open={confirmarReemplazo} onOpenChange={setConfirmarReemplazo}>
+          <AlertDialogContent className="rounded-2xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Reemplazar liquidación existente</AlertDialogTitle>
+              <AlertDialogDescription className="space-y-2">
+                <span className="block">
+                  Ya hay una liquidación de{" "}
+                  <strong>{conductores.find((c) => String(c.id) === String(conductorId))?.nombre}</strong>{" "}
+                  para la semana con corte al{" "}
+                  <strong>{infoSemana?.fechaCorte}</strong>, por{" "}
+                  <strong>${formatCurrency(liquidacionExistente?.monto_final)}</strong>.
+                </span>
+                <span className="block">
+                  Se reemplazará por el cálculo actual de{" "}
+                  <strong>${formatCurrency(sueldoNeto)}</strong> y el PDF archivado se
+                  sobrescribirá. Esta acción no se puede deshacer.
+                </span>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={() => guardarLiquidacion.mutate()}
+              >
+                Reemplazar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

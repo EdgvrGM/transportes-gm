@@ -197,7 +197,7 @@ export default function TooltipUnidad({ unidad, onClose, onMouseEnter, onMouseLe
   return (
     <div
       style={{ position: "fixed", zIndex: 9999, pointerEvents: "auto", ...style }}
-      className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 w-80 overflow-hidden"
+      className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 w-80 max-h-[calc(100vh-1rem)] overflow-y-auto"
       onMouseEnter={onMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
