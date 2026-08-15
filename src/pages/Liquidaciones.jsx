@@ -39,7 +39,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Loader2, DollarSign, Calculator, FileText, Trash2, Plus, Download, CalendarRange, RotateCcw } from "lucide-react";
+import { Loader2, DollarSign, Calculator, FileText, Trash2, Plus, Download, CalendarRange, RotateCcw, AlertTriangle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -137,9 +137,16 @@ export default function Liquidaciones() {
   // Si el rango se sale de esa semana, es fácil pensar que se está armando
   // la nómina de "hoy" cuando en realidad se sigue guardando bajo el corte
   // de la semana elegida arriba (típicamente la anterior, ya pagada).
+  //
+  // Tolerancia: mover el inicio hasta el miércoles de la semana pasada
+  // (inicioPago - 4 días) es un ajuste normal (viaje que se cruza de
+  // semana) y no debe alertar. Ir más atrás que ese miércoles sí.
+  const umbralInicioSinAviso = infoSemana
+    ? format(subDays(parseISO(infoSemana.inicioPago), 4), "yyyy-MM-dd")
+    : null;
   const rangoFueraDeSemana = !!(
     rangoCustom.activo && infoSemana &&
-    ((rangoCustom.inicio && rangoCustom.inicio < infoSemana.inicioPago) ||
+    ((rangoCustom.inicio && umbralInicioSinAviso && rangoCustom.inicio < umbralInicioSinAviso) ||
      (rangoCustom.fin && rangoCustom.fin > infoSemana.finPago))
   );
 
@@ -732,11 +739,16 @@ export default function Liquidaciones() {
                         />
                       </div>
                       {rangoFueraDeSemana && (
-                        <p className="w-full text-[11px] font-semibold text-amber-800 dark:text-amber-300">
-                          ⚠ Este rango sale de la semana seleccionada arriba. Los viajes que agregue se sumarán
-                          a la nómina con corte al <strong>{infoSemana?.fechaCorte}</strong> — si tu intención
-                          es pagar la nómina de una semana distinta, verifica el selector "Semana del Programa".
-                        </p>
+                        <div className="w-full flex items-start gap-2.5 p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border-2 border-red-400 dark:border-red-700 animate-pulse">
+                          <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                          <p className="text-sm font-bold text-red-800 dark:text-red-300 leading-snug">
+                            Este rango sale de la semana seleccionada arriba. Los viajes que agregue se
+                            sumarán a la nómina con corte al{" "}
+                            <span className="underline decoration-2">{infoSemana?.fechaCorte}</span> —
+                            si tu intención es pagar la nómina de otra semana, cancela y verifica el
+                            selector "Semana del Programa" antes de continuar.
+                          </p>
+                        </div>
                       )}
                     </div>
                   )}
@@ -1063,10 +1075,13 @@ export default function Liquidaciones() {
                   sobrescribirá. Esta acción no se puede deshacer.
                 </span>
                 {rangoFueraDeSemana && (
-                  <span className="block p-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 text-xs font-semibold">
-                    Tu rango de fechas se extiende fuera de esta semana. Si querías generar la nómina de
-                    otra semana (por ejemplo la actual), cancela y selecciona la semana correcta en
-                    "Semana del Programa" antes de continuar.
+                  <span className="flex items-start gap-2.5 p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border-2 border-red-400 dark:border-red-700">
+                    <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                    <span className="text-sm font-bold text-red-800 dark:text-red-300 leading-snug">
+                      Tu rango de fechas se extiende fuera de esta semana. Si querías generar la nómina
+                      de otra semana (por ejemplo la actual), cancela y selecciona la semana correcta en
+                      "Semana del Programa" antes de continuar.
+                    </span>
                   </span>
                 )}
               </AlertDialogDescription>
