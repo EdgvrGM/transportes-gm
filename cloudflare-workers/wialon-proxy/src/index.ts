@@ -197,7 +197,7 @@ async function wialonGetHistory(eid: string, unitId: string, from: number, to: n
     timeTo: to,
     flags: 0x0000,
     flagsMask: 0xFF00,
-    loadCount: 10000,
+    loadCount: 30000,
   }, eid);
   if (data.error) throw new Error(`Wialon history error: ${data.error}`);
 

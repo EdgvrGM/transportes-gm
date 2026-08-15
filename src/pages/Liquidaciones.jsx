@@ -131,6 +131,18 @@ export default function Liquidaciones() {
   const fechaEfectivaInicio = rangoCustom.activo && rangoCustom.inicio ? rangoCustom.inicio : infoSemana?.inicioPago;
   const fechaEfectivaFin = rangoCustom.activo && rangoCustom.fin ? rangoCustom.fin : infoSemana?.finPago;
 
+  // El rango personalizado sólo cambia qué viajes se traen a calcular — el
+  // fecha_corte (identidad de la nómina y el índice único conductor+corte)
+  // sigue saliendo exclusivamente de la "Semana del Programa" seleccionada.
+  // Si el rango se sale de esa semana, es fácil pensar que se está armando
+  // la nómina de "hoy" cuando en realidad se sigue guardando bajo el corte
+  // de la semana elegida arriba (típicamente la anterior, ya pagada).
+  const rangoFueraDeSemana = !!(
+    rangoCustom.activo && infoSemana &&
+    ((rangoCustom.inicio && rangoCustom.inicio < infoSemana.inicioPago) ||
+     (rangoCustom.fin && rangoCustom.fin > infoSemana.finPago))
+  );
+
   const { data: viajesDelRango = EMPTY_ARRAY } = useQuery({
     queryKey: ["viajes_liq", fechaEfectivaInicio, fechaEfectivaFin],
     queryFn: async () => {
@@ -719,6 +731,13 @@ export default function Liquidaciones() {
                           className="h-8 w-36 text-sm rounded-lg bg-background"
                         />
                       </div>
+                      {rangoFueraDeSemana && (
+                        <p className="w-full text-[11px] font-semibold text-amber-800 dark:text-amber-300">
+                          ⚠ Este rango sale de la semana seleccionada arriba. Los viajes que agregue se sumarán
+                          a la nómina con corte al <strong>{infoSemana?.fechaCorte}</strong> — si tu intención
+                          es pagar la nómina de una semana distinta, verifica el selector "Semana del Programa".
+                        </p>
+                      )}
                     </div>
                   )}
                 </CardHeader>
@@ -1043,6 +1062,13 @@ export default function Liquidaciones() {
                   <strong>${formatCurrency(sueldoNeto)}</strong> y el PDF archivado se
                   sobrescribirá. Esta acción no se puede deshacer.
                 </span>
+                {rangoFueraDeSemana && (
+                  <span className="block p-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 text-xs font-semibold">
+                    Tu rango de fechas se extiende fuera de esta semana. Si querías generar la nómina de
+                    otra semana (por ejemplo la actual), cancela y selecciona la semana correcta en
+                    "Semana del Programa" antes de continuar.
+                  </span>
+                )}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
