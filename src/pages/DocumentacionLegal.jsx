@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/supabaseClient";
-import { differenceInDays, format, parseISO } from "date-fns";
 import {
   ShieldCheck,
   AlertTriangle,
@@ -13,6 +12,8 @@ import {
   Loader2,
   Eye,
   EyeOff,
+  Paperclip,
+  FolderOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,71 +40,31 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
+import DocumentosDialog from "@/components/legal/DocumentosDialog";
+import {
+  useDocumentosLegales,
+  contarPorEntidad,
+} from "@/components/legal/useDocumentosLegales";
+import StatusBadge from "@/components/legal/StatusBadge";
+import { getEstadoVencimiento } from "@/components/legal/vencimientos";
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+// ─── Botón de expediente ─────────────────────────────────────────────────────
 
-function getEstadoVencimiento(fechaStr) {
-  if (!fechaStr) return "sin_registro";
-  try {
-    const date = parseISO(fechaStr);
-    if (isNaN(date.getTime())) return "sin_registro";
-    const dias = differenceInDays(date, new Date());
-    if (dias < 0) return "vencido";
-    if (dias <= 30) return "por_vencer";
-    return "vigente";
-  } catch (_e) {
-    return "sin_registro";
-  }
-}
-
-function getBadgeClasses(estado) {
-  switch (estado) {
-    case "vencido":
-      return "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800";
-    case "por_vencer":
-      return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800";
-    case "vigente":
-      return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800";
-    default:
-      return "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700";
-  }
-}
-
-function getBadgeLabel(estado, fechaStr) {
-  if (estado === "sin_registro" || !fechaStr) return "Sin registro";
-  try {
-    const date = parseISO(fechaStr);
-    if (isNaN(date.getTime())) return "Sin registro";
-
-    if (estado === "vencido") {
-      const dias = Math.abs(differenceInDays(date, new Date()));
-      return `Vencido hace ${dias}d`;
-    }
-    if (estado === "por_vencer") {
-      const dias = differenceInDays(date, new Date());
-      return `Vence en ${dias}d`;
-    }
-    return format(date, "dd/MM/yyyy");
-  } catch (_e) {
-    return "Sin registro";
-  }
-}
-
-function StatusBadge({ fechaStr }) {
-  const estado = getEstadoVencimiento(fechaStr);
+// El contador hace visible de un vistazo qué unidades tienen respaldo escaneado
+// y cuáles siguen sólo con la fecha capturada a mano.
+function BotonDocumentos({ count, onClick }) {
   return (
-    <Badge
-      variant="outline"
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${getBadgeClasses(estado)}`}
+    <Button
+      variant={count ? "outline" : "ghost"}
+      size="sm"
+      onClick={onClick}
+      title="Ver documentos del expediente"
+      className={`gap-1.5 h-8 px-2.5 ${count ? "" : "text-muted-foreground"}`}
     >
-      {estado === "vencido" && <AlertTriangle className="w-3 h-3" />}
-      {estado === "por_vencer" && <Clock className="w-3 h-3" />}
-      {estado === "vigente" && <CheckCircle2 className="w-3 h-3" />}
-      {estado === "sin_registro" && <FileX className="w-3 h-3" />}
-      {getBadgeLabel(estado, fechaStr)}
-    </Badge>
+      <Paperclip className="w-3.5 h-3.5" />
+      <span className="text-xs font-semibold">{count || 0}</span>
+    </Button>
   );
 }
 
@@ -215,7 +176,7 @@ function EditDialog({ open, onClose, record, fields, tableName, idField, nameLab
 
 // ─── Summary Cards ────────────────────────────────────────────────────────────
 
-function SummaryCards({ allDocs }) {
+function SummaryCards({ allDocs, totalArchivos }) {
   const counts = useMemo(() => {
     let vencidos = 0, por_vencer = 0, vigentes = 0, sin_registro = 0;
     (allDocs || []).forEach((doc) => {
@@ -263,12 +224,24 @@ function SummaryCards({ allDocs }) {
       bg: "bg-slate-50 dark:bg-slate-800/40",
       border: "border-slate-200 dark:border-slate-700",
     },
+    {
+      label: "Documentos archivados",
+      value: totalArchivos,
+      icon: Paperclip,
+      color: "text-primary",
+      bg: "bg-primary/5",
+      border: "border-primary/20",
+      wide: true,
+    },
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
       {cards.map((c) => (
-        <Card key={c.label} className={`border ${c.border} ${c.bg}`}>
+        <Card
+          key={c.label}
+          className={`border ${c.border} ${c.bg} ${c.wide ? "col-span-2 lg:col-span-1" : ""}`}
+        >
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -293,7 +266,11 @@ const CONDUCTOR_FIELDS = [
 
 function ConductoresTab() {
   const [editRecord, setEditRecord] = useState(null);
+  const [docsRecord, setDocsRecord] = useState(null);
   const [showInactivos, setShowInactivos] = useState(false);
+
+  const { data: documentos = [] } = useDocumentosLegales();
+  const conteoDocs = useMemo(() => contarPorEntidad(documentos), [documentos]);
 
   const { data: conductores = [], isLoading } = useQuery({
     queryKey: ["Conductor"],
@@ -336,13 +313,14 @@ function ConductoresTab() {
               <TableHead className="font-bold">Conductor</TableHead>
               <TableHead className="font-bold">Licencia</TableHead>
               <TableHead className="font-bold">Apto Médico</TableHead>
+              <TableHead className="font-bold text-center">Expediente</TableHead>
               <TableHead className="w-16" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {(filtered || []).length === 0 && (
               <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                   Sin conductores registrados
                 </TableCell>
               </TableRow>
@@ -357,6 +335,12 @@ function ConductoresTab() {
                 </TableCell>
                 <TableCell><StatusBadge fechaStr={c.venc_licencia} /></TableCell>
                 <TableCell><StatusBadge fechaStr={c.venc_apto_medico} /></TableCell>
+                <TableCell className="text-center">
+                  <BotonDocumentos
+                    count={conteoDocs.get(`conductor:${c.id}`)}
+                    onClick={() => setDocsRecord(c)}
+                  />
+                </TableCell>
                 <TableCell>
                   <Button
                     variant="ghost"
@@ -384,6 +368,8 @@ function ConductoresTab() {
               { label: "Licencia", value: c.venc_licencia },
               { label: "Apto Médico", value: c.venc_apto_medico },
             ]}
+            docsCount={conteoDocs.get(`conductor:${c.id}`)}
+            onDocs={() => setDocsRecord(c)}
             onEdit={() => setEditRecord(c)}
           />
         ))}
@@ -397,6 +383,15 @@ function ConductoresTab() {
         tableName="Conductor"
         idField="id"
         nameLabel="nombre"
+      />
+
+      <DocumentosDialog
+        open={!!docsRecord}
+        onClose={() => setDocsRecord(null)}
+        entidadTipo="conductor"
+        entidad={docsRecord}
+        titulo={docsRecord?.nombre}
+        subtitulo="Conductor"
       />
     </>
   );
@@ -412,6 +407,10 @@ const CAMION_FIELDS = [
 
 function CamionesTab() {
   const [editRecord, setEditRecord] = useState(null);
+  const [docsRecord, setDocsRecord] = useState(null);
+
+  const { data: documentos = [] } = useDocumentosLegales();
+  const conteoDocs = useMemo(() => contarPorEntidad(documentos), [documentos]);
 
   const { data: camiones = [], isLoading } = useQuery({
     queryKey: ["Camion"],
@@ -438,13 +437,14 @@ function CamionesTab() {
               <TableHead className="font-bold">Físico-Mecánica</TableHead>
               <TableHead className="font-bold">Contaminantes</TableHead>
               <TableHead className="font-bold">Póliza Seguro</TableHead>
+              <TableHead className="font-bold text-center">Expediente</TableHead>
               <TableHead className="w-16" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {(camiones || []).length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                   Sin camiones registrados
                 </TableCell>
               </TableRow>
@@ -460,6 +460,12 @@ function CamionesTab() {
                 <TableCell><StatusBadge fechaStr={cam.venc_fisicomecanica} /></TableCell>
                 <TableCell><StatusBadge fechaStr={cam.venc_contaminantes} /></TableCell>
                 <TableCell><StatusBadge fechaStr={cam.venc_poliza_seguro} /></TableCell>
+                <TableCell className="text-center">
+                  <BotonDocumentos
+                    count={conteoDocs.get(`camion:${cam.id}`)}
+                    onClick={() => setDocsRecord(cam)}
+                  />
+                </TableCell>
                 <TableCell>
                   <Button
                     variant="ghost"
@@ -488,6 +494,8 @@ function CamionesTab() {
               { label: "Contaminantes", value: cam.venc_contaminantes },
               { label: "Póliza Seguro", value: cam.venc_poliza_seguro },
             ]}
+            docsCount={conteoDocs.get(`camion:${cam.id}`)}
+            onDocs={() => setDocsRecord(cam)}
             onEdit={() => setEditRecord(cam)}
           />
         ))}
@@ -502,6 +510,15 @@ function CamionesTab() {
         idField="id"
         nameLabel="nombre"
       />
+
+      <DocumentosDialog
+        open={!!docsRecord}
+        onClose={() => setDocsRecord(null)}
+        entidadTipo="camion"
+        entidad={docsRecord}
+        titulo={docsRecord?.nombre}
+        subtitulo={docsRecord?.placas || "Camión"}
+      />
     </>
   );
 }
@@ -514,6 +531,10 @@ const REMOLQUE_FIELDS = [
 
 function RemolquesTab() {
   const [editRecord, setEditRecord] = useState(null);
+  const [docsRecord, setDocsRecord] = useState(null);
+
+  const { data: documentos = [] } = useDocumentosLegales();
+  const conteoDocs = useMemo(() => contarPorEntidad(documentos), [documentos]);
 
   const { data: remolques = [], isLoading } = useQuery({
     queryKey: ["Remolque"],
@@ -539,13 +560,14 @@ function RemolquesTab() {
             <TableRow className="bg-muted/50">
               <TableHead className="font-bold">Remolque</TableHead>
               <TableHead className="font-bold">Físico-Mecánica</TableHead>
+              <TableHead className="font-bold text-center">Expediente</TableHead>
               <TableHead className="w-16" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {(remolques || []).length === 0 && (
               <TableRow>
-                <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
                   Sin remolques registrados
                 </TableCell>
               </TableRow>
@@ -559,6 +581,12 @@ function RemolquesTab() {
                   )}
                 </TableCell>
                 <TableCell><StatusBadge fechaStr={r.venc_fisicomecanica} /></TableCell>
+                <TableCell className="text-center">
+                  <BotonDocumentos
+                    count={conteoDocs.get(`remolque:${r.id}`)}
+                    onClick={() => setDocsRecord(r)}
+                  />
+                </TableCell>
                 <TableCell>
                   <Button
                     variant="ghost"
@@ -585,6 +613,8 @@ function RemolquesTab() {
             fields={[
               { label: "Físico-Mecánica", value: r.venc_fisicomecanica },
             ]}
+            docsCount={conteoDocs.get(`remolque:${r.id}`)}
+            onDocs={() => setDocsRecord(r)}
             onEdit={() => setEditRecord(r)}
           />
         ))}
@@ -599,13 +629,22 @@ function RemolquesTab() {
         idField="id"
         nameLabel="placas"
       />
+
+      <DocumentosDialog
+        open={!!docsRecord}
+        onClose={() => setDocsRecord(null)}
+        entidadTipo="remolque"
+        entidad={docsRecord}
+        titulo={docsRecord?.placas}
+        subtitulo={docsRecord?.tipo || "Remolque"}
+      />
     </>
   );
 }
 
 // ─── Shared sub-components ────────────────────────────────────────────────────
 
-function MobileDocCard({ title, subtitle, inactive, fields, onEdit }) {
+function MobileDocCard({ title, subtitle, inactive, fields, docsCount, onDocs, onEdit }) {
   return (
     <Card className={`border border-border ${inactive ? "opacity-50" : ""}`}>
       <CardContent className="p-4">
@@ -632,6 +671,18 @@ function MobileDocCard({ title, subtitle, inactive, fields, onEdit }) {
             </div>
           ))}
         </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onDocs}
+          className="w-full mt-3 gap-2 justify-center"
+        >
+          <FolderOpen className="w-3.5 h-3.5" />
+          {docsCount
+            ? `Expediente (${docsCount} doc${docsCount === 1 ? "" : "s"})`
+            : "Subir documentos"}
+        </Button>
       </CardContent>
     </Card>
   );
@@ -688,6 +739,8 @@ export default function DocumentacionLegal() {
     },
   });
 
+  const { data: documentos = [] } = useDocumentosLegales();
+
   const allDocs = useMemo(() => {
     const docs = [];
     (conductores || []).forEach((c) => docs.push({ fechas: [c.venc_licencia, c.venc_apto_medico] }));
@@ -706,13 +759,13 @@ export default function DocumentacionLegal() {
         <div>
           <h1 className="text-2xl font-black text-foreground">Documentación Legal</h1>
           <p className="text-sm text-muted-foreground">
-            Seguimiento de vencimientos de conductores y vehículos
+            Vencimientos y expedientes escaneados de conductores y vehículos
           </p>
         </div>
       </div>
 
       {/* Summary cards */}
-      <SummaryCards allDocs={allDocs} />
+      <SummaryCards allDocs={allDocs} totalArchivos={documentos.length} />
 
       {/* Tabs */}
       <Tabs defaultValue="conductores">

@@ -1,16 +1,16 @@
-# Graph Report - transportes-gm  (2026-07-07)
+# Graph Report - transportes-gm  (2026-08-24)
 
 ## Corpus Check
-- 173 files · ~380,198 words
+- 183 files · ~388,782 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2023 nodes · 2059 edges · 141 communities (102 shown, 39 thin omitted)
-- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 71 edges (avg confidence: 0.8)
+- 2080 nodes · 2178 edges · 138 communities (100 shown, 38 thin omitted)
+- Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 88 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `388749cb`
+- Built from commit: `9f9c1e59`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -123,17 +123,14 @@
 - [[_COMMUNITY_Community 124|Community 124]]
 - [[_COMMUNITY_Community 125|Community 125]]
 - [[_COMMUNITY_Community 135|Community 135]]
-- [[_COMMUNITY_Community 136|Community 136]]
-- [[_COMMUNITY_Community 137|Community 137]]
-- [[_COMMUNITY_Community 138|Community 138]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `cn()` - 27 edges
 2. `fetch()` - 20 edges
 3. `compilerOptions` - 16 edges
-4. `UI/UX Pro Max - Design Intelligence` - 13 edges
-5. `str` - 12 edges
-6. `useToast()` - 12 edges
+4. `useToast()` - 15 edges
+5. `UI/UX Pro Max - Design Intelligence` - 13 edges
+6. `str` - 12 edges
 7. `DesignSystemGenerator` - 11 edges
 8. `generate_design_system()` - 9 edges
 9. `wialonFetch()` - 9 edges
@@ -151,7 +148,7 @@
 - `wialonLogout()` --calls--> `fetch()`  [INFERRED]
   supabase/functions/wialon-proxy/index.ts → cloudflare-workers/wialon-proxy/src/index.ts
 
-## Communities (141 total, 39 thin omitted)
+## Communities (138 total, 38 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.00
@@ -159,7 +156,7 @@ Nodes (964): AbortController, AbortSignal, Ai, Ai_Cf_Ai4Bharat_Indictrans2_En_In
 
 ### Community 1 - "Community 1"
 Cohesion: 0.03
-Nodes (62): dependencies, @base44/sdk, class-variance-authority, clsx, cmdk, date-fns, embla-carousel-react, framer-motion (+54 more)
+Nodes (63): dependencies, @base44/sdk, class-variance-authority, clsx, cmdk, date-fns, embla-carousel-react, exceljs (+55 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.06
@@ -184,10 +181,6 @@ Nodes (17): devDependencies, autoprefixer, eslint, @eslint/js, eslint-plugin-rea
 ### Community 7 - "Community 7"
 Cohesion: 0.09
 Nodes (10): DefaultIcon, endIcon, excesoIcon, FILTROS_RUTA, MapaGPS(), startIcon, TRIP_COLORS, createUnitIcon() (+2 more)
-
-### Community 8 - "Community 8"
-Cohesion: 0.10
-Nodes (10): Clientes(), EditDialog(), FuelCamiones(), FuelConductores(), FuelProgramaCargas(), FuelViajes(), EMPTY_ARRAY, Liquidaciones() (+2 more)
 
 ### Community 9 - "Community 9"
 Cohesion: 0.11
@@ -214,12 +207,16 @@ Cohesion: 0.12
 Nodes (15): devDependencies, @cloudflare/vitest-pool-workers, @types/node, typescript, vitest, wrangler, name, private (+7 more)
 
 ### Community 15 - "Community 15"
-Cohesion: 0.16
-Nodes (7): CAMION_FIELDS, CONDUCTOR_FIELDS, getBadgeClasses(), getBadgeLabel(), getEstadoVencimiento(), REMOLQUE_FIELDS, StatusBadge()
+Cohesion: 0.08
+Nodes (36): esImagen(), esPDF(), formatoTamano(), MIME_ACEPTADOS, nombreSeguro(), TABLA_ENTIDAD, tipoDoc(), TIPOS_DOC (+28 more)
+
+### Community 16 - "Community 16"
+Cohesion: 0.13
+Nodes (12): formatCurrency(), DialogDesglose(), EMPTY_ARRAY, esLegacy(), fechaLegible(), HistorialLiquidaciones(), Clientes(), FuelCamiones() (+4 more)
 
 ### Community 17 - "Community 17"
-Cohesion: 0.20
-Nodes (9): addDays(), ControlVacios(), DIAS_SEMANA, ESTATUS_VACIOS, FORM_VACIO, getEstatus(), getLunes(), localDateStr() (+1 more)
+Cohesion: 0.18
+Nodes (10): addDays(), ControlVacios(), DIAS_SEMANA, ESTATUS_VACIOS, FORM_VACIO, getEstatus(), getLunes(), localDateStr() (+2 more)
 
 ### Community 18 - "Community 18"
 Cohesion: 0.18
@@ -242,8 +239,8 @@ Cohesion: 0.17
 Nodes (12): code:bash (python3 skills/ui-ux-pro-max/scripts/search.py "<keyword>" -), code:bash (python3 skills/ui-ux-pro-max/scripts/search.py "<product_typ), code:bash (python3 skills/ui-ux-pro-max/scripts/search.py "beauty spa w), code:bash (python3 skills/ui-ux-pro-max/scripts/search.py "<query>" --d), code:bash (python3 skills/ui-ux-pro-max/scripts/search.py "<query>" --d), code:bash (python3 skills/ui-ux-pro-max/scripts/search.py "<keyword>" -), How to Use This Skill, Step 1: Analyze User Requirements (+4 more)
 
 ### Community 23 - "Community 23"
-Cohesion: 0.22
-Nodes (5): DIAS_SEMANA, PLANTILLA_VACIA, FuelRemolques(), SYSTEM_PAGES, TrailerIcon()
+Cohesion: 0.20
+Nodes (6): DIAS_NUEVA_SEMANA, DIAS_SEMANA, PLANTILLA_VACIA, FuelRemolques(), SYSTEM_PAGES, TrailerIcon()
 
 ### Community 24 - "Community 24"
 Cohesion: 0.25
@@ -278,8 +275,8 @@ Cohesion: 0.20
 Nodes (9): DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut(), DropdownMenuSubContent (+1 more)
 
 ### Community 32 - "Community 32"
-Cohesion: 0.28
-Nodes (4): DashboardMantenimiento(), ESTADOS, formatFecha(), formatMXN()
+Cohesion: 0.06
+Nodes (21): CENTRO_MX, estaEnRalenti(), DURACIONES_SHARE, HistorialGPS(), toDatetimeLocal(), today, yesterday, fmtFecha() (+13 more)
 
 ### Community 33 - "Community 33"
 Cohesion: 0.22
@@ -354,12 +351,8 @@ Cohesion: 0.29
 Nodes (6): DialogContent, DialogDescription, DialogFooter(), DialogHeader(), DialogOverlay, DialogTitle
 
 ### Community 53 - "Community 53"
-Cohesion: 0.47
-Nodes (4): fmtFecha(), generarDatosMock(), REPORTES, ReportesGPS()
-
-### Community 54 - "Community 54"
-Cohesion: 0.20
-Nodes (9): name, private, scripts, build, dev, lint, preview, type (+1 more)
+Cohesion: 0.24
+Nodes (11): diasDeSemana(), nombreDia(), NOMBRES_DIA, numeroSemana(), offsetDia(), plantillaVacia(), remapearProgramacion(), toDate() (+3 more)
 
 ### Community 55 - "Community 55"
 Cohesion: 0.33
@@ -434,32 +427,28 @@ Cohesion: 0.50
 Nodes (3): ToggleGroup, ToggleGroupContext, ToggleGroupItem
 
 ### Community 135 - "Community 135"
-Cohesion: 0.25
-Nodes (5): DURACIONES_SHARE, HistorialGPS(), toDatetimeLocal(), today, yesterday
-
-### Community 136 - "Community 136"
-Cohesion: 0.33
-Nodes (4): CENTRO_MX, estaEnRalenti(), tiempoDesde(), TooltipUnidad()
+Cohesion: 0.20
+Nodes (9): name, private, scripts, build, dev, lint, preview, type (+1 more)
 
 ## Knowledge Gaps
-- **1475 isolated node(s):** `C:\Users\Joker\AppData\Local\Programs\Python\Python314\python.exe`, `$schema`, `style`, `rsc`, `tsx` (+1470 more)
+- **1481 isolated node(s):** `C:\Users\Joker\AppData\Local\Programs\Python\Python314\python.exe`, `$schema`, `style`, `rsc`, `tsx` (+1476 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **39 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **38 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `wialonFetch()` connect `Community 4` to `Community 3`?**
   _High betweenness centrality (0.008) - this node is a cross-community bridge._
-- **Why does `fetch()` connect `Community 3` to `Community 4`?**
-  _High betweenness centrality (0.005) - this node is a cross-community bridge._
+- **Why does `useToast()` connect `Community 16` to `Community 8`, `Community 15`, `Community 17`, `Community 53`, `Community 54`, `Community 23`, `Community 24`?**
+  _High betweenness centrality (0.007) - this node is a cross-community bridge._
 - **Are the 26 inferred relationships involving `cn()` (e.g. with `LiquidButton()` and `MagneticButton()`) actually correct?**
   _`cn()` has 26 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 5 inferred relationships involving `fetch()` (e.g. with `wialonFetch()` and `wialonGetHistory()`) actually correct?**
   _`fetch()` has 5 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `C:\Users\Joker\AppData\Local\Programs\Python\Python314\python.exe`, `$schema`, `style` to the rest of the system?**
-  _1501 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _1507 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
   _Cohesion score 0.002072538860103627 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.03225806451612903 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.031746031746031744 - nodes in this community are weakly interconnected._

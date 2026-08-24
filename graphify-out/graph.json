@@ -324,7 +324,7 @@
       "source_file": "package.json",
       "source_location": "L1",
       "id": "package_json",
-      "community": 54,
+      "community": 135,
       "norm_label": "package.json"
     },
     {
@@ -333,7 +333,7 @@
       "source_file": "package.json",
       "source_location": "L2",
       "id": "transportes_gm_package_name",
-      "community": 54,
+      "community": 135,
       "norm_label": "name"
     },
     {
@@ -342,7 +342,7 @@
       "source_file": "package.json",
       "source_location": "L3",
       "id": "transportes_gm_package_private",
-      "community": 54,
+      "community": 135,
       "norm_label": "private"
     },
     {
@@ -351,7 +351,7 @@
       "source_file": "package.json",
       "source_location": "L4",
       "id": "transportes_gm_package_version",
-      "community": 54,
+      "community": 135,
       "norm_label": "version"
     },
     {
@@ -360,7 +360,7 @@
       "source_file": "package.json",
       "source_location": "L5",
       "id": "transportes_gm_package_type",
-      "community": 54,
+      "community": 135,
       "norm_label": "type"
     },
     {
@@ -369,7 +369,7 @@
       "source_file": "package.json",
       "source_location": "L6",
       "id": "transportes_gm_package_scripts",
-      "community": 54,
+      "community": 135,
       "norm_label": "scripts"
     },
     {
@@ -378,7 +378,7 @@
       "source_file": "package.json",
       "source_location": "L7",
       "id": "transportes_gm_package_scripts_dev",
-      "community": 54,
+      "community": 135,
       "norm_label": "dev"
     },
     {
@@ -387,7 +387,7 @@
       "source_file": "package.json",
       "source_location": "L8",
       "id": "transportes_gm_package_scripts_build",
-      "community": 54,
+      "community": 135,
       "norm_label": "build"
     },
     {
@@ -396,7 +396,7 @@
       "source_file": "package.json",
       "source_location": "L9",
       "id": "transportes_gm_package_scripts_lint",
-      "community": 54,
+      "community": 135,
       "norm_label": "lint"
     },
     {
@@ -405,7 +405,7 @@
       "source_file": "package.json",
       "source_location": "L10",
       "id": "transportes_gm_package_scripts_preview",
-      "community": 54,
+      "community": 135,
       "norm_label": "preview"
     },
     {
@@ -760,10 +760,19 @@
       "norm_label": "embla-carousel-react"
     },
     {
-      "label": "framer-motion",
+      "label": "exceljs",
       "file_type": "code",
       "source_file": "package.json",
       "source_location": "L51",
+      "id": "transportes_gm_package_dependencies_exceljs",
+      "community": 1,
+      "norm_label": "exceljs"
+    },
+    {
+      "label": "framer-motion",
+      "file_type": "code",
+      "source_file": "package.json",
+      "source_location": "L52",
       "id": "transportes_gm_package_dependencies_framer_motion",
       "community": 1,
       "norm_label": "framer-motion"
@@ -772,7 +781,7 @@
       "label": "gsap",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L52",
+      "source_location": "L53",
       "id": "transportes_gm_package_dependencies_gsap",
       "community": 1,
       "norm_label": "gsap"
@@ -781,7 +790,7 @@
       "label": "input-otp",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L53",
+      "source_location": "L54",
       "id": "transportes_gm_package_dependencies_input_otp",
       "community": 1,
       "norm_label": "input-otp"
@@ -790,7 +799,7 @@
       "label": "jspdf",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L54",
+      "source_location": "L55",
       "id": "transportes_gm_package_dependencies_jspdf",
       "community": 1,
       "norm_label": "jspdf"
@@ -799,7 +808,7 @@
       "label": "jspdf-autotable",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L55",
+      "source_location": "L56",
       "id": "transportes_gm_package_dependencies_jspdf_autotable",
       "community": 1,
       "norm_label": "jspdf-autotable"
@@ -808,7 +817,7 @@
       "label": "leaflet",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L56",
+      "source_location": "L57",
       "id": "transportes_gm_package_dependencies_leaflet",
       "community": 1,
       "norm_label": "leaflet"
@@ -817,7 +826,7 @@
       "label": "lucide-react",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L57",
+      "source_location": "L58",
       "id": "transportes_gm_package_dependencies_lucide_react",
       "community": 1,
       "norm_label": "lucide-react"
@@ -826,7 +835,7 @@
       "label": "next-themes",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L58",
+      "source_location": "L59",
       "id": "transportes_gm_package_dependencies_next_themes",
       "community": 1,
       "norm_label": "next-themes"
@@ -835,7 +844,7 @@
       "label": "ogl",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L59",
+      "source_location": "L60",
       "id": "transportes_gm_package_dependencies_ogl",
       "community": 1,
       "norm_label": "ogl"
@@ -844,7 +853,7 @@
       "label": "react",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L60",
+      "source_location": "L61",
       "id": "transportes_gm_package_dependencies_react",
       "community": 1,
       "norm_label": "react"
@@ -853,7 +862,7 @@
       "label": "react-day-picker",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L61",
+      "source_location": "L62",
       "id": "transportes_gm_package_dependencies_react_day_picker",
       "community": 1,
       "norm_label": "react-day-picker"
@@ -862,7 +871,7 @@
       "label": "react-dom",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L62",
+      "source_location": "L63",
       "id": "transportes_gm_package_dependencies_react_dom",
       "community": 1,
       "norm_label": "react-dom"
@@ -871,7 +880,7 @@
       "label": "react-hook-form",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L63",
+      "source_location": "L64",
       "id": "transportes_gm_package_dependencies_react_hook_form",
       "community": 1,
       "norm_label": "react-hook-form"
@@ -880,7 +889,7 @@
       "label": "react-leaflet",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L64",
+      "source_location": "L65",
       "id": "transportes_gm_package_dependencies_react_leaflet",
       "community": 1,
       "norm_label": "react-leaflet"
@@ -889,7 +898,7 @@
       "label": "react-resizable-panels",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L65",
+      "source_location": "L66",
       "id": "transportes_gm_package_dependencies_react_resizable_panels",
       "community": 1,
       "norm_label": "react-resizable-panels"
@@ -898,7 +907,7 @@
       "label": "react-router-dom",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L66",
+      "source_location": "L67",
       "id": "transportes_gm_package_dependencies_react_router_dom",
       "community": 1,
       "norm_label": "react-router-dom"
@@ -907,7 +916,7 @@
       "label": "recharts",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L67",
+      "source_location": "L68",
       "id": "transportes_gm_package_dependencies_recharts",
       "community": 1,
       "norm_label": "recharts"
@@ -916,7 +925,7 @@
       "label": "sonner",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L68",
+      "source_location": "L69",
       "id": "transportes_gm_package_dependencies_sonner",
       "community": 1,
       "norm_label": "sonner"
@@ -925,7 +934,7 @@
       "label": "tailwind-merge",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L69",
+      "source_location": "L70",
       "id": "transportes_gm_package_dependencies_tailwind_merge",
       "community": 1,
       "norm_label": "tailwind-merge"
@@ -934,7 +943,7 @@
       "label": "tailwindcss-animate",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L70",
+      "source_location": "L71",
       "id": "transportes_gm_package_dependencies_tailwindcss_animate",
       "community": 1,
       "norm_label": "tailwindcss-animate"
@@ -943,7 +952,7 @@
       "label": "three",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L71",
+      "source_location": "L72",
       "id": "transportes_gm_package_dependencies_three",
       "community": 1,
       "norm_label": "three"
@@ -952,7 +961,7 @@
       "label": "vaul",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L72",
+      "source_location": "L73",
       "id": "transportes_gm_package_dependencies_vaul",
       "community": 1,
       "norm_label": "vaul"
@@ -961,7 +970,7 @@
       "label": "zod",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L73",
+      "source_location": "L74",
       "id": "transportes_gm_package_dependencies_zod",
       "community": 1,
       "norm_label": "zod"
@@ -970,7 +979,7 @@
       "label": "devDependencies",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L75",
+      "source_location": "L76",
       "id": "transportes_gm_package_devdependencies",
       "community": 6,
       "norm_label": "devdependencies"
@@ -979,7 +988,7 @@
       "label": "@eslint/js",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L76",
+      "source_location": "L77",
       "id": "transportes_gm_package_devdependencies_eslint_js",
       "community": 6,
       "norm_label": "@eslint/js"
@@ -988,7 +997,7 @@
       "label": "@flydotio/dockerfile",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L77",
+      "source_location": "L78",
       "id": "transportes_gm_package_devdependencies_flydotio_dockerfile",
       "community": 6,
       "norm_label": "@flydotio/dockerfile"
@@ -997,7 +1006,7 @@
       "label": "@types/node",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L78",
+      "source_location": "L79",
       "id": "transportes_gm_package_devdependencies_types_node",
       "community": 6,
       "norm_label": "@types/node"
@@ -1006,7 +1015,7 @@
       "label": "@types/react",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L79",
+      "source_location": "L80",
       "id": "transportes_gm_package_devdependencies_types_react",
       "community": 6,
       "norm_label": "@types/react"
@@ -1015,7 +1024,7 @@
       "label": "@types/react-dom",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L80",
+      "source_location": "L81",
       "id": "transportes_gm_package_devdependencies_types_react_dom",
       "community": 6,
       "norm_label": "@types/react-dom"
@@ -1024,7 +1033,7 @@
       "label": "@vitejs/plugin-react",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L81",
+      "source_location": "L82",
       "id": "transportes_gm_package_devdependencies_vitejs_plugin_react",
       "community": 6,
       "norm_label": "@vitejs/plugin-react"
@@ -1033,7 +1042,7 @@
       "label": "autoprefixer",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L82",
+      "source_location": "L83",
       "id": "transportes_gm_package_devdependencies_autoprefixer",
       "community": 6,
       "norm_label": "autoprefixer"
@@ -1042,7 +1051,7 @@
       "label": "eslint",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L83",
+      "source_location": "L84",
       "id": "transportes_gm_package_devdependencies_eslint",
       "community": 6,
       "norm_label": "eslint"
@@ -1051,7 +1060,7 @@
       "label": "eslint-plugin-react",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L84",
+      "source_location": "L85",
       "id": "transportes_gm_package_devdependencies_eslint_plugin_react",
       "community": 6,
       "norm_label": "eslint-plugin-react"
@@ -1060,7 +1069,7 @@
       "label": "eslint-plugin-react-hooks",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L85",
+      "source_location": "L86",
       "id": "transportes_gm_package_devdependencies_eslint_plugin_react_hooks",
       "community": 6,
       "norm_label": "eslint-plugin-react-hooks"
@@ -1069,7 +1078,7 @@
       "label": "eslint-plugin-react-refresh",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L86",
+      "source_location": "L87",
       "id": "transportes_gm_package_devdependencies_eslint_plugin_react_refresh",
       "community": 6,
       "norm_label": "eslint-plugin-react-refresh"
@@ -1078,7 +1087,7 @@
       "label": "globals",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L87",
+      "source_location": "L88",
       "id": "transportes_gm_package_devdependencies_globals",
       "community": 6,
       "norm_label": "globals"
@@ -1087,7 +1096,7 @@
       "label": "postcss",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L88",
+      "source_location": "L89",
       "id": "transportes_gm_package_devdependencies_postcss",
       "community": 6,
       "norm_label": "postcss"
@@ -1096,7 +1105,7 @@
       "label": "tailwindcss",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L89",
+      "source_location": "L90",
       "id": "transportes_gm_package_devdependencies_tailwindcss",
       "community": 6,
       "norm_label": "tailwindcss"
@@ -1105,7 +1114,7 @@
       "label": "vite",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L90",
+      "source_location": "L91",
       "id": "transportes_gm_package_devdependencies_vite",
       "community": 6,
       "norm_label": "vite"
@@ -1114,7 +1123,7 @@
       "label": "vite-plugin-pwa",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L91",
+      "source_location": "L92",
       "id": "transportes_gm_package_devdependencies_vite_plugin_pwa",
       "community": 6,
       "norm_label": "vite-plugin-pwa"
@@ -11596,15 +11605,6 @@
       "norm_label": "colacarga.jsx"
     },
     {
-      "label": "DIAS_SEMANA",
-      "file_type": "code",
-      "source_file": "src/components/fuel/ColaCarga.jsx",
-      "source_location": "L11",
-      "id": "fuel_colacarga_dias_semana",
-      "community": 74,
-      "norm_label": "dias_semana"
-    },
-    {
       "label": "PendingCard()",
       "file_type": "code",
       "source_file": "src/components/fuel/ColaCarga.jsx",
@@ -11889,7 +11889,7 @@
       "source_file": "src/components/gps/constants.js",
       "source_location": "L1",
       "id": "src_components_gps_constants_js",
-      "community": 136,
+      "community": 32,
       "norm_label": "constants.js"
     },
     {
@@ -11898,7 +11898,7 @@
       "source_file": "src/components/gps/constants.js",
       "source_location": "L19",
       "id": "gps_constants_estaenralenti",
-      "community": 136,
+      "community": 32,
       "norm_label": "estaenralenti()"
     },
     {
@@ -11907,7 +11907,7 @@
       "source_file": "src/components/gps/constants.js",
       "source_location": "L26",
       "id": "gps_constants_centro_mx",
-      "community": 136,
+      "community": 32,
       "norm_label": "centro_mx"
     },
     {
@@ -11961,7 +11961,7 @@
       "source_file": "src/components/gps/HistorialGPS.jsx",
       "source_location": "L1",
       "id": "src_components_gps_historialgps_jsx",
-      "community": 135,
+      "community": 32,
       "norm_label": "historialgps.jsx"
     },
     {
@@ -11970,7 +11970,7 @@
       "source_file": "src/components/gps/HistorialGPS.jsx",
       "source_location": "L14",
       "id": "gps_historialgps_duraciones_share",
-      "community": 135,
+      "community": 32,
       "norm_label": "duraciones_share"
     },
     {
@@ -11979,7 +11979,7 @@
       "source_file": "src/components/gps/HistorialGPS.jsx",
       "source_location": "L22",
       "id": "gps_historialgps_todatetimelocal",
-      "community": 135,
+      "community": 32,
       "norm_label": "todatetimelocal()"
     },
     {
@@ -11997,7 +11997,7 @@
       "source_file": "src/components/gps/HistorialGPS.jsx",
       "source_location": "L36",
       "id": "gps_historialgps_fetchunidades",
-      "community": 135,
+      "community": 32,
       "norm_label": "fetchunidades()"
     },
     {
@@ -12006,7 +12006,7 @@
       "source_file": "src/components/gps/HistorialGPS.jsx",
       "source_location": "L45",
       "id": "gps_historialgps_haversinekm",
-      "community": 135,
+      "community": 32,
       "norm_label": "haversinekm()"
     },
     {
@@ -12015,7 +12015,7 @@
       "source_file": "src/components/gps/HistorialGPS.jsx",
       "source_location": "L57",
       "id": "gps_historialgps_historialgps",
-      "community": 135,
+      "community": 32,
       "norm_label": "historialgps()"
     },
     {
@@ -12294,7 +12294,7 @@
       "source_file": "src/components/gps/ReportesGPS.jsx",
       "source_location": "L1",
       "id": "src_components_gps_reportesgps_jsx",
-      "community": 53,
+      "community": 32,
       "norm_label": "reportesgps.jsx"
     },
     {
@@ -12303,7 +12303,7 @@
       "source_file": "src/components/gps/ReportesGPS.jsx",
       "source_location": "L9",
       "id": "gps_reportesgps_fmtduracion",
-      "community": 53,
+      "community": 32,
       "norm_label": "fmtduracion()"
     },
     {
@@ -12312,7 +12312,7 @@
       "source_file": "src/components/gps/ReportesGPS.jsx",
       "source_location": "L14",
       "id": "gps_reportesgps_fmtfecha",
-      "community": 53,
+      "community": 32,
       "norm_label": "fmtfecha()"
     },
     {
@@ -12321,7 +12321,7 @@
       "source_file": "src/components/gps/ReportesGPS.jsx",
       "source_location": "L20",
       "id": "gps_reportesgps_generardatosmock",
-      "community": 53,
+      "community": 32,
       "norm_label": "generardatosmock()"
     },
     {
@@ -12330,7 +12330,7 @@
       "source_file": "src/components/gps/ReportesGPS.jsx",
       "source_location": "L46",
       "id": "gps_reportesgps_reportes",
-      "community": 53,
+      "community": 32,
       "norm_label": "reportes"
     },
     {
@@ -12339,7 +12339,7 @@
       "source_file": "src/components/gps/ReportesGPS.jsx",
       "source_location": "L67",
       "id": "gps_reportesgps_reportesgps",
-      "community": 53,
+      "community": 32,
       "norm_label": "reportesgps()"
     },
     {
@@ -12348,7 +12348,7 @@
       "source_file": "src/components/gps/TooltipUnidad.jsx",
       "source_location": "L1",
       "id": "src_components_gps_tooltipunidad_jsx",
-      "community": 136,
+      "community": 32,
       "norm_label": "tooltipunidad.jsx"
     },
     {
@@ -12357,7 +12357,7 @@
       "source_file": "src/components/gps/TooltipUnidad.jsx",
       "source_location": "L11",
       "id": "gps_tooltipunidad_tiempodesde",
-      "community": 136,
+      "community": 32,
       "norm_label": "tiempodesde()"
     },
     {
@@ -12366,7 +12366,7 @@
       "source_file": "src/components/gps/TooltipUnidad.jsx",
       "source_location": "L23",
       "id": "gps_tooltipunidad_tooltipunidad",
-      "community": 136,
+      "community": 32,
       "norm_label": "tooltipunidad()"
     },
     {
@@ -12375,7 +12375,7 @@
       "source_file": "src/components/gps/TooltipUnidad.jsx",
       "source_location": "L210",
       "id": "gps_tooltipunidad_estadomotor",
-      "community": 136,
+      "community": 32,
       "norm_label": "estadomotor()"
     },
     {
@@ -12395,6 +12395,366 @@
       "id": "gps_uniticonhelper_createuniticon",
       "community": 7,
       "norm_label": "createuniticon()"
+    },
+    {
+      "label": "documentosConfig.js",
+      "file_type": "code",
+      "source_file": "src/components/legal/documentosConfig.js",
+      "source_location": "L1",
+      "id": "src_components_legal_documentosconfig_js",
+      "community": 15,
+      "norm_label": "documentosconfig.js"
+    },
+    {
+      "label": "MIME_ACEPTADOS",
+      "file_type": "code",
+      "source_file": "src/components/legal/documentosConfig.js",
+      "source_location": "L18",
+      "id": "legal_documentosconfig_mime_aceptados",
+      "community": 15,
+      "norm_label": "mime_aceptados"
+    },
+    {
+      "label": "TIPOS_DOC",
+      "file_type": "code",
+      "source_file": "src/components/legal/documentosConfig.js",
+      "source_location": "L32",
+      "id": "legal_documentosconfig_tipos_doc",
+      "community": 15,
+      "norm_label": "tipos_doc"
+    },
+    {
+      "label": "TABLA_ENTIDAD",
+      "file_type": "code",
+      "source_file": "src/components/legal/documentosConfig.js",
+      "source_location": "L57",
+      "id": "legal_documentosconfig_tabla_entidad",
+      "community": 15,
+      "norm_label": "tabla_entidad"
+    },
+    {
+      "label": "tipoDoc()",
+      "file_type": "code",
+      "source_file": "src/components/legal/documentosConfig.js",
+      "source_location": "L63",
+      "id": "legal_documentosconfig_tipodoc",
+      "community": 15,
+      "norm_label": "tipodoc()"
+    },
+    {
+      "label": "tituloDoc()",
+      "file_type": "code",
+      "source_file": "src/components/legal/documentosConfig.js",
+      "source_location": "L68",
+      "id": "legal_documentosconfig_titulodoc",
+      "community": 15,
+      "norm_label": "titulodoc()"
+    },
+    {
+      "label": "esImagen()",
+      "file_type": "code",
+      "source_file": "src/components/legal/documentosConfig.js",
+      "source_location": "L74",
+      "id": "legal_documentosconfig_esimagen",
+      "community": 15,
+      "norm_label": "esimagen()"
+    },
+    {
+      "label": "esPDF()",
+      "file_type": "code",
+      "source_file": "src/components/legal/documentosConfig.js",
+      "source_location": "L78",
+      "id": "legal_documentosconfig_espdf",
+      "community": 15,
+      "norm_label": "espdf()"
+    },
+    {
+      "label": "formatoTamano()",
+      "file_type": "code",
+      "source_file": "src/components/legal/documentosConfig.js",
+      "source_location": "L82",
+      "id": "legal_documentosconfig_formatotamano",
+      "community": 15,
+      "norm_label": "formatotamano()"
+    },
+    {
+      "label": "nombreSeguro()",
+      "file_type": "code",
+      "source_file": "src/components/legal/documentosConfig.js",
+      "source_location": "L91",
+      "id": "legal_documentosconfig_nombreseguro",
+      "community": 15,
+      "norm_label": "nombreseguro()"
+    },
+    {
+      "label": "validarArchivo()",
+      "file_type": "code",
+      "source_file": "src/components/legal/documentosConfig.js",
+      "source_location": "L100",
+      "id": "legal_documentosconfig_validararchivo",
+      "community": 15,
+      "norm_label": "validararchivo()"
+    },
+    {
+      "label": "DocumentosDialog.jsx",
+      "file_type": "code",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L1",
+      "id": "src_components_legal_documentosdialog_jsx",
+      "community": 15,
+      "norm_label": "documentosdialog.jsx"
+    },
+    {
+      "label": "DocumentosDialog()",
+      "file_type": "code",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L58",
+      "id": "legal_documentosdialog_documentosdialog",
+      "community": 15,
+      "norm_label": "documentosdialog()"
+    },
+    {
+      "label": "ApartadoDocumento()",
+      "file_type": "code",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L399",
+      "id": "legal_documentosdialog_apartadodocumento",
+      "community": 15,
+      "norm_label": "apartadodocumento()"
+    },
+    {
+      "label": "PanelSubida()",
+      "file_type": "code",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L525",
+      "id": "legal_documentosdialog_panelsubida",
+      "community": 15,
+      "norm_label": "panelsubida()"
+    },
+    {
+      "label": "FilaDocumento()",
+      "file_type": "code",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L608",
+      "id": "legal_documentosdialog_filadocumento",
+      "community": 15,
+      "norm_label": "filadocumento()"
+    },
+    {
+      "label": "StatusBadge.jsx",
+      "file_type": "code",
+      "source_file": "src/components/legal/StatusBadge.jsx",
+      "source_location": "L1",
+      "id": "src_components_legal_statusbadge_jsx",
+      "community": 15,
+      "norm_label": "statusbadge.jsx"
+    },
+    {
+      "label": "ICONO_ESTADO",
+      "file_type": "code",
+      "source_file": "src/components/legal/StatusBadge.jsx",
+      "source_location": "L5",
+      "id": "legal_statusbadge_icono_estado",
+      "community": 15,
+      "norm_label": "icono_estado"
+    },
+    {
+      "label": "StatusBadge()",
+      "file_type": "code",
+      "source_file": "src/components/legal/StatusBadge.jsx",
+      "source_location": "L12",
+      "id": "legal_statusbadge_statusbadge",
+      "community": 15,
+      "norm_label": "statusbadge()"
+    },
+    {
+      "label": "storageDocs.js",
+      "file_type": "code",
+      "source_file": "src/components/legal/storageDocs.js",
+      "source_location": "L1",
+      "id": "src_components_legal_storagedocs_js",
+      "community": 15,
+      "norm_label": "storagedocs.js"
+    },
+    {
+      "label": "urlFirmada()",
+      "file_type": "code",
+      "source_file": "src/components/legal/storageDocs.js",
+      "source_location": "L7",
+      "id": "legal_storagedocs_urlfirmada",
+      "community": 15,
+      "norm_label": "urlfirmada()"
+    },
+    {
+      "label": "urlsFirmadas()",
+      "file_type": "code",
+      "source_file": "src/components/legal/storageDocs.js",
+      "source_location": "L14",
+      "id": "legal_storagedocs_urlsfirmadas",
+      "community": 15,
+      "norm_label": "urlsfirmadas()"
+    },
+    {
+      "label": "descargarDocumento()",
+      "file_type": "code",
+      "source_file": "src/components/legal/storageDocs.js",
+      "source_location": "L30",
+      "id": "legal_storagedocs_descargardocumento",
+      "community": 15,
+      "norm_label": "descargardocumento()"
+    },
+    {
+      "label": "useDocumentosLegales.js",
+      "file_type": "code",
+      "source_file": "src/components/legal/useDocumentosLegales.js",
+      "source_location": "L1",
+      "id": "src_components_legal_usedocumentoslegales_js",
+      "community": 15,
+      "norm_label": "usedocumentoslegales.js"
+    },
+    {
+      "label": "QK_DOCS",
+      "file_type": "code",
+      "source_file": "src/components/legal/useDocumentosLegales.js",
+      "source_location": "L4",
+      "id": "legal_usedocumentoslegales_qk_docs",
+      "community": 15,
+      "norm_label": "qk_docs"
+    },
+    {
+      "label": "useDocumentosLegales()",
+      "file_type": "code",
+      "source_file": "src/components/legal/useDocumentosLegales.js",
+      "source_location": "L9",
+      "id": "legal_usedocumentoslegales_usedocumentoslegales",
+      "community": 15,
+      "norm_label": "usedocumentoslegales()"
+    },
+    {
+      "label": "contarPorEntidad()",
+      "file_type": "code",
+      "source_file": "src/components/legal/useDocumentosLegales.js",
+      "source_location": "L26",
+      "id": "legal_usedocumentoslegales_contarporentidad",
+      "community": 15,
+      "norm_label": "contarporentidad()"
+    },
+    {
+      "label": "vencimientos.js",
+      "file_type": "code",
+      "source_file": "src/components/legal/vencimientos.js",
+      "source_location": "L1",
+      "id": "src_components_legal_vencimientos_js",
+      "community": 15,
+      "norm_label": "vencimientos.js"
+    },
+    {
+      "label": "getEstadoVencimiento()",
+      "file_type": "code",
+      "source_file": "src/components/legal/vencimientos.js",
+      "source_location": "L5",
+      "id": "legal_vencimientos_getestadovencimiento",
+      "community": 15,
+      "norm_label": "getestadovencimiento()"
+    },
+    {
+      "label": "getBadgeClasses()",
+      "file_type": "code",
+      "source_file": "src/components/legal/vencimientos.js",
+      "source_location": "L19",
+      "id": "legal_vencimientos_getbadgeclasses",
+      "community": 15,
+      "norm_label": "getbadgeclasses()"
+    },
+    {
+      "label": "getBadgeLabel()",
+      "file_type": "code",
+      "source_file": "src/components/legal/vencimientos.js",
+      "source_location": "L32",
+      "id": "legal_vencimientos_getbadgelabel",
+      "community": 15,
+      "norm_label": "getbadgelabel()"
+    },
+    {
+      "label": "VisorDocumento.jsx",
+      "file_type": "code",
+      "source_file": "src/components/legal/VisorDocumento.jsx",
+      "source_location": "L1",
+      "id": "src_components_legal_visordocumento_jsx",
+      "community": 15,
+      "norm_label": "visordocumento.jsx"
+    },
+    {
+      "label": "VisorDocumento()",
+      "file_type": "code",
+      "source_file": "src/components/legal/VisorDocumento.jsx",
+      "source_location": "L13",
+      "id": "legal_visordocumento_visordocumento",
+      "community": 15,
+      "norm_label": "visordocumento()"
+    },
+    {
+      "label": "HistorialLiquidaciones.jsx",
+      "file_type": "code",
+      "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
+      "source_location": "L1",
+      "id": "src_components_liquidaciones_historialliquidaciones_jsx",
+      "community": 16,
+      "norm_label": "historialliquidaciones.jsx"
+    },
+    {
+      "label": "EMPTY_ARRAY",
+      "file_type": "code",
+      "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
+      "source_location": "L37",
+      "id": "liquidaciones_historialliquidaciones_empty_array",
+      "community": 16,
+      "norm_label": "empty_array"
+    },
+    {
+      "label": "fechaLegible()",
+      "file_type": "code",
+      "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
+      "source_location": "L43",
+      "id": "liquidaciones_historialliquidaciones_fechalegible",
+      "community": 16,
+      "norm_label": "fechalegible()"
+    },
+    {
+      "label": "tituloDesdeCorte()",
+      "file_type": "code",
+      "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
+      "source_location": "L56",
+      "id": "liquidaciones_historialliquidaciones_titulodesdecorte",
+      "community": 16,
+      "norm_label": "titulodesdecorte()"
+    },
+    {
+      "label": "esLegacy()",
+      "file_type": "code",
+      "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
+      "source_location": "L68",
+      "id": "liquidaciones_historialliquidaciones_eslegacy",
+      "community": 16,
+      "norm_label": "eslegacy()"
+    },
+    {
+      "label": "HistorialLiquidaciones()",
+      "file_type": "code",
+      "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
+      "source_location": "L72",
+      "id": "liquidaciones_historialliquidaciones_historialliquidaciones",
+      "community": 16,
+      "norm_label": "historialliquidaciones()"
+    },
+    {
+      "label": "DialogDesglose()",
+      "file_type": "code",
+      "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
+      "source_location": "L472",
+      "id": "liquidaciones_historialliquidaciones_dialogdesglose",
+      "community": 16,
+      "norm_label": "dialogdesglose()"
     },
     {
       "label": "CatalogoServicios.jsx",
@@ -12685,28 +13045,10 @@
       "norm_label": "colacargacompacta.jsx"
     },
     {
-      "label": "DIAS_SEMANA",
-      "file_type": "code",
-      "source_file": "src/components/panel/ColaCargaCompacta.jsx",
-      "source_location": "L9",
-      "id": "panel_colacargacompacta_dias_semana",
-      "community": 19,
-      "norm_label": "dias_semana"
-    },
-    {
-      "label": "DIA_CORTO",
-      "file_type": "code",
-      "source_file": "src/components/panel/ColaCargaCompacta.jsx",
-      "source_location": "L10",
-      "id": "panel_colacargacompacta_dia_corto",
-      "community": 19,
-      "norm_label": "dia_corto"
-    },
-    {
       "label": "ColaCargaCompacta()",
       "file_type": "code",
       "source_file": "src/components/panel/ColaCargaCompacta.jsx",
-      "source_location": "L14",
+      "source_location": "L13",
       "id": "panel_colacargacompacta_colacargacompacta",
       "community": 19,
       "norm_label": "colacargacompacta()"
@@ -12886,7 +13228,7 @@
       "label": "PendingRow()",
       "file_type": "code",
       "source_file": "src/components/panel/Pendientes.jsx",
-      "source_location": "L12",
+      "source_location": "L13",
       "id": "panel_pendientes_pendingrow",
       "community": 86,
       "norm_label": "pendingrow()"
@@ -12895,7 +13237,7 @@
       "label": "Pendientes()",
       "file_type": "code",
       "source_file": "src/components/panel/Pendientes.jsx",
-      "source_location": "L39",
+      "source_location": "L40",
       "id": "panel_pendientes_pendientes",
       "community": 86,
       "norm_label": "pendientes()"
@@ -12910,28 +13252,10 @@
       "norm_label": "pulsodia.jsx"
     },
     {
-      "label": "DIAS_SEMANA",
-      "file_type": "code",
-      "source_file": "src/components/panel/PulsoDia.jsx",
-      "source_location": "L14",
-      "id": "panel_pulsodia_dias_semana",
-      "community": 4,
-      "norm_label": "dias_semana"
-    },
-    {
-      "label": "diaSemanaDe()",
-      "file_type": "code",
-      "source_file": "src/components/panel/PulsoDia.jsx",
-      "source_location": "L16",
-      "id": "panel_pulsodia_diasemanade",
-      "community": 4,
-      "norm_label": "diasemanade()"
-    },
-    {
       "label": "PulsoDia()",
       "file_type": "code",
       "source_file": "src/components/panel/PulsoDia.jsx",
-      "source_location": "L23",
+      "source_location": "L16",
       "id": "panel_pulsodia_pulsodia",
       "community": 4,
       "norm_label": "pulsodia()"
@@ -15246,7 +15570,7 @@
       "source_file": "src/components/ui/toaster.jsx",
       "source_location": "L1",
       "id": "src_components_ui_toaster_jsx",
-      "community": 8,
+      "community": 16,
       "norm_label": "toaster.jsx"
     },
     {
@@ -15255,7 +15579,7 @@
       "source_file": "src/components/ui/toaster.jsx",
       "source_location": "L11",
       "id": "ui_toaster_toaster",
-      "community": 8,
+      "community": 16,
       "norm_label": "toaster()"
     },
     {
@@ -15444,7 +15768,7 @@
       "source_file": "src/components/ui/use-toast.jsx",
       "source_location": "L147",
       "id": "ui_use_toast_usetoast",
-      "community": 8,
+      "community": 16,
       "norm_label": "usetoast()"
     },
     {
@@ -15480,7 +15804,7 @@
       "source_file": "src/lib/fechas.js",
       "source_location": "L1",
       "id": "src_lib_fechas_js",
-      "community": 138,
+      "community": 32,
       "norm_label": "fechas.js"
     },
     {
@@ -15489,7 +15813,7 @@
       "source_file": "src/lib/fechas.js",
       "source_location": "L6",
       "id": "lib_fechas_localdatestr",
-      "community": 138,
+      "community": 32,
       "norm_label": "localdatestr()"
     },
     {
@@ -15498,8 +15822,26 @@
       "source_file": "src/lib/fechas.js",
       "source_location": "L14",
       "id": "lib_fechas_formatearfecha",
-      "community": 138,
+      "community": 32,
       "norm_label": "formatearfecha()"
+    },
+    {
+      "label": "formato.js",
+      "file_type": "code",
+      "source_file": "src/lib/formato.js",
+      "source_location": "L1",
+      "id": "src_lib_formato_js",
+      "community": 16,
+      "norm_label": "formato.js"
+    },
+    {
+      "label": "formatCurrency()",
+      "file_type": "code",
+      "source_file": "src/lib/formato.js",
+      "source_location": "L5",
+      "id": "lib_formato_formatcurrency",
+      "community": 16,
+      "norm_label": "formatcurrency()"
     },
     {
       "label": "rol.js",
@@ -15518,6 +15860,96 @@
       "id": "lib_rol_getcuentacliente",
       "community": 113,
       "norm_label": "getcuentacliente()"
+    },
+    {
+      "label": "semana.js",
+      "file_type": "code",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L1",
+      "id": "src_lib_semana_js",
+      "community": 53,
+      "norm_label": "semana.js"
+    },
+    {
+      "label": "NOMBRES_DIA",
+      "file_type": "code",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L10",
+      "id": "lib_semana_nombres_dia",
+      "community": 53,
+      "norm_label": "nombres_dia"
+    },
+    {
+      "label": "toDate()",
+      "file_type": "code",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L25",
+      "id": "lib_semana_todate",
+      "community": 53,
+      "norm_label": "todate()"
+    },
+    {
+      "label": "nombreDia()",
+      "file_type": "code",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L33",
+      "id": "lib_semana_nombredia",
+      "community": 53,
+      "norm_label": "nombredia()"
+    },
+    {
+      "label": "diasDeSemana()",
+      "file_type": "code",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L39",
+      "id": "lib_semana_diasdesemana",
+      "community": 53,
+      "norm_label": "diasdesemana()"
+    },
+    {
+      "label": "offsetDia()",
+      "file_type": "code",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L49",
+      "id": "lib_semana_offsetdia",
+      "community": 53,
+      "norm_label": "offsetdia()"
+    },
+    {
+      "label": "plantillaVacia()",
+      "file_type": "code",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L55",
+      "id": "lib_semana_plantillavacia",
+      "community": 53,
+      "norm_label": "plantillavacia()"
+    },
+    {
+      "label": "abreviaDia()",
+      "file_type": "code",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L62",
+      "id": "lib_semana_abreviadia",
+      "community": 53,
+      "norm_label": "abreviadia()"
+    },
+    {
+      "label": "numeroSemana()",
+      "file_type": "code",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L70",
+      "id": "lib_semana_numerosemana",
+      "community": 53,
+      "norm_label": "numerosemana()"
+    },
+    {
+      "label": "remapearProgramacion()",
+      "file_type": "code",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L80",
+      "id": "lib_semana_remapearprogramacion",
+      "community": 53,
+      "norm_label": "remapearprogramacion()"
     },
     {
       "label": "utils.js",
@@ -15561,7 +15993,7 @@
       "source_file": "src/pages/Clientes.jsx",
       "source_location": "L1",
       "id": "src_pages_clientes_jsx",
-      "community": 8,
+      "community": 16,
       "norm_label": "clientes.jsx"
     },
     {
@@ -15570,7 +16002,7 @@
       "source_file": "src/pages/Clientes.jsx",
       "source_location": "L44",
       "id": "pages_clientes_clientes",
-      "community": 8,
+      "community": 16,
       "norm_label": "clientes()"
     },
     {
@@ -15714,7 +16146,7 @@
       "source_file": "src/pages/CuentasCliente.jsx",
       "source_location": "L1",
       "id": "src_pages_cuentascliente_jsx",
-      "community": 137,
+      "community": 8,
       "norm_label": "cuentascliente.jsx"
     },
     {
@@ -15723,7 +16155,7 @@
       "source_file": "src/pages/CuentasCliente.jsx",
       "source_location": "L13",
       "id": "pages_cuentascliente_invocar",
-      "community": 137,
+      "community": 8,
       "norm_label": "invocar()"
     },
     {
@@ -15732,7 +16164,7 @@
       "source_file": "src/pages/CuentasCliente.jsx",
       "source_location": "L24",
       "id": "pages_cuentascliente_cuentascliente",
-      "community": 137,
+      "community": 8,
       "norm_label": "cuentascliente()"
     },
     {
@@ -15741,7 +16173,7 @@
       "source_file": "src/pages/CuentasCliente.jsx",
       "source_location": "L128",
       "id": "pages_cuentascliente_selectorunidades",
-      "community": 137,
+      "community": 8,
       "norm_label": "selectorunidades()"
     },
     {
@@ -15750,7 +16182,7 @@
       "source_file": "src/pages/CuentasCliente.jsx",
       "source_location": "L150",
       "id": "pages_cuentascliente_dialognueva",
-      "community": 137,
+      "community": 8,
       "norm_label": "dialognueva()"
     },
     {
@@ -15759,7 +16191,7 @@
       "source_file": "src/pages/CuentasCliente.jsx",
       "source_location": "L173",
       "id": "pages_cuentascliente_dialogunidades",
-      "community": 137,
+      "community": 8,
       "norm_label": "dialogunidades()"
     },
     {
@@ -15768,7 +16200,7 @@
       "source_file": "src/pages/CuentasCliente.jsx",
       "source_location": "L193",
       "id": "pages_cuentascliente_dialogreset",
-      "community": 137,
+      "community": 8,
       "norm_label": "dialogreset()"
     },
     {
@@ -15781,55 +16213,28 @@
       "norm_label": "documentacionlegal.jsx"
     },
     {
-      "label": "getEstadoVencimiento()",
+      "label": "BotonDocumentos()",
       "file_type": "code",
       "source_file": "src/pages/DocumentacionLegal.jsx",
-      "source_location": "L47",
-      "id": "pages_documentacionlegal_getestadovencimiento",
+      "source_location": "L56",
+      "id": "pages_documentacionlegal_botondocumentos",
       "community": 15,
-      "norm_label": "getestadovencimiento()"
-    },
-    {
-      "label": "getBadgeClasses()",
-      "file_type": "code",
-      "source_file": "src/pages/DocumentacionLegal.jsx",
-      "source_location": "L61",
-      "id": "pages_documentacionlegal_getbadgeclasses",
-      "community": 15,
-      "norm_label": "getbadgeclasses()"
-    },
-    {
-      "label": "getBadgeLabel()",
-      "file_type": "code",
-      "source_file": "src/pages/DocumentacionLegal.jsx",
-      "source_location": "L74",
-      "id": "pages_documentacionlegal_getbadgelabel",
-      "community": 15,
-      "norm_label": "getbadgelabel()"
-    },
-    {
-      "label": "StatusBadge()",
-      "file_type": "code",
-      "source_file": "src/pages/DocumentacionLegal.jsx",
-      "source_location": "L94",
-      "id": "pages_documentacionlegal_statusbadge",
-      "community": 15,
-      "norm_label": "statusbadge()"
+      "norm_label": "botondocumentos()"
     },
     {
       "label": "EditDialog()",
       "file_type": "code",
       "source_file": "src/pages/DocumentacionLegal.jsx",
-      "source_location": "L112",
+      "source_location": "L73",
       "id": "pages_documentacionlegal_editdialog",
-      "community": 8,
+      "community": 15,
       "norm_label": "editdialog()"
     },
     {
       "label": "SummaryCards()",
       "file_type": "code",
       "source_file": "src/pages/DocumentacionLegal.jsx",
-      "source_location": "L218",
+      "source_location": "L179",
       "id": "pages_documentacionlegal_summarycards",
       "community": 15,
       "norm_label": "summarycards()"
@@ -15838,7 +16243,7 @@
       "label": "CONDUCTOR_FIELDS",
       "file_type": "code",
       "source_file": "src/pages/DocumentacionLegal.jsx",
-      "source_location": "L289",
+      "source_location": "L262",
       "id": "pages_documentacionlegal_conductor_fields",
       "community": 15,
       "norm_label": "conductor_fields"
@@ -15847,7 +16252,7 @@
       "label": "ConductoresTab()",
       "file_type": "code",
       "source_file": "src/pages/DocumentacionLegal.jsx",
-      "source_location": "L294",
+      "source_location": "L267",
       "id": "pages_documentacionlegal_conductorestab",
       "community": 15,
       "norm_label": "conductorestab()"
@@ -15856,7 +16261,7 @@
       "label": "CAMION_FIELDS",
       "file_type": "code",
       "source_file": "src/pages/DocumentacionLegal.jsx",
-      "source_location": "L407",
+      "source_location": "L402",
       "id": "pages_documentacionlegal_camion_fields",
       "community": 15,
       "norm_label": "camion_fields"
@@ -15865,7 +16270,7 @@
       "label": "CamionesTab()",
       "file_type": "code",
       "source_file": "src/pages/DocumentacionLegal.jsx",
-      "source_location": "L413",
+      "source_location": "L408",
       "id": "pages_documentacionlegal_camionestab",
       "community": 15,
       "norm_label": "camionestab()"
@@ -15874,7 +16279,7 @@
       "label": "REMOLQUE_FIELDS",
       "file_type": "code",
       "source_file": "src/pages/DocumentacionLegal.jsx",
-      "source_location": "L511",
+      "source_location": "L528",
       "id": "pages_documentacionlegal_remolque_fields",
       "community": 15,
       "norm_label": "remolque_fields"
@@ -15883,7 +16288,7 @@
       "label": "RemolquesTab()",
       "file_type": "code",
       "source_file": "src/pages/DocumentacionLegal.jsx",
-      "source_location": "L515",
+      "source_location": "L532",
       "id": "pages_documentacionlegal_remolquestab",
       "community": 15,
       "norm_label": "remolquestab()"
@@ -15892,7 +16297,7 @@
       "label": "MobileDocCard()",
       "file_type": "code",
       "source_file": "src/pages/DocumentacionLegal.jsx",
-      "source_location": "L608",
+      "source_location": "L647",
       "id": "pages_documentacionlegal_mobiledoccard",
       "community": 15,
       "norm_label": "mobiledoccard()"
@@ -15901,7 +16306,7 @@
       "label": "TabSkeleton()",
       "file_type": "code",
       "source_file": "src/pages/DocumentacionLegal.jsx",
-      "source_location": "L640",
+      "source_location": "L691",
       "id": "pages_documentacionlegal_tabskeleton",
       "community": 15,
       "norm_label": "tabskeleton()"
@@ -15910,7 +16315,7 @@
       "label": "DocumentacionLegal()",
       "file_type": "code",
       "source_file": "src/pages/DocumentacionLegal.jsx",
-      "source_location": "L652",
+      "source_location": "L703",
       "id": "pages_documentacionlegal_documentacionlegal",
       "community": 15,
       "norm_label": "documentacionlegal()"
@@ -15957,7 +16362,7 @@
       "source_file": "src/pages/FuelCamiones.jsx",
       "source_location": "L1",
       "id": "src_pages_fuelcamiones_jsx",
-      "community": 8,
+      "community": 16,
       "norm_label": "fuelcamiones.jsx"
     },
     {
@@ -15966,7 +16371,7 @@
       "source_file": "src/pages/FuelCamiones.jsx",
       "source_location": "L37",
       "id": "pages_fuelcamiones_fuelcamiones",
-      "community": 8,
+      "community": 16,
       "norm_label": "fuelcamiones()"
     },
     {
@@ -15975,7 +16380,7 @@
       "source_file": "src/pages/FuelConductores.jsx",
       "source_location": "L1",
       "id": "src_pages_fuelconductores_jsx",
-      "community": 8,
+      "community": 16,
       "norm_label": "fuelconductores.jsx"
     },
     {
@@ -15984,7 +16389,7 @@
       "source_file": "src/pages/FuelConductores.jsx",
       "source_location": "L44",
       "id": "pages_fuelconductores_fuelconductores",
-      "community": 8,
+      "community": 16,
       "norm_label": "fuelconductores()"
     },
     {
@@ -15997,28 +16402,19 @@
       "norm_label": "fuelprogramacargas.jsx"
     },
     {
-      "label": "DIAS_SEMANA",
+      "label": "DIAS_NUEVA_SEMANA",
       "file_type": "code",
       "source_file": "src/pages/FuelProgramaCargas.jsx",
-      "source_location": "L72",
-      "id": "pages_fuelprogramacargas_dias_semana",
+      "source_location": "L82",
+      "id": "pages_fuelprogramacargas_dias_nueva_semana",
       "community": 23,
-      "norm_label": "dias_semana"
-    },
-    {
-      "label": "PLANTILLA_VACIA",
-      "file_type": "code",
-      "source_file": "src/pages/FuelProgramaCargas.jsx",
-      "source_location": "L80",
-      "id": "pages_fuelprogramacargas_plantilla_vacia",
-      "community": 23,
-      "norm_label": "plantilla_vacia"
+      "norm_label": "dias_nueva_semana"
     },
     {
       "label": "ProgramCard()",
       "file_type": "code",
       "source_file": "src/pages/FuelProgramaCargas.jsx",
-      "source_location": "L85",
+      "source_location": "L84",
       "id": "pages_fuelprogramacargas_programcard",
       "community": 23,
       "norm_label": "programcard()"
@@ -16027,7 +16423,7 @@
       "label": "pathEvidenciaStorage()",
       "file_type": "code",
       "source_file": "src/pages/FuelProgramaCargas.jsx",
-      "source_location": "L189",
+      "source_location": "L188",
       "id": "pages_fuelprogramacargas_pathevidenciastorage",
       "community": 23,
       "norm_label": "pathevidenciastorage()"
@@ -16036,7 +16432,7 @@
       "label": "limpiarFotosDeViajes()",
       "file_type": "code",
       "source_file": "src/pages/FuelProgramaCargas.jsx",
-      "source_location": "L197",
+      "source_location": "L196",
       "id": "pages_fuelprogramacargas_limpiarfotosdeviajes",
       "community": 23,
       "norm_label": "limpiarfotosdeviajes()"
@@ -16045,9 +16441,9 @@
       "label": "FuelProgramaCargas()",
       "file_type": "code",
       "source_file": "src/pages/FuelProgramaCargas.jsx",
-      "source_location": "L210",
+      "source_location": "L209",
       "id": "pages_fuelprogramacargas_fuelprogramacargas",
-      "community": 8,
+      "community": 53,
       "norm_label": "fuelprogramacargas()"
     },
     {
@@ -16119,52 +16515,52 @@
       "source_file": "src/pages/FuelViajes.jsx",
       "source_location": "L1",
       "id": "src_pages_fuelviajes_jsx",
-      "community": 8,
+      "community": 54,
       "norm_label": "fuelviajes.jsx"
     },
     {
       "label": "FitBounds()",
       "file_type": "code",
       "source_file": "src/pages/FuelViajes.jsx",
-      "source_location": "L83",
+      "source_location": "L84",
       "id": "pages_fuelviajes_fitbounds",
-      "community": 8,
+      "community": 54,
       "norm_label": "fitbounds()"
     },
     {
       "label": "SeguirPunto()",
       "file_type": "code",
       "source_file": "src/pages/FuelViajes.jsx",
-      "source_location": "L95",
+      "source_location": "L96",
       "id": "pages_fuelviajes_seguirpunto",
-      "community": 8,
+      "community": 54,
       "norm_label": "seguirpunto()"
     },
     {
       "label": "haversineKm()",
       "file_type": "code",
       "source_file": "src/pages/FuelViajes.jsx",
-      "source_location": "L112",
+      "source_location": "L113",
       "id": "pages_fuelviajes_haversinekm",
-      "community": 8,
+      "community": 54,
       "norm_label": "haversinekm()"
     },
     {
       "label": "VinculoProgramaPicker()",
       "file_type": "code",
       "source_file": "src/pages/FuelViajes.jsx",
-      "source_location": "L124",
+      "source_location": "L125",
       "id": "pages_fuelviajes_vinculoprogramapicker",
-      "community": 8,
+      "community": 54,
       "norm_label": "vinculoprogramapicker()"
     },
     {
       "label": "FuelViajes()",
       "file_type": "code",
       "source_file": "src/pages/FuelViajes.jsx",
-      "source_location": "L308",
+      "source_location": "L309",
       "id": "pages_fuelviajes_fuelviajes",
-      "community": 8,
+      "community": 54,
       "norm_label": "fuelviajes()"
     },
     {
@@ -16596,25 +16992,43 @@
       "source_file": "src/pages/Liquidaciones.jsx",
       "source_location": "L1",
       "id": "src_pages_liquidaciones_jsx",
-      "community": 8,
+      "community": 53,
       "norm_label": "liquidaciones.jsx"
     },
     {
       "label": "EMPTY_ARRAY",
       "file_type": "code",
       "source_file": "src/pages/Liquidaciones.jsx",
-      "source_location": "L36",
+      "source_location": "L50",
       "id": "pages_liquidaciones_empty_array",
-      "community": 8,
+      "community": 53,
       "norm_label": "empty_array"
+    },
+    {
+      "label": "sabadoDeCorte()",
+      "file_type": "code",
+      "source_file": "src/pages/Liquidaciones.jsx",
+      "source_location": "L56",
+      "id": "pages_liquidaciones_sabadodecorte",
+      "community": 17,
+      "norm_label": "sabadodecorte()"
+    },
+    {
+      "label": "anticiposVacios()",
+      "file_type": "code",
+      "source_file": "src/pages/Liquidaciones.jsx",
+      "source_location": "L65",
+      "id": "pages_liquidaciones_anticiposvacios",
+      "community": 53,
+      "norm_label": "anticiposvacios()"
     },
     {
       "label": "Liquidaciones()",
       "file_type": "code",
       "source_file": "src/pages/Liquidaciones.jsx",
-      "source_location": "L38",
+      "source_location": "L69",
       "id": "pages_liquidaciones_liquidaciones",
-      "community": 8,
+      "community": 16,
       "norm_label": "liquidaciones()"
     },
     {
@@ -16659,7 +17073,7 @@
       "source_file": "src/pages/PortalCliente.jsx",
       "source_location": "L1",
       "id": "src_pages_portalcliente_jsx",
-      "community": 16,
+      "community": 32,
       "norm_label": "portalcliente.jsx"
     },
     {
@@ -16668,7 +17082,7 @@
       "source_file": "src/pages/PortalCliente.jsx",
       "source_location": "L15",
       "id": "pages_portalcliente_haversinekm",
-      "community": 16,
+      "community": 32,
       "norm_label": "haversinekm()"
     },
     {
@@ -16677,7 +17091,7 @@
       "source_file": "src/pages/PortalCliente.jsx",
       "source_location": "L21",
       "id": "pages_portalcliente_enfocarunidad",
-      "community": 16,
+      "community": 32,
       "norm_label": "enfocarunidad()"
     },
     {
@@ -16686,7 +17100,7 @@
       "source_file": "src/pages/PortalCliente.jsx",
       "source_location": "L32",
       "id": "pages_portalcliente_seguirpunto",
-      "community": 16,
+      "community": 32,
       "norm_label": "seguirpunto()"
     },
     {
@@ -16695,7 +17109,7 @@
       "source_file": "src/pages/PortalCliente.jsx",
       "source_location": "L37",
       "id": "pages_portalcliente_fitruta",
-      "community": 16,
+      "community": 32,
       "norm_label": "fitruta()"
     },
     {
@@ -16704,7 +17118,7 @@
       "source_file": "src/pages/PortalCliente.jsx",
       "source_location": "L48",
       "id": "pages_portalcliente_portalcliente",
-      "community": 16,
+      "community": 32,
       "norm_label": "portalcliente()"
     },
     {
@@ -18148,11 +18562,110 @@
       "norm_label": "best practices (conditional)"
     },
     {
+      "label": "DIAS_SEMANA",
+      "file_type": "code",
+      "source_file": "src/components/fuel/ColaCarga.jsx",
+      "source_location": "L11",
+      "community": 74,
+      "norm_label": "dias_semana",
+      "id": "fuel_colacarga_dias_semana"
+    },
+    {
+      "label": "DIAS_SEMANA",
+      "file_type": "code",
+      "source_file": "src/components/panel/ColaCargaCompacta.jsx",
+      "source_location": "L9",
+      "community": 19,
+      "norm_label": "dias_semana",
+      "id": "panel_colacargacompacta_dias_semana"
+    },
+    {
+      "label": "DIA_CORTO",
+      "file_type": "code",
+      "source_file": "src/components/panel/ColaCargaCompacta.jsx",
+      "source_location": "L10",
+      "community": 19,
+      "norm_label": "dia_corto",
+      "id": "panel_colacargacompacta_dia_corto"
+    },
+    {
+      "label": "DIAS_SEMANA",
+      "file_type": "code",
+      "source_file": "src/components/panel/PulsoDia.jsx",
+      "source_location": "L14",
+      "community": 4,
+      "norm_label": "dias_semana",
+      "id": "panel_pulsodia_dias_semana"
+    },
+    {
+      "label": "diaSemanaDe()",
+      "file_type": "code",
+      "source_file": "src/components/panel/PulsoDia.jsx",
+      "source_location": "L16",
+      "community": 4,
+      "norm_label": "diasemanade()",
+      "id": "panel_pulsodia_diasemanade"
+    },
+    {
+      "label": "getEstadoVencimiento()",
+      "file_type": "code",
+      "source_file": "src/pages/DocumentacionLegal.jsx",
+      "source_location": "L47",
+      "community": 15,
+      "norm_label": "getestadovencimiento()",
+      "id": "pages_documentacionlegal_getestadovencimiento"
+    },
+    {
+      "label": "getBadgeClasses()",
+      "file_type": "code",
+      "source_file": "src/pages/DocumentacionLegal.jsx",
+      "source_location": "L61",
+      "community": 15,
+      "norm_label": "getbadgeclasses()",
+      "id": "pages_documentacionlegal_getbadgeclasses"
+    },
+    {
+      "label": "getBadgeLabel()",
+      "file_type": "code",
+      "source_file": "src/pages/DocumentacionLegal.jsx",
+      "source_location": "L74",
+      "community": 15,
+      "norm_label": "getbadgelabel()",
+      "id": "pages_documentacionlegal_getbadgelabel"
+    },
+    {
+      "label": "StatusBadge()",
+      "file_type": "code",
+      "source_file": "src/pages/DocumentacionLegal.jsx",
+      "source_location": "L94",
+      "community": 15,
+      "norm_label": "statusbadge()",
+      "id": "pages_documentacionlegal_statusbadge"
+    },
+    {
+      "label": "DIAS_SEMANA",
+      "file_type": "code",
+      "source_file": "src/pages/FuelProgramaCargas.jsx",
+      "source_location": "L72",
+      "community": 23,
+      "norm_label": "dias_semana",
+      "id": "pages_fuelprogramacargas_dias_semana"
+    },
+    {
+      "label": "PLANTILLA_VACIA",
+      "file_type": "code",
+      "source_file": "src/pages/FuelProgramaCargas.jsx",
+      "source_location": "L80",
+      "community": 23,
+      "norm_label": "plantilla_vacia",
+      "id": "pages_fuelprogramacargas_plantilla_vacia"
+    },
+    {
       "label": "localDateStr()",
       "file_type": "code",
       "source_file": "src/components/gps/HistorialGPS.jsx",
       "source_location": "L21",
-      "community": 135,
+      "community": 32,
       "norm_label": "localdatestr()",
       "id": "gps_historialgps_localdatestr"
     },
@@ -18161,7 +18674,7 @@
       "file_type": "code",
       "source_file": "src/components/gps/HistorialGPS.jsx",
       "source_location": "L28",
-      "community": 135,
+      "community": 32,
       "norm_label": "today",
       "id": "gps_historialgps_today"
     },
@@ -18170,7 +18683,7 @@
       "file_type": "code",
       "source_file": "src/components/gps/HistorialGPS.jsx",
       "source_location": "L29",
-      "community": 135,
+      "community": 32,
       "norm_label": "yesterday",
       "id": "gps_historialgps_yesterday"
     },
@@ -18215,7 +18728,7 @@
       "file_type": "code",
       "source_file": "src/pages/PortalCliente.jsx",
       "source_location": "L14",
-      "community": 16,
+      "community": 32,
       "norm_label": "localdatestr()",
       "id": "pages_portalcliente_localdatestr"
     }
@@ -18691,6 +19204,16 @@
       "confidence_score": 1.0,
       "source": "transportes_gm_package_dependencies",
       "target": "transportes_gm_package_dependencies_embla_carousel_react"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "package.json",
+      "source_location": "L51",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "transportes_gm_package_dependencies",
+      "target": "transportes_gm_package_dependencies_exceljs"
     },
     {
       "relation": "contains",
@@ -32487,6 +33010,964 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/documentosConfig.js",
+      "source_location": "L68",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosconfig_js",
+      "target": "legal_documentosconfig_esimagen"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/documentosConfig.js",
+      "source_location": "L72",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosconfig_js",
+      "target": "legal_documentosconfig_espdf"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/documentosConfig.js",
+      "source_location": "L76",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosconfig_js",
+      "target": "legal_documentosconfig_formatotamano"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/documentosConfig.js",
+      "source_location": "L18",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosconfig_js",
+      "target": "legal_documentosconfig_mime_aceptados"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/documentosConfig.js",
+      "source_location": "L85",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosconfig_js",
+      "target": "legal_documentosconfig_nombreseguro"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/documentosConfig.js",
+      "source_location": "L57",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosconfig_js",
+      "target": "legal_documentosconfig_tabla_entidad"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/documentosConfig.js",
+      "source_location": "L63",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosconfig_js",
+      "target": "legal_documentosconfig_tipodoc"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/documentosConfig.js",
+      "source_location": "L32",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosconfig_js",
+      "target": "legal_documentosconfig_tipos_doc"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/documentosConfig.js",
+      "source_location": "L68",
+      "weight": 1.0,
+      "source": "src_components_legal_documentosconfig_js",
+      "target": "legal_documentosconfig_titulodoc",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/documentosConfig.js",
+      "source_location": "L94",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosconfig_js",
+      "target": "legal_documentosconfig_validararchivo"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L50",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosdialog_jsx",
+      "target": "src_components_legal_documentosconfig_js"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/storageDocs.js",
+      "source_location": "L2",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_storagedocs_js",
+      "target": "src_components_legal_documentosconfig_js"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/VisorDocumento.jsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_visordocumento_jsx",
+      "target": "src_components_legal_documentosconfig_js"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L50",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosdialog_jsx",
+      "target": "legal_documentosconfig_tipos_doc"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L50",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosdialog_jsx",
+      "target": "legal_documentosconfig_tabla_entidad"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/documentosConfig.js",
+      "source_location": "L69",
+      "weight": 1.0,
+      "source": "legal_documentosconfig_titulodoc",
+      "target": "legal_documentosconfig_tipodoc",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L530",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "legal_documentosdialog_filadocumento",
+      "target": "legal_documentosconfig_tipodoc"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/legal/VisorDocumento.jsx",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "legal_visordocumento_visordocumento",
+      "target": "legal_documentosconfig_tipodoc"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L50",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosdialog_jsx",
+      "target": "legal_documentosconfig_tipodoc"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/VisorDocumento.jsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_visordocumento_jsx",
+      "target": "legal_documentosconfig_tipodoc"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L621",
+      "weight": 1.0,
+      "source": "legal_documentosdialog_filadocumento",
+      "target": "legal_documentosconfig_titulodoc",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/legal/VisorDocumento.jsx",
+      "source_location": "L51",
+      "weight": 1.0,
+      "source": "legal_visordocumento_visordocumento",
+      "target": "legal_documentosconfig_titulodoc"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L41",
+      "weight": 1.0,
+      "source": "src_components_legal_documentosdialog_jsx",
+      "target": "legal_documentosconfig_titulodoc",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/VisorDocumento.jsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "src_components_legal_visordocumento_jsx",
+      "target": "legal_documentosconfig_titulodoc",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/legal/VisorDocumento.jsx",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "legal_visordocumento_visordocumento",
+      "target": "legal_documentosconfig_esimagen"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L50",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosdialog_jsx",
+      "target": "legal_documentosconfig_esimagen"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/VisorDocumento.jsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_visordocumento_jsx",
+      "target": "legal_documentosconfig_esimagen"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/legal/VisorDocumento.jsx",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "legal_visordocumento_visordocumento",
+      "target": "legal_documentosconfig_espdf"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/VisorDocumento.jsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_visordocumento_jsx",
+      "target": "legal_documentosconfig_espdf"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/documentosConfig.js",
+      "source_location": "L97",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "legal_documentosconfig_validararchivo",
+      "target": "legal_documentosconfig_formatotamano"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L563",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "legal_documentosdialog_filadocumento",
+      "target": "legal_documentosconfig_formatotamano"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L444",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "legal_documentosdialog_panelsubida",
+      "target": "legal_documentosconfig_formatotamano"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/legal/VisorDocumento.jsx",
+      "source_location": "L53",
+      "weight": 1.0,
+      "source": "legal_visordocumento_visordocumento",
+      "target": "legal_documentosconfig_formatotamano"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L50",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosdialog_jsx",
+      "target": "legal_documentosconfig_formatotamano"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/VisorDocumento.jsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_visordocumento_jsx",
+      "target": "legal_documentosconfig_formatotamano"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L50",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosdialog_jsx",
+      "target": "legal_documentosconfig_nombreseguro"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L50",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosdialog_jsx",
+      "target": "legal_documentosconfig_validararchivo"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L399",
+      "weight": 1.0,
+      "source": "src_components_legal_documentosdialog_jsx",
+      "target": "legal_documentosdialog_apartadodocumento",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L66",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosdialog_jsx",
+      "target": "legal_documentosdialog_documentosdialog"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L520",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosdialog_jsx",
+      "target": "legal_documentosdialog_filadocumento"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L431",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosdialog_jsx",
+      "target": "legal_documentosdialog_panelsubida"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L47",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosdialog_jsx",
+      "target": "legal_storagedocs_descargardocumento"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L47",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosdialog_jsx",
+      "target": "legal_storagedocs_urlfirmada"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L47",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosdialog_jsx",
+      "target": "legal_storagedocs_urlsfirmadas"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L49",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosdialog_jsx",
+      "target": "legal_usedocumentoslegales_qk_docs"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L49",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosdialog_jsx",
+      "target": "legal_usedocumentoslegales_usedocumentoslegales"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L48",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosdialog_jsx",
+      "target": "src_components_legal_statusbadge_jsx"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L47",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosdialog_jsx",
+      "target": "src_components_legal_storagedocs_js"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L49",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosdialog_jsx",
+      "target": "src_components_legal_usedocumentoslegales_js"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L46",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_documentosdialog_jsx",
+      "target": "src_components_legal_visordocumento_jsx"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L89",
+      "weight": 1.0,
+      "source": "legal_documentosdialog_documentosdialog",
+      "target": "legal_usedocumentoslegales_usedocumentoslegales"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L75",
+      "weight": 1.0,
+      "source": "legal_documentosdialog_documentosdialog",
+      "target": "ui_use_toast_usetoast"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/legal/DocumentosDialog.jsx",
+      "source_location": "L564",
+      "weight": 1.0,
+      "source": "legal_documentosdialog_filadocumento",
+      "target": "lib_fechas_formatearfecha"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/StatusBadge.jsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_statusbadge_jsx",
+      "target": "legal_statusbadge_icono_estado"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/StatusBadge.jsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_statusbadge_jsx",
+      "target": "legal_statusbadge_statusbadge"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/StatusBadge.jsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_statusbadge_jsx",
+      "target": "legal_vencimientos_getbadgeclasses"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/StatusBadge.jsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_statusbadge_jsx",
+      "target": "legal_vencimientos_getbadgelabel"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/StatusBadge.jsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_statusbadge_jsx",
+      "target": "legal_vencimientos_getestadovencimiento"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/StatusBadge.jsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_statusbadge_jsx",
+      "target": "src_components_legal_vencimientos_js"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/legal/StatusBadge.jsx",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "legal_statusbadge_statusbadge",
+      "target": "legal_vencimientos_getbadgeclasses"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/legal/StatusBadge.jsx",
+      "source_location": "L21",
+      "weight": 1.0,
+      "source": "legal_statusbadge_statusbadge",
+      "target": "legal_vencimientos_getbadgelabel"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/legal/StatusBadge.jsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "legal_statusbadge_statusbadge",
+      "target": "legal_vencimientos_getestadovencimiento"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/storageDocs.js",
+      "source_location": "L30",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_storagedocs_js",
+      "target": "legal_storagedocs_descargardocumento"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/storageDocs.js",
+      "source_location": "L7",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_storagedocs_js",
+      "target": "legal_storagedocs_urlfirmada"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/storageDocs.js",
+      "source_location": "L14",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_storagedocs_js",
+      "target": "legal_storagedocs_urlsfirmadas"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/VisorDocumento.jsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_visordocumento_jsx",
+      "target": "src_components_legal_storagedocs_js"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/VisorDocumento.jsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_visordocumento_jsx",
+      "target": "legal_storagedocs_descargardocumento"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/useDocumentosLegales.js",
+      "source_location": "L26",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_usedocumentoslegales_js",
+      "target": "legal_usedocumentoslegales_contarporentidad"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/useDocumentosLegales.js",
+      "source_location": "L4",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_usedocumentoslegales_js",
+      "target": "legal_usedocumentoslegales_qk_docs"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/useDocumentosLegales.js",
+      "source_location": "L9",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_usedocumentoslegales_js",
+      "target": "legal_usedocumentoslegales_usedocumentoslegales"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/pages/DocumentacionLegal.jsx",
+      "source_location": "L412",
+      "weight": 1.0,
+      "source": "pages_documentacionlegal_camionestab",
+      "target": "legal_usedocumentoslegales_usedocumentoslegales"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/pages/DocumentacionLegal.jsx",
+      "source_location": "L272",
+      "weight": 1.0,
+      "source": "pages_documentacionlegal_conductorestab",
+      "target": "legal_usedocumentoslegales_usedocumentoslegales"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/pages/DocumentacionLegal.jsx",
+      "source_location": "L742",
+      "weight": 1.0,
+      "source": "pages_documentacionlegal_documentacionlegal",
+      "target": "legal_usedocumentoslegales_usedocumentoslegales"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/pages/DocumentacionLegal.jsx",
+      "source_location": "L536",
+      "weight": 1.0,
+      "source": "pages_documentacionlegal_remolquestab",
+      "target": "legal_usedocumentoslegales_usedocumentoslegales"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/vencimientos.js",
+      "source_location": "L19",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_vencimientos_js",
+      "target": "legal_vencimientos_getbadgeclasses"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/vencimientos.js",
+      "source_location": "L32",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_vencimientos_js",
+      "target": "legal_vencimientos_getbadgelabel"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/vencimientos.js",
+      "source_location": "L5",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_vencimientos_js",
+      "target": "legal_vencimientos_getestadovencimiento"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/legal/VisorDocumento.jsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_legal_visordocumento_jsx",
+      "target": "legal_visordocumento_visordocumento"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/legal/VisorDocumento.jsx",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "legal_visordocumento_visordocumento",
+      "target": "ui_use_toast_usetoast"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
+      "source_location": "L472",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_liquidaciones_historialliquidaciones_jsx",
+      "target": "liquidaciones_historialliquidaciones_dialogdesglose"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
+      "source_location": "L37",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_liquidaciones_historialliquidaciones_jsx",
+      "target": "liquidaciones_historialliquidaciones_empty_array"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
+      "source_location": "L68",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_liquidaciones_historialliquidaciones_jsx",
+      "target": "liquidaciones_historialliquidaciones_eslegacy"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
+      "source_location": "L43",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_liquidaciones_historialliquidaciones_jsx",
+      "target": "liquidaciones_historialliquidaciones_fechalegible"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
+      "source_location": "L72",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_liquidaciones_historialliquidaciones_jsx",
+      "target": "liquidaciones_historialliquidaciones_historialliquidaciones"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
+      "source_location": "L56",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_liquidaciones_historialliquidaciones_jsx",
+      "target": "liquidaciones_historialliquidaciones_titulodesdecorte"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
+      "source_location": "L499",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "liquidaciones_historialliquidaciones_dialogdesglose",
+      "target": "liquidaciones_historialliquidaciones_fechalegible"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
+      "source_location": "L481",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "liquidaciones_historialliquidaciones_dialogdesglose",
+      "target": "liquidaciones_historialliquidaciones_eslegacy"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
+      "source_location": "L323",
+      "weight": 1.0,
+      "source": "liquidaciones_historialliquidaciones_historialliquidaciones",
+      "target": "lib_formato_formatcurrency"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
+      "source_location": "L73",
+      "weight": 1.0,
+      "source": "liquidaciones_historialliquidaciones_historialliquidaciones",
+      "target": "ui_use_toast_usetoast"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
+      "source_location": "L607",
+      "weight": 1.0,
+      "source": "liquidaciones_historialliquidaciones_dialogdesglose",
+      "target": "lib_formato_formatcurrency"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "src/components/mantenimiento/CatalogoServicios.jsx",
       "source_location": "L76",
       "weight": 1.0,
@@ -32907,9 +34388,9 @@
       "source_file": "src/components/panel/EstadoFlota.jsx",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_panel_estadoflota_jsx",
-      "target": "panel_fetchpositions_fetchpositions",
-      "confidence_score": 1.0
+      "target": "panel_fetchpositions_fetchpositions"
     },
     {
       "relation": "imports",
@@ -32929,9 +34410,9 @@
       "source_file": "src/components/panel/EstadoFlota.jsx",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_panel_estadoflota_jsx",
-      "target": "src_components_panel_fetchpositions_js",
-      "confidence_score": 1.0
+      "target": "src_components_panel_fetchpositions_js"
     },
     {
       "relation": "imports_from",
@@ -32961,9 +34442,9 @@
       "source_file": "src/components/panel/fetchPositions.js",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_panel_fetchpositions_js",
-      "target": "panel_fetchpositions_fetchpositions",
-      "confidence_score": 1.0
+      "target": "panel_fetchpositions_fetchpositions"
     },
     {
       "relation": "imports_from",
@@ -32972,9 +34453,9 @@
       "source_file": "src/components/panel/PulsoDia.jsx",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_panel_pulsodia_jsx",
-      "target": "src_components_panel_fetchpositions_js",
-      "confidence_score": 1.0
+      "target": "src_components_panel_fetchpositions_js"
     },
     {
       "relation": "calls",
@@ -32994,9 +34475,9 @@
       "source_file": "src/components/panel/PulsoDia.jsx",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_panel_pulsodia_jsx",
-      "target": "panel_fetchpositions_fetchpositions",
-      "confidence_score": 1.0
+      "target": "panel_fetchpositions_fetchpositions"
     },
     {
       "relation": "contains",
@@ -35980,9 +37461,9 @@
       "source_file": "src/lib/fechas.js",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_lib_fechas_js",
-      "target": "lib_fechas_formatearfecha",
-      "confidence_score": 1.0
+      "target": "lib_fechas_formatearfecha"
     },
     {
       "relation": "contains",
@@ -35990,9 +37471,9 @@
       "source_file": "src/lib/fechas.js",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_lib_fechas_js",
-      "target": "lib_fechas_localdatestr",
-      "confidence_score": 1.0
+      "target": "lib_fechas_localdatestr"
     },
     {
       "relation": "calls",
@@ -36019,12 +37500,255 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "src/lib/formato.js",
+      "source_location": "L5",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_lib_formato_js",
+      "target": "lib_formato_formatcurrency"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/pages/Liquidaciones.jsx",
+      "source_location": "L603",
+      "weight": 1.0,
+      "source": "pages_liquidaciones_liquidaciones",
+      "target": "lib_formato_formatcurrency"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "src/lib/rol.js",
       "source_location": "L5",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "src_lib_rol_js",
       "target": "lib_rol_getcuentacliente"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L62",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_lib_semana_js",
+      "target": "lib_semana_abreviadia"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L39",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_lib_semana_js",
+      "target": "lib_semana_diasdesemana"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L33",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_lib_semana_js",
+      "target": "lib_semana_nombredia"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L10",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_lib_semana_js",
+      "target": "lib_semana_nombres_dia"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L70",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_lib_semana_js",
+      "target": "lib_semana_numerosemana"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L49",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_lib_semana_js",
+      "target": "lib_semana_offsetdia"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L55",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_lib_semana_js",
+      "target": "lib_semana_plantillavacia"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L80",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_lib_semana_js",
+      "target": "lib_semana_remapearprogramacion"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L25",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_lib_semana_js",
+      "target": "lib_semana_todate"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L40",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "lib_semana_diasdesemana",
+      "target": "lib_semana_todate"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L34",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "lib_semana_nombredia",
+      "target": "lib_semana_todate"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L71",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "lib_semana_numerosemana",
+      "target": "lib_semana_todate"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/pages/FuelProgramaCargas.jsx",
+      "source_location": "L1312",
+      "weight": 1.0,
+      "source": "pages_fuelprogramacargas_fuelprogramacargas",
+      "target": "lib_semana_nombredia"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L50",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "lib_semana_offsetdia",
+      "target": "lib_semana_diasdesemana"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L56",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "lib_semana_plantillavacia",
+      "target": "lib_semana_diasdesemana"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L81",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "lib_semana_remapearprogramacion",
+      "target": "lib_semana_diasdesemana"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/pages/FuelProgramaCargas.jsx",
+      "source_location": "L1047",
+      "weight": 1.0,
+      "source": "pages_fuelprogramacargas_fuelprogramacargas",
+      "target": "lib_semana_diasdesemana"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/pages/Liquidaciones.jsx",
+      "source_location": "L66",
+      "weight": 1.0,
+      "source": "pages_liquidaciones_anticiposvacios",
+      "target": "lib_semana_diasdesemana"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L83",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "lib_semana_remapearprogramacion",
+      "target": "lib_semana_plantillavacia"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/pages/FuelProgramaCargas.jsx",
+      "source_location": "L238",
+      "weight": 1.0,
+      "source": "pages_fuelprogramacargas_fuelprogramacargas",
+      "target": "lib_semana_plantillavacia"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/lib/semana.js",
+      "source_location": "L74",
+      "weight": 1.0,
+      "source": "lib_semana_numerosemana",
+      "target": "pages_controlvacios_adddays"
     },
     {
       "relation": "contains",
@@ -36309,6 +38033,17 @@
     {
       "relation": "calls",
       "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/pages/Liquidaciones.jsx",
+      "source_location": "L60",
+      "weight": 1.0,
+      "source": "pages_liquidaciones_sabadodecorte",
+      "target": "pages_controlvacios_adddays"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/ControlVacios.jsx",
       "source_location": "L590",
@@ -36387,6 +38122,16 @@
       "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
       "target": "src_pages_cuentascliente_jsx"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/pages/DocumentacionLegal.jsx",
+      "source_location": "L56",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_pages_documentacionlegal_jsx",
+      "target": "pages_documentacionlegal_botondocumentos"
     },
     {
       "relation": "contains",
@@ -36550,39 +38295,6 @@
       "target": "src_pages_documentacionlegal_jsx"
     },
     {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/DocumentacionLegal.jsx",
-      "source_location": "L95",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_documentacionlegal_statusbadge",
-      "target": "pages_documentacionlegal_getestadovencimiento"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/DocumentacionLegal.jsx",
-      "source_location": "L99",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_documentacionlegal_statusbadge",
-      "target": "pages_documentacionlegal_getbadgeclasses"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/DocumentacionLegal.jsx",
-      "source_location": "L105",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_documentacionlegal_statusbadge",
-      "target": "pages_documentacionlegal_getbadgelabel"
-    },
-    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/ExpertoLogistica.jsx",
@@ -36664,6 +38376,16 @@
       "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
       "target": "src_pages_fuelconductores_jsx"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/pages/FuelProgramaCargas.jsx",
+      "source_location": "L82",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_pages_fuelprogramacargas_jsx",
+      "target": "pages_fuelprogramacargas_dias_nueva_semana"
     },
     {
       "relation": "contains",
@@ -37084,9 +38806,9 @@
       "source_file": "src/pages/index.jsx",
       "source_location": "L27",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
-      "target": "pages_index_clientes",
-      "confidence_score": 1.0
+      "target": "pages_index_clientes"
     },
     {
       "relation": "contains",
@@ -37094,9 +38816,9 @@
       "source_file": "src/pages/index.jsx",
       "source_location": "L19",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
-      "target": "pages_index_controlcombustible",
-      "confidence_score": 1.0
+      "target": "pages_index_controlcombustible"
     },
     {
       "relation": "contains",
@@ -37104,9 +38826,9 @@
       "source_file": "src/pages/index.jsx",
       "source_location": "L36",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
-      "target": "pages_index_controlvacios",
-      "confidence_score": 1.0
+      "target": "pages_index_controlvacios"
     },
     {
       "relation": "contains",
@@ -37114,9 +38836,9 @@
       "source_file": "src/pages/index.jsx",
       "source_location": "L37",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
-      "target": "pages_index_cuentascliente",
-      "confidence_score": 1.0
+      "target": "pages_index_cuentascliente"
     },
     {
       "relation": "contains",
@@ -37124,9 +38846,9 @@
       "source_file": "src/pages/index.jsx",
       "source_location": "L31",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
-      "target": "pages_index_documentacionlegal",
-      "confidence_score": 1.0
+      "target": "pages_index_documentacionlegal"
     },
     {
       "relation": "contains",
@@ -37134,9 +38856,9 @@
       "source_file": "src/pages/index.jsx",
       "source_location": "L29",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
-      "target": "pages_index_expertologistica",
-      "confidence_score": 1.0
+      "target": "pages_index_expertologistica"
     },
     {
       "relation": "contains",
@@ -37144,9 +38866,9 @@
       "source_file": "src/pages/index.jsx",
       "source_location": "L22",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
-      "target": "pages_index_fuelcamiones",
-      "confidence_score": 1.0
+      "target": "pages_index_fuelcamiones"
     },
     {
       "relation": "contains",
@@ -37154,9 +38876,9 @@
       "source_file": "src/pages/index.jsx",
       "source_location": "L21",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
-      "target": "pages_index_fuelconductores",
-      "confidence_score": 1.0
+      "target": "pages_index_fuelconductores"
     },
     {
       "relation": "contains",
@@ -37164,9 +38886,9 @@
       "source_file": "src/pages/index.jsx",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
-      "target": "pages_index_fuelprogramacargas",
-      "confidence_score": 1.0
+      "target": "pages_index_fuelprogramacargas"
     },
     {
       "relation": "contains",
@@ -37174,9 +38896,9 @@
       "source_file": "src/pages/index.jsx",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
-      "target": "pages_index_fuelregistrarviaje",
-      "confidence_score": 1.0
+      "target": "pages_index_fuelregistrarviaje"
     },
     {
       "relation": "contains",
@@ -37184,9 +38906,9 @@
       "source_file": "src/pages/index.jsx",
       "source_location": "L23",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
-      "target": "pages_index_fuelremolques",
-      "confidence_score": 1.0
+      "target": "pages_index_fuelremolques"
     },
     {
       "relation": "contains",
@@ -37194,9 +38916,9 @@
       "source_file": "src/pages/index.jsx",
       "source_location": "L24",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
-      "target": "pages_index_fuelviajes",
-      "confidence_score": 1.0
+      "target": "pages_index_fuelviajes"
     },
     {
       "relation": "contains",
@@ -37214,9 +38936,9 @@
       "source_file": "src/pages/index.jsx",
       "source_location": "L34",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
-      "target": "pages_index_historialpublico",
-      "confidence_score": 1.0
+      "target": "pages_index_historialpublico"
     },
     {
       "relation": "contains",
@@ -37224,9 +38946,9 @@
       "source_file": "src/pages/index.jsx",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
-      "target": "pages_index_home",
-      "confidence_score": 1.0
+      "target": "pages_index_home"
     },
     {
       "relation": "contains",
@@ -37234,9 +38956,9 @@
       "source_file": "src/pages/index.jsx",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
-      "target": "pages_index_iaauditorchat",
-      "confidence_score": 1.0
+      "target": "pages_index_iaauditorchat"
     },
     {
       "relation": "contains",
@@ -37244,9 +38966,9 @@
       "source_file": "src/pages/index.jsx",
       "source_location": "L30",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
-      "target": "pages_index_liquidaciones",
-      "confidence_score": 1.0
+      "target": "pages_index_liquidaciones"
     },
     {
       "relation": "contains",
@@ -37254,9 +38976,9 @@
       "source_file": "src/pages/index.jsx",
       "source_location": "L26",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
-      "target": "pages_index_login",
-      "confidence_score": 1.0
+      "target": "pages_index_login"
     },
     {
       "relation": "contains",
@@ -37264,9 +38986,9 @@
       "source_file": "src/pages/index.jsx",
       "source_location": "L35",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
-      "target": "pages_index_mantenimiento",
-      "confidence_score": 1.0
+      "target": "pages_index_mantenimiento"
     },
     {
       "relation": "contains",
@@ -37274,9 +38996,9 @@
       "source_file": "src/pages/index.jsx",
       "source_location": "L86",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
-      "target": "pages_index_notfound",
-      "confidence_score": 1.0
+      "target": "pages_index_notfound"
     },
     {
       "relation": "contains",
@@ -37284,9 +39006,9 @@
       "source_file": "src/pages/index.jsx",
       "source_location": "L41",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
-      "target": "pages_index_page_names",
-      "confidence_score": 1.0
+      "target": "pages_index_page_names"
     },
     {
       "relation": "contains",
@@ -37294,9 +39016,9 @@
       "source_file": "src/pages/index.jsx",
       "source_location": "L78",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
-      "target": "pages_index_pageloader",
-      "confidence_score": 1.0
+      "target": "pages_index_pageloader"
     },
     {
       "relation": "contains",
@@ -37324,9 +39046,9 @@
       "source_file": "src/pages/index.jsx",
       "source_location": "L38",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
-      "target": "pages_index_portalcliente",
-      "confidence_score": 1.0
+      "target": "pages_index_portalcliente"
     },
     {
       "relation": "contains",
@@ -37334,9 +39056,9 @@
       "source_file": "src/pages/index.jsx",
       "source_location": "L32",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
-      "target": "pages_index_rastreogps",
-      "confidence_score": 1.0
+      "target": "pages_index_rastreogps"
     },
     {
       "relation": "contains",
@@ -37344,9 +39066,9 @@
       "source_file": "src/pages/index.jsx",
       "source_location": "L33",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
-      "target": "pages_index_rastreopublico",
-      "confidence_score": 1.0
+      "target": "pages_index_rastreopublico"
     },
     {
       "relation": "contains",
@@ -37354,9 +39076,9 @@
       "source_file": "src/pages/index.jsx",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
-      "target": "pages_index_unidades",
-      "confidence_score": 1.0
+      "target": "pages_index_unidades"
     },
     {
       "relation": "imports_from",
@@ -37524,6 +39246,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/Liquidaciones.jsx",
+      "source_location": "L65",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_pages_liquidaciones_jsx",
+      "target": "pages_liquidaciones_anticiposvacios"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/pages/Liquidaciones.jsx",
       "source_location": "L36",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -37539,6 +39271,16 @@
       "confidence_score": 1.0,
       "source": "src_pages_liquidaciones_jsx",
       "target": "pages_liquidaciones_liquidaciones"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/pages/Liquidaciones.jsx",
+      "source_location": "L56",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_pages_liquidaciones_jsx",
+      "target": "pages_liquidaciones_sabadodecorte"
     },
     {
       "relation": "contains",
@@ -39021,8 +40763,41 @@
       "confidence_score": 1.0,
       "source": "wialon_proxy_agents_cloudflare_workers",
       "target": "wialon_proxy_agents_product_docs"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/pages/DocumentacionLegal.jsx",
+      "source_location": "L95",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "pages_documentacionlegal_statusbadge",
+      "target": "pages_documentacionlegal_getestadovencimiento"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/pages/DocumentacionLegal.jsx",
+      "source_location": "L99",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "pages_documentacionlegal_statusbadge",
+      "target": "pages_documentacionlegal_getbadgeclasses"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/pages/DocumentacionLegal.jsx",
+      "source_location": "L105",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "pages_documentacionlegal_statusbadge",
+      "target": "pages_documentacionlegal_getbadgelabel"
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "388749cb2156338cb4d41e99ff6968c1856d558b"
+  "built_at_commit": "9f9c1e59f4dc97c341e2e0881275972d6c9cb34c"
 }
