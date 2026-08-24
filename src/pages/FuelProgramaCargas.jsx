@@ -59,6 +59,7 @@ import {
   Info,
   ImageIcon,
   Route,
+  FileText,
 } from "lucide-react";
 import { format, addDays, parseISO, differenceInCalendarDays } from "date-fns";
 import { es } from "date-fns/locale";
@@ -189,6 +190,11 @@ function pathEvidenciaStorage(url) {
   const marker = "/storage/v1/object/public/evidencias/";
   const i = url.indexOf(marker);
   return i === -1 ? null : decodeURIComponent(url.slice(i + marker.length));
+}
+
+// Las evidencias se guardan como URL (sin mime_type propio); el tipo se infiere de la extensión.
+function esPDFEvidencia(url) {
+  return /\.pdf($|\?)/i.test(url || "");
 }
 
 // Borra todas las fotos de uno o varios viajes (carpeta evidencias/{viajeId},
@@ -1920,7 +1926,7 @@ export default function FuelProgramaCargas() {
                                       }`}
                                     >
                                       {fotos.length > 0 ? <ImageIcon className="w-4 h-4" /> : <Camera className="w-4 h-4" />}
-                                      Fotos ({fotos.length})
+                                      Archivos ({fotos.length})
                                     </button>
                                     
                                     <button
@@ -1938,18 +1944,27 @@ export default function FuelProgramaCargas() {
                                 {isOpen && (
                                   <div className="border-t border-slate-100 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-950/50 p-5 animate-in slide-in-from-top-2 duration-200">
                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                      {/* Fotos existentes */}
-                                      {fotos.map((url, i) => (
+                                      {/* Archivos existentes (fotos y PDFs) */}
+                                      {fotos.map((url, i) => {
+                                        const esPdf = esPDFEvidencia(url);
+                                        return (
                                         <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-slate-200 dark:border-zinc-800 group/foto bg-black">
-                                          <img src={url} alt={`Evidencia ${i}`} className="w-full h-full object-contain" />
+                                          {esPdf ? (
+                                            <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-slate-100 dark:bg-zinc-900">
+                                              <FileText className="w-10 h-10 text-red-500" />
+                                              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">PDF</span>
+                                            </div>
+                                          ) : (
+                                            <img src={url} alt={`Evidencia ${i}`} className="w-full h-full object-contain" />
+                                          )}
                                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/foto:opacity-100 transition-opacity flex items-center justify-center gap-2 backdrop-blur-sm">
-                                            <button 
-                                              onClick={() => setFotoVisor(url)}
+                                            <button
+                                              onClick={() => esPdf ? window.open(url, "_blank", "noopener,noreferrer") : setFotoVisor(url)}
                                               className="p-2 bg-white/20 hover:bg-white/40 rounded-lg text-white backdrop-blur-md transition-colors"
                                             >
                                               <ZoomIn className="w-5 h-5" />
                                             </button>
-                                            <button 
+                                            <button
                                               onClick={() => setFotoAEliminar({ evidenciaId: ev.id, currentFotosUrls: fotos, urlToRemove: url })}
                                               className="p-2 bg-red-500/80 hover:bg-red-600 rounded-lg text-white backdrop-blur-md transition-colors"
                                             >
@@ -1957,9 +1972,10 @@ export default function FuelProgramaCargas() {
                                             </button>
                                           </div>
                                         </div>
-                                      ))}
+                                        );
+                                      })}
 
-                                      {/* Botón Añadir Foto */}
+                                      {/* Botón Añadir Foto o PDF */}
                                       <div className="relative aspect-square rounded-xl border-2 border-dashed border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-900 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors flex flex-col items-center justify-center cursor-pointer overflow-hidden group/add">
                                         {fotoCargando === ev.id ? (
                                           <div className="flex flex-col items-center gap-2 text-primary">
@@ -1971,12 +1987,12 @@ export default function FuelProgramaCargas() {
                                             <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-zinc-800 flex items-center justify-center mb-2 group-hover/add:scale-110 transition-transform">
                                               <Upload className="w-5 h-5 text-slate-500 dark:text-slate-400" />
                                             </div>
-                                            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Añadir Foto</span>
+                                            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase text-center px-1">Añadir Foto o PDF</span>
                                           </>
                                         )}
-                                        <input 
-                                          type="file" 
-                                          accept="image/*" 
+                                        <input
+                                          type="file"
+                                          accept="image/*,application/pdf"
                                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                           disabled={fotoCargando === ev.id}
                                           onChange={(e) => {
