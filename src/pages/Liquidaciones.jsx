@@ -179,7 +179,7 @@ export default function Liquidaciones() {
       .filter(v => String(v.conductor_id) === String(conductorId))
       .map(v => {
         const isFull = v.tipo_viaje && v.tipo_viaje.toLowerCase().includes("full");
-        const porcentaje = isFull ? 15.0 : porcentajeBase;
+        const porcentaje = isFull ? 14.0 : porcentajeBase;
 
         const km = parseFloat(v.kilometros_total || v.kilometros) || 0;
         const litros = parseFloat(v.litros_combustible) || 0;

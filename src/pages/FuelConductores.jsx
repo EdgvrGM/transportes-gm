@@ -585,7 +585,7 @@ export default function FuelConductores() {
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Porcentaje del flete que se le paga en cada viaje. Se usa en
-                  Liquidaciones (los viajes FULL aplican 15% fijo).
+                  Liquidaciones (los viajes FULL aplican 14% fijo).
                 </p>
               </div>
 

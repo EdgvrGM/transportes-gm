@@ -33,6 +33,7 @@ const RastreoGPS = lazy(() => import("./RastreoGPS.jsx"));
 const RastreoPublico = lazy(() => import("./RastreoPublico.jsx"));
 const HistorialPublico = lazy(() => import("./HistorialPublico.jsx"));
 const Mantenimiento = lazy(() => import("./Mantenimiento"));
+const CostosUnidad = lazy(() => import("./CostosUnidad"));
 const ControlVacios = lazy(() => import("./ControlVacios"));
 const CuentasCliente = lazy(() => import("./CuentasCliente.jsx"));
 const PortalCliente = lazy(() => import("./PortalCliente.jsx"));
@@ -56,6 +57,7 @@ const PAGE_NAMES = [
   "DocumentacionLegal",
   "RastreoGPS",
   "Mantenimiento",
+  "CostosUnidad",
   "ControlVacios",
   "CuentasCliente",
   "PortalCliente",
@@ -147,6 +149,7 @@ function PagesContent() {
             <Route path="/documentacionlegal" element={<DocumentacionLegal />} />
             <Route path="/rastreogps" element={<RastreoGPS />} />
             <Route path="/mantenimiento" element={<Mantenimiento />} />
+            <Route path="/costosunidad" element={<CostosUnidad />} />
             <Route path="/controlvacios" element={<ControlVacios />} />
             <Route path="/cuentascliente" element={<CuentasCliente />} />
             <Route path="/iaauditorchat" element={<IAAuditorChat />} />

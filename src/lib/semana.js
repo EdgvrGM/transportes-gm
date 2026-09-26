@@ -86,3 +86,22 @@ export function remapearProgramacion(programacion, fechaInicioPrevia, fechaInici
   });
   return salida;
 }
+
+// ── Semana calendario Lunes–Domingo ──────────────────────────────────────────
+// Independiente del Programa de Cargas: la usan Control de Vacíos y Costos por
+// Unidad, que agrupan por semana calendario y no por semana operativa.
+
+// Lunes (00:00 local) de la semana que contiene `fecha`.
+export function lunesDeSemana(fecha) {
+  const x = toDate(fecha) ?? new Date();
+  const d = new Date(x.getFullYear(), x.getMonth(), x.getDate());
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return d;
+}
+
+// Suma días en hora local (sin pasar por UTC).
+export function sumarDias(fecha, n) {
+  const d = new Date(fecha);
+  d.setDate(d.getDate() + n);
+  return d;
+}

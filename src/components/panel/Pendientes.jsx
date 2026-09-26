@@ -6,7 +6,7 @@ import { createPageUrl } from "@/utils";
 import { differenceInDays, parseISO } from "date-fns";
 import { localDateStr, formatearFecha } from "@/lib/fechas";
 import { offsetDia } from "@/lib/semana";
-import { Inbox, Fuel, Link2, Wrench, FileWarning, ChevronRight, Check, Container } from "lucide-react";
+import { Inbox, Fuel, Link2, FileWarning, ChevronRight, Check, Container } from "lucide-react";
 
 import { FECHA_LIMITE_ARCHIVO } from "@/lib/archivo";
 
@@ -55,14 +55,6 @@ export default function Pendientes() {
     queryKey: ["panel-programa-cargas"],
     queryFn: async () => {
       const { data } = await supabase.from("ProgramaCargas").select("*").order("fecha_inicio", { ascending: false });
-      return data || [];
-    },
-  });
-
-  const { data: ordenes = [] } = useQuery({
-    queryKey: ["panel-ordenes"],
-    queryFn: async () => {
-      const { data } = await supabase.from("OrdenTrabajo").select("id, estado");
       return data || [];
     },
   });
@@ -132,8 +124,6 @@ export default function Pendientes() {
       return !tieneMatch;
     });
 
-    const otAbiertas = ordenes.filter((o) => ["abierta", "en_progreso", "en_espera"].includes(o.estado));
-
     const docsVencer = [];
     const hoy = new Date();
     const checkDoc = (fechaStr, ref) => {
@@ -171,10 +161,6 @@ export default function Pendientes() {
       ? differenceInDays(hoy, parseISO(fechaMasAntigua))
       : null;
 
-    const otEnProgreso = ordenes.filter((o) => o.estado === "en_progreso").length;
-    const otEnEspera = ordenes.filter((o) => o.estado === "en_espera").length;
-    const otSinAsignar = ordenes.filter((o) => o.estado === "abierta").length;
-
     const vacioFechaMasAntigua = vaciosPend
       .map((v) => v.fecha_carga)
       .filter(Boolean)
@@ -196,11 +182,6 @@ export default function Pendientes() {
         sinVincular.length > 0
           ? "No coinciden por conductor + camión con ningún programa"
           : "Todos los viajes están vinculados",
-      otAbiertas: otAbiertas.length,
-      otSubtitle:
-        otAbiertas.length > 0
-          ? `${otEnProgreso} en progreso · ${otEnEspera} en espera · ${otSinAsignar} sin asignar`
-          : "Sin órdenes pendientes",
       docsCount: docsVencer.length,
       docsSubtitle: docMasUrgente
         ? `${docMasUrgente.nombre} · ${docMasUrgente.tipo} en ${docMasUrgente.dias}d`
@@ -210,9 +191,9 @@ export default function Pendientes() {
         ? `${vaciosPend.length} contenedor${vaciosPend.length !== 1 ? "es" : ""} pendiente${vaciosPend.length !== 1 ? "s" : ""}`
         : "Sin contenedores pendientes",
     };
-  }, [viajes, programas, ordenes, conductoresDoc, camionesDoc, vaciosPend]);
+  }, [viajes, programas, conductoresDoc, camionesDoc, vaciosPend]);
 
-  const total = stats.sinCombustible + stats.sinVincular + stats.otAbiertas + stats.docsCount + stats.vaciosCount;
+  const total = stats.sinCombustible + stats.sinVincular + stats.docsCount + stats.vaciosCount;
 
   return (
     <section className="bg-card border border-border rounded-2xl p-5 md:p-6 shadow-sm h-full">
@@ -258,16 +239,6 @@ export default function Pendientes() {
           subtitle={stats.sinVincularSubtitle}
           count={stats.sinVincular}
           onClick={() => navigate(createPageUrl("FuelViajes"), { state: { soloSinVincular: true } })}
-        />
-        <PendingRow
-          icon={Wrench}
-          iconBg="bg-blue-500/10"
-          iconColor="text-blue-500"
-          accentColor="text-blue-500"
-          title="Órdenes de trabajo abiertas"
-          subtitle={stats.otSubtitle}
-          count={stats.otAbiertas}
-          onClick={() => navigate(createPageUrl("Mantenimiento"))}
         />
         <PendingRow
           icon={FileWarning}

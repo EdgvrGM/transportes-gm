@@ -59,6 +59,7 @@ import {
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { localDateStr, formatearFecha } from "@/lib/fechas";
+import { lunesDeSemana, sumarDias } from "@/lib/semana";
 import VisorImagen from "@/components/fuel/VisorImagen";
 
 const ESTATUS_VACIOS = [
@@ -70,19 +71,6 @@ const ESTATUS_VACIOS = [
 const getEstatus = (v) => ESTATUS_VACIOS.find((e) => e.value === v) || ESTATUS_VACIOS[0];
 
 const DIAS_SEMANA = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-
-function getLunes(d) {
-  const x = new Date(d);
-  x.setHours(0, 0, 0, 0);
-  x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
-  return x;
-}
-
-function addDays(d, n) {
-  const x = new Date(d);
-  x.setDate(x.getDate() + n);
-  return x;
-}
 
 // Extrae la ruta interna del bucket "vacios" a partir de su URL pública.
 function pathFotoStorage(url) {
@@ -481,7 +469,7 @@ export default function ControlVacios() {
   const { toast } = useToast();
 
   const [vista, setVista] = useState("semana");
-  const [lunes, setLunes] = useState(() => getLunes(new Date()));
+  const [lunes, setLunes] = useState(() => lunesDeSemana(new Date()));
   const [verRezagados, setVerRezagados] = useState(false);
 
   const [dialogAbierto, setDialogAbierto] = useState(false);
@@ -574,12 +562,12 @@ export default function ControlVacios() {
   // ---------- Semana ----------
   const hoyStr = localDateStr(new Date());
   const lunesStr = localDateStr(lunes);
-  const esSemanaActual = localDateStr(getLunes(new Date())) === lunesStr;
+  const esSemanaActual = localDateStr(lunesDeSemana(new Date())) === lunesStr;
 
   const dias = useMemo(
     () =>
       Array.from({ length: 7 }, (_, i) => {
-        const fecha = addDays(lunes, i);
+        const fecha = sumarDias(lunes, i);
         return { nombre: DIAS_SEMANA[i], fecha, fechaStr: localDateStr(fecha) };
       }),
     [lunes]
@@ -1053,7 +1041,7 @@ export default function ControlVacios() {
     onCambiarEstatus: (id, estatus) => actualizarEstatusMutation.mutate({ id, estatus }),
   };
 
-  const rangoSemana = `${format(lunes, "dd MMM", { locale: es })} – ${format(addDays(lunes, 5), "dd MMM yyyy", { locale: es })}`;
+  const rangoSemana = `${format(lunes, "dd MMM", { locale: es })} – ${format(sumarDias(lunes, 5), "dd MMM yyyy", { locale: es })}`;
 
   const gridTarjetas = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3";
 
@@ -1137,20 +1125,20 @@ export default function ControlVacios() {
             <>
               <div className="inline-flex items-center rounded-xl border border-border bg-card overflow-hidden">
                 <button
-                  onClick={() => setLunes((l) => getLunes(addDays(l, -7)))}
+                  onClick={() => setLunes((l) => lunesDeSemana(sumarDias(l, -7)))}
                   aria-label="Semana anterior"
                   className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => setLunes(getLunes(new Date()))}
+                  onClick={() => setLunes(lunesDeSemana(new Date()))}
                   className="h-9 px-3 text-xs font-bold border-x border-border text-foreground hover:bg-muted transition-colors cursor-pointer"
                 >
                   Hoy
                 </button>
                 <button
-                  onClick={() => setLunes((l) => getLunes(addDays(l, 7)))}
+                  onClick={() => setLunes((l) => lunesDeSemana(sumarDias(l, 7)))}
                   aria-label="Semana siguiente"
                   className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
                 >

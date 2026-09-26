@@ -59,6 +59,7 @@ export default [
     files: [
       'src/components/panel/**/*.{js,jsx}',
       'src/components/legal/**/*.{js,jsx}',
+      'src/components/costos/**/*.{js,jsx}',
     ],
     rules: {
       'react/prop-types': 'off',

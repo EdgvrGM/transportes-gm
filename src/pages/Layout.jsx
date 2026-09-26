@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   Navigation,
   Wrench,
+  Receipt,
   Container,
   KeyRound,
 } from "lucide-react";
@@ -43,6 +44,7 @@ const SYSTEM_PAGES = [
   "DocumentacionLegal",
   "RastreoGPS",
   "Mantenimiento",
+  "CostosUnidad",
   "ControlVacios",
   "CuentasCliente",
 ];
@@ -245,16 +247,30 @@ export default function Layout({ children, currentPageName }) {
               <span className="font-medium">Liquidaciones</span>
             </Link>
 
-            {/* BOTÓN: MANTENIMIENTO (Directo) */}
+            {/* BOTÓN: COSTOS POR UNIDAD (Directo) */}
             <Link
-              to={createPageUrl("Mantenimiento")}
+              to={createPageUrl("CostosUnidad")}
               className={navItemClass(
-                location.pathname === createPageUrl("Mantenimiento"),
+                location.pathname === createPageUrl("CostosUnidad"),
               )}
             >
-              <Wrench className="w-5 h-5" />
-              <span className="font-medium">Mantenimiento</span>
+              <Receipt className="w-5 h-5" />
+              <span className="font-medium">Costos por Unidad</span>
             </Link>
+
+            {/* MANTENIMIENTO — ARCHIVADO (2026-09). Reemplazado por Costos por Unidad.
+                La ruta /mantenimiento sigue viva para consultar las OTs históricas. */}
+            {false && (
+              <Link
+                to={createPageUrl("Mantenimiento")}
+                className={navItemClass(
+                  location.pathname === createPageUrl("Mantenimiento"),
+                )}
+              >
+                <Wrench className="w-5 h-5" />
+                <span className="font-medium">Mantenimiento</span>
+              </Link>
+            )}
 
             {/* BOTÓN: DOCUMENTACIÓN LEGAL (Directo) */}
             <Link

@@ -40,6 +40,14 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Categorías del módulo Costos (orden fijo, paleta validada CVD). */
+    --costo-1: #2a78d6;
+    --costo-2: #eb6834;
+    --costo-3: #1baf7a;
+    --costo-4: #eda100;
+    --costo-5: #e87ba4;
+    --costo-6: #008300;
+    --costo-7: #4a3aa7;
   }
 
   .dark {
@@ -75,6 +83,13 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 5% 15%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    --costo-1: #3987e5;
+    --costo-2: #d95926;
+    --costo-3: #199e70;
+    --costo-4: #c98500;
+    --costo-5: #d55181;
+    --costo-6: #008300;
+    --costo-7: #9085e9;
   }
 
   /* --- ZONA DE LUZ FORZADA --- */

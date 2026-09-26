@@ -8,7 +8,7 @@ import EstadoFlota from "@/components/panel/EstadoFlota";
 import ColaCargaCompacta from "@/components/panel/ColaCargaCompacta";
 import Pendientes from "@/components/panel/Pendientes";
 import PulsoDia from "@/components/panel/PulsoDia";
-import FlotaMantenimiento from "@/components/panel/FlotaMantenimiento";
+import CostosSemana from "@/components/panel/CostosSemana";
 
 export default function ControlCombustible() {
   const queryClient = useQueryClient();
@@ -74,7 +74,7 @@ export default function ControlCombustible() {
           </div>
         </div>
 
-        <FlotaMantenimiento />
+        <CostosSemana />
       </div>
     </div>
   );
