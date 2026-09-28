@@ -4,20 +4,24 @@ import {
   Cog,
   Droplet,
   ClipboardCheck,
-  SprayCan,
+  Droplets,
+  Hammer,
   MoreHorizontal,
 } from "lucide-react";
 
 // Catálogo de categorías. Debe coincidir con el CHECK `costo_unidad_categoria`
-// (última versión: 20260928_costos_generales_aceites.sql): si agregas una aquí, agrégala allá.
-// El orden es fijo y define el color (--costo-N): nunca reordenar, sólo agregar.
+// (última versión: 20260928_costos_talachas.sql): si agregas una aquí, agrégala allá.
+// Cada categoría tiene su color fijo (--costo-N): nunca reasignar un color existente.
+// El orden de la lista es el de la UI; los colores vecinos están validados para
+// daltonismo en este orden — si mueves o agregas una, re-valida la paleta.
 export const CATEGORIAS = [
   { key: "llantas", label: "Llantas", icon: CircleDot, color: "var(--costo-1)" },
   { key: "reparacion", label: "Reparación", icon: Wrench, color: "var(--costo-2)" },
   { key: "refacciones", label: "Refacciones", icon: Cog, color: "var(--costo-3)" },
   { key: "aceites", label: "Aceites", icon: Droplet, color: "var(--costo-4)" },
   { key: "servicio_preventivo", label: "Servicio preventivo", icon: ClipboardCheck, color: "var(--costo-5)" },
-  { key: "lavado", label: "Lavado", icon: SprayCan, color: "var(--costo-6)" },
+  { key: "lavado", label: "Lavado", icon: Droplets, color: "var(--costo-6)" },
+  { key: "talachas", label: "Talachas", icon: Hammer, color: "var(--costo-8)" },
   { key: "otros", label: "Otros", icon: MoreHorizontal, color: "var(--costo-7)" },
 ];
 
