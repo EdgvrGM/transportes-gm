@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { differenceInHours, differenceInMinutes, addHours, format } from "date-fns";
+import { differenceInHours, differenceInMinutes, addHours, format, formatDistanceToNowStrict } from "date-fns";
+import { es } from "date-fns/locale";
 import { supabase } from "@/supabaseClient";
+import { POLL_POSITIONS_MS, VISITA_ACTIVA_MS } from "@/components/gps/constants";
 import {
-  Link2, Clock, Trash2, Check, Plus, Share2, AlertCircle, Loader2,
+  Link2, Clock, Trash2, Check, Plus, Share2, AlertCircle, Loader2, Eye, MapPin, Monitor, Smartphone,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -56,6 +58,28 @@ function TiempoRestante({ expiresAt }) {
   );
 }
 
+function describirDispositivo(ua = "") {
+  const movil = /Mobi|Android|iPhone|iPad/i.test(ua);
+  const so =
+    /Android/i.test(ua)           ? "Android" :
+    /iPhone|iPad|iPod/i.test(ua)  ? "iOS" :
+    /Windows/i.test(ua)           ? "Windows" :
+    /Mac OS X/i.test(ua)          ? "macOS" :
+    /Linux/i.test(ua)             ? "Linux" : "Desconocido";
+  // El orden importa: Edge y Opera también se anuncian como Chrome, y Chrome como Safari.
+  const navegador =
+    /Edg\//.test(ua)                ? "Edge" :
+    /OPR\//.test(ua)                ? "Opera" :
+    /SamsungBrowser/.test(ua)       ? "Samsung Internet" :
+    /FBAN|FBAV|Instagram/.test(ua)  ? "Navegador de Facebook/Instagram" :
+    /CriOS|Chrome\//.test(ua)       ? "Chrome" :
+    /FxiOS|Firefox\//.test(ua)      ? "Firefox" :
+    /Safari\//.test(ua)             ? "Safari" : "Otro";
+  return { movil, texto: `${so} · ${navegador}` };
+}
+
+const estaActiva = (visita) => Date.now() - new Date(visita.ultima_vez).getTime() < VISITA_ACTIVA_MS;
+
 export default function CompartidosGPS({ positions = [] }) {
   const queryClient = useQueryClient();
 
@@ -69,6 +93,25 @@ export default function CompartidosGPS({ positions = [] }) {
       return data ?? [];
     },
   });
+
+  const { data: visitas = [] } = useQuery({
+    queryKey: ["rastreo-visitas"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("RastreoVisita")
+        .select("token, ip, user_agent, pais, region, ciudad, primera_vez, ultima_vez, hits")
+        .order("ultima_vez", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    refetchInterval: POLL_POSITIONS_MS,
+  });
+
+  const visitasPorToken = useMemo(() => {
+    const map = {};
+    visitas.forEach((v) => { (map[v.token] ??= []).push(v); });
+    return map;
+  }, [visitas]);
 
   // Limpiar expirados silenciosamente al montar
   useEffect(() => {
@@ -93,6 +136,7 @@ export default function CompartidosGPS({ positions = [] }) {
   const [linkNuevo, setLinkNuevo]             = useState(null);
   const [linkNuevoCopiado, setLinkNuevoCopiado] = useState(false);
   const [errorNuevo, setErrorNuevo]           = useState(null);
+  const [visitasDe, setVisitasDe]             = useState(null);
 
   const rutaPublica = (sesion) =>
     sesion.tipo === "historial" ? `/historial/${sesion.token}` : `/rastreo/${sesion.token}`;
@@ -188,6 +232,31 @@ export default function CompartidosGPS({ positions = [] }) {
         <p className="text-[10px] text-muted-foreground mt-0.5">
           {format(new Date(sesion.created_at), "yyyy-MM-dd HH:mm")} → {format(new Date(sesion.expires_at), "yyyy-MM-dd")}
         </p>
+        {(() => {
+          const lista = visitasPorToken[sesion.token] ?? [];
+          const viendo = lista.filter(estaActiva).length;
+          return (
+            <button
+              onClick={() => setVisitasDe(sesion)}
+              disabled={lista.length === 0}
+              title="Ver visitantes"
+              className="mt-1.5 flex items-center gap-1.5 text-[11px] rounded px-1.5 py-0.5 -ml-1.5 hover:bg-accent transition-colors disabled:hover:bg-transparent disabled:cursor-default"
+            >
+              <Eye className={`w-3.5 h-3.5 ${viendo > 0 ? "text-green-500" : "text-muted-foreground"}`} />
+              {viendo > 0 ? (
+                <span className="font-semibold text-green-600 dark:text-green-400 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  {viendo} viendo ahora
+                </span>
+              ) : (
+                <span className="text-muted-foreground">Nadie viendo</span>
+              )}
+              <span className="text-muted-foreground">
+                · {lista.length === 0 ? "sin visitas" : `${lista.length} visitante${lista.length === 1 ? "" : "s"}`}
+              </span>
+            </button>
+          );
+        })()}
         <div className="flex items-center gap-1 mt-2">
           <button
             onClick={() => copyLink(sesion)}
@@ -279,6 +348,64 @@ export default function CompartidosGPS({ positions = [] }) {
           {expiradas.map(renderCard)}
         </>
       )}
+
+      {/* Dialog — visitantes del enlace */}
+      <Dialog open={!!visitasDe} onOpenChange={(open) => !open && setVisitasDe(null)}>
+        <DialogContent className="max-w-md min-w-0">
+          <DialogHeader>
+            <DialogTitle>Visitantes — {visitasDe?.wialon_nombre}</DialogTitle>
+          </DialogHeader>
+          {visitasDe && (() => {
+            const lista = [...(visitasPorToken[visitasDe.token] ?? [])].sort(
+              (a, b) => Number(estaActiva(b)) - Number(estaActiva(a))
+            );
+            const viendo = lista.filter(estaActiva).length;
+            return (
+              <div className="space-y-2 min-w-0">
+                <p className="text-xs text-muted-foreground">
+                  {viendo} viendo ahora · {lista.length} visitante{lista.length === 1 ? "" : "s"} en total.
+                  Un visitante es una combinación IP + navegador; varias personas en la misma red pueden compartir IP.
+                </p>
+                <div className="max-h-[60vh] overflow-y-auto space-y-2 pr-1">
+                  {lista.length === 0 && (
+                    <p className="text-xs text-muted-foreground text-center py-4">Sin visitas registradas</p>
+                  )}
+                  {lista.map((v) => {
+                    const activa = estaActiva(v);
+                    const disp = describirDispositivo(v.user_agent);
+                    const lugar = [v.ciudad, v.region, v.pais].filter(Boolean).join(", ");
+                    const DispIcon = disp.movil ? Smartphone : Monitor;
+                    return (
+                      <div key={`${v.ip}|${v.user_agent}`} className="p-2.5 rounded-lg border border-border bg-card min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className={`w-2 h-2 rounded-full shrink-0 ${activa ? "bg-green-500 animate-pulse" : "bg-muted-foreground/40"}`} />
+                          <span className="font-mono text-sm text-foreground truncate flex-1 select-all">{v.ip}</span>
+                          <span className={`text-[10px] font-semibold shrink-0 ${activa ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
+                            {activa
+                              ? "En línea"
+                              : formatDistanceToNowStrict(new Date(v.ultima_vez), { locale: es, addSuffix: true })}
+                          </span>
+                        </div>
+                        <div className="mt-1 space-y-0.5 text-[11px] text-muted-foreground">
+                          {lugar && (
+                            <p className="flex items-center gap-1 truncate"><MapPin className="w-3 h-3 shrink-0" />{lugar}</p>
+                          )}
+                          <p className="flex items-center gap-1 truncate" title={v.user_agent}>
+                            <DispIcon className="w-3 h-3 shrink-0" />{disp.texto}
+                          </p>
+                          <p>
+                            Primera visita {format(new Date(v.primera_vez), "dd/MM HH:mm")} · última {format(new Date(v.ultima_vez), "dd/MM HH:mm")} · {v.hits} consulta{v.hits === 1 ? "" : "s"}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
 
       {/* AlertDialog — confirmar revocar */}
       <AlertDialog

@@ -5,7 +5,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { supabase } from "@/supabaseClient";
 import { createUnitIcon } from "@/components/gps/unitIconHelper";
-import { WIALON_PROXY_URL, VELOCIDAD_EXCESO, CENTRO_MX } from "@/components/gps/constants";
+import { WIALON_PROXY_URL, VELOCIDAD_EXCESO, CENTRO_MX, PING_HISTORIAL_MS } from "@/components/gps/constants";
 import { Play, Pause, ChevronsLeft, ChevronsRight, ChevronLeft, ChevronRight } from "lucide-react";
 
 import icon from "leaflet/dist/images/marker-icon.png";
@@ -73,6 +73,15 @@ export default function HistorialPublico() {
       setSesion(row);
     })();
   }, [token]);
+
+  // Latido de presencia para el panel "Compartidos" (esta página no hace polling)
+  useEffect(() => {
+    if (!sesion) return;
+    const ping = () =>
+      fetch(`${WIALON_PROXY_URL}?action=ping&token=${encodeURIComponent(token)}`).catch(() => {});
+    const t = setInterval(ping, PING_HISTORIAL_MS);
+    return () => clearInterval(t);
+  }, [sesion, token]);
 
   // Cargar recorrido del rango guardado
   useEffect(() => {

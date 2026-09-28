@@ -526,9 +526,34 @@ async function autorizar(request: Request, url: URL, env: Env): Promise<Autoriza
   return { ok: false };
 }
 
+// ── Visitas a enlaces compartidos ─────────────────────────────────────────────
+// Cada petición con ?token= cuenta como latido del visitante; el panel
+// "Compartidos" considera "viendo ahora" a quien latió en los últimos segundos.
+async function registrarVisita(request: Request, shareToken: string, env: Env): Promise<void> {
+  const ip = request.headers.get("CF-Connecting-IP");
+  if (!ip) return;
+  const cf = (request.cf ?? {}) as { country?: string; region?: string; city?: string };
+  try {
+    await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/registrar_visita_rastreo`, {
+      method: "POST",
+      headers: { ...sbHeaders(env), "Content-Type": "application/json" },
+      body: JSON.stringify({
+        p_token:      shareToken,
+        p_ip:         ip,
+        p_user_agent: request.headers.get("User-Agent") ?? "",
+        p_pais:       cf.country ?? null,
+        p_region:     cf.region ?? null,
+        p_ciudad:     cf.city ?? null,
+      }),
+    });
+  } catch (e) {
+    console.error("registrarVisita:", String(e));
+  }
+}
+
 // ── Handler principal ─────────────────────────────────────────────────────────
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders });
     }
@@ -567,6 +592,12 @@ export default {
           status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      ctx.waitUntil(registrarVisita(request, url.searchParams.get("token")!, env));
+    }
+
+    // Latido sin tocar Wialon (lo usa /historial/:token, que no hace polling).
+    if (action === "ping") {
+      return new Response(null, { status: 204, headers: corsHeaders });
     }
 
     let eid: string | null = null;

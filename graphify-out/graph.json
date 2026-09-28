@@ -324,7 +324,7 @@
       "source_file": "package.json",
       "source_location": "L1",
       "id": "package_json",
-      "community": 135,
+      "community": 6,
       "norm_label": "package.json"
     },
     {
@@ -333,7 +333,7 @@
       "source_file": "package.json",
       "source_location": "L2",
       "id": "transportes_gm_package_name",
-      "community": 135,
+      "community": 6,
       "norm_label": "name"
     },
     {
@@ -342,7 +342,7 @@
       "source_file": "package.json",
       "source_location": "L3",
       "id": "transportes_gm_package_private",
-      "community": 135,
+      "community": 6,
       "norm_label": "private"
     },
     {
@@ -351,7 +351,7 @@
       "source_file": "package.json",
       "source_location": "L4",
       "id": "transportes_gm_package_version",
-      "community": 135,
+      "community": 6,
       "norm_label": "version"
     },
     {
@@ -360,7 +360,7 @@
       "source_file": "package.json",
       "source_location": "L5",
       "id": "transportes_gm_package_type",
-      "community": 135,
+      "community": 6,
       "norm_label": "type"
     },
     {
@@ -369,7 +369,7 @@
       "source_file": "package.json",
       "source_location": "L6",
       "id": "transportes_gm_package_scripts",
-      "community": 135,
+      "community": 6,
       "norm_label": "scripts"
     },
     {
@@ -378,7 +378,7 @@
       "source_file": "package.json",
       "source_location": "L7",
       "id": "transportes_gm_package_scripts_dev",
-      "community": 135,
+      "community": 6,
       "norm_label": "dev"
     },
     {
@@ -387,7 +387,7 @@
       "source_file": "package.json",
       "source_location": "L8",
       "id": "transportes_gm_package_scripts_build",
-      "community": 135,
+      "community": 6,
       "norm_label": "build"
     },
     {
@@ -396,7 +396,7 @@
       "source_file": "package.json",
       "source_location": "L9",
       "id": "transportes_gm_package_scripts_lint",
-      "community": 135,
+      "community": 6,
       "norm_label": "lint"
     },
     {
@@ -405,7 +405,7 @@
       "source_file": "package.json",
       "source_location": "L10",
       "id": "transportes_gm_package_scripts_preview",
-      "community": 135,
+      "community": 6,
       "norm_label": "preview"
     },
     {
@@ -11011,10 +11011,19 @@
       "norm_label": "autorizar()"
     },
     {
+      "label": "registrarVisita()",
+      "file_type": "code",
+      "source_file": "cloudflare-workers/wialon-proxy/src/index.ts",
+      "source_location": "L532",
+      "id": "src_index_registrarvisita",
+      "community": 3,
+      "norm_label": "registrarvisita()"
+    },
+    {
       "label": "fetch()",
       "file_type": "code",
       "source_file": "cloudflare-workers/wialon-proxy/src/index.ts",
-      "source_location": "L531",
+      "source_location": "L556",
       "id": "src_index_fetch",
       "community": 3,
       "norm_label": "fetch()"
@@ -11023,7 +11032,7 @@
       "label": "scheduled()",
       "file_type": "code",
       "source_file": "cloudflare-workers/wialon-proxy/src/index.ts",
-      "source_location": "L654",
+      "source_location": "L685",
       "id": "src_index_scheduled",
       "community": 3,
       "norm_label": "scheduled()"
@@ -11032,7 +11041,7 @@
       "label": "Env",
       "file_type": "code",
       "source_file": "cloudflare-workers/wialon-proxy/src/index.ts",
-      "source_location": "L662",
+      "source_location": "L693",
       "id": "src_index_env",
       "community": 3,
       "norm_label": "env"
@@ -11578,6 +11587,321 @@
       "norm_label": "usetheme()"
     },
     {
+      "label": "CapturaCostoDialog.jsx",
+      "file_type": "code",
+      "source_file": "src/components/costos/CapturaCostoDialog.jsx",
+      "source_location": "L1",
+      "id": "src_components_costos_capturacostodialog_jsx",
+      "community": 135,
+      "norm_label": "capturacostodialog.jsx"
+    },
+    {
+      "label": "formVacio()",
+      "file_type": "code",
+      "source_file": "src/components/costos/CapturaCostoDialog.jsx",
+      "source_location": "L23",
+      "id": "costos_capturacostodialog_formvacio",
+      "community": 137,
+      "norm_label": "formvacio()"
+    },
+    {
+      "label": "formDesdeCosto()",
+      "file_type": "code",
+      "source_file": "src/components/costos/CapturaCostoDialog.jsx",
+      "source_location": "L36",
+      "id": "costos_capturacostodialog_formdesdecosto",
+      "community": 135,
+      "norm_label": "formdesdecosto()"
+    },
+    {
+      "label": "CapturaCostoDialog()",
+      "file_type": "code",
+      "source_file": "src/components/costos/CapturaCostoDialog.jsx",
+      "source_location": "L51",
+      "id": "costos_capturacostodialog_capturacostodialog",
+      "community": 16,
+      "norm_label": "capturacostodialog()"
+    },
+    {
+      "label": "costosConfig.js",
+      "file_type": "code",
+      "source_file": "src/components/costos/costosConfig.js",
+      "source_location": "L1",
+      "id": "src_components_costos_costosconfig_js",
+      "community": 135,
+      "norm_label": "costosconfig.js"
+    },
+    {
+      "label": "CATEGORIAS",
+      "file_type": "code",
+      "source_file": "src/components/costos/costosConfig.js",
+      "source_location": "L14",
+      "id": "costos_costosconfig_categorias",
+      "community": 135,
+      "norm_label": "categorias"
+    },
+    {
+      "label": "getCategoria()",
+      "file_type": "code",
+      "source_file": "src/components/costos/costosConfig.js",
+      "source_location": "L24",
+      "id": "costos_costosconfig_getcategoria",
+      "community": 135,
+      "norm_label": "getcategoria()"
+    },
+    {
+      "label": "TIPOS_UNIDAD",
+      "file_type": "code",
+      "source_file": "src/components/costos/costosConfig.js",
+      "source_location": "L29",
+      "id": "costos_costosconfig_tipos_unidad",
+      "community": 135,
+      "norm_label": "tipos_unidad"
+    },
+    {
+      "label": "etiquetaUnidad()",
+      "file_type": "code",
+      "source_file": "src/components/costos/costosConfig.js",
+      "source_location": "L34",
+      "id": "costos_costosconfig_etiquetaunidad",
+      "community": 135,
+      "norm_label": "etiquetaunidad()"
+    },
+    {
+      "label": "DetalleUnidad.jsx",
+      "file_type": "code",
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L1",
+      "id": "src_components_costos_detalleunidad_jsx",
+      "community": 135,
+      "norm_label": "detalleunidad.jsx"
+    },
+    {
+      "label": "RANGOS",
+      "file_type": "code",
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L32",
+      "id": "costos_detalleunidad_rangos",
+      "community": 135,
+      "norm_label": "rangos"
+    },
+    {
+      "label": "ejeMoneda()",
+      "file_type": "code",
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L39",
+      "id": "costos_detalleunidad_ejemoneda",
+      "community": 135,
+      "norm_label": "ejemoneda()"
+    },
+    {
+      "label": "TooltipSemana()",
+      "file_type": "code",
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L41",
+      "id": "costos_detalleunidad_tooltipsemana",
+      "community": 16,
+      "norm_label": "tooltipsemana()"
+    },
+    {
+      "label": "DetalleUnidad()",
+      "file_type": "code",
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L69",
+      "id": "costos_detalleunidad_detalleunidad",
+      "community": 135,
+      "norm_label": "detalleunidad()"
+    },
+    {
+      "label": "exportarExcel.js",
+      "file_type": "code",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L1",
+      "id": "src_components_costos_exportarexcel_js",
+      "community": 138,
+      "norm_label": "exportarexcel.js"
+    },
+    {
+      "label": "encabezado()",
+      "file_type": "code",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L5",
+      "id": "costos_exportarexcel_encabezado",
+      "community": 138,
+      "norm_label": "encabezado()"
+    },
+    {
+      "label": "titulo()",
+      "file_type": "code",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L14",
+      "id": "costos_exportarexcel_titulo",
+      "community": 138,
+      "norm_label": "titulo()"
+    },
+    {
+      "label": "hojaDetalle()",
+      "file_type": "code",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L23",
+      "id": "costos_exportarexcel_hojadetalle",
+      "community": 138,
+      "norm_label": "hojadetalle()"
+    },
+    {
+      "label": "descargar()",
+      "file_type": "code",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L44",
+      "id": "costos_exportarexcel_descargar",
+      "community": 138,
+      "norm_label": "descargar()"
+    },
+    {
+      "label": "exportarSemana()",
+      "file_type": "code",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L57",
+      "id": "costos_exportarexcel_exportarsemana",
+      "community": 138,
+      "norm_label": "exportarsemana()"
+    },
+    {
+      "label": "exportarUnidad()",
+      "file_type": "code",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L82",
+      "id": "costos_exportarexcel_exportarunidad",
+      "community": 138,
+      "norm_label": "exportarunidad()"
+    },
+    {
+      "label": "ListaGastos.jsx",
+      "file_type": "code",
+      "source_file": "src/components/costos/ListaGastos.jsx",
+      "source_location": "L1",
+      "id": "src_components_costos_listagastos_jsx",
+      "community": 135,
+      "norm_label": "listagastos.jsx"
+    },
+    {
+      "label": "ListaGastos()",
+      "file_type": "code",
+      "source_file": "src/components/costos/ListaGastos.jsx",
+      "source_location": "L21",
+      "id": "costos_listagastos_listagastos",
+      "community": 16,
+      "norm_label": "listagastos()"
+    },
+    {
+      "label": "SelectUnidad.jsx",
+      "file_type": "code",
+      "source_file": "src/components/costos/SelectUnidad.jsx",
+      "source_location": "L1",
+      "id": "src_components_costos_selectunidad_jsx",
+      "community": 135,
+      "norm_label": "selectunidad.jsx"
+    },
+    {
+      "label": "SelectUnidad()",
+      "file_type": "code",
+      "source_file": "src/components/costos/SelectUnidad.jsx",
+      "source_location": "L14",
+      "id": "costos_selectunidad_selectunidad",
+      "community": 135,
+      "norm_label": "selectunidad()"
+    },
+    {
+      "label": "TablaSemanal.jsx",
+      "file_type": "code",
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L1",
+      "id": "src_components_costos_tablasemanal_jsx",
+      "community": 135,
+      "norm_label": "tablasemanal.jsx"
+    },
+    {
+      "label": "Kpi()",
+      "file_type": "code",
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L32",
+      "id": "costos_tablasemanal_kpi",
+      "community": 135,
+      "norm_label": "kpi()"
+    },
+    {
+      "label": "Variacion()",
+      "file_type": "code",
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L42",
+      "id": "costos_tablasemanal_variacion",
+      "community": 16,
+      "norm_label": "variacion()"
+    },
+    {
+      "label": "TablaSemanal()",
+      "file_type": "code",
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L55",
+      "id": "costos_tablasemanal_tablasemanal",
+      "community": 135,
+      "norm_label": "tablasemanal()"
+    },
+    {
+      "label": "useCostos.js",
+      "file_type": "code",
+      "source_file": "src/components/costos/useCostos.js",
+      "source_location": "L1",
+      "id": "src_components_costos_usecostos_js",
+      "community": 135,
+      "norm_label": "usecostos.js"
+    },
+    {
+      "label": "invalidarCostos()",
+      "file_type": "code",
+      "source_file": "src/components/costos/useCostos.js",
+      "source_location": "L12",
+      "id": "costos_usecostos_invalidarcostos",
+      "community": 135,
+      "norm_label": "invalidarcostos()"
+    },
+    {
+      "label": "useUnidades()",
+      "file_type": "code",
+      "source_file": "src/components/costos/useCostos.js",
+      "source_location": "L17",
+      "id": "costos_usecostos_useunidades",
+      "community": 135,
+      "norm_label": "useunidades()"
+    },
+    {
+      "label": "useCostosRango()",
+      "file_type": "code",
+      "source_file": "src/components/costos/useCostos.js",
+      "source_location": "L35",
+      "id": "costos_usecostos_usecostosrango",
+      "community": 135,
+      "norm_label": "usecostosrango()"
+    },
+    {
+      "label": "useEliminarCosto()",
+      "file_type": "code",
+      "source_file": "src/components/costos/useCostos.js",
+      "source_location": "L57",
+      "id": "costos_usecostos_useeliminarcosto",
+      "community": 16,
+      "norm_label": "useeliminarcosto()"
+    },
+    {
+      "label": "sumaMontos()",
+      "file_type": "code",
+      "source_file": "src/components/costos/useCostos.js",
+      "source_location": "L75",
+      "id": "costos_usecostos_sumamontos",
+      "community": 135,
+      "norm_label": "sumamontos()"
+    },
+    {
       "label": "AnomaliasCombustible.jsx",
       "file_type": "code",
       "source_file": "src/components/fuel/AnomaliasCombustible.jsx",
@@ -11851,7 +12175,7 @@
       "label": "DURACIONES",
       "file_type": "code",
       "source_file": "src/components/gps/CompartidosGPS.jsx",
-      "source_location": "L32",
+      "source_location": "L34",
       "id": "gps_compartidosgps_duraciones",
       "community": 62,
       "norm_label": "duraciones"
@@ -11860,7 +12184,7 @@
       "label": "generateToken()",
       "file_type": "code",
       "source_file": "src/components/gps/CompartidosGPS.jsx",
-      "source_location": "L39",
+      "source_location": "L41",
       "id": "gps_compartidosgps_generatetoken",
       "community": 62,
       "norm_label": "generatetoken()"
@@ -11869,16 +12193,34 @@
       "label": "TiempoRestante()",
       "file_type": "code",
       "source_file": "src/components/gps/CompartidosGPS.jsx",
-      "source_location": "L43",
+      "source_location": "L45",
       "id": "gps_compartidosgps_tiemporestante",
       "community": 62,
       "norm_label": "tiemporestante()"
     },
     {
+      "label": "describirDispositivo()",
+      "file_type": "code",
+      "source_file": "src/components/gps/CompartidosGPS.jsx",
+      "source_location": "L61",
+      "id": "gps_compartidosgps_describirdispositivo",
+      "community": 62,
+      "norm_label": "describirdispositivo()"
+    },
+    {
+      "label": "estaActiva()",
+      "file_type": "code",
+      "source_file": "src/components/gps/CompartidosGPS.jsx",
+      "source_location": "L81",
+      "id": "gps_compartidosgps_estaactiva",
+      "community": 62,
+      "norm_label": "estaactiva()"
+    },
+    {
       "label": "CompartidosGPS()",
       "file_type": "code",
       "source_file": "src/components/gps/CompartidosGPS.jsx",
-      "source_location": "L59",
+      "source_location": "L83",
       "id": "gps_compartidosgps_compartidosgps",
       "community": 62,
       "norm_label": "compartidosgps()"
@@ -11905,7 +12247,7 @@
       "label": "CENTRO_MX",
       "file_type": "code",
       "source_file": "src/components/gps/constants.js",
-      "source_location": "L26",
+      "source_location": "L31",
       "id": "gps_constants_centro_mx",
       "community": 32,
       "norm_label": "centro_mx"
@@ -11961,7 +12303,7 @@
       "source_file": "src/components/gps/HistorialGPS.jsx",
       "source_location": "L1",
       "id": "src_components_gps_historialgps_jsx",
-      "community": 32,
+      "community": 4,
       "norm_label": "historialgps.jsx"
     },
     {
@@ -11970,7 +12312,7 @@
       "source_file": "src/components/gps/HistorialGPS.jsx",
       "source_location": "L14",
       "id": "gps_historialgps_duraciones_share",
-      "community": 32,
+      "community": 4,
       "norm_label": "duraciones_share"
     },
     {
@@ -11979,7 +12321,7 @@
       "source_file": "src/components/gps/HistorialGPS.jsx",
       "source_location": "L22",
       "id": "gps_historialgps_todatetimelocal",
-      "community": 32,
+      "community": 4,
       "norm_label": "todatetimelocal()"
     },
     {
@@ -11997,7 +12339,7 @@
       "source_file": "src/components/gps/HistorialGPS.jsx",
       "source_location": "L36",
       "id": "gps_historialgps_fetchunidades",
-      "community": 32,
+      "community": 4,
       "norm_label": "fetchunidades()"
     },
     {
@@ -12006,7 +12348,7 @@
       "source_file": "src/components/gps/HistorialGPS.jsx",
       "source_location": "L45",
       "id": "gps_historialgps_haversinekm",
-      "community": 32,
+      "community": 4,
       "norm_label": "haversinekm()"
     },
     {
@@ -12015,7 +12357,7 @@
       "source_file": "src/components/gps/HistorialGPS.jsx",
       "source_location": "L57",
       "id": "gps_historialgps_historialgps",
-      "community": 32,
+      "community": 4,
       "norm_label": "historialgps()"
     },
     {
@@ -12294,7 +12636,7 @@
       "source_file": "src/components/gps/ReportesGPS.jsx",
       "source_location": "L1",
       "id": "src_components_gps_reportesgps_jsx",
-      "community": 32,
+      "community": 137,
       "norm_label": "reportesgps.jsx"
     },
     {
@@ -12303,7 +12645,7 @@
       "source_file": "src/components/gps/ReportesGPS.jsx",
       "source_location": "L9",
       "id": "gps_reportesgps_fmtduracion",
-      "community": 32,
+      "community": 137,
       "norm_label": "fmtduracion()"
     },
     {
@@ -12312,7 +12654,7 @@
       "source_file": "src/components/gps/ReportesGPS.jsx",
       "source_location": "L14",
       "id": "gps_reportesgps_fmtfecha",
-      "community": 32,
+      "community": 137,
       "norm_label": "fmtfecha()"
     },
     {
@@ -12321,7 +12663,7 @@
       "source_file": "src/components/gps/ReportesGPS.jsx",
       "source_location": "L20",
       "id": "gps_reportesgps_generardatosmock",
-      "community": 32,
+      "community": 137,
       "norm_label": "generardatosmock()"
     },
     {
@@ -12330,7 +12672,7 @@
       "source_file": "src/components/gps/ReportesGPS.jsx",
       "source_location": "L46",
       "id": "gps_reportesgps_reportes",
-      "community": 32,
+      "community": 137,
       "norm_label": "reportes"
     },
     {
@@ -12339,7 +12681,7 @@
       "source_file": "src/components/gps/ReportesGPS.jsx",
       "source_location": "L67",
       "id": "gps_reportesgps_reportesgps",
-      "community": 32,
+      "community": 137,
       "norm_label": "reportesgps()"
     },
     {
@@ -12427,7 +12769,7 @@
       "label": "TABLA_ENTIDAD",
       "file_type": "code",
       "source_file": "src/components/legal/documentosConfig.js",
-      "source_location": "L57",
+      "source_location": "L55",
       "id": "legal_documentosconfig_tabla_entidad",
       "community": 15,
       "norm_label": "tabla_entidad"
@@ -12436,7 +12778,7 @@
       "label": "tipoDoc()",
       "file_type": "code",
       "source_file": "src/components/legal/documentosConfig.js",
-      "source_location": "L63",
+      "source_location": "L61",
       "id": "legal_documentosconfig_tipodoc",
       "community": 15,
       "norm_label": "tipodoc()"
@@ -12445,7 +12787,7 @@
       "label": "tituloDoc()",
       "file_type": "code",
       "source_file": "src/components/legal/documentosConfig.js",
-      "source_location": "L68",
+      "source_location": "L66",
       "id": "legal_documentosconfig_titulodoc",
       "community": 15,
       "norm_label": "titulodoc()"
@@ -12454,7 +12796,7 @@
       "label": "esImagen()",
       "file_type": "code",
       "source_file": "src/components/legal/documentosConfig.js",
-      "source_location": "L74",
+      "source_location": "L72",
       "id": "legal_documentosconfig_esimagen",
       "community": 15,
       "norm_label": "esimagen()"
@@ -12463,7 +12805,7 @@
       "label": "esPDF()",
       "file_type": "code",
       "source_file": "src/components/legal/documentosConfig.js",
-      "source_location": "L78",
+      "source_location": "L76",
       "id": "legal_documentosconfig_espdf",
       "community": 15,
       "norm_label": "espdf()"
@@ -12472,7 +12814,7 @@
       "label": "formatoTamano()",
       "file_type": "code",
       "source_file": "src/components/legal/documentosConfig.js",
-      "source_location": "L82",
+      "source_location": "L80",
       "id": "legal_documentosconfig_formatotamano",
       "community": 15,
       "norm_label": "formatotamano()"
@@ -12481,7 +12823,7 @@
       "label": "nombreSeguro()",
       "file_type": "code",
       "source_file": "src/components/legal/documentosConfig.js",
-      "source_location": "L91",
+      "source_location": "L89",
       "id": "legal_documentosconfig_nombreseguro",
       "community": 15,
       "norm_label": "nombreseguro()"
@@ -12490,7 +12832,7 @@
       "label": "validarArchivo()",
       "file_type": "code",
       "source_file": "src/components/legal/documentosConfig.js",
-      "source_location": "L100",
+      "source_location": "L98",
       "id": "legal_documentosconfig_validararchivo",
       "community": 15,
       "norm_label": "validararchivo()"
@@ -12699,7 +13041,7 @@
       "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
       "source_location": "L1",
       "id": "src_components_liquidaciones_historialliquidaciones_jsx",
-      "community": 16,
+      "community": 141,
       "norm_label": "historialliquidaciones.jsx"
     },
     {
@@ -12708,7 +13050,7 @@
       "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
       "source_location": "L37",
       "id": "liquidaciones_historialliquidaciones_empty_array",
-      "community": 16,
+      "community": 141,
       "norm_label": "empty_array"
     },
     {
@@ -12717,7 +13059,7 @@
       "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
       "source_location": "L43",
       "id": "liquidaciones_historialliquidaciones_fechalegible",
-      "community": 16,
+      "community": 141,
       "norm_label": "fechalegible()"
     },
     {
@@ -12726,7 +13068,7 @@
       "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
       "source_location": "L56",
       "id": "liquidaciones_historialliquidaciones_titulodesdecorte",
-      "community": 16,
+      "community": 141,
       "norm_label": "titulodesdecorte()"
     },
     {
@@ -12735,7 +13077,7 @@
       "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
       "source_location": "L68",
       "id": "liquidaciones_historialliquidaciones_eslegacy",
-      "community": 16,
+      "community": 141,
       "norm_label": "eslegacy()"
     },
     {
@@ -12753,7 +13095,7 @@
       "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
       "source_location": "L472",
       "id": "liquidaciones_historialliquidaciones_dialogdesglose",
-      "community": 16,
+      "community": 141,
       "norm_label": "dialogdesglose()"
     },
     {
@@ -12843,7 +13185,7 @@
       "source_file": "src/components/mantenimiento/DashboardMantenimiento.jsx",
       "source_location": "L1",
       "id": "src_components_mantenimiento_dashboardmantenimiento_jsx",
-      "community": 32,
+      "community": 136,
       "norm_label": "dashboardmantenimiento.jsx"
     },
     {
@@ -12852,7 +13194,7 @@
       "source_file": "src/components/mantenimiento/DashboardMantenimiento.jsx",
       "source_location": "L10",
       "id": "mantenimiento_dashboardmantenimiento_estados",
-      "community": 32,
+      "community": 136,
       "norm_label": "estados"
     },
     {
@@ -12861,7 +13203,7 @@
       "source_file": "src/components/mantenimiento/DashboardMantenimiento.jsx",
       "source_location": "L17",
       "id": "mantenimiento_dashboardmantenimiento_estadoinfo",
-      "community": 32,
+      "community": 136,
       "norm_label": "estadoinfo()"
     },
     {
@@ -12870,7 +13212,7 @@
       "source_file": "src/components/mantenimiento/DashboardMantenimiento.jsx",
       "source_location": "L19",
       "id": "mantenimiento_dashboardmantenimiento_formatmxn",
-      "community": 32,
+      "community": 136,
       "norm_label": "formatmxn()"
     },
     {
@@ -12879,7 +13221,7 @@
       "source_file": "src/components/mantenimiento/DashboardMantenimiento.jsx",
       "source_location": "L24",
       "id": "mantenimiento_dashboardmantenimiento_formatfecha",
-      "community": 32,
+      "community": 136,
       "norm_label": "formatfecha()"
     },
     {
@@ -12888,7 +13230,7 @@
       "source_file": "src/components/mantenimiento/DashboardMantenimiento.jsx",
       "source_location": "L30",
       "id": "mantenimiento_dashboardmantenimiento_kmdesdeservicio",
-      "community": 32,
+      "community": 136,
       "norm_label": "kmdesdeservicio()"
     },
     {
@@ -12897,7 +13239,7 @@
       "source_file": "src/components/mantenimiento/DashboardMantenimiento.jsx",
       "source_location": "L35",
       "id": "mantenimiento_dashboardmantenimiento_badgeflota",
-      "community": 32,
+      "community": 136,
       "norm_label": "badgeflota()"
     },
     {
@@ -12906,7 +13248,7 @@
       "source_file": "src/components/mantenimiento/DashboardMantenimiento.jsx",
       "source_location": "L43",
       "id": "mantenimiento_dashboardmantenimiento_dashboardmantenimiento",
-      "community": 32,
+      "community": 136,
       "norm_label": "dashboardmantenimiento()"
     },
     {
@@ -12915,7 +13257,7 @@
       "source_file": "src/components/mantenimiento/DashboardMantenimiento.jsx",
       "source_location": "L296",
       "id": "mantenimiento_dashboardmantenimiento_kpicard",
-      "community": 32,
+      "community": 136,
       "norm_label": "kpicard()"
     },
     {
@@ -13052,6 +13394,24 @@
       "id": "panel_colacargacompacta_colacargacompacta",
       "community": 19,
       "norm_label": "colacargacompacta()"
+    },
+    {
+      "label": "CostosSemana.jsx",
+      "file_type": "code",
+      "source_file": "src/components/panel/CostosSemana.jsx",
+      "source_location": "L1",
+      "id": "src_components_panel_costossemana_jsx",
+      "community": 53,
+      "norm_label": "costossemana.jsx"
+    },
+    {
+      "label": "CostosSemana()",
+      "file_type": "code",
+      "source_file": "src/components/panel/CostosSemana.jsx",
+      "source_location": "L13",
+      "id": "panel_costossemana_costossemana",
+      "community": 53,
+      "norm_label": "costossemana()"
     },
     {
       "label": "EstadoFlota.jsx",
@@ -15804,7 +16164,7 @@
       "source_file": "src/lib/fechas.js",
       "source_location": "L1",
       "id": "src_lib_fechas_js",
-      "community": 32,
+      "community": 15,
       "norm_label": "fechas.js"
     },
     {
@@ -15813,7 +16173,7 @@
       "source_file": "src/lib/fechas.js",
       "source_location": "L6",
       "id": "lib_fechas_localdatestr",
-      "community": 32,
+      "community": 137,
       "norm_label": "localdatestr()"
     },
     {
@@ -15822,7 +16182,7 @@
       "source_file": "src/lib/fechas.js",
       "source_location": "L14",
       "id": "lib_fechas_formatearfecha",
-      "community": 32,
+      "community": 15,
       "norm_label": "formatearfecha()"
     },
     {
@@ -15952,6 +16312,24 @@
       "norm_label": "remapearprogramacion()"
     },
     {
+      "label": "lunesDeSemana()",
+      "file_type": "code",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L95",
+      "id": "lib_semana_lunesdesemana",
+      "community": 53,
+      "norm_label": "lunesdesemana()"
+    },
+    {
+      "label": "sumarDias()",
+      "file_type": "code",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L103",
+      "id": "lib_semana_sumardias",
+      "community": 53,
+      "norm_label": "sumardias()"
+    },
+    {
       "label": "utils.js",
       "file_type": "code",
       "source_file": "src/lib/utils.js",
@@ -15993,7 +16371,7 @@
       "source_file": "src/pages/Clientes.jsx",
       "source_location": "L1",
       "id": "src_pages_clientes_jsx",
-      "community": 16,
+      "community": 142,
       "norm_label": "clientes.jsx"
     },
     {
@@ -16002,7 +16380,7 @@
       "source_file": "src/pages/Clientes.jsx",
       "source_location": "L44",
       "id": "pages_clientes_clientes",
-      "community": 16,
+      "community": 142,
       "norm_label": "clientes()"
     },
     {
@@ -16011,7 +16389,7 @@
       "source_file": "src/pages/ControlCombustible.jsx",
       "source_location": "L1",
       "id": "src_pages_controlcombustible_jsx",
-      "community": 11,
+      "community": 143,
       "norm_label": "controlcombustible.jsx"
     },
     {
@@ -16020,7 +16398,7 @@
       "source_file": "src/pages/ControlCombustible.jsx",
       "source_location": "L13",
       "id": "pages_controlcombustible_controlcombustible",
-      "community": 11,
+      "community": 143,
       "norm_label": "controlcombustible()"
     },
     {
@@ -16036,7 +16414,7 @@
       "label": "ESTATUS_VACIOS",
       "file_type": "code",
       "source_file": "src/pages/ControlVacios.jsx",
-      "source_location": "L64",
+      "source_location": "L65",
       "id": "pages_controlvacios_estatus_vacios",
       "community": 17,
       "norm_label": "estatus_vacios"
@@ -16045,7 +16423,7 @@
       "label": "getEstatus()",
       "file_type": "code",
       "source_file": "src/pages/ControlVacios.jsx",
-      "source_location": "L70",
+      "source_location": "L71",
       "id": "pages_controlvacios_getestatus",
       "community": 17,
       "norm_label": "getestatus()"
@@ -16054,34 +16432,16 @@
       "label": "DIAS_SEMANA",
       "file_type": "code",
       "source_file": "src/pages/ControlVacios.jsx",
-      "source_location": "L72",
+      "source_location": "L73",
       "id": "pages_controlvacios_dias_semana",
       "community": 17,
       "norm_label": "dias_semana"
     },
     {
-      "label": "getLunes()",
-      "file_type": "code",
-      "source_file": "src/pages/ControlVacios.jsx",
-      "source_location": "L74",
-      "id": "pages_controlvacios_getlunes",
-      "community": 17,
-      "norm_label": "getlunes()"
-    },
-    {
-      "label": "addDays()",
-      "file_type": "code",
-      "source_file": "src/pages/ControlVacios.jsx",
-      "source_location": "L81",
-      "id": "pages_controlvacios_adddays",
-      "community": 17,
-      "norm_label": "adddays()"
-    },
-    {
       "label": "pathFotoStorage()",
       "file_type": "code",
       "source_file": "src/pages/ControlVacios.jsx",
-      "source_location": "L88",
+      "source_location": "L76",
       "id": "pages_controlvacios_pathfotostorage",
       "community": 17,
       "norm_label": "pathfotostorage()"
@@ -16090,7 +16450,7 @@
       "label": "SelectCatalogo()",
       "file_type": "code",
       "source_file": "src/pages/ControlVacios.jsx",
-      "source_location": "L95",
+      "source_location": "L83",
       "id": "pages_controlvacios_selectcatalogo",
       "community": 17,
       "norm_label": "selectcatalogo()"
@@ -16099,7 +16459,7 @@
       "label": "SelectCatalogoLibre()",
       "file_type": "code",
       "source_file": "src/pages/ControlVacios.jsx",
-      "source_location": "L116",
+      "source_location": "L104",
       "id": "pages_controlvacios_selectcatalogolibre",
       "community": 17,
       "norm_label": "selectcatalogolibre()"
@@ -16108,7 +16468,7 @@
       "label": "FORM_VACIO",
       "file_type": "code",
       "source_file": "src/pages/ControlVacios.jsx",
-      "source_location": "L166",
+      "source_location": "L154",
       "id": "pages_controlvacios_form_vacio",
       "community": 17,
       "norm_label": "form_vacio"
@@ -16117,7 +16477,7 @@
       "label": "QuickAddVacio()",
       "file_type": "code",
       "source_file": "src/pages/ControlVacios.jsx",
-      "source_location": "L202",
+      "source_location": "L190",
       "id": "pages_controlvacios_quickaddvacio",
       "community": 17,
       "norm_label": "quickaddvacio()"
@@ -16126,7 +16486,7 @@
       "label": "TarjetaVacio()",
       "file_type": "code",
       "source_file": "src/pages/ControlVacios.jsx",
-      "source_location": "L346",
+      "source_location": "L334",
       "id": "pages_controlvacios_tarjetavacio",
       "community": 17,
       "norm_label": "tarjetavacio()"
@@ -16135,10 +16495,28 @@
       "label": "ControlVacios()",
       "file_type": "code",
       "source_file": "src/pages/ControlVacios.jsx",
-      "source_location": "L479",
+      "source_location": "L467",
       "id": "pages_controlvacios_controlvacios",
       "community": 17,
       "norm_label": "controlvacios()"
+    },
+    {
+      "label": "CostosUnidad.jsx",
+      "file_type": "code",
+      "source_file": "src/pages/CostosUnidad.jsx",
+      "source_location": "L1",
+      "id": "src_pages_costosunidad_jsx",
+      "community": 144,
+      "norm_label": "costosunidad.jsx"
+    },
+    {
+      "label": "CostosUnidad()",
+      "file_type": "code",
+      "source_file": "src/pages/CostosUnidad.jsx",
+      "source_location": "L9",
+      "id": "pages_costosunidad_costosunidad",
+      "community": 144,
+      "norm_label": "costosunidad()"
     },
     {
       "label": "CuentasCliente.jsx",
@@ -16362,7 +16740,7 @@
       "source_file": "src/pages/FuelCamiones.jsx",
       "source_location": "L1",
       "id": "src_pages_fuelcamiones_jsx",
-      "community": 16,
+      "community": 145,
       "norm_label": "fuelcamiones.jsx"
     },
     {
@@ -16371,7 +16749,7 @@
       "source_file": "src/pages/FuelCamiones.jsx",
       "source_location": "L37",
       "id": "pages_fuelcamiones_fuelcamiones",
-      "community": 16,
+      "community": 145,
       "norm_label": "fuelcamiones()"
     },
     {
@@ -16380,7 +16758,7 @@
       "source_file": "src/pages/FuelConductores.jsx",
       "source_location": "L1",
       "id": "src_pages_fuelconductores_jsx",
-      "community": 16,
+      "community": 146,
       "norm_label": "fuelconductores.jsx"
     },
     {
@@ -16389,7 +16767,7 @@
       "source_file": "src/pages/FuelConductores.jsx",
       "source_location": "L44",
       "id": "pages_fuelconductores_fuelconductores",
-      "community": 16,
+      "community": 146,
       "norm_label": "fuelconductores()"
     },
     {
@@ -16405,7 +16783,7 @@
       "label": "DIAS_NUEVA_SEMANA",
       "file_type": "code",
       "source_file": "src/pages/FuelProgramaCargas.jsx",
-      "source_location": "L82",
+      "source_location": "L83",
       "id": "pages_fuelprogramacargas_dias_nueva_semana",
       "community": 23,
       "norm_label": "dias_nueva_semana"
@@ -16414,7 +16792,7 @@
       "label": "ProgramCard()",
       "file_type": "code",
       "source_file": "src/pages/FuelProgramaCargas.jsx",
-      "source_location": "L84",
+      "source_location": "L85",
       "id": "pages_fuelprogramacargas_programcard",
       "community": 23,
       "norm_label": "programcard()"
@@ -16423,16 +16801,25 @@
       "label": "pathEvidenciaStorage()",
       "file_type": "code",
       "source_file": "src/pages/FuelProgramaCargas.jsx",
-      "source_location": "L188",
+      "source_location": "L189",
       "id": "pages_fuelprogramacargas_pathevidenciastorage",
       "community": 23,
       "norm_label": "pathevidenciastorage()"
     },
     {
-      "label": "limpiarFotosDeViajes()",
+      "label": "esPDFEvidencia()",
       "file_type": "code",
       "source_file": "src/pages/FuelProgramaCargas.jsx",
       "source_location": "L196",
+      "id": "pages_fuelprogramacargas_espdfevidencia",
+      "community": 23,
+      "norm_label": "espdfevidencia()"
+    },
+    {
+      "label": "limpiarFotosDeViajes()",
+      "file_type": "code",
+      "source_file": "src/pages/FuelProgramaCargas.jsx",
+      "source_location": "L202",
       "id": "pages_fuelprogramacargas_limpiarfotosdeviajes",
       "community": 23,
       "norm_label": "limpiarfotosdeviajes()"
@@ -16441,7 +16828,7 @@
       "label": "FuelProgramaCargas()",
       "file_type": "code",
       "source_file": "src/pages/FuelProgramaCargas.jsx",
-      "source_location": "L209",
+      "source_location": "L215",
       "id": "pages_fuelprogramacargas_fuelprogramacargas",
       "community": 53,
       "norm_label": "fuelprogramacargas()"
@@ -16870,10 +17257,19 @@
       "norm_label": "mantenimiento"
     },
     {
-      "label": "ControlVacios",
+      "label": "CostosUnidad",
       "file_type": "code",
       "source_file": "src/pages/index.jsx",
       "source_location": "L36",
+      "id": "pages_index_costosunidad",
+      "community": 11,
+      "norm_label": "costosunidad"
+    },
+    {
+      "label": "ControlVacios",
+      "file_type": "code",
+      "source_file": "src/pages/index.jsx",
+      "source_location": "L37",
       "id": "pages_index_controlvacios",
       "community": 11,
       "norm_label": "controlvacios"
@@ -16882,7 +17278,7 @@
       "label": "CuentasCliente",
       "file_type": "code",
       "source_file": "src/pages/index.jsx",
-      "source_location": "L37",
+      "source_location": "L38",
       "id": "pages_index_cuentascliente",
       "community": 11,
       "norm_label": "cuentascliente"
@@ -16891,7 +17287,7 @@
       "label": "PortalCliente",
       "file_type": "code",
       "source_file": "src/pages/index.jsx",
-      "source_location": "L38",
+      "source_location": "L39",
       "id": "pages_index_portalcliente",
       "community": 11,
       "norm_label": "portalcliente"
@@ -16900,7 +17296,7 @@
       "label": "PAGE_NAMES",
       "file_type": "code",
       "source_file": "src/pages/index.jsx",
-      "source_location": "L41",
+      "source_location": "L42",
       "id": "pages_index_page_names",
       "community": 11,
       "norm_label": "page_names"
@@ -16909,7 +17305,7 @@
       "label": "_getCurrentPage()",
       "file_type": "code",
       "source_file": "src/pages/index.jsx",
-      "source_location": "L64",
+      "source_location": "L66",
       "id": "pages_index_getcurrentpage",
       "community": 11,
       "norm_label": "_getcurrentpage()"
@@ -16918,7 +17314,7 @@
       "label": "PageLoader()",
       "file_type": "code",
       "source_file": "src/pages/index.jsx",
-      "source_location": "L78",
+      "source_location": "L80",
       "id": "pages_index_pageloader",
       "community": 11,
       "norm_label": "pageloader()"
@@ -16927,7 +17323,7 @@
       "label": "NotFound()",
       "file_type": "code",
       "source_file": "src/pages/index.jsx",
-      "source_location": "L86",
+      "source_location": "L88",
       "id": "pages_index_notfound",
       "community": 11,
       "norm_label": "notfound()"
@@ -16936,7 +17332,7 @@
       "label": "PagesContent()",
       "file_type": "code",
       "source_file": "src/pages/index.jsx",
-      "source_location": "L104",
+      "source_location": "L106",
       "id": "pages_index_pagescontent",
       "community": 11,
       "norm_label": "pagescontent()"
@@ -16945,7 +17341,7 @@
       "label": "Pages()",
       "file_type": "code",
       "source_file": "src/pages/index.jsx",
-      "source_location": "L165",
+      "source_location": "L168",
       "id": "pages_index_pages",
       "community": 11,
       "norm_label": "pages()"
@@ -16963,7 +17359,7 @@
       "label": "SYSTEM_PAGES",
       "file_type": "code",
       "source_file": "src/pages/Layout.jsx",
-      "source_location": "L31",
+      "source_location": "L32",
       "id": "pages_layout_system_pages",
       "community": 23,
       "norm_label": "system_pages"
@@ -16972,7 +17368,7 @@
       "label": "TrailerIcon()",
       "file_type": "code",
       "source_file": "src/pages/Layout.jsx",
-      "source_location": "L50",
+      "source_location": "L52",
       "id": "pages_layout_trailericon",
       "community": 23,
       "norm_label": "trailericon()"
@@ -16981,7 +17377,7 @@
       "label": "Layout()",
       "file_type": "code",
       "source_file": "src/pages/Layout.jsx",
-      "source_location": "L69",
+      "source_location": "L71",
       "id": "pages_layout_layout",
       "community": 19,
       "norm_label": "layout()"
@@ -16992,7 +17388,7 @@
       "source_file": "src/pages/Liquidaciones.jsx",
       "source_location": "L1",
       "id": "src_pages_liquidaciones_jsx",
-      "community": 53,
+      "community": 16,
       "norm_label": "liquidaciones.jsx"
     },
     {
@@ -17001,7 +17397,7 @@
       "source_file": "src/pages/Liquidaciones.jsx",
       "source_location": "L50",
       "id": "pages_liquidaciones_empty_array",
-      "community": 53,
+      "community": 16,
       "norm_label": "empty_array"
     },
     {
@@ -17019,7 +17415,7 @@
       "source_file": "src/pages/Liquidaciones.jsx",
       "source_location": "L65",
       "id": "pages_liquidaciones_anticiposvacios",
-      "community": 53,
+      "community": 16,
       "norm_label": "anticiposvacios()"
     },
     {
@@ -17037,7 +17433,7 @@
       "source_file": "src/pages/Login.jsx",
       "source_location": "L1",
       "id": "src_pages_login_jsx",
-      "community": 11,
+      "community": 147,
       "norm_label": "login.jsx"
     },
     {
@@ -17046,7 +17442,7 @@
       "source_file": "src/pages/Login.jsx",
       "source_location": "L18",
       "id": "pages_login_login",
-      "community": 11,
+      "community": 147,
       "norm_label": "login()"
     },
     {
@@ -17055,7 +17451,7 @@
       "source_file": "src/pages/Mantenimiento.jsx",
       "source_location": "L1",
       "id": "src_pages_mantenimiento_jsx",
-      "community": 11,
+      "community": 148,
       "norm_label": "mantenimiento.jsx"
     },
     {
@@ -17064,7 +17460,7 @@
       "source_file": "src/pages/Mantenimiento.jsx",
       "source_location": "L8",
       "id": "pages_mantenimiento_mantenimiento",
-      "community": 11,
+      "community": 148,
       "norm_label": "mantenimiento()"
     },
     {
@@ -17127,7 +17523,7 @@
       "source_file": "src/pages/PortalRoute.jsx",
       "source_location": "L1",
       "id": "src_pages_portalroute_jsx",
-      "community": 11,
+      "community": 149,
       "norm_label": "portalroute.jsx"
     },
     {
@@ -17136,7 +17532,7 @@
       "source_file": "src/pages/PortalRoute.jsx",
       "source_location": "L9",
       "id": "pages_portalroute_portalroute",
-      "community": 11,
+      "community": 149,
       "norm_label": "portalroute()"
     },
     {
@@ -17145,7 +17541,7 @@
       "source_file": "src/pages/ProtectedRoute.jsx",
       "source_location": "L1",
       "id": "src_pages_protectedroute_jsx",
-      "community": 11,
+      "community": 150,
       "norm_label": "protectedroute.jsx"
     },
     {
@@ -17154,7 +17550,7 @@
       "source_file": "src/pages/ProtectedRoute.jsx",
       "source_location": "L7",
       "id": "pages_protectedroute_protectedroute",
-      "community": 11,
+      "community": 150,
       "norm_label": "protectedroute()"
     },
     {
@@ -18562,6 +18958,24 @@
       "norm_label": "best practices (conditional)"
     },
     {
+      "label": "getLunes()",
+      "file_type": "code",
+      "source_file": "src/pages/ControlVacios.jsx",
+      "source_location": "L74",
+      "community": 17,
+      "norm_label": "getlunes()",
+      "id": "pages_controlvacios_getlunes"
+    },
+    {
+      "label": "addDays()",
+      "file_type": "code",
+      "source_file": "src/pages/ControlVacios.jsx",
+      "source_location": "L81",
+      "community": 17,
+      "norm_label": "adddays()",
+      "id": "pages_controlvacios_adddays"
+    },
+    {
       "label": "DIAS_SEMANA",
       "file_type": "code",
       "source_file": "src/components/fuel/ColaCarga.jsx",
@@ -18665,7 +19079,7 @@
       "file_type": "code",
       "source_file": "src/components/gps/HistorialGPS.jsx",
       "source_location": "L21",
-      "community": 32,
+      "community": 4,
       "norm_label": "localdatestr()",
       "id": "gps_historialgps_localdatestr"
     },
@@ -18674,7 +19088,7 @@
       "file_type": "code",
       "source_file": "src/components/gps/HistorialGPS.jsx",
       "source_location": "L28",
-      "community": 32,
+      "community": 4,
       "norm_label": "today",
       "id": "gps_historialgps_today"
     },
@@ -18683,7 +19097,7 @@
       "file_type": "code",
       "source_file": "src/components/gps/HistorialGPS.jsx",
       "source_location": "L29",
-      "community": 32,
+      "community": 4,
       "norm_label": "yesterday",
       "id": "gps_historialgps_yesterday"
     },
@@ -31129,6 +31543,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "cloudflare-workers/wialon-proxy/src/index.ts",
+      "source_location": "L532",
+      "weight": 1.0,
+      "source": "cloudflare_workers_wialon_proxy_src_index_ts",
+      "target": "src_index_registrarvisita",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "cloudflare-workers/wialon-proxy/src/index.ts",
       "source_location": "L456",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -31517,6 +31941,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "cloudflare-workers/wialon-proxy/src/index.ts",
+      "source_location": "L539",
+      "weight": 1.0,
+      "source": "src_index_registrarvisita",
+      "target": "src_index_sbheaders",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "cloudflare-workers/wialon-proxy/src/index.ts",
       "source_location": "L465",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -31599,6 +32034,17 @@
       "confidence_score": 1.0,
       "source": "src_index_fetch",
       "target": "src_index_autorizar"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "cloudflare-workers/wialon-proxy/src/index.ts",
+      "source_location": "L537",
+      "weight": 1.0,
+      "source": "src_index_registrarvisita",
+      "target": "src_index_fetch",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -32136,6 +32582,1156 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/CapturaCostoDialog.jsx",
+      "source_location": "L51",
+      "weight": 1.0,
+      "source": "src_components_costos_capturacostodialog_jsx",
+      "target": "costos_capturacostodialog_capturacostodialog",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/CapturaCostoDialog.jsx",
+      "source_location": "L36",
+      "weight": 1.0,
+      "source": "src_components_costos_capturacostodialog_jsx",
+      "target": "costos_capturacostodialog_formdesdecosto",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/CapturaCostoDialog.jsx",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "src_components_costos_capturacostodialog_jsx",
+      "target": "costos_capturacostodialog_formvacio",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/CapturaCostoDialog.jsx",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "src_components_costos_capturacostodialog_jsx",
+      "target": "costos_costosconfig_categorias",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/CapturaCostoDialog.jsx",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "src_components_costos_capturacostodialog_jsx",
+      "target": "costos_costosconfig_tipos_unidad",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/CapturaCostoDialog.jsx",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "src_components_costos_capturacostodialog_jsx",
+      "target": "costos_usecostos_invalidarcostos",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/CapturaCostoDialog.jsx",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "src_components_costos_capturacostodialog_jsx",
+      "target": "costos_usecostos_useunidades",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/CapturaCostoDialog.jsx",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "src_components_costos_capturacostodialog_jsx",
+      "target": "src_components_costos_costosconfig_js",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/CapturaCostoDialog.jsx",
+      "source_location": "L21",
+      "weight": 1.0,
+      "source": "src_components_costos_capturacostodialog_jsx",
+      "target": "src_components_costos_selectunidad_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/CapturaCostoDialog.jsx",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "src_components_costos_capturacostodialog_jsx",
+      "target": "src_components_costos_usecostos_js",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/costos/CapturaCostoDialog.jsx",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "costos_capturacostodialog_formvacio",
+      "target": "lib_fechas_localdatestr"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/costos/CapturaCostoDialog.jsx",
+      "source_location": "L67",
+      "weight": 1.0,
+      "source": "costos_capturacostodialog_capturacostodialog",
+      "target": "costos_usecostos_useunidades"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/costos/CapturaCostoDialog.jsx",
+      "source_location": "L53",
+      "weight": 1.0,
+      "source": "costos_capturacostodialog_capturacostodialog",
+      "target": "ui_use_toast_usetoast"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/costosConfig.js",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "src_components_costos_costosconfig_js",
+      "target": "costos_costosconfig_categorias",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/costosConfig.js",
+      "source_location": "L34",
+      "weight": 1.0,
+      "source": "src_components_costos_costosconfig_js",
+      "target": "costos_costosconfig_etiquetaunidad",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/costosConfig.js",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "src_components_costos_costosconfig_js",
+      "target": "costos_costosconfig_getcategoria",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/costosConfig.js",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "src_components_costos_costosconfig_js",
+      "target": "costos_costosconfig_tipos_unidad",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "src_components_costos_detalleunidad_jsx",
+      "target": "src_components_costos_costosconfig_js",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "src_components_costos_exportarexcel_js",
+      "target": "src_components_costos_costosconfig_js",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/ListaGastos.jsx",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "src_components_costos_listagastos_jsx",
+      "target": "src_components_costos_costosconfig_js",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/SelectUnidad.jsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "src_components_costos_selectunidad_jsx",
+      "target": "src_components_costos_costosconfig_js",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "src_components_costos_tablasemanal_jsx",
+      "target": "src_components_costos_costosconfig_js",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/useCostos.js",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "src_components_costos_usecostos_js",
+      "target": "src_components_costos_costosconfig_js",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "src_components_costos_detalleunidad_jsx",
+      "target": "costos_costosconfig_categorias",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "src_components_costos_exportarexcel_js",
+      "target": "costos_costosconfig_categorias",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "src_components_costos_tablasemanal_jsx",
+      "target": "costos_costosconfig_categorias",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L299",
+      "weight": 1.0,
+      "source": "costos_detalleunidad_detalleunidad",
+      "target": "costos_costosconfig_getcategoria"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "costos_exportarexcel_hojadetalle",
+      "target": "costos_costosconfig_getcategoria",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L287",
+      "weight": 1.0,
+      "source": "costos_tablasemanal_tablasemanal",
+      "target": "costos_costosconfig_getcategoria"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "src_components_costos_detalleunidad_jsx",
+      "target": "costos_costosconfig_getcategoria",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "src_components_costos_exportarexcel_js",
+      "target": "costos_costosconfig_getcategoria",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/ListaGastos.jsx",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "src_components_costos_listagastos_jsx",
+      "target": "costos_costosconfig_getcategoria",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "src_components_costos_tablasemanal_jsx",
+      "target": "costos_costosconfig_getcategoria",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "src_components_costos_detalleunidad_jsx",
+      "target": "costos_costosconfig_tipos_unidad",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "src_components_costos_tablasemanal_jsx",
+      "target": "costos_costosconfig_tipos_unidad",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/useCostos.js",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "src_components_costos_usecostos_js",
+      "target": "costos_costosconfig_tipos_unidad",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L88",
+      "weight": 1.0,
+      "source": "costos_detalleunidad_detalleunidad",
+      "target": "costos_costosconfig_etiquetaunidad"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "src_components_costos_detalleunidad_jsx",
+      "target": "costos_costosconfig_etiquetaunidad",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/SelectUnidad.jsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "src_components_costos_selectunidad_jsx",
+      "target": "costos_costosconfig_etiquetaunidad",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "src_components_costos_tablasemanal_jsx",
+      "target": "costos_costosconfig_etiquetaunidad",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L69",
+      "weight": 1.0,
+      "source": "src_components_costos_detalleunidad_jsx",
+      "target": "costos_detalleunidad_detalleunidad",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L39",
+      "weight": 1.0,
+      "source": "src_components_costos_detalleunidad_jsx",
+      "target": "costos_detalleunidad_ejemoneda",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L32",
+      "weight": 1.0,
+      "source": "src_components_costos_detalleunidad_jsx",
+      "target": "costos_detalleunidad_rangos",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L41",
+      "weight": 1.0,
+      "source": "src_components_costos_detalleunidad_jsx",
+      "target": "costos_detalleunidad_tooltipsemana",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "src_components_costos_detalleunidad_jsx",
+      "target": "costos_exportarexcel_exportarunidad",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "src_components_costos_detalleunidad_jsx",
+      "target": "costos_usecostos_sumamontos",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "src_components_costos_detalleunidad_jsx",
+      "target": "costos_usecostos_usecostosrango",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "src_components_costos_detalleunidad_jsx",
+      "target": "costos_usecostos_useunidades",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "src_components_costos_detalleunidad_jsx",
+      "target": "src_components_costos_exportarexcel_js",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "src_components_costos_detalleunidad_jsx",
+      "target": "src_components_costos_listagastos_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "src_components_costos_detalleunidad_jsx",
+      "target": "src_components_costos_selectunidad_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "src_components_costos_detalleunidad_jsx",
+      "target": "src_components_costos_usecostos_js",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L63",
+      "weight": 1.0,
+      "source": "costos_detalleunidad_tooltipsemana",
+      "target": "lib_formato_formatcurrency"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L123",
+      "weight": 1.0,
+      "source": "costos_detalleunidad_detalleunidad",
+      "target": "costos_usecostos_sumamontos"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L95",
+      "weight": 1.0,
+      "source": "costos_detalleunidad_detalleunidad",
+      "target": "costos_usecostos_usecostosrango"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L76",
+      "weight": 1.0,
+      "source": "costos_detalleunidad_detalleunidad",
+      "target": "costos_usecostos_useunidades"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L92",
+      "weight": 1.0,
+      "source": "costos_detalleunidad_detalleunidad",
+      "target": "lib_fechas_localdatestr"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L198",
+      "weight": 1.0,
+      "source": "costos_detalleunidad_detalleunidad",
+      "target": "lib_formato_formatcurrency"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L90",
+      "weight": 1.0,
+      "source": "costos_detalleunidad_detalleunidad",
+      "target": "lib_semana_lunesdesemana"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L91",
+      "weight": 1.0,
+      "source": "costos_detalleunidad_detalleunidad",
+      "target": "lib_semana_sumardias"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/costos/DetalleUnidad.jsx",
+      "source_location": "L70",
+      "weight": 1.0,
+      "source": "costos_detalleunidad_detalleunidad",
+      "target": "ui_use_toast_usetoast"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L44",
+      "weight": 1.0,
+      "source": "src_components_costos_exportarexcel_js",
+      "target": "costos_exportarexcel_descargar",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "src_components_costos_exportarexcel_js",
+      "target": "costos_exportarexcel_encabezado",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L57",
+      "weight": 1.0,
+      "source": "src_components_costos_exportarexcel_js",
+      "target": "costos_exportarexcel_exportarsemana",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L82",
+      "weight": 1.0,
+      "source": "src_components_costos_exportarexcel_js",
+      "target": "costos_exportarexcel_exportarunidad",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "src_components_costos_exportarexcel_js",
+      "target": "costos_exportarexcel_hojadetalle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "src_components_costos_exportarexcel_js",
+      "target": "costos_exportarexcel_titulo",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "src_components_costos_tablasemanal_jsx",
+      "target": "src_components_costos_exportarexcel_js",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L64",
+      "weight": 1.0,
+      "source": "costos_exportarexcel_exportarsemana",
+      "target": "costos_exportarexcel_encabezado",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L88",
+      "weight": 1.0,
+      "source": "costos_exportarexcel_exportarunidad",
+      "target": "costos_exportarexcel_encabezado",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "costos_exportarexcel_hojadetalle",
+      "target": "costos_exportarexcel_encabezado",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L63",
+      "weight": 1.0,
+      "source": "costos_exportarexcel_exportarsemana",
+      "target": "costos_exportarexcel_titulo",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L87",
+      "weight": 1.0,
+      "source": "costos_exportarexcel_exportarunidad",
+      "target": "costos_exportarexcel_titulo",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L77",
+      "weight": 1.0,
+      "source": "costos_exportarexcel_exportarsemana",
+      "target": "costos_exportarexcel_hojadetalle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L101",
+      "weight": 1.0,
+      "source": "costos_exportarexcel_exportarunidad",
+      "target": "costos_exportarexcel_hojadetalle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L78",
+      "weight": 1.0,
+      "source": "costos_exportarexcel_exportarsemana",
+      "target": "costos_exportarexcel_descargar",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/exportarExcel.js",
+      "source_location": "L102",
+      "weight": 1.0,
+      "source": "costos_exportarexcel_exportarunidad",
+      "target": "costos_exportarexcel_descargar",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "src_components_costos_tablasemanal_jsx",
+      "target": "costos_exportarexcel_exportarsemana",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/ListaGastos.jsx",
+      "source_location": "L21",
+      "weight": 1.0,
+      "source": "src_components_costos_listagastos_jsx",
+      "target": "costos_listagastos_listagastos",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/ListaGastos.jsx",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "src_components_costos_listagastos_jsx",
+      "target": "costos_usecostos_useeliminarcosto",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/ListaGastos.jsx",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "src_components_costos_listagastos_jsx",
+      "target": "src_components_costos_usecostos_js",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "src_components_costos_tablasemanal_jsx",
+      "target": "src_components_costos_listagastos_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/costos/ListaGastos.jsx",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "costos_listagastos_listagastos",
+      "target": "costos_usecostos_useeliminarcosto"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/costos/ListaGastos.jsx",
+      "source_location": "L68",
+      "weight": 1.0,
+      "source": "costos_listagastos_listagastos",
+      "target": "lib_formato_formatcurrency"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/SelectUnidad.jsx",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "src_components_costos_selectunidad_jsx",
+      "target": "costos_selectunidad_selectunidad",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L32",
+      "weight": 1.0,
+      "source": "src_components_costos_tablasemanal_jsx",
+      "target": "costos_tablasemanal_kpi",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L55",
+      "weight": 1.0,
+      "source": "src_components_costos_tablasemanal_jsx",
+      "target": "costos_tablasemanal_tablasemanal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L42",
+      "weight": 1.0,
+      "source": "src_components_costos_tablasemanal_jsx",
+      "target": "costos_tablasemanal_variacion",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "src_components_costos_tablasemanal_jsx",
+      "target": "costos_usecostos_sumamontos",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "src_components_costos_tablasemanal_jsx",
+      "target": "costos_usecostos_usecostosrango",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "src_components_costos_tablasemanal_jsx",
+      "target": "costos_usecostos_useunidades",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "src_components_costos_tablasemanal_jsx",
+      "target": "src_components_costos_usecostos_js",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L50",
+      "weight": 1.0,
+      "source": "costos_tablasemanal_variacion",
+      "target": "lib_formato_formatcurrency"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L107",
+      "weight": 1.0,
+      "source": "costos_tablasemanal_tablasemanal",
+      "target": "costos_usecostos_sumamontos"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L70",
+      "weight": 1.0,
+      "source": "costos_tablasemanal_tablasemanal",
+      "target": "costos_usecostos_usecostosrango"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L68",
+      "weight": 1.0,
+      "source": "costos_tablasemanal_tablasemanal",
+      "target": "costos_usecostos_useunidades"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L63",
+      "weight": 1.0,
+      "source": "costos_tablasemanal_tablasemanal",
+      "target": "lib_fechas_localdatestr"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L172",
+      "weight": 1.0,
+      "source": "costos_tablasemanal_tablasemanal",
+      "target": "lib_formato_formatcurrency"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L66",
+      "weight": 1.0,
+      "source": "costos_tablasemanal_tablasemanal",
+      "target": "lib_semana_lunesdesemana"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L64",
+      "weight": 1.0,
+      "source": "costos_tablasemanal_tablasemanal",
+      "target": "lib_semana_sumardias"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/costos/TablaSemanal.jsx",
+      "source_location": "L56",
+      "weight": 1.0,
+      "source": "costos_tablasemanal_tablasemanal",
+      "target": "ui_use_toast_usetoast"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/useCostos.js",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "src_components_costos_usecostos_js",
+      "target": "costos_usecostos_invalidarcostos",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/useCostos.js",
+      "source_location": "L75",
+      "weight": 1.0,
+      "source": "src_components_costos_usecostos_js",
+      "target": "costos_usecostos_sumamontos",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/useCostos.js",
+      "source_location": "L35",
+      "weight": 1.0,
+      "source": "src_components_costos_usecostos_js",
+      "target": "costos_usecostos_usecostosrango",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/useCostos.js",
+      "source_location": "L57",
+      "weight": 1.0,
+      "source": "src_components_costos_usecostos_js",
+      "target": "costos_usecostos_useeliminarcosto",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/costos/useCostos.js",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "src_components_costos_usecostos_js",
+      "target": "costos_usecostos_useunidades",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/costos/useCostos.js",
+      "source_location": "L59",
+      "weight": 1.0,
+      "source": "costos_usecostos_useeliminarcosto",
+      "target": "ui_use_toast_usetoast"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "src/components/fuel/AnomaliasCombustible.jsx",
       "source_location": "L11",
       "weight": 1.0,
@@ -32337,11 +33933,31 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/gps/CompartidosGPS.jsx",
+      "source_location": "L61",
+      "weight": 1.0,
+      "source": "src_components_gps_compartidosgps_jsx",
+      "target": "gps_compartidosgps_describirdispositivo",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/gps/CompartidosGPS.jsx",
       "source_location": "L32",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "src_components_gps_compartidosgps_jsx",
       "target": "gps_compartidosgps_duraciones"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/gps/CompartidosGPS.jsx",
+      "source_location": "L81",
+      "weight": 1.0,
+      "source": "src_components_gps_compartidosgps_jsx",
+      "target": "gps_compartidosgps_estaactiva",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -33093,9 +34709,9 @@
       "source_file": "src/components/legal/documentosConfig.js",
       "source_location": "L68",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_legal_documentosconfig_js",
-      "target": "legal_documentosconfig_titulodoc",
-      "confidence_score": 1.0
+      "target": "legal_documentosconfig_titulodoc"
     },
     {
       "relation": "contains",
@@ -33169,9 +34785,9 @@
       "source_file": "src/components/legal/documentosConfig.js",
       "source_location": "L69",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "legal_documentosconfig_titulodoc",
-      "target": "legal_documentosconfig_tipodoc",
-      "confidence_score": 1.0
+      "target": "legal_documentosconfig_tipodoc"
     },
     {
       "relation": "calls",
@@ -33224,9 +34840,9 @@
       "source_file": "src/components/legal/DocumentosDialog.jsx",
       "source_location": "L621",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "legal_documentosdialog_filadocumento",
-      "target": "legal_documentosconfig_titulodoc",
-      "confidence_score": 1.0
+      "target": "legal_documentosconfig_titulodoc"
     },
     {
       "relation": "calls",
@@ -33246,9 +34862,9 @@
       "source_file": "src/components/legal/DocumentosDialog.jsx",
       "source_location": "L41",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_legal_documentosdialog_jsx",
-      "target": "legal_documentosconfig_titulodoc",
-      "confidence_score": 1.0
+      "target": "legal_documentosconfig_titulodoc"
     },
     {
       "relation": "imports",
@@ -33257,9 +34873,9 @@
       "source_file": "src/components/legal/VisorDocumento.jsx",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_legal_visordocumento_jsx",
-      "target": "legal_documentosconfig_titulodoc",
-      "confidence_score": 1.0
+      "target": "legal_documentosconfig_titulodoc"
     },
     {
       "relation": "calls",
@@ -33410,9 +35026,9 @@
       "source_file": "src/components/legal/DocumentosDialog.jsx",
       "source_location": "L399",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_legal_documentosdialog_jsx",
-      "target": "legal_documentosdialog_apartadodocumento",
-      "confidence_score": 1.0
+      "target": "legal_documentosdialog_apartadodocumento"
     },
     {
       "relation": "contains",
@@ -34340,6 +35956,60 @@
       "weight": 1.0,
       "source": "panel_colacargacompacta_colacargacompacta",
       "target": "utils_index_createpageurl"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/panel/CostosSemana.jsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "src_components_panel_costossemana_jsx",
+      "target": "panel_costossemana_costossemana",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/panel/CostosSemana.jsx",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "panel_costossemana_costossemana",
+      "target": "lib_fechas_localdatestr"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/panel/CostosSemana.jsx",
+      "source_location": "L98",
+      "weight": 1.0,
+      "source": "panel_costossemana_costossemana",
+      "target": "lib_formato_formatcurrency"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/panel/CostosSemana.jsx",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "panel_costossemana_costossemana",
+      "target": "lib_semana_lunesdesemana"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/panel/CostosSemana.jsx",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "panel_costossemana_costossemana",
+      "target": "lib_semana_sumardias"
     },
     {
       "relation": "contains",
@@ -37552,6 +39222,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/semana.js",
+      "source_location": "L95",
+      "weight": 1.0,
+      "source": "src_lib_semana_js",
+      "target": "lib_semana_lunesdesemana",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/semana.js",
       "source_location": "L33",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -37612,6 +39292,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/semana.js",
+      "source_location": "L103",
+      "weight": 1.0,
+      "source": "src_lib_semana_js",
+      "target": "lib_semana_sumardias",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/semana.js",
       "source_location": "L25",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -37628,6 +39318,17 @@
       "confidence_score": 1.0,
       "source": "lib_semana_diasdesemana",
       "target": "lib_semana_todate"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/semana.js",
+      "source_location": "L96",
+      "weight": 1.0,
+      "source": "lib_semana_lunesdesemana",
+      "target": "lib_semana_todate",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -37749,6 +39450,28 @@
       "weight": 1.0,
       "source": "lib_semana_numerosemana",
       "target": "pages_controlvacios_adddays"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/pages/ControlVacios.jsx",
+      "source_location": "L565",
+      "weight": 1.0,
+      "source": "pages_controlvacios_controlvacios",
+      "target": "lib_semana_lunesdesemana"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/pages/ControlVacios.jsx",
+      "source_location": "L1044",
+      "weight": 1.0,
+      "source": "pages_controlvacios_controlvacios",
+      "target": "lib_semana_sumardias"
     },
     {
       "relation": "contains",
@@ -38013,6 +39736,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/ControlVacios.jsx",
+      "source_location": "L1066",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "pages_controlvacios_controlvacios",
+      "target": "pages_controlvacios_adddays"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/pages/ControlVacios.jsx",
       "source_location": "L592",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -38024,33 +39758,21 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/pages/ControlVacios.jsx",
-      "source_location": "L1066",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_controlvacios_controlvacios",
-      "target": "pages_controlvacios_adddays"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "src/pages/Liquidaciones.jsx",
-      "source_location": "L60",
-      "weight": 1.0,
-      "source": "pages_liquidaciones_sabadodecorte",
-      "target": "pages_controlvacios_adddays"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/ControlVacios.jsx",
       "source_location": "L590",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "pages_controlvacios_controlvacios",
       "target": "pages_controlvacios_localdatestr"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/pages/CostosUnidad.jsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "src_pages_costosunidad_jsx",
+      "target": "pages_costosunidad_costosunidad",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -38396,6 +40118,16 @@
       "confidence_score": 1.0,
       "source": "src_pages_fuelprogramacargas_jsx",
       "target": "pages_fuelprogramacargas_dias_semana"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/pages/FuelProgramaCargas.jsx",
+      "source_location": "L196",
+      "weight": 1.0,
+      "source": "src_pages_fuelprogramacargas_jsx",
+      "target": "pages_fuelprogramacargas_espdfevidencia",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -38829,6 +40561,16 @@
       "confidence_score": 1.0,
       "source": "src_pages_index_jsx",
       "target": "pages_index_controlvacios"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/pages/index.jsx",
+      "source_location": "L36",
+      "weight": 1.0,
+      "source": "src_pages_index_jsx",
+      "target": "pages_index_costosunidad",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -39281,6 +41023,17 @@
       "confidence_score": 1.0,
       "source": "src_pages_liquidaciones_jsx",
       "target": "pages_liquidaciones_sabadodecorte"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/pages/Liquidaciones.jsx",
+      "source_location": "L60",
+      "weight": 1.0,
+      "source": "pages_liquidaciones_sabadodecorte",
+      "target": "pages_controlvacios_adddays"
     },
     {
       "relation": "contains",
@@ -40799,5 +42552,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "9f9c1e59f4dc97c341e2e0881275972d6c9cb34c"
+  "built_at_commit": "a0999be1521ce3297bbea033f831fea2170ac494"
 }

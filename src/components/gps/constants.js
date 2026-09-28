@@ -22,5 +22,10 @@ export const estaEnRalenti = (u) => !!u?.motor && (u?.velocidad ?? 0) <= RALENTI
 export const POLL_POSITIONS_MS  = 15000;
 export const POLL_ALERTAS_MS    = 30000;
 
+// Visitas a enlaces compartidos: las páginas públicas laten cada ≤ 20 s,
+// así que un visitante sin latido en 45 s ya cerró o dejó la pestaña en segundo plano.
+export const PING_HISTORIAL_MS  = 20000;
+export const VISITA_ACTIVA_MS   = 45000;
+
 // Mapa
 export const CENTRO_MX = [23.6345, -102.5528];
