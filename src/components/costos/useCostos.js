@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/supabaseClient";
 import { useToast } from "@/components/ui/use-toast";
-import { TIPOS_UNIDAD } from "./costosConfig";
+import { TIPOS_UNIDAD, UNIDAD_GENERAL } from "./costosConfig";
 
 // Todas las queries del módulo cuelgan de "costos": invalidar ["costos"]
 // refresca tabla semanal, detalle por unidad y el widget del panel a la vez.
@@ -18,6 +18,7 @@ export function useUnidades(tipo) {
   return useQuery({
     queryKey: [COSTOS_KEY, "unidades", tipo],
     queryFn: async () => {
+      if (tipo === "general") return [UNIDAD_GENERAL];
       const q =
         tipo === "camion"
           ? supabase.from("Camion").select("id, nombre, placas, estado").order("nombre")
@@ -37,15 +38,14 @@ export function useCostosRango(tipo, desde, hasta, { unidadId = null, enabled = 
   return useQuery({
     queryKey: [COSTOS_KEY, "rango", tipo, desde, hasta, unidadId],
     queryFn: async () => {
-      let q = supabase
-        .from("CostoUnidad")
-        .select("*")
-        .not(columna, "is", null)
+      let q = supabase.from("CostoUnidad").select("*");
+      q = columna ? q.not(columna, "is", null) : q.is("camion_id", null).is("remolque_id", null);
+      q = q
         .gte("fecha", desde)
         .lte("fecha", hasta)
         .order("fecha", { ascending: false })
         .order("created_at", { ascending: false });
-      if (unidadId) q = q.eq(columna, unidadId);
+      if (unidadId && columna) q = q.eq(columna, unidadId);
       const { data, error } = await q;
       if (error) throw error;
       return data || [];

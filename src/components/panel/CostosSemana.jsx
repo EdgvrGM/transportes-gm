@@ -7,7 +7,7 @@ import { Receipt, ArrowUpRight } from "lucide-react";
 import { localDateStr } from "@/lib/fechas";
 import { lunesDeSemana, sumarDias } from "@/lib/semana";
 import { formatCurrency } from "@/lib/formato";
-import { etiquetaUnidad, getCategoria } from "@/components/costos/costosConfig";
+import { etiquetaUnidad, getCategoria, tipoDeCosto, TIPOS_UNIDAD } from "@/components/costos/costosConfig";
 
 // Resumen de la semana en curso (Lunes–Domingo) para el Panel de Control.
 export default function CostosSemana() {
@@ -48,7 +48,7 @@ export default function CostosSemana() {
 
     const porUnidad = new Map();
     for (const g of actual) {
-      const k = g.camion_id ? `c${g.camion_id}` : `r${g.remolque_id}`;
+      const k = `${tipoDeCosto(g)}-${g.camion_id ?? g.remolque_id ?? 0}`;
       if (!porUnidad.has(k)) porUnidad.set(k, { g, total: 0, cats: {} });
       const u = porUnidad.get(k);
       u.total += Number(g.monto);
@@ -58,14 +58,15 @@ export default function CostosSemana() {
       .sort((a, b) => b.total - a.total)
       .slice(0, 3)
       .map(({ g, total: t, cats }) => {
-        const esCamion = Boolean(g.camion_id);
-        const u = esCamion
-          ? catalogo.camiones.find((c) => c.id === g.camion_id)
-          : catalogo.remolques.find((r) => r.id === g.remolque_id);
+        const tipo = tipoDeCosto(g);
+        const u =
+          tipo === "camion"
+            ? catalogo.camiones.find((c) => c.id === g.camion_id)
+            : catalogo.remolques.find((r) => r.id === g.remolque_id);
         const catTop = Object.entries(cats).sort((a, b) => b[1] - a[1])[0][0];
         return {
-          etiqueta: etiquetaUnidad(esCamion ? "camion" : "remolque", u),
-          tipo: esCamion ? "Camión" : "Remolque",
+          etiqueta: etiquetaUnidad(tipo, u),
+          tipo: TIPOS_UNIDAD[tipo].singular,
           total: t,
           catTop: getCategoria(catTop).label,
         };

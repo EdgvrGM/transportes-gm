@@ -24,7 +24,7 @@ import {
 import { localDateStr } from "@/lib/fechas";
 import { lunesDeSemana, sumarDias } from "@/lib/semana";
 import { formatCurrency } from "@/lib/formato";
-import { CATEGORIAS, TIPOS_UNIDAD, etiquetaUnidad, getCategoria } from "./costosConfig";
+import { CATEGORIAS, TIPOS_UNIDAD, etiquetaUnidad, getCategoria, idUnidad } from "./costosConfig";
 import { useUnidades, useCostosRango, sumaMontos } from "./useCostos";
 import ListaGastos from "./ListaGastos";
 import { exportarSemana } from "./exportarExcel";
@@ -59,7 +59,7 @@ export default function TablaSemanal({ tipo, onEditar, onNuevo }) {
   const [celda, setCelda] = useState(null); // { unidadId, categoria|null }
   const [exportando, setExportando] = useState(false);
 
-  const columna = TIPOS_UNIDAD[tipo].columna;
+  const esGeneral = tipo === "general";
   const desde = localDateStr(lunes);
   const hasta = localDateStr(sumarDias(lunes, 6));
   const desdePrevio = localDateStr(sumarDias(lunes, -7));
@@ -76,12 +76,12 @@ export default function TablaSemanal({ tipo, onEditar, onNuevo }) {
   );
 
   const unidadPorId = useMemo(() => new Map(unidades.map((u) => [u.id, u])), [unidades]);
-  const nombreUnidad = (g) => etiquetaUnidad(tipo, unidadPorId.get(g[columna]));
+  const nombreUnidad = (g) => etiquetaUnidad(tipo, unidadPorId.get(idUnidad(tipo, g)));
 
   const filas = useMemo(() => {
     const acc = new Map();
     for (const g of gastos) {
-      const id = g[columna];
+      const id = idUnidad(tipo, g);
       if (!acc.has(id)) acc.set(id, { porCat: {}, total: 0 });
       const f = acc.get(id);
       f.porCat[g.categoria] = (f.porCat[g.categoria] || 0) + Number(g.monto);
@@ -102,7 +102,7 @@ export default function TablaSemanal({ tipo, onEditar, onNuevo }) {
           b.total - a.total ||
           a.etiqueta.localeCompare(b.etiqueta),
       );
-  }, [gastos, columna, verTodas, unidades, unidadPorId, tipo]);
+  }, [gastos, verTodas, unidades, unidadPorId, tipo]);
 
   const total = sumaMontos(gastos);
   const totalesCat = CATEGORIAS.map((c) => ({
@@ -112,11 +112,12 @@ export default function TablaSemanal({ tipo, onEditar, onNuevo }) {
   const catPrincipal = [...totalesCat].sort((a, b) => b.total - a.total)[0];
   const masCara = filas.reduce((m, f) => (f.total > (m?.total || 0) ? f : m), null);
   const conGasto = filas.filter((f) => f.total > 0).length;
+  const gastoMayor = gastos.reduce((m, g) => (Number(g.monto) > Number(m?.monto || 0) ? g : m), null);
 
   const rango = `${format(lunes, "dd MMM", { locale: es })} – ${format(sumarDias(lunes, 6), "dd MMM yyyy", { locale: es })}`;
 
   const gastosCelda = celda
-    ? gastos.filter((g) => g[columna] === celda.unidadId && (!celda.categoria || g.categoria === celda.categoria))
+    ? gastos.filter((g) => idUnidad(tipo, g) === celda.unidadId && (!celda.categoria || g.categoria === celda.categoria))
     : [];
 
   const exportar = async () => {
@@ -171,12 +172,25 @@ export default function TablaSemanal({ tipo, onEditar, onNuevo }) {
         <Kpi label="Total de la semana" sub={<Variacion actual={total} previo={totalPrevio} />}>
           ${formatCurrency(total)}
         </Kpi>
-        <Kpi label={`${TIPOS_UNIDAD[tipo].label} con gasto`} sub={`de ${unidades.length} registrados`}>
-          {conGasto}
-        </Kpi>
-        <Kpi label="Unidad con mayor gasto" sub={masCara ? `$${formatCurrency(masCara.total)}` : "—"}>
-          {masCara ? masCara.etiqueta : "—"}
-        </Kpi>
+        {esGeneral ? (
+          <>
+            <Kpi label="Compras registradas" sub="sin unidad asignada">
+              {gastos.length}
+            </Kpi>
+            <Kpi label="Compra más grande" sub={gastoMayor ? `$${formatCurrency(gastoMayor.monto)}` : "—"}>
+              {gastoMayor ? gastoMayor.concepto : "—"}
+            </Kpi>
+          </>
+        ) : (
+          <>
+            <Kpi label={`${TIPOS_UNIDAD[tipo].label} con gasto`} sub={`de ${unidades.length} registrados`}>
+              {conGasto}
+            </Kpi>
+            <Kpi label="Unidad con mayor gasto" sub={masCara ? `$${formatCurrency(masCara.total)}` : "—"}>
+              {masCara ? masCara.etiqueta : "—"}
+            </Kpi>
+          </>
+        )}
         <Kpi label="Categoría principal" sub={catPrincipal?.total > 0 ? `$${formatCurrency(catPrincipal.total)}` : "—"}>
           {catPrincipal?.total > 0 ? catPrincipal.label : "—"}
         </Kpi>
@@ -185,11 +199,15 @@ export default function TablaSemanal({ tipo, onEditar, onNuevo }) {
       {/* Matriz unidades × categorías */}
       <div className="bg-card border border-border rounded-2xl overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <div className="text-sm font-bold text-foreground">Gasto por {TIPOS_UNIDAD[tipo].singular.toLowerCase()} y categoría</div>
-          <div className="flex items-center gap-2">
-            <Checkbox id="ver-todas" checked={verTodas} onCheckedChange={(v) => setVerTodas(Boolean(v))} />
-            <Label htmlFor="ver-todas" className="text-xs text-muted-foreground cursor-pointer">Mostrar unidades sin gasto</Label>
+          <div className="text-sm font-bold text-foreground">
+            {esGeneral ? "Gastos generales por categoría" : `Gasto por ${TIPOS_UNIDAD[tipo].singular.toLowerCase()} y categoría`}
           </div>
+          {!esGeneral && (
+            <div className="flex items-center gap-2">
+              <Checkbox id="ver-todas" checked={verTodas} onCheckedChange={(v) => setVerTodas(Boolean(v))} />
+              <Label htmlFor="ver-todas" className="text-xs text-muted-foreground cursor-pointer">Mostrar unidades sin gasto</Label>
+            </div>
+          )}
         </div>
 
         {isLoading ? (

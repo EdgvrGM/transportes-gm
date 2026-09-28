@@ -16,14 +16,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
 import { localDateStr } from "@/lib/fechas";
-import { CATEGORIAS, TIPOS_UNIDAD } from "./costosConfig";
+import { CATEGORIAS, TIPOS_UNIDAD, UNIDAD_GENERAL, tipoDeCosto } from "./costosConfig";
 import { useUnidades, invalidarCostos } from "./useCostos";
 import SelectUnidad from "./SelectUnidad";
+
+const unidadInicial = (tipo, unidadId) =>
+  tipo === "general" ? String(UNIDAD_GENERAL.id) : unidadId ? String(unidadId) : "";
 
 function formVacio({ tipo = "camion", unidadId = "", fecha, categoria = "" } = {}) {
   return {
     tipo,
-    unidadId: unidadId ? String(unidadId) : "",
+    unidadId: unidadInicial(tipo, unidadId),
     fecha: fecha || localDateStr(),
     categoria,
     concepto: "",
@@ -34,9 +37,10 @@ function formVacio({ tipo = "camion", unidadId = "", fecha, categoria = "" } = {
 }
 
 function formDesdeCosto(c) {
+  const tipo = tipoDeCosto(c);
   return {
-    tipo: c.camion_id ? "camion" : "remolque",
-    unidadId: String(c.camion_id ?? c.remolque_id),
+    tipo,
+    unidadId: unidadInicial(tipo, c.camion_id ?? c.remolque_id),
     fecha: c.fecha,
     categoria: c.categoria,
     concepto: c.concepto || "",
@@ -73,7 +77,8 @@ export default function CapturaCostoDialog({ open, onOpenChange, costo = null, p
 
   const guardar = async (continuar) => {
     const monto = parseFloat(form.monto);
-    if (!form.unidadId) return setError(`Elige el ${TIPOS_UNIDAD[form.tipo].singular.toLowerCase()}.`);
+    if (form.tipo !== "general" && !form.unidadId)
+      return setError(`Elige el ${TIPOS_UNIDAD[form.tipo].singular.toLowerCase()}.`);
     if (!form.fecha) return setError("Captura la fecha.");
     if (!form.categoria) return setError("Elige la categoría.");
     if (!form.concepto.trim()) return setError("Describe el concepto del gasto.");
@@ -133,12 +138,12 @@ export default function CapturaCostoDialog({ open, onOpenChange, costo = null, p
 
         <form onSubmit={onSubmit} className="space-y-4">
           {!editando && (
-            <div className="grid grid-cols-2 gap-1 p-1 rounded-lg bg-muted">
+            <div className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-muted">
               {Object.entries(TIPOS_UNIDAD).map(([key, t]) => (
                 <button
                   key={key}
                   type="button"
-                  onClick={() => setForm((f) => ({ ...f, tipo: key, unidadId: "" }))}
+                  onClick={() => setForm((f) => ({ ...f, tipo: key, unidadId: unidadInicial(key) }))}
                   className={`py-1.5 rounded-md text-sm font-semibold transition ${
                     form.tipo === key
                       ? "bg-background text-foreground shadow-sm"
@@ -151,18 +156,27 @@ export default function CapturaCostoDialog({ open, onOpenChange, costo = null, p
             </div>
           )}
 
+          {form.tipo === "general" && (
+            <p className="text-xs text-muted-foreground -mt-1">
+              Compras de flota que no son de una unidad específica (p. ej. cubetas de aceite para rellenar).
+              Cuentan en el total de la semana, no en el costo de cada camión.
+            </p>
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>{TIPOS_UNIDAD[form.tipo].singular} *</Label>
-              <SelectUnidad
-                tipo={form.tipo}
-                unidades={unidades}
-                value={form.unidadId}
-                onChange={set("unidadId")}
-                placeholder="Seleccionar…"
-                disabled={editando}
-              />
-            </div>
+            {form.tipo !== "general" && (
+              <div className="space-y-1.5">
+                <Label>{TIPOS_UNIDAD[form.tipo].singular} *</Label>
+                <SelectUnidad
+                  tipo={form.tipo}
+                  unidades={unidades}
+                  value={form.unidadId}
+                  onChange={set("unidadId")}
+                  placeholder="Seleccionar…"
+                  disabled={editando}
+                />
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label htmlFor="costo-fecha">Fecha *</Label>
               <Input id="costo-fecha" type="date" value={form.fecha} onChange={set("fecha")} />

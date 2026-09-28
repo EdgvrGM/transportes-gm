@@ -25,10 +25,10 @@ export default function CostosUnidad() {
             </div>
             <div>
               <h1 className="text-2xl md:text-3xl font-black tracking-tight text-foreground">Costos por Unidad</h1>
-              <p className="text-sm text-muted-foreground">Llantas, reparaciones, refacciones, rescates y más — semana con semana</p>
+              <p className="text-sm text-muted-foreground">Llantas, reparaciones, refacciones, aceites y más — semana con semana</p>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-1 p-1 rounded-lg bg-muted self-start md:self-auto">
+          <div className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-muted self-start md:self-auto">
             {Object.entries(TIPOS_UNIDAD).map(([key, t]) => (
               <button
                 key={key}

@@ -150,14 +150,16 @@ export default function DetalleUnidad({ tipo, onEditar, onNuevo }) {
     <div className="space-y-4">
       {/* Filtros en una fila */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-        <SelectUnidad
-          tipo={tipo}
-          unidades={unidades}
-          value={unidadId}
-          onChange={(v) => { setUnidadId(v); setCatFiltro(null); }}
-          placeholder={`Elige ${TIPOS_UNIDAD[tipo].singular.toLowerCase()}…`}
-          className="sm:w-72"
-        />
+        {tipo !== "general" && (
+          <SelectUnidad
+            tipo={tipo}
+            unidades={unidades}
+            value={unidadId}
+            onChange={(v) => { setUnidadId(v); setCatFiltro(null); }}
+            placeholder={`Elige ${TIPOS_UNIDAD[tipo].singular.toLowerCase()}…`}
+            className="sm:w-72"
+          />
+        )}
         <Select value={String(numSemanas)} onValueChange={(v) => setNumSemanas(Number(v))}>
           <SelectTrigger className="sm:w-40">
             <SelectValue />
