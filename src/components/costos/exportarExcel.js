@@ -59,18 +59,22 @@ export async function exportarSemana({ tituloTexto, nombreArchivo, filas, gastos
   const ExcelJS = (await import("exceljs")).default;
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet("Resumen");
-  const ncol = CATEGORIAS.length + 2;
+  const ncol = CATEGORIAS.length + 3;
   titulo(ws, tituloTexto, ncol);
-  encabezado(ws, ["Unidad", ...CATEGORIAS.map((c) => c.label), "Total"]);
-  filas.forEach((f) => ws.addRow([f.etiqueta, ...CATEGORIAS.map((c) => f.porCat[c.key] || 0), f.total]));
+  encabezado(ws, ["Tipo", "Unidad", ...CATEGORIAS.map((c) => c.label), "Total"]);
+  filas.forEach((f) =>
+    ws.addRow([f.seccion, f.etiqueta, ...CATEGORIAS.map((c) => f.porCat[c.key] || 0), f.total]),
+  );
   const tot = ws.addRow([
     "TOTAL",
+    "",
     ...CATEGORIAS.map((c) => filas.reduce((s, f) => s + (f.porCat[c.key] || 0), 0)),
     filas.reduce((s, f) => s + f.total, 0),
   ]);
   tot.font = { bold: true };
-  ws.getColumn(1).width = 28;
-  for (let i = 2; i <= ncol; i++) {
+  ws.getColumn(1).width = 24;
+  ws.getColumn(2).width = 28;
+  for (let i = 3; i <= ncol; i++) {
     ws.getColumn(i).width = 16;
     ws.getColumn(i).numFmt = MONEDA;
   }

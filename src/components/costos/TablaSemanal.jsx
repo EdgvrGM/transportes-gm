@@ -24,7 +24,7 @@ import {
 import { localDateStr } from "@/lib/fechas";
 import { lunesDeSemana, sumarDias } from "@/lib/semana";
 import { formatCurrency } from "@/lib/formato";
-import { CATEGORIAS, TIPOS_UNIDAD, etiquetaUnidad, getCategoria, idUnidad } from "./costosConfig";
+import { CATEGORIAS, getCategoria, keyDeCosto } from "./costosConfig";
 import { useUnidades, useCostosRango, sumaMontos } from "./useCostos";
 import ListaGastos from "./ListaGastos";
 import { exportarSemana } from "./exportarExcel";
@@ -52,22 +52,24 @@ function Variacion({ actual, previo }) {
   );
 }
 
-export default function TablaSemanal({ tipo, onEditar, onNuevo }) {
+const vacia = () => ({ porCat: {}, total: 0 });
+
+export default function TablaSemanal({ onEditar, onNuevo }) {
   const { toast } = useToast();
   const [lunes, setLunes] = useState(() => lunesDeSemana(new Date()));
   const [verTodas, setVerTodas] = useState(false);
-  const [celda, setCelda] = useState(null); // { unidadId, categoria|null }
+  const [celda, setCelda] = useState(null); // { key, etiqueta, categoria|null }
   const [exportando, setExportando] = useState(false);
 
-  const esGeneral = tipo === "general";
   const desde = localDateStr(lunes);
   const hasta = localDateStr(sumarDias(lunes, 6));
   const desdePrevio = localDateStr(sumarDias(lunes, -7));
   const esSemanaActual = localDateStr(lunesDeSemana(new Date())) === desde;
+  const fechaAlta = esSemanaActual ? undefined : desde;
 
-  const { data: unidades = [] } = useUnidades(tipo);
+  const { data: unidades = [] } = useUnidades();
   // Una sola consulta de 2 semanas: la actual para la tabla y la previa para la variación.
-  const { data: gastos2sem = [], isLoading } = useCostosRango(tipo, desdePrevio, hasta);
+  const { data: gastos2sem = [], isLoading } = useCostosRango(desdePrevio, hasta);
 
   const gastos = useMemo(() => gastos2sem.filter((g) => g.fecha >= desde), [gastos2sem, desde]);
   const totalPrevio = useMemo(
@@ -75,57 +77,79 @@ export default function TablaSemanal({ tipo, onEditar, onNuevo }) {
     [gastos2sem, desde],
   );
 
-  const unidadPorId = useMemo(() => new Map(unidades.map((u) => [u.id, u])), [unidades]);
-  const nombreUnidad = (g) => etiquetaUnidad(tipo, unidadPorId.get(idUnidad(tipo, g)));
+  const unidadPorKey = useMemo(() => new Map(unidades.map((u) => [u.key, u])), [unidades]);
+  const nombreUnidad = (g) => unidadPorKey.get(keyDeCosto(g))?.etiqueta || "—";
 
-  const filas = useMemo(() => {
+  // Secciones en el orden de useUnidades (camiones → remolques por tipo → generales);
+  // dentro de cada sección, de mayor a menor gasto.
+  const secciones = useMemo(() => {
     const acc = new Map();
     for (const g of gastos) {
-      const id = idUnidad(tipo, g);
-      if (!acc.has(id)) acc.set(id, { porCat: {}, total: 0 });
-      const f = acc.get(id);
+      const k = keyDeCosto(g);
+      if (!acc.has(k)) acc.set(k, vacia());
+      const f = acc.get(k);
       f.porCat[g.categoria] = (f.porCat[g.categoria] || 0) + Number(g.monto);
       f.total += Number(g.monto);
     }
-    const base = verTodas ? unidades.map((u) => u.id) : [...acc.keys()];
-    return base
-      .map((id) => ({
-        id,
-        etiqueta: etiquetaUnidad(tipo, unidadPorId.get(id)),
-        grupo: tipo === "remolque" ? unidadPorId.get(id)?.tipo || "Sin tipo" : "",
-        ...(acc.get(id) || { porCat: {}, total: 0 }),
-      }))
-      // Remolques: primero agrupados por tipo (Caja Seca, Chasis…), dentro de cada grupo por gasto.
+    const ordenSeccion = new Map();
+    unidades.forEach((u) => {
+      if (!ordenSeccion.has(u.seccion)) ordenSeccion.set(u.seccion, ordenSeccion.size);
+    });
+    const keys = verTodas ? unidades.map((u) => u.key) : [...acc.keys()];
+    const filas = keys
+      .map((k) => {
+        const u = unidadPorKey.get(k);
+        return {
+          key: k,
+          etiqueta: u?.etiqueta || "—",
+          seccion: u?.seccion || "Sin clasificar",
+          ...(acc.get(k) || vacia()),
+        };
+      })
       .sort(
         (a, b) =>
-          a.grupo.localeCompare(b.grupo) ||
+          (ordenSeccion.get(a.seccion) ?? Infinity) - (ordenSeccion.get(b.seccion) ?? Infinity) ||
           b.total - a.total ||
           a.etiqueta.localeCompare(b.etiqueta),
       );
-  }, [gastos, verTodas, unidades, unidadPorId, tipo]);
 
+    const lista = [];
+    for (const f of filas) {
+      let s = lista.at(-1);
+      if (s?.nombre !== f.seccion) {
+        s = { nombre: f.seccion, filas: [], total: 0 };
+        lista.push(s);
+      }
+      s.filas.push(f);
+      s.total += f.total;
+    }
+    return lista;
+  }, [gastos, verTodas, unidades, unidadPorKey]);
+
+  const filas = secciones.flatMap((s) => s.filas);
+  const filasUnidad = filas.filter((f) => unidadPorKey.get(f.key)?.tipo !== "general");
   const total = sumaMontos(gastos);
   const totalesCat = CATEGORIAS.map((c) => ({
     ...c,
     total: filas.reduce((s, f) => s + (f.porCat[c.key] || 0), 0),
   }));
   const catPrincipal = [...totalesCat].sort((a, b) => b.total - a.total)[0];
-  const masCara = filas.reduce((m, f) => (f.total > (m?.total || 0) ? f : m), null);
-  const conGasto = filas.filter((f) => f.total > 0).length;
-  const gastoMayor = gastos.reduce((m, g) => (Number(g.monto) > Number(m?.monto || 0) ? g : m), null);
+  const masCara = filasUnidad.reduce((m, f) => (f.total > (m?.total || 0) ? f : m), null);
+  const conGasto = filasUnidad.filter((f) => f.total > 0).length;
+  const totalUnidades = unidades.filter((u) => u.tipo !== "general").length;
 
   const rango = `${format(lunes, "dd MMM", { locale: es })} – ${format(sumarDias(lunes, 6), "dd MMM yyyy", { locale: es })}`;
 
   const gastosCelda = celda
-    ? gastos.filter((g) => idUnidad(tipo, g) === celda.unidadId && (!celda.categoria || g.categoria === celda.categoria))
+    ? gastos.filter((g) => keyDeCosto(g) === celda.key && (!celda.categoria || g.categoria === celda.categoria))
     : [];
 
   const exportar = async () => {
     setExportando(true);
     try {
       await exportarSemana({
-        tituloTexto: `Costos ${TIPOS_UNIDAD[tipo].label.toLowerCase()} · ${rango}`,
-        nombreArchivo: `Costos_${TIPOS_UNIDAD[tipo].label}_${desde}.xlsx`,
+        tituloTexto: `Costos por unidad · ${rango}`,
+        nombreArchivo: `Costos_${desde}.xlsx`,
         filas: filas.filter((f) => f.total > 0),
         gastos,
         nombreUnidad,
@@ -136,6 +160,19 @@ export default function TablaSemanal({ tipo, onEditar, onNuevo }) {
       setExportando(false);
     }
   };
+
+  const celdaMonto = (f, v, categoria, negrita = false) =>
+    v > 0 ? (
+      <button
+        className={`w-full text-right px-2 py-1 rounded-md tabular-nums text-foreground hover:bg-accent transition ${negrita ? "font-bold" : ""}`}
+        onClick={() => setCelda({ key: f.key, etiqueta: f.etiqueta, categoria })}
+        title={`${f.etiqueta}${categoria ? ` · ${getCategoria(categoria).label}` : ""}: ver desglose`}
+      >
+        ${formatCurrency(v)}
+      </button>
+    ) : (
+      <span className="px-2 text-muted-foreground/50">—</span>
+    );
 
   return (
     <div className="space-y-4">
@@ -161,7 +198,7 @@ export default function TablaSemanal({ tipo, onEditar, onNuevo }) {
             {exportando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
             Exportar Excel
           </Button>
-          <Button size="sm" className="gap-2 bg-primary text-primary-foreground" onClick={() => onNuevo({ tipo, fecha: esSemanaActual ? undefined : desde })}>
+          <Button size="sm" className="gap-2 bg-primary text-primary-foreground" onClick={() => onNuevo({ fecha: fechaAlta })}>
             <Plus className="w-4 h-4" /> Registrar gasto
           </Button>
         </div>
@@ -172,25 +209,12 @@ export default function TablaSemanal({ tipo, onEditar, onNuevo }) {
         <Kpi label="Total de la semana" sub={<Variacion actual={total} previo={totalPrevio} />}>
           ${formatCurrency(total)}
         </Kpi>
-        {esGeneral ? (
-          <>
-            <Kpi label="Compras registradas" sub="sin unidad asignada">
-              {gastos.length}
-            </Kpi>
-            <Kpi label="Compra más grande" sub={gastoMayor ? `$${formatCurrency(gastoMayor.monto)}` : "—"}>
-              {gastoMayor ? gastoMayor.concepto : "—"}
-            </Kpi>
-          </>
-        ) : (
-          <>
-            <Kpi label={`${TIPOS_UNIDAD[tipo].label} con gasto`} sub={`de ${unidades.length} registrados`}>
-              {conGasto}
-            </Kpi>
-            <Kpi label="Unidad con mayor gasto" sub={masCara ? `$${formatCurrency(masCara.total)}` : "—"}>
-              {masCara ? masCara.etiqueta : "—"}
-            </Kpi>
-          </>
-        )}
+        <Kpi label="Unidades con gasto" sub={`de ${totalUnidades} camiones y remolques`}>
+          {conGasto}
+        </Kpi>
+        <Kpi label="Unidad con mayor gasto" sub={masCara ? `$${formatCurrency(masCara.total)}` : "—"}>
+          {masCara ? masCara.etiqueta : "—"}
+        </Kpi>
         <Kpi label="Categoría principal" sub={catPrincipal?.total > 0 ? `$${formatCurrency(catPrincipal.total)}` : "—"}>
           {catPrincipal?.total > 0 ? catPrincipal.label : "—"}
         </Kpi>
@@ -199,15 +223,11 @@ export default function TablaSemanal({ tipo, onEditar, onNuevo }) {
       {/* Matriz unidades × categorías */}
       <div className="bg-card border border-border rounded-2xl overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <div className="text-sm font-bold text-foreground">
-            {esGeneral ? "Gastos generales por categoría" : `Gasto por ${TIPOS_UNIDAD[tipo].singular.toLowerCase()} y categoría`}
+          <div className="text-sm font-bold text-foreground">Gasto por unidad y categoría</div>
+          <div className="flex items-center gap-2">
+            <Checkbox id="ver-todas" checked={verTodas} onCheckedChange={(v) => setVerTodas(Boolean(v))} />
+            <Label htmlFor="ver-todas" className="text-xs text-muted-foreground cursor-pointer">Mostrar unidades sin gasto</Label>
           </div>
-          {!esGeneral && (
-            <div className="flex items-center gap-2">
-              <Checkbox id="ver-todas" checked={verTodas} onCheckedChange={(v) => setVerTodas(Boolean(v))} />
-              <Label htmlFor="ver-todas" className="text-xs text-muted-foreground cursor-pointer">Mostrar unidades sin gasto</Label>
-            </div>
-          )}
         </div>
 
         {isLoading ? (
@@ -234,49 +254,28 @@ export default function TablaSemanal({ tipo, onEditar, onNuevo }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filas.map((f, i) => (
-                  <Fragment key={f.id}>
-                    {f.grupo && f.grupo !== filas[i - 1]?.grupo && (
-                      <tr className="bg-muted/40">
-                        <td colSpan={CATEGORIAS.length + 2} className="px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground sticky left-0">
-                          {f.grupo}
-                        </td>
-                      </tr>
-                    )}
-                    <tr className="hover:bg-muted/30">
-                      <td className="px-4 py-2 font-semibold text-foreground sticky left-0 bg-card whitespace-nowrap">{f.etiqueta}</td>
-                      {CATEGORIAS.map((c) => {
-                        const v = f.porCat[c.key] || 0;
-                        return (
-                          <td key={c.key} className="px-1 py-1 text-right">
-                            {v > 0 ? (
-                              <button
-                                className="w-full text-right px-2 py-1 rounded-md tabular-nums text-foreground hover:bg-accent transition"
-                                onClick={() => setCelda({ unidadId: f.id, categoria: c.key, etiqueta: f.etiqueta })}
-                                title={`${f.etiqueta} · ${c.label}: ver desglose`}
-                              >
-                                ${formatCurrency(v)}
-                              </button>
-                            ) : (
-                              <span className="px-2 text-muted-foreground/50">—</span>
-                            )}
-                          </td>
-                        );
-                      })}
-                      <td className="px-2 py-1 text-right">
-                        {f.total > 0 ? (
-                          <button
-                            className="w-full text-right px-2 py-1 rounded-md font-bold tabular-nums text-foreground hover:bg-accent transition"
-                            onClick={() => setCelda({ unidadId: f.id, categoria: null, etiqueta: f.etiqueta })}
-                            title={`${f.etiqueta}: ver todos los gastos de la semana`}
-                          >
-                            ${formatCurrency(f.total)}
-                          </button>
-                        ) : (
-                          <span className="px-2 text-muted-foreground/50">—</span>
-                        )}
+                {secciones.map((s) => (
+                  <Fragment key={s.nombre}>
+                    <tr className="bg-muted/40">
+                      <td className="px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground sticky left-0 bg-muted whitespace-nowrap">
+                        {s.nombre}
+                      </td>
+                      <td colSpan={CATEGORIAS.length} />
+                      <td className="px-4 py-1.5 text-right text-xs font-bold tabular-nums text-muted-foreground">
+                        {s.total > 0 ? `$${formatCurrency(s.total)}` : "—"}
                       </td>
                     </tr>
+                    {s.filas.map((f) => (
+                      <tr key={f.key} className="hover:bg-muted/30">
+                        <td className="px-4 py-2 font-semibold text-foreground sticky left-0 bg-card whitespace-nowrap">{f.etiqueta}</td>
+                        {CATEGORIAS.map((c) => (
+                          <td key={c.key} className="px-1 py-1 text-right">
+                            {celdaMonto(f, f.porCat[c.key] || 0, c.key)}
+                          </td>
+                        ))}
+                        <td className="px-2 py-1 text-right">{celdaMonto(f, f.total, null, true)}</td>
+                      </tr>
+                    ))}
                   </Fragment>
                 ))}
               </tbody>
@@ -319,12 +318,7 @@ export default function TablaSemanal({ tipo, onEditar, onNuevo }) {
             variant="outline"
             className="gap-2"
             onClick={() => {
-              const prefill = {
-                tipo,
-                unidadId: celda.unidadId,
-                categoria: celda.categoria || "",
-                fecha: esSemanaActual ? undefined : desde,
-              };
+              const prefill = { unidadKey: celda.key, categoria: celda.categoria || "", fecha: fechaAlta };
               setCelda(null);
               onNuevo(prefill);
             }}

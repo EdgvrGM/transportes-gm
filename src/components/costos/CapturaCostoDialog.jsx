@@ -16,17 +16,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
 import { localDateStr } from "@/lib/fechas";
-import { CATEGORIAS, TIPOS_UNIDAD, UNIDAD_GENERAL, tipoDeCosto } from "./costosConfig";
+import { CATEGORIAS, TIPOS_UNIDAD, keyDeCosto, keyUnidad, parseKeyUnidad } from "./costosConfig";
 import { useUnidades, invalidarCostos } from "./useCostos";
 import SelectUnidad from "./SelectUnidad";
 
-const unidadInicial = (tipo, unidadId) =>
-  tipo === "general" ? String(UNIDAD_GENERAL.id) : unidadId ? String(unidadId) : "";
+// El destino se elige en dos pasos: tipo (Camión / Remolque / General) y luego la
+// unidad de ese tipo. Internamente se guarda la llave "tipo:id" de useUnidades.
+const unidadKeyInicial = (tipo) => (tipo === "general" ? keyUnidad("general") : "");
 
-function formVacio({ tipo = "camion", unidadId = "", fecha, categoria = "" } = {}) {
+function formVacio({ unidadKey = "", fecha, categoria = "" } = {}) {
   return {
-    tipo,
-    unidadId: unidadInicial(tipo, unidadId),
+    tipo: unidadKey ? parseKeyUnidad(unidadKey).tipo : "camion",
+    unidadKey,
     fecha: fecha || localDateStr(),
     categoria,
     concepto: "",
@@ -37,10 +38,10 @@ function formVacio({ tipo = "camion", unidadId = "", fecha, categoria = "" } = {
 }
 
 function formDesdeCosto(c) {
-  const tipo = tipoDeCosto(c);
+  const unidadKey = keyDeCosto(c);
   return {
-    tipo,
-    unidadId: unidadInicial(tipo, c.camion_id ?? c.remolque_id),
+    tipo: parseKeyUnidad(unidadKey).tipo,
+    unidadKey,
     fecha: c.fecha,
     categoria: c.categoria,
     concepto: c.concepto || "",
@@ -51,7 +52,7 @@ function formDesdeCosto(c) {
 }
 
 // `costo`: fila a editar (o null para alta). `prefill`: valores iniciales del alta
-// (tipo, unidadId, fecha, categoria) cuando se abre desde una celda de la tabla.
+// (unidadKey, fecha, categoria) cuando se abre desde una celda de la tabla.
 export default function CapturaCostoDialog({ open, onOpenChange, costo = null, prefill = null }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -68,7 +69,11 @@ export default function CapturaCostoDialog({ open, onOpenChange, costo = null, p
     setError("");
   }, [open, costo, prefill]);
 
-  const { data: unidades = [] } = useUnidades(form.tipo);
+  const { data: todas = [] } = useUnidades();
+  // Remolques: el encabezado del grupo es sólo su tipo (Caja Seca, Chasis…).
+  const unidades = todas
+    .filter((u) => u.tipo === form.tipo)
+    .map((u) => (u.tipo === "remolque" ? { ...u, seccion: u.seccion.split(" · ").pop() } : u));
 
   const set = (campo) => (e) => {
     const valor = e?.target ? e.target.value : e;
@@ -77,8 +82,7 @@ export default function CapturaCostoDialog({ open, onOpenChange, costo = null, p
 
   const guardar = async (continuar) => {
     const monto = parseFloat(form.monto);
-    if (form.tipo !== "general" && !form.unidadId)
-      return setError(`Elige el ${TIPOS_UNIDAD[form.tipo].singular.toLowerCase()}.`);
+    if (!form.unidadKey) return setError(`Elige el ${TIPOS_UNIDAD[form.tipo].singular.toLowerCase()}.`);
     if (!form.fecha) return setError("Captura la fecha.");
     if (!form.categoria) return setError("Elige la categoría.");
     if (!form.concepto.trim()) return setError("Describe el concepto del gasto.");
@@ -86,11 +90,11 @@ export default function CapturaCostoDialog({ open, onOpenChange, costo = null, p
     setError("");
     setGuardando(true);
 
-    const unidadId = parseInt(form.unidadId, 10);
+    const { tipo, id } = parseKeyUnidad(form.unidadKey);
     try {
       const fila = {
-        camion_id: form.tipo === "camion" ? unidadId : null,
-        remolque_id: form.tipo === "remolque" ? unidadId : null,
+        camion_id: tipo === "camion" ? id : null,
+        remolque_id: tipo === "remolque" ? id : null,
         fecha: form.fecha,
         categoria: form.categoria,
         concepto: form.concepto.trim(),
@@ -143,7 +147,7 @@ export default function CapturaCostoDialog({ open, onOpenChange, costo = null, p
                 <button
                   key={key}
                   type="button"
-                  onClick={() => setForm((f) => ({ ...f, tipo: key, unidadId: unidadInicial(key) }))}
+                  onClick={() => setForm((f) => ({ ...f, tipo: key, unidadKey: unidadKeyInicial(key) }))}
                   className={`py-1.5 rounded-md text-sm font-semibold transition ${
                     form.tipo === key
                       ? "bg-background text-foreground shadow-sm"
@@ -168,10 +172,9 @@ export default function CapturaCostoDialog({ open, onOpenChange, costo = null, p
               <div className="space-y-1.5">
                 <Label>{TIPOS_UNIDAD[form.tipo].singular} *</Label>
                 <SelectUnidad
-                  tipo={form.tipo}
                   unidades={unidades}
-                  value={form.unidadId}
-                  onChange={set("unidadId")}
+                  value={form.unidadKey}
+                  onChange={set("unidadKey")}
                   placeholder="Seleccionar…"
                   disabled={editando}
                 />

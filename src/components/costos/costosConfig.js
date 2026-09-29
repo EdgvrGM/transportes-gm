@@ -37,13 +37,17 @@ export const TIPOS_UNIDAD = {
   general: { label: "Generales", singular: "General", columna: null, tabla: null },
 };
 
-// Pseudo-unidad para que las vistas traten "General" como una unidad más (id 0).
-export const UNIDAD_GENERAL = { id: 0 };
-
 export const tipoDeCosto = (g) => (g.camion_id ? "camion" : g.remolque_id ? "remolque" : "general");
 
-export const idUnidad = (tipo, g) =>
-  tipo === "general" ? UNIDAD_GENERAL.id : g[TIPOS_UNIDAD[tipo].columna];
+// Todas las vistas mezclan camiones, remolques y generales: una unidad se
+// identifica por la llave "tipo:id" (general = "general:0").
+export const keyUnidad = (tipo, id) => `${tipo}:${tipo === "general" ? 0 : id}`;
+export const keyDeCosto = (g) => keyUnidad(tipoDeCosto(g), g.camion_id ?? g.remolque_id);
+
+export function parseKeyUnidad(key) {
+  const [tipo, id] = String(key).split(":");
+  return { tipo, id: tipo === "general" ? null : parseInt(id, 10) };
+}
 
 export function etiquetaUnidad(tipo, u) {
   if (tipo === "general") return "Generales de flota";

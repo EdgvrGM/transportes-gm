@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/supabaseClient";
 import { useToast } from "@/components/ui/use-toast";
-import { TIPOS_UNIDAD, UNIDAD_GENERAL } from "./costosConfig";
+import { TIPOS_UNIDAD, etiquetaUnidad, keyUnidad } from "./costosConfig";
 
 // Todas las queries del módulo cuelgan de "costos": invalidar ["costos"]
 // refresca tabla semanal, detalle por unidad y el widget del panel a la vez.
@@ -14,38 +14,62 @@ export function invalidarCostos(queryClient) {
   queryClient.invalidateQueries({ queryKey: ["panel-costos-semana"] });
 }
 
-export function useUnidades(tipo) {
+// Lista única de destinos de gasto, en el orden en que se muestran:
+// camiones (por nombre) → remolques (por tipo, luego placas) → generales.
+// `seccion` agrupa filas en tablas y selectores.
+export function useUnidades() {
   return useQuery({
-    queryKey: [COSTOS_KEY, "unidades", tipo],
+    queryKey: [COSTOS_KEY, "unidades"],
     queryFn: async () => {
-      if (tipo === "general") return [UNIDAD_GENERAL];
-      const q =
-        tipo === "camion"
-          ? supabase.from("Camion").select("id, nombre, placas, estado").order("nombre")
-          : supabase.from("Remolque").select("id, placas, tipo").order("tipo", { nullsFirst: false }).order("placas");
-      const { data, error } = await q;
-      if (error) throw error;
-      return data || [];
+      const [c, r] = await Promise.all([
+        supabase.from("Camion").select("id, nombre, placas").order("nombre"),
+        supabase.from("Remolque").select("id, placas, tipo").order("tipo", { nullsFirst: false }).order("placas"),
+      ]);
+      if (c.error) throw c.error;
+      if (r.error) throw r.error;
+      return [
+        ...(c.data || []).map((u) => ({
+          key: keyUnidad("camion", u.id),
+          tipo: "camion",
+          id: u.id,
+          etiqueta: etiquetaUnidad("camion", u),
+          seccion: TIPOS_UNIDAD.camion.label,
+        })),
+        ...(r.data || []).map((u) => ({
+          key: keyUnidad("remolque", u.id),
+          tipo: "remolque",
+          id: u.id,
+          etiqueta: etiquetaUnidad("remolque", u),
+          seccion: `${TIPOS_UNIDAD.remolque.label} · ${u.tipo || "Sin tipo"}`,
+        })),
+        {
+          key: keyUnidad("general"),
+          tipo: "general",
+          id: null,
+          etiqueta: etiquetaUnidad("general"),
+          seccion: TIPOS_UNIDAD.general.label,
+        },
+      ];
     },
     staleTime: 5 * 60 * 1000,
   });
 }
 
-// Gastos de un tipo de unidad en [desde, hasta] (YYYY-MM-DD, inclusivo).
-// `unidadId` opcional para limitar a una sola unidad.
-export function useCostosRango(tipo, desde, hasta, { unidadId = null, enabled = true } = {}) {
-  const columna = TIPOS_UNIDAD[tipo].columna;
+// Gastos en [desde, hasta] (YYYY-MM-DD, inclusivo) de todas las unidades, o de
+// una sola si se pasa `unidad` (objeto de useUnidades).
+export function useCostosRango(desde, hasta, { unidad = null, enabled = true } = {}) {
   return useQuery({
-    queryKey: [COSTOS_KEY, "rango", tipo, desde, hasta, unidadId],
+    queryKey: [COSTOS_KEY, "rango", desde, hasta, unidad?.key ?? "todas"],
     queryFn: async () => {
-      let q = supabase.from("CostoUnidad").select("*");
-      q = columna ? q.not(columna, "is", null) : q.is("camion_id", null).is("remolque_id", null);
-      q = q
+      let q = supabase
+        .from("CostoUnidad")
+        .select("*")
         .gte("fecha", desde)
         .lte("fecha", hasta)
         .order("fecha", { ascending: false })
         .order("created_at", { ascending: false });
-      if (unidadId && columna) q = q.eq(columna, unidadId);
+      if (unidad?.tipo === "general") q = q.is("camion_id", null).is("remolque_id", null);
+      else if (unidad) q = q.eq(TIPOS_UNIDAD[unidad.tipo].columna, unidad.id);
       const { data, error } = await q;
       if (error) throw error;
       return data || [];

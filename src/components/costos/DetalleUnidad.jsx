@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import {
@@ -23,10 +23,10 @@ import { Download, Loader2, Plus } from "lucide-react";
 import { localDateStr } from "@/lib/fechas";
 import { lunesDeSemana, sumarDias } from "@/lib/semana";
 import { formatCurrency } from "@/lib/formato";
-import { CATEGORIAS, TIPOS_UNIDAD, etiquetaUnidad, getCategoria } from "./costosConfig";
+import { CATEGORIAS, getCategoria, keyDeCosto } from "./costosConfig";
 import { useUnidades, useCostosRango, sumaMontos } from "./useCostos";
 import ListaGastos from "./ListaGastos";
-import SelectUnidad from "./SelectUnidad";
+import SelectUnidad, { TODAS } from "./SelectUnidad";
 import { exportarUnidad } from "./exportarExcel";
 
 const RANGOS = [
@@ -66,35 +66,29 @@ function TooltipSemana({ active, payload }) {
   );
 }
 
-export default function DetalleUnidad({ tipo, onEditar, onNuevo }) {
+export default function DetalleUnidad({ onEditar, onNuevo }) {
   const { toast } = useToast();
-  const [unidadId, setUnidadId] = useState("");
+  const [unidadKey, setUnidadKey] = useState(TODAS);
   const [numSemanas, setNumSemanas] = useState(12);
   const [catFiltro, setCatFiltro] = useState(null);
   const [exportando, setExportando] = useState(false);
 
-  const { data: unidades = [] } = useUnidades(tipo);
+  const { data: unidades = [] } = useUnidades();
 
-  useEffect(() => {
-    setUnidadId("");
-    setCatFiltro(null);
-  }, [tipo]);
-
-  useEffect(() => {
-    if (!unidadId && unidades.length) setUnidadId(String(unidades[0].id));
-  }, [unidades, unidadId]);
-
-  const unidad = unidades.find((u) => String(u.id) === unidadId);
-  const etiqueta = etiquetaUnidad(tipo, unidad);
+  const esTodas = unidadKey === TODAS;
+  const unidad = esTodas ? null : unidades.find((u) => u.key === unidadKey);
+  const etiqueta = esTodas ? "Toda la flota" : unidad?.etiqueta || "—";
+  const unidadPorKey = useMemo(() => new Map(unidades.map((u) => [u.key, u])), [unidades]);
+  const nombreUnidad = (g) => unidadPorKey.get(keyDeCosto(g))?.etiqueta || "—";
 
   const lunesActual = lunesDeSemana(new Date());
   const primerLunes = sumarDias(lunesActual, -7 * (numSemanas - 1));
   const desde = localDateStr(primerLunes);
   const hasta = localDateStr(sumarDias(lunesActual, 6));
 
-  const { data: gastos = [], isLoading } = useCostosRango(tipo, desde, hasta, {
-    unidadId: unidadId ? parseInt(unidadId, 10) : null,
-    enabled: Boolean(unidadId),
+  const { data: gastos = [], isLoading } = useCostosRango(desde, hasta, {
+    unidad,
+    enabled: esTodas || Boolean(unidad),
   });
 
   const semanas = useMemo(() => {
@@ -137,7 +131,7 @@ export default function DetalleUnidad({ tipo, onEditar, onNuevo }) {
         nombreArchivo: `Costos_${etiqueta.replace(/[^\w]+/g, "_")}_${desde}_${hasta}.xlsx`,
         semanas,
         gastos,
-        nombreUnidad: () => etiqueta,
+        nombreUnidad,
       });
     } catch (e) {
       toast({ variant: "destructive", title: "Error al exportar", description: e.message });
@@ -150,16 +144,13 @@ export default function DetalleUnidad({ tipo, onEditar, onNuevo }) {
     <div className="space-y-4">
       {/* Filtros en una fila */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-        {tipo !== "general" && (
-          <SelectUnidad
-            tipo={tipo}
-            unidades={unidades}
-            value={unidadId}
-            onChange={(v) => { setUnidadId(v); setCatFiltro(null); }}
-            placeholder={`Elige ${TIPOS_UNIDAD[tipo].singular.toLowerCase()}…`}
-            className="sm:w-72"
-          />
-        )}
+        <SelectUnidad
+          unidades={unidades}
+          value={unidadKey}
+          onChange={(v) => { setUnidadKey(v); setCatFiltro(null); }}
+          className="sm:w-72"
+          opcionTodas
+        />
         <Select value={String(numSemanas)} onValueChange={(v) => setNumSemanas(Number(v))}>
           <SelectTrigger className="sm:w-40">
             <SelectValue />
@@ -180,19 +171,13 @@ export default function DetalleUnidad({ tipo, onEditar, onNuevo }) {
           <Button
             size="sm"
             className="gap-2 bg-primary text-primary-foreground"
-            disabled={!unidadId}
-            onClick={() => onNuevo({ tipo, unidadId })}
+            onClick={() => onNuevo(esTodas ? {} : { unidadKey })}
           >
             <Plus className="w-4 h-4" /> Gasto
           </Button>
         </div>
       </div>
 
-      {!unidadId ? (
-        <div className="text-sm text-muted-foreground text-center py-12">
-          No hay {TIPOS_UNIDAD[tipo].label.toLowerCase()} en el catálogo.
-        </div>
-      ) : (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             <div className="p-4 rounded-xl bg-card border border-border">
@@ -298,11 +283,11 @@ export default function DetalleUnidad({ tipo, onEditar, onNuevo }) {
             <ListaGastos
               gastos={gastosLista}
               onEditar={onEditar}
+              nombreUnidad={esTodas ? nombreUnidad : undefined}
               vacio={catFiltro ? `Sin gastos de ${getCategoria(catFiltro).label.toLowerCase()} en el periodo.` : "Sin gastos en el periodo."}
             />
           </div>
         </>
-      )}
     </div>
   );
 }
