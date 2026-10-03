@@ -479,7 +479,7 @@ export default function MapaGPS({
             {puntoActivo && (
               <Marker
                 position={[puntoActivo.lat, puntoActivo.lng]}
-                icon={createUnitIcon(iconoUnidad, puntoActivo.rumbo, puntoActivo.velocidad > 2, "")}
+                icon={createUnitIcon(iconoUnidad, puntoActivo.rumbo, puntoActivo.velocidad > 2, "", puntoActivo.velocidad)}
                 zIndexOffset={1000}
               >
                 <Tooltip permanent direction="top" offset={[0, -28]}>

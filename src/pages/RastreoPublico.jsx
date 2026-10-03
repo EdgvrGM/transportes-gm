@@ -214,7 +214,7 @@ export default function RastreoPublico() {
           {posicion && (
             <Marker
               position={[posicion.lat, posicion.lng]}
-              icon={createUnitIcon(posicion.uri, posicion.rumbo, posicion.motor, posicion.nombre)}
+              icon={createUnitIcon(posicion.uri, posicion.rumbo, posicion.motor, posicion.nombre, posicion.velocidad)}
             >
               <Popup>
                 <div style={{ fontSize: "13px", lineHeight: 1.6 }}>

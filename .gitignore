@@ -45,3 +45,6 @@ supabase/.temp
 supabase/config.toml
 # Added by code-review-graph
 .code-review-graph/
+
+# Respaldos locales (scripts/regenerar-pdfs-liquidaciones.mjs)
+backups/

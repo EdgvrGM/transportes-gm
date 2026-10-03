@@ -1,16 +1,16 @@
-# Graph Report - transportes-gm  (2026-09-28)
+# Graph Report - transportes-gm  (2026-09-29)
 
 ## Corpus Check
-- 193 files · ~395,050 words
+- 195 files · ~397,726 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2126 nodes · 2303 edges · 151 communities (110 shown, 41 thin omitted)
-- Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 110 edges (avg confidence: 0.8)
+- 2153 nodes · 2353 edges · 152 communities (111 shown, 41 thin omitted)
+- Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 111 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `a0999be1`
+- Built from commit: `a852dfab`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -130,20 +130,23 @@
 - [[_COMMUNITY_Community 142|Community 142]]
 - [[_COMMUNITY_Community 145|Community 145]]
 - [[_COMMUNITY_Community 146|Community 146]]
+- [[_COMMUNITY_Community 151|Community 151]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `cn()` - 27 edges
-2. `fetch()` - 21 edges
+2. `fetch()` - 22 edges
 3. `useToast()` - 19 edges
 4. `compilerOptions` - 16 edges
 5. `UI/UX Pro Max - Design Intelligence` - 13 edges
 6. `str` - 12 edges
-7. `DesignSystemGenerator` - 11 edges
-8. `DetalleUnidad()` - 11 edges
-9. `TablaSemanal()` - 10 edges
-10. `localDateStr()` - 10 edges
+7. `formatCurrency()` - 12 edges
+8. `DesignSystemGenerator` - 11 edges
+9. `DetalleUnidad()` - 11 edges
+10. `TablaSemanal()` - 10 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `cargarLogoPDF()` --calls--> `fetch()`  [INFERRED]
+  src/components/liquidaciones/pdfLiquidacion.js → cloudflare-workers/wialon-proxy/src/index.ts
 - `wialonFetch()` --calls--> `fetch()`  [INFERRED]
   src/lib/wialonFetch.js → cloudflare-workers/wialon-proxy/src/index.ts
 - `wialonGetHistory()` --calls--> `fetch()`  [INFERRED]
@@ -152,10 +155,8 @@
   supabase/functions/wialon-proxy/index.ts → cloudflare-workers/wialon-proxy/src/index.ts
 - `wialonLogin()` --calls--> `fetch()`  [INFERRED]
   supabase/functions/wialon-proxy/index.ts → cloudflare-workers/wialon-proxy/src/index.ts
-- `wialonLogout()` --calls--> `fetch()`  [INFERRED]
-  supabase/functions/wialon-proxy/index.ts → cloudflare-workers/wialon-proxy/src/index.ts
 
-## Communities (151 total, 41 thin omitted)
+## Communities (152 total, 41 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.00
@@ -218,8 +219,8 @@ Cohesion: 0.07
 Nodes (37): esImagen(), esPDF(), formatoTamano(), MIME_ACEPTADOS, nombreSeguro(), TABLA_ENTIDAD, tipoDoc(), TIPOS_DOC (+29 more)
 
 ### Community 16 - "Community 16"
-Cohesion: 0.15
-Nodes (12): CapturaCostoDialog(), TooltipSemana(), ListaGastos(), Variacion(), useEliminarCosto(), formatCurrency(), HistorialLiquidaciones(), anticiposVacios() (+4 more)
+Cohesion: 0.14
+Nodes (14): CapturaCostoDialog(), TooltipSemana(), Variacion(), formatCurrency(), DialogDesglose(), EMPTY_ARRAY, esLegacy(), fechaLegible() (+6 more)
 
 ### Community 17 - "Community 17"
 Cohesion: 0.18
@@ -358,8 +359,8 @@ Cohesion: 0.29
 Nodes (6): DialogContent, DialogDescription, DialogFooter(), DialogHeader(), DialogOverlay, DialogTitle
 
 ### Community 53 - "Community 53"
-Cohesion: 0.24
-Nodes (12): diasDeSemana(), lunesDeSemana(), nombreDia(), NOMBRES_DIA, numeroSemana(), offsetDia(), plantillaVacia(), remapearProgramacion() (+4 more)
+Cohesion: 0.32
+Nodes (10): diasDeSemana(), lunesDeSemana(), nombreDia(), NOMBRES_DIA, numeroSemana(), offsetDia(), plantillaVacia(), remapearProgramacion() (+2 more)
 
 ### Community 55 - "Community 55"
 Cohesion: 0.33
@@ -434,44 +435,48 @@ Cohesion: 0.50
 Nodes (3): ToggleGroup, ToggleGroupContext, ToggleGroupItem
 
 ### Community 135 - "Community 135"
-Cohesion: 0.26
-Nodes (11): CATEGORIAS, etiquetaUnidad(), getCategoria(), TIPOS_UNIDAD, DetalleUnidad(), RANGOS, TablaSemanal(), invalidarCostos() (+3 more)
+Cohesion: 0.24
+Nodes (12): CATEGORIAS, etiquetaUnidad(), getCategoria(), TIPOS_UNIDAD, DetalleUnidad(), RANGOS, ListaGastos(), TablaSemanal() (+4 more)
 
 ### Community 136 - "Community 136"
 Cohesion: 0.28
 Nodes (4): DashboardMantenimiento(), ESTADOS, formatFecha(), formatMXN()
 
 ### Community 137 - "Community 137"
-Cohesion: 0.32
-Nodes (6): formVacio(), fmtFecha(), generarDatosMock(), REPORTES, ReportesGPS(), localDateStr()
+Cohesion: 0.24
+Nodes (7): fmtFecha(), generarDatosMock(), REPORTES, ReportesGPS(), localDateStr(), sumarDias(), CostosSemana()
 
 ### Community 138 - "Community 138"
 Cohesion: 0.71
 Nodes (6): descargar(), encabezado(), exportarSemana(), exportarUnidad(), hojaDetalle(), titulo()
 
 ### Community 141 - "Community 141"
-Cohesion: 0.47
-Nodes (4): DialogDesglose(), EMPTY_ARRAY, esLegacy(), fechaLegible()
+Cohesion: 0.12
+Nodes (19): cargarLogoPDF(), construirPDFLiquidacion(), APLICAR, args, DIR, DIR_NUEVOS, DIR_ORIG, kb() (+11 more)
+
+### Community 151 - "Community 151"
+Cohesion: 0.36
+Nodes (8): formDesdeCosto(), formVacio(), unidadKeyInicial(), keyDeCosto(), keyUnidad(), parseKeyUnidad(), tipoDeCosto(), invalidarCostos()
 
 ## Knowledge Gaps
-- **1483 isolated node(s):** `C:\Users\Joker\AppData\Local\Programs\Python\Python314\python.exe`, `$schema`, `style`, `rsc`, `tsx` (+1478 more)
+- **1494 isolated node(s):** `C:\Users\Joker\AppData\Local\Programs\Python\Python314\python.exe`, `$schema`, `style`, `rsc`, `tsx` (+1489 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **41 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `wialonFetch()` connect `Community 4` to `Community 3`?**
-  _High betweenness centrality (0.005) - this node is a cross-community bridge._
-- **Why does `localDateStr()` connect `Community 137` to `Community 32`, `Community 4`, `Community 135`, `Community 136`, `Community 15`, `Community 17`, `Community 53`?**
-  _High betweenness centrality (0.005) - this node is a cross-community bridge._
 - **Why does `useToast()` connect `Community 16` to `Community 135`, `Community 8`, `Community 142`, `Community 15`, `Community 17`, `Community 145`, `Community 146`, `Community 53`, `Community 54`, `Community 23`, `Community 24`?**
+  _High betweenness centrality (0.007) - this node is a cross-community bridge._
+- **Why does `localDateStr()` connect `Community 137` to `Community 32`, `Community 4`, `Community 135`, `Community 136`, `Community 15`, `Community 17`, `Community 151`?**
+  _High betweenness centrality (0.005) - this node is a cross-community bridge._
+- **Why does `wialonFetch()` connect `Community 4` to `Community 3`?**
   _High betweenness centrality (0.005) - this node is a cross-community bridge._
 - **Are the 26 inferred relationships involving `cn()` (e.g. with `LiquidButton()` and `MagneticButton()`) actually correct?**
   _`cn()` has 26 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 5 inferred relationships involving `fetch()` (e.g. with `wialonFetch()` and `wialonGetHistory()`) actually correct?**
-  _`fetch()` has 5 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 6 inferred relationships involving `fetch()` (e.g. with `wialonFetch()` and `cargarLogoPDF()`) actually correct?**
+  _`fetch()` has 6 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 18 inferred relationships involving `useToast()` (e.g. with `CapturaCostoDialog()` and `DetalleUnidad()`) actually correct?**
   _`useToast()` has 18 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `C:\Users\Joker\AppData\Local\Programs\Python\Python314\python.exe`, `$schema`, `style` to the rest of the system?**
-  _1509 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _1520 weakly-connected nodes found - possible documentation gaps or missing edges._

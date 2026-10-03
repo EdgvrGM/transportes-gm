@@ -720,8 +720,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\Liquidaciones.jsx": {
-    "mtime": 1790450708.56909,
-    "ast_hash": "e2cfe8732606d18783e41def3fb24634",
+    "mtime": 1790709513.815355,
+    "ast_hash": "29b0623412a1c9387fbb98625b76d67c",
     "semantic_hash": ""
   },
   "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\Login.jsx": {
@@ -940,23 +940,23 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\costos\\CapturaCostoDialog.jsx": {
-    "mtime": 1790438974.0013535,
-    "ast_hash": "78447a1eafa5bb636b82f0d2afdd1494",
+    "mtime": 1790640110.5234084,
+    "ast_hash": "a700482d38807f900fa26e4c829ccfc7",
     "semantic_hash": ""
   },
   "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\costos\\costosConfig.js": {
-    "mtime": 1790438997.6470754,
-    "ast_hash": "0778b3a99d039b31aeeb82cb36140caf",
+    "mtime": 1790639925.6103892,
+    "ast_hash": "a892a982cf8a1edd156e5bda909f3107",
     "semantic_hash": ""
   },
   "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\costos\\DetalleUnidad.jsx": {
-    "mtime": 1790438997.6450753,
-    "ast_hash": "1fc4d80067fe4aac287f5be2726a25fa",
+    "mtime": 1790640188.612352,
+    "ast_hash": "5eaa15cf4648e3dab552fc4359f81fc3",
     "semantic_hash": ""
   },
   "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\costos\\exportarExcel.js": {
-    "mtime": 1790438997.6470754,
-    "ast_hash": "1f07d07121e334bd73500ea11cbbacaf",
+    "mtime": 1790639925.611388,
+    "ast_hash": "ee7182403542fa675d5c11b0a74147b4",
     "semantic_hash": ""
   },
   "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\costos\\ListaGastos.jsx": {
@@ -965,28 +965,43 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\costos\\SelectUnidad.jsx": {
-    "mtime": 1790438973.958431,
-    "ast_hash": "d6dcd05f48e3b6fc8c5b36d47c4cc69d",
+    "mtime": 1790640110.5234084,
+    "ast_hash": "af9f4fb256ff1cad723b58ebb9455df8",
     "semantic_hash": ""
   },
   "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\costos\\TablaSemanal.jsx": {
-    "mtime": 1790439045.9455268,
-    "ast_hash": "b762980968e3f695e5718ae94fb61369",
+    "mtime": 1790640029.0180807,
+    "ast_hash": "daedabf2c65dccd08ad69515ab62d49b",
     "semantic_hash": ""
   },
   "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\costos\\useCostos.js": {
-    "mtime": 1790438997.6450753,
-    "ast_hash": "be5f43cdea4c4ca45bd07a9f54480479",
+    "mtime": 1790639925.611388,
+    "ast_hash": "079a4d792136e8f1699d50c9683df94d",
     "semantic_hash": ""
   },
   "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\panel\\CostosSemana.jsx": {
-    "mtime": 1790436407.120512,
-    "ast_hash": "f3979f54ce361644631d077d7338f84f",
+    "mtime": 1790638663.742439,
+    "ast_hash": "d6b51256109c1c1fc94745ea340d6309",
     "semantic_hash": ""
   },
   "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\pages\\CostosUnidad.jsx": {
-    "mtime": 1790439012.9795928,
-    "ast_hash": "e2f55e2803e13cf2064da094ac46bbd7",
+    "mtime": 1790640154.807781,
+    "ast_hash": "1532f1138cffef7be1111c3a55e5688b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\scripts\\regenerar-pdfs-liquidaciones.mjs": {
+    "mtime": 1790709579.2488072,
+    "ast_hash": "1dd5b19beb53924050da8f8aa359c640",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\src\\components\\liquidaciones\\pdfLiquidacion.js": {
+    "mtime": 1790709504.004424,
+    "ast_hash": "20fe7dcba8dd465636fe5d4ee8080386",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Joker\\Documents\\dev\\Version 1.1\\transportes-gm\\public\\img\\logo-pdf.jpg": {
+    "mtime": 1790709444.4120243,
+    "ast_hash": "2a4971bc06611f01c12c7269307e867f",
     "semantic_hash": ""
   }
 }
