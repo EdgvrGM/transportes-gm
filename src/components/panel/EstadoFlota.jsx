@@ -10,10 +10,10 @@ import { fetchPositions } from "./fetchPositions";
 import {
   POLL_POSITIONS_MS,
   POLL_ALERTAS_MS,
-  VELOCIDAD_ALERTA,
+  VELOCIDAD_EXCESO,
+  SIN_SENAL_MS,
 } from "@/components/gps/constants";
 
-const SIN_SENAL_MS = 30 * 60 * 1000;
 
 const COUNTER_VARIANTS = {
   green: "hover:border-green-500/40 hover:bg-green-500/5",
@@ -89,7 +89,7 @@ export default function EstadoFlota() {
       }
       if (p.motor && (p.velocidad || 0) > 5) {
         enRuta++;
-        if ((p.velocidad || 0) > VELOCIDAD_ALERTA && (!exceso || p.velocidad > exceso.velocidad)) {
+        if ((p.velocidad || 0) > VELOCIDAD_EXCESO && (!exceso || p.velocidad > exceso.velocidad)) {
           exceso = p;
         }
       } else {

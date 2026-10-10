@@ -182,7 +182,7 @@ function SeguimientoAuto({ punto, reproduciendo }) {
 }
 
 // Marker de unidad en vivo — memoiza el icono para evitar parpadeo cada 15s
-function LiveUnitMarker({ p, camion, onMarkerClick, hoverTimerRef, closeTimerRef, setTooltip, setTooltipCentrado }) {
+function LiveUnitMarker({ p, onMarkerClick, hoverTimerRef, closeTimerRef, setTooltip, setTooltipCentrado }) {
   const icon = useMemo(
     () => createUnitIcon(p.uri, p.rumbo, p.motor, p.nombre, p.velocidad),
     [p.uri, p.rumbo, p.motor, p.nombre, p.velocidad]
@@ -215,23 +215,7 @@ function LiveUnitMarker({ p, camion, onMarkerClick, hoverTimerRef, closeTimerRef
           closeTimerRef.current = setTimeout(() => setTooltip(null), 300);
         },
       }}
-    >
-      <Popup>
-        <div style={{ fontSize: "13px", lineHeight: 1.6, minWidth: "160px" }}>
-          <strong>{camion ? camion.nombre : p.nombre}</strong>
-          {camion?.placas && (
-            <><br /><span className="text-slate-600 dark:text-slate-300" style={{ fontFamily: "monospace", fontSize: "11px" }}>{camion.placas}</span></>
-          )}
-          <br />
-          Velocidad: {p.velocidad} km/h<br />
-          Rumbo: {p.rumbo}°<br />
-          Estado: {p.motor ? "🟢 En movimiento" : "⚪ Detenido"}<br />
-          <span className="text-slate-500 dark:text-slate-400" style={{ fontSize: "11px" }}>
-            {new Date(p.ultima_actualizacion).toLocaleTimeString("es-MX")}
-          </span>
-        </div>
-      </Popup>
-    </Marker>
+    />
   );
 }
 
@@ -277,6 +261,12 @@ export default function MapaGPS({
   const histLatlngs = useMemo(() => historialPuntos.map((p) => [p.lat, p.lng]), [historialPuntos]);
   const puntoActivo = historialPuntos[puntoReproduccion ?? -1] ?? null;
 
+  // Los tooltips guardan la unidad del momento en que se abrieron; se re-resuelve contra
+  // `positions` para que velocidad, estado y hora sigan el polling mientras están abiertos.
+  const enVivo = (u) => (u && positions.find((p) => p.id === u.id)) ?? u;
+  const unidadTooltip  = enVivo(tooltip?.unidad);
+  const unidadCentrada = enVivo(tooltipCentrado);
+
   return (
     <div style={{ position: "relative", zIndex: 0, width: "100%", height: "100%" }}>
       <MapContainer
@@ -318,7 +308,6 @@ export default function MapaGPS({
             <LiveUnitMarker
               key={p.id}
               p={p}
-              camion={vinculaciones[p.id]}
               onMarkerClick={onMarkerClick}
               hoverTimerRef={hoverTimerRef}
               closeTimerRef={closeTimerRef}
@@ -486,7 +475,7 @@ export default function MapaGPS({
                   <span style={{ fontSize: "11px", fontWeight: "bold" }}>
                     {new Date(puntoActivo.timestamp).toLocaleTimeString("es-MX")}
                     {" · "}
-                    <span style={{ color: puntoActivo.velocidad > 80 ? "#ef4444" : "inherit" }}>
+                    <span style={{ color: puntoActivo.velocidad > VELOCIDAD_EXCESO ? "#ef4444" : "inherit" }}>
                       {puntoActivo.velocidad} km/h
                     </span>
                   </span>
@@ -500,7 +489,8 @@ export default function MapaGPS({
       {/* Tooltip de unidad en vivo — desktop hover */}
       {tooltip && (
         <TooltipUnidad
-          unidad={tooltip.unidad}
+          unidad={unidadTooltip}
+          camion={vinculaciones[unidadTooltip.id]}
           onClose={() => setTooltip(null)}
           onMouseEnter={handleTooltipMouseEnter}
           onMouseLeave={handleTooltipMouseLeave}
@@ -514,7 +504,8 @@ export default function MapaGPS({
       {/* Tooltip centrado — móvil click */}
       {tooltipCentrado && (
         <TooltipUnidad
-          unidad={tooltipCentrado}
+          unidad={unidadCentrada}
+          camion={vinculaciones[unidadCentrada.id]}
           onClose={() => setTooltipCentrado(null)}
           centered
         />

@@ -324,7 +324,7 @@
       "source_file": "package.json",
       "source_location": "L1",
       "id": "package_json",
-      "community": 6,
+      "community": 137,
       "norm_label": "package.json"
     },
     {
@@ -333,7 +333,7 @@
       "source_file": "package.json",
       "source_location": "L2",
       "id": "transportes_gm_package_name",
-      "community": 6,
+      "community": 137,
       "norm_label": "name"
     },
     {
@@ -342,7 +342,7 @@
       "source_file": "package.json",
       "source_location": "L3",
       "id": "transportes_gm_package_private",
-      "community": 6,
+      "community": 137,
       "norm_label": "private"
     },
     {
@@ -351,7 +351,7 @@
       "source_file": "package.json",
       "source_location": "L4",
       "id": "transportes_gm_package_version",
-      "community": 6,
+      "community": 137,
       "norm_label": "version"
     },
     {
@@ -360,7 +360,7 @@
       "source_file": "package.json",
       "source_location": "L5",
       "id": "transportes_gm_package_type",
-      "community": 6,
+      "community": 137,
       "norm_label": "type"
     },
     {
@@ -369,7 +369,7 @@
       "source_file": "package.json",
       "source_location": "L6",
       "id": "transportes_gm_package_scripts",
-      "community": 6,
+      "community": 137,
       "norm_label": "scripts"
     },
     {
@@ -378,7 +378,7 @@
       "source_file": "package.json",
       "source_location": "L7",
       "id": "transportes_gm_package_scripts_dev",
-      "community": 6,
+      "community": 137,
       "norm_label": "dev"
     },
     {
@@ -387,7 +387,7 @@
       "source_file": "package.json",
       "source_location": "L8",
       "id": "transportes_gm_package_scripts_build",
-      "community": 6,
+      "community": 137,
       "norm_label": "build"
     },
     {
@@ -396,7 +396,7 @@
       "source_file": "package.json",
       "source_location": "L9",
       "id": "transportes_gm_package_scripts_lint",
-      "community": 6,
+      "community": 137,
       "norm_label": "lint"
     },
     {
@@ -405,7 +405,7 @@
       "source_file": "package.json",
       "source_location": "L10",
       "id": "transportes_gm_package_scripts_preview",
-      "community": 6,
+      "community": 137,
       "norm_label": "preview"
     },
     {
@@ -11158,7 +11158,7 @@
       "label": "NOMBRES_DIA",
       "file_type": "code",
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
-      "source_location": "L31",
+      "source_location": "L33",
       "id": "scripts_regenerar_pdfs_liquidaciones_nombres_dia",
       "community": 141,
       "norm_label": "nombres_dia"
@@ -11167,7 +11167,7 @@
       "label": "RAIZ",
       "file_type": "code",
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
-      "source_location": "L33",
+      "source_location": "L35",
       "id": "scripts_regenerar_pdfs_liquidaciones_raiz",
       "community": 141,
       "norm_label": "raiz"
@@ -11176,7 +11176,7 @@
       "label": "args",
       "file_type": "code",
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
-      "source_location": "L34",
+      "source_location": "L36",
       "id": "scripts_regenerar_pdfs_liquidaciones_args",
       "community": 141,
       "norm_label": "args"
@@ -11185,7 +11185,7 @@
       "label": "APLICAR",
       "file_type": "code",
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
-      "source_location": "L35",
+      "source_location": "L37",
       "id": "scripts_regenerar_pdfs_liquidaciones_aplicar",
       "community": 141,
       "norm_label": "aplicar"
@@ -11194,7 +11194,7 @@
       "label": "SOLO_ID",
       "file_type": "code",
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
-      "source_location": "L36",
+      "source_location": "L38",
       "id": "scripts_regenerar_pdfs_liquidaciones_solo_id",
       "community": 141,
       "norm_label": "solo_id"
@@ -11203,7 +11203,7 @@
       "label": "supabase",
       "file_type": "code",
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
-      "source_location": "L44",
+      "source_location": "L46",
       "id": "scripts_regenerar_pdfs_liquidaciones_supabase",
       "community": 141,
       "norm_label": "supabase"
@@ -11212,16 +11212,25 @@
       "label": "sello",
       "file_type": "code",
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
-      "source_location": "L46",
+      "source_location": "L48",
       "id": "scripts_regenerar_pdfs_liquidaciones_sello",
       "community": 141,
       "norm_label": "sello"
     },
     {
+      "label": "BASE_RESPALDO",
+      "file_type": "code",
+      "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
+      "source_location": "L49",
+      "id": "scripts_regenerar_pdfs_liquidaciones_base_respaldo",
+      "community": 141,
+      "norm_label": "base_respaldo"
+    },
+    {
       "label": "DIR",
       "file_type": "code",
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
-      "source_location": "L47",
+      "source_location": "L50",
       "id": "scripts_regenerar_pdfs_liquidaciones_dir",
       "community": 141,
       "norm_label": "dir"
@@ -11230,7 +11239,7 @@
       "label": "DIR_ORIG",
       "file_type": "code",
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
-      "source_location": "L48",
+      "source_location": "L51",
       "id": "scripts_regenerar_pdfs_liquidaciones_dir_orig",
       "community": 141,
       "norm_label": "dir_orig"
@@ -11239,7 +11248,7 @@
       "label": "DIR_NUEVOS",
       "file_type": "code",
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
-      "source_location": "L49",
+      "source_location": "L52",
       "id": "scripts_regenerar_pdfs_liquidaciones_dir_nuevos",
       "community": 141,
       "norm_label": "dir_nuevos"
@@ -11248,7 +11257,7 @@
       "label": "logo",
       "file_type": "code",
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
-      "source_location": "L51",
+      "source_location": "L54",
       "id": "scripts_regenerar_pdfs_liquidaciones_logo",
       "community": 141,
       "norm_label": "logo"
@@ -11257,7 +11266,7 @@
       "label": "rutaLocal()",
       "file_type": "code",
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
-      "source_location": "L53",
+      "source_location": "L56",
       "id": "scripts_regenerar_pdfs_liquidaciones_rutalocal",
       "community": 141,
       "norm_label": "rutalocal()"
@@ -11266,16 +11275,25 @@
       "label": "ordenarAnticipos()",
       "file_type": "code",
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
-      "source_location": "L63",
+      "source_location": "L66",
       "id": "scripts_regenerar_pdfs_liquidaciones_ordenaranticipos",
       "community": 141,
       "norm_label": "ordenaranticipos()"
     },
     {
+      "label": "fechaEmisionDelPDF()",
+      "file_type": "code",
+      "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
+      "source_location": "L78",
+      "id": "scripts_regenerar_pdfs_liquidaciones_fechaemisiondelpdf",
+      "community": 141,
+      "norm_label": "fechaemisiondelpdf()"
+    },
+    {
       "label": "pdfDesdeFila()",
       "file_type": "code",
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
-      "source_location": "L72",
+      "source_location": "L97",
       "id": "scripts_regenerar_pdfs_liquidaciones_pdfdesdefila",
       "community": 141,
       "norm_label": "pdfdesdefila()"
@@ -11284,7 +11302,7 @@
       "label": "leerLiquidaciones()",
       "file_type": "code",
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
-      "source_location": "L94",
+      "source_location": "L119",
       "id": "scripts_regenerar_pdfs_liquidaciones_leerliquidaciones",
       "community": 141,
       "norm_label": "leerliquidaciones()"
@@ -11293,7 +11311,7 @@
       "label": "kb()",
       "file_type": "code",
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
-      "source_location": "L112",
+      "source_location": "L137",
       "id": "scripts_regenerar_pdfs_liquidaciones_kb",
       "community": 141,
       "norm_label": "kb()"
@@ -11302,7 +11320,7 @@
       "label": "main()",
       "file_type": "code",
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
-      "source_location": "L114",
+      "source_location": "L139",
       "id": "scripts_regenerar_pdfs_liquidaciones_main",
       "community": 141,
       "norm_label": "main()"
@@ -11754,7 +11772,7 @@
       "source_file": "src/components/costos/CapturaCostoDialog.jsx",
       "source_location": "L1",
       "id": "src_components_costos_capturacostodialog_jsx",
-      "community": 151,
+      "community": 135,
       "norm_label": "capturacostodialog.jsx"
     },
     {
@@ -11763,7 +11781,7 @@
       "source_file": "src/components/costos/CapturaCostoDialog.jsx",
       "source_location": "L25",
       "id": "costos_capturacostodialog_unidadkeyinicial",
-      "community": 151,
+      "community": 135,
       "norm_label": "unidadkeyinicial()"
     },
     {
@@ -11772,7 +11790,7 @@
       "source_file": "src/components/costos/CapturaCostoDialog.jsx",
       "source_location": "L27",
       "id": "costos_capturacostodialog_formvacio",
-      "community": 151,
+      "community": 135,
       "norm_label": "formvacio()"
     },
     {
@@ -11781,7 +11799,7 @@
       "source_file": "src/components/costos/CapturaCostoDialog.jsx",
       "source_location": "L40",
       "id": "costos_capturacostodialog_formdesdecosto",
-      "community": 151,
+      "community": 135,
       "norm_label": "formdesdecosto()"
     },
     {
@@ -11790,7 +11808,7 @@
       "source_file": "src/components/costos/CapturaCostoDialog.jsx",
       "source_location": "L56",
       "id": "costos_capturacostodialog_capturacostodialog",
-      "community": 16,
+      "community": 135,
       "norm_label": "capturacostodialog()"
     },
     {
@@ -11835,7 +11853,7 @@
       "source_file": "src/components/costos/costosConfig.js",
       "source_location": "L40",
       "id": "costos_costosconfig_tipodecosto",
-      "community": 151,
+      "community": 135,
       "norm_label": "tipodecosto()"
     },
     {
@@ -11844,7 +11862,7 @@
       "source_file": "src/components/costos/costosConfig.js",
       "source_location": "L44",
       "id": "costos_costosconfig_keyunidad",
-      "community": 151,
+      "community": 135,
       "norm_label": "keyunidad()"
     },
     {
@@ -11853,7 +11871,7 @@
       "source_file": "src/components/costos/costosConfig.js",
       "source_location": "L45",
       "id": "costos_costosconfig_keydecosto",
-      "community": 151,
+      "community": 135,
       "norm_label": "keydecosto()"
     },
     {
@@ -11862,7 +11880,7 @@
       "source_file": "src/components/costos/costosConfig.js",
       "source_location": "L47",
       "id": "costos_costosconfig_parsekeyunidad",
-      "community": 151,
+      "community": 135,
       "norm_label": "parsekeyunidad()"
     },
     {
@@ -11907,7 +11925,7 @@
       "source_file": "src/components/costos/DetalleUnidad.jsx",
       "source_location": "L41",
       "id": "costos_detalleunidad_tooltipsemana",
-      "community": 16,
+      "community": 135,
       "norm_label": "tooltipsemana()"
     },
     {
@@ -11925,7 +11943,7 @@
       "source_file": "src/components/costos/exportarExcel.js",
       "source_location": "L1",
       "id": "src_components_costos_exportarexcel_js",
-      "community": 138,
+      "community": 135,
       "norm_label": "exportarexcel.js"
     },
     {
@@ -11934,7 +11952,7 @@
       "source_file": "src/components/costos/exportarExcel.js",
       "source_location": "L5",
       "id": "costos_exportarexcel_encabezado",
-      "community": 138,
+      "community": 135,
       "norm_label": "encabezado()"
     },
     {
@@ -11943,7 +11961,7 @@
       "source_file": "src/components/costos/exportarExcel.js",
       "source_location": "L14",
       "id": "costos_exportarexcel_titulo",
-      "community": 138,
+      "community": 135,
       "norm_label": "titulo()"
     },
     {
@@ -11952,7 +11970,7 @@
       "source_file": "src/components/costos/exportarExcel.js",
       "source_location": "L23",
       "id": "costos_exportarexcel_hojadetalle",
-      "community": 138,
+      "community": 135,
       "norm_label": "hojadetalle()"
     },
     {
@@ -11961,7 +11979,7 @@
       "source_file": "src/components/costos/exportarExcel.js",
       "source_location": "L44",
       "id": "costos_exportarexcel_descargar",
-      "community": 138,
+      "community": 135,
       "norm_label": "descargar()"
     },
     {
@@ -11970,7 +11988,7 @@
       "source_file": "src/components/costos/exportarExcel.js",
       "source_location": "L57",
       "id": "costos_exportarexcel_exportarsemana",
-      "community": 138,
+      "community": 135,
       "norm_label": "exportarsemana()"
     },
     {
@@ -11979,7 +11997,7 @@
       "source_file": "src/components/costos/exportarExcel.js",
       "source_location": "L86",
       "id": "costos_exportarexcel_exportarunidad",
-      "community": 138,
+      "community": 135,
       "norm_label": "exportarunidad()"
     },
     {
@@ -12042,7 +12060,7 @@
       "source_file": "src/components/costos/TablaSemanal.jsx",
       "source_location": "L42",
       "id": "costos_tablasemanal_variacion",
-      "community": 16,
+      "community": 135,
       "norm_label": "variacion()"
     },
     {
@@ -12078,7 +12096,7 @@
       "source_file": "src/components/costos/useCostos.js",
       "source_location": "L12",
       "id": "costos_usecostos_invalidarcostos",
-      "community": 151,
+      "community": 135,
       "norm_label": "invalidarcostos()"
     },
     {
@@ -12447,26 +12465,107 @@
       "source_file": "src/components/gps/constants.js",
       "source_location": "L1",
       "id": "src_components_gps_constants_js",
-      "community": 32,
+      "community": 7,
       "norm_label": "constants.js"
     },
     {
       "label": "estaEnRalenti()",
       "file_type": "code",
       "source_file": "src/components/gps/constants.js",
-      "source_location": "L19",
+      "source_location": "L21",
       "id": "gps_constants_estaenralenti",
-      "community": 32,
+      "community": 7,
       "norm_label": "estaenralenti()"
+    },
+    {
+      "label": "estadoUnidad()",
+      "file_type": "code",
+      "source_file": "src/components/gps/constants.js",
+      "source_location": "L24",
+      "id": "gps_constants_estadounidad",
+      "community": 7,
+      "norm_label": "estadounidad()"
     },
     {
       "label": "CENTRO_MX",
       "file_type": "code",
       "source_file": "src/components/gps/constants.js",
-      "source_location": "L31",
+      "source_location": "L39",
       "id": "gps_constants_centro_mx",
-      "community": 32,
+      "community": 7,
       "norm_label": "centro_mx"
+    },
+    {
+      "label": "formatoGps.js",
+      "file_type": "code",
+      "source_file": "src/components/gps/formatoGps.js",
+      "source_location": "L1",
+      "id": "src_components_gps_formatogps_js",
+      "community": 7,
+      "norm_label": "formatogps.js"
+    },
+    {
+      "label": "aMs()",
+      "file_type": "code",
+      "source_file": "src/components/gps/formatoGps.js",
+      "source_location": "L5",
+      "id": "gps_formatogps_ams",
+      "community": 7,
+      "norm_label": "ams()"
+    },
+    {
+      "label": "ultimoReporteMs()",
+      "file_type": "code",
+      "source_file": "src/components/gps/formatoGps.js",
+      "source_location": "L9",
+      "id": "gps_formatogps_ultimoreportems",
+      "community": 7,
+      "norm_label": "ultimoreportems()"
+    },
+    {
+      "label": "duracion()",
+      "file_type": "code",
+      "source_file": "src/components/gps/formatoGps.js",
+      "source_location": "L15",
+      "id": "gps_formatogps_duracion",
+      "community": 7,
+      "norm_label": "duracion()"
+    },
+    {
+      "label": "tiempoDesde()",
+      "file_type": "code",
+      "source_file": "src/components/gps/formatoGps.js",
+      "source_location": "L24",
+      "id": "gps_formatogps_tiempodesde",
+      "community": 7,
+      "norm_label": "tiempodesde()"
+    },
+    {
+      "label": "horaReporte()",
+      "file_type": "code",
+      "source_file": "src/components/gps/formatoGps.js",
+      "source_location": "L33",
+      "id": "gps_formatogps_horareporte",
+      "community": 7,
+      "norm_label": "horareporte()"
+    },
+    {
+      "label": "PUNTOS_CARDINALES",
+      "file_type": "code",
+      "source_file": "src/components/gps/formatoGps.js",
+      "source_location": "L40",
+      "id": "gps_formatogps_puntos_cardinales",
+      "community": 7,
+      "norm_label": "puntos_cardinales"
+    },
+    {
+      "label": "rumboCardinal()",
+      "file_type": "code",
+      "source_file": "src/components/gps/formatoGps.js",
+      "source_location": "L41",
+      "id": "gps_formatogps_rumbocardinal",
+      "community": 7,
+      "norm_label": "rumbocardinal()"
     },
     {
       "label": "GeocercaGPS.jsx",
@@ -12724,7 +12823,7 @@
       "label": "MapaGPS()",
       "file_type": "code",
       "source_file": "src/components/gps/MapaGPS.jsx",
-      "source_location": "L239",
+      "source_location": "L223",
       "id": "gps_mapagps_mapagps",
       "community": 7,
       "norm_label": "mapagps()"
@@ -12852,7 +12951,7 @@
       "source_file": "src/components/gps/ReportesGPS.jsx",
       "source_location": "L1",
       "id": "src_components_gps_reportesgps_jsx",
-      "community": 137,
+      "community": 143,
       "norm_label": "reportesgps.jsx"
     },
     {
@@ -12861,7 +12960,7 @@
       "source_file": "src/components/gps/ReportesGPS.jsx",
       "source_location": "L9",
       "id": "gps_reportesgps_fmtduracion",
-      "community": 137,
+      "community": 143,
       "norm_label": "fmtduracion()"
     },
     {
@@ -12870,7 +12969,7 @@
       "source_file": "src/components/gps/ReportesGPS.jsx",
       "source_location": "L14",
       "id": "gps_reportesgps_fmtfecha",
-      "community": 137,
+      "community": 143,
       "norm_label": "fmtfecha()"
     },
     {
@@ -12879,7 +12978,7 @@
       "source_file": "src/components/gps/ReportesGPS.jsx",
       "source_location": "L20",
       "id": "gps_reportesgps_generardatosmock",
-      "community": 137,
+      "community": 143,
       "norm_label": "generardatosmock()"
     },
     {
@@ -12888,7 +12987,7 @@
       "source_file": "src/components/gps/ReportesGPS.jsx",
       "source_location": "L46",
       "id": "gps_reportesgps_reportes",
-      "community": 137,
+      "community": 143,
       "norm_label": "reportes"
     },
     {
@@ -12897,7 +12996,7 @@
       "source_file": "src/components/gps/ReportesGPS.jsx",
       "source_location": "L67",
       "id": "gps_reportesgps_reportesgps",
-      "community": 137,
+      "community": 143,
       "norm_label": "reportesgps()"
     },
     {
@@ -12906,35 +13005,44 @@
       "source_file": "src/components/gps/TooltipUnidad.jsx",
       "source_location": "L1",
       "id": "src_components_gps_tooltipunidad_jsx",
-      "community": 32,
+      "community": 7,
       "norm_label": "tooltipunidad.jsx"
     },
     {
-      "label": "tiempoDesde()",
+      "label": "llegadaAlLugar()",
       "file_type": "code",
       "source_file": "src/components/gps/TooltipUnidad.jsx",
-      "source_location": "L11",
-      "id": "gps_tooltipunidad_tiempodesde",
-      "community": 32,
-      "norm_label": "tiempodesde()"
+      "source_location": "L18",
+      "id": "gps_tooltipunidad_llegadaallugar",
+      "community": 7,
+      "norm_label": "llegadaallugar()"
+    },
+    {
+      "label": "subtituloCamion()",
+      "file_type": "code",
+      "source_file": "src/components/gps/TooltipUnidad.jsx",
+      "source_location": "L31",
+      "id": "gps_tooltipunidad_subtitulocamion",
+      "community": 7,
+      "norm_label": "subtitulocamion()"
     },
     {
       "label": "TooltipUnidad()",
       "file_type": "code",
       "source_file": "src/components/gps/TooltipUnidad.jsx",
-      "source_location": "L23",
+      "source_location": "L37",
       "id": "gps_tooltipunidad_tooltipunidad",
-      "community": 32,
+      "community": 7,
       "norm_label": "tooltipunidad()"
     },
     {
-      "label": "EstadoMotor()",
+      "label": "TiempoEnLugar()",
       "file_type": "code",
       "source_file": "src/components/gps/TooltipUnidad.jsx",
-      "source_location": "L210",
-      "id": "gps_tooltipunidad_estadomotor",
-      "community": 32,
-      "norm_label": "estadomotor()"
+      "source_location": "L251",
+      "id": "gps_tooltipunidad_tiempoenlugar",
+      "community": 7,
+      "norm_label": "tiempoenlugar()"
     },
     {
       "label": "unitIconHelper.js",
@@ -13257,7 +13365,7 @@
       "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
       "source_location": "L1",
       "id": "src_components_liquidaciones_historialliquidaciones_jsx",
-      "community": 16,
+      "community": 135,
       "norm_label": "historialliquidaciones.jsx"
     },
     {
@@ -13266,7 +13374,7 @@
       "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
       "source_location": "L37",
       "id": "liquidaciones_historialliquidaciones_empty_array",
-      "community": 16,
+      "community": 135,
       "norm_label": "empty_array"
     },
     {
@@ -13275,7 +13383,7 @@
       "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
       "source_location": "L43",
       "id": "liquidaciones_historialliquidaciones_fechalegible",
-      "community": 16,
+      "community": 135,
       "norm_label": "fechalegible()"
     },
     {
@@ -13284,7 +13392,7 @@
       "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
       "source_location": "L56",
       "id": "liquidaciones_historialliquidaciones_titulodesdecorte",
-      "community": 16,
+      "community": 135,
       "norm_label": "titulodesdecorte()"
     },
     {
@@ -13293,7 +13401,7 @@
       "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
       "source_location": "L68",
       "id": "liquidaciones_historialliquidaciones_eslegacy",
-      "community": 16,
+      "community": 135,
       "norm_label": "eslegacy()"
     },
     {
@@ -13302,7 +13410,7 @@
       "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
       "source_location": "L72",
       "id": "liquidaciones_historialliquidaciones_historialliquidaciones",
-      "community": 16,
+      "community": 135,
       "norm_label": "historialliquidaciones()"
     },
     {
@@ -13311,7 +13419,7 @@
       "source_file": "src/components/liquidaciones/HistorialLiquidaciones.jsx",
       "source_location": "L472",
       "id": "liquidaciones_historialliquidaciones_dialogdesglose",
-      "community": 16,
+      "community": 135,
       "norm_label": "dialogdesglose()"
     },
     {
@@ -13644,7 +13752,7 @@
       "source_file": "src/components/panel/CostosSemana.jsx",
       "source_location": "L1",
       "id": "src_components_panel_costossemana_jsx",
-      "community": 137,
+      "community": 135,
       "norm_label": "costossemana.jsx"
     },
     {
@@ -13653,7 +13761,7 @@
       "source_file": "src/components/panel/CostosSemana.jsx",
       "source_location": "L13",
       "id": "panel_costossemana_costossemana",
-      "community": 137,
+      "community": 135,
       "norm_label": "costossemana()"
     },
     {
@@ -16173,7 +16281,7 @@
       "source_file": "src/components/ui/toaster.jsx",
       "source_location": "L1",
       "id": "src_components_ui_toaster_jsx",
-      "community": 16,
+      "community": 135,
       "norm_label": "toaster.jsx"
     },
     {
@@ -16182,7 +16290,7 @@
       "source_file": "src/components/ui/toaster.jsx",
       "source_location": "L11",
       "id": "ui_toaster_toaster",
-      "community": 16,
+      "community": 135,
       "norm_label": "toaster()"
     },
     {
@@ -16371,7 +16479,7 @@
       "source_file": "src/components/ui/use-toast.jsx",
       "source_location": "L147",
       "id": "ui_use_toast_usetoast",
-      "community": 16,
+      "community": 135,
       "norm_label": "usetoast()"
     },
     {
@@ -16416,7 +16524,7 @@
       "source_file": "src/lib/fechas.js",
       "source_location": "L6",
       "id": "lib_fechas_localdatestr",
-      "community": 137,
+      "community": 135,
       "norm_label": "localdatestr()"
     },
     {
@@ -16443,7 +16551,7 @@
       "source_file": "src/lib/formato.js",
       "source_location": "L5",
       "id": "lib_formato_formatcurrency",
-      "community": 16,
+      "community": 135,
       "norm_label": "formatcurrency()"
     },
     {
@@ -16470,7 +16578,7 @@
       "source_file": "src/lib/semana.js",
       "source_location": "L1",
       "id": "src_lib_semana_js",
-      "community": 53,
+      "community": 135,
       "norm_label": "semana.js"
     },
     {
@@ -16479,7 +16587,7 @@
       "source_file": "src/lib/semana.js",
       "source_location": "L10",
       "id": "lib_semana_nombres_dia",
-      "community": 53,
+      "community": 135,
       "norm_label": "nombres_dia"
     },
     {
@@ -16488,7 +16596,7 @@
       "source_file": "src/lib/semana.js",
       "source_location": "L25",
       "id": "lib_semana_todate",
-      "community": 53,
+      "community": 135,
       "norm_label": "todate()"
     },
     {
@@ -16497,7 +16605,7 @@
       "source_file": "src/lib/semana.js",
       "source_location": "L33",
       "id": "lib_semana_nombredia",
-      "community": 53,
+      "community": 135,
       "norm_label": "nombredia()"
     },
     {
@@ -16506,7 +16614,7 @@
       "source_file": "src/lib/semana.js",
       "source_location": "L39",
       "id": "lib_semana_diasdesemana",
-      "community": 53,
+      "community": 135,
       "norm_label": "diasdesemana()"
     },
     {
@@ -16515,7 +16623,7 @@
       "source_file": "src/lib/semana.js",
       "source_location": "L49",
       "id": "lib_semana_offsetdia",
-      "community": 53,
+      "community": 135,
       "norm_label": "offsetdia()"
     },
     {
@@ -16524,7 +16632,7 @@
       "source_file": "src/lib/semana.js",
       "source_location": "L55",
       "id": "lib_semana_plantillavacia",
-      "community": 53,
+      "community": 135,
       "norm_label": "plantillavacia()"
     },
     {
@@ -16533,7 +16641,7 @@
       "source_file": "src/lib/semana.js",
       "source_location": "L62",
       "id": "lib_semana_abreviadia",
-      "community": 53,
+      "community": 135,
       "norm_label": "abreviadia()"
     },
     {
@@ -16542,7 +16650,7 @@
       "source_file": "src/lib/semana.js",
       "source_location": "L70",
       "id": "lib_semana_numerosemana",
-      "community": 53,
+      "community": 135,
       "norm_label": "numerosemana()"
     },
     {
@@ -16551,7 +16659,7 @@
       "source_file": "src/lib/semana.js",
       "source_location": "L80",
       "id": "lib_semana_remapearprogramacion",
-      "community": 53,
+      "community": 135,
       "norm_label": "remapearprogramacion()"
     },
     {
@@ -16560,7 +16668,7 @@
       "source_file": "src/lib/semana.js",
       "source_location": "L95",
       "id": "lib_semana_lunesdesemana",
-      "community": 53,
+      "community": 135,
       "norm_label": "lunesdesemana()"
     },
     {
@@ -16569,7 +16677,7 @@
       "source_file": "src/lib/semana.js",
       "source_location": "L103",
       "id": "lib_semana_sumardias",
-      "community": 137,
+      "community": 135,
       "norm_label": "sumardias()"
     },
     {
@@ -16614,7 +16722,7 @@
       "source_file": "src/pages/Clientes.jsx",
       "source_location": "L1",
       "id": "src_pages_clientes_jsx",
-      "community": 142,
+      "community": 145,
       "norm_label": "clientes.jsx"
     },
     {
@@ -16623,7 +16731,7 @@
       "source_file": "src/pages/Clientes.jsx",
       "source_location": "L44",
       "id": "pages_clientes_clientes",
-      "community": 142,
+      "community": 145,
       "norm_label": "clientes()"
     },
     {
@@ -16632,7 +16740,7 @@
       "source_file": "src/pages/ControlCombustible.jsx",
       "source_location": "L1",
       "id": "src_pages_controlcombustible_jsx",
-      "community": 143,
+      "community": 146,
       "norm_label": "controlcombustible.jsx"
     },
     {
@@ -16641,7 +16749,7 @@
       "source_file": "src/pages/ControlCombustible.jsx",
       "source_location": "L13",
       "id": "pages_controlcombustible_controlcombustible",
-      "community": 143,
+      "community": 146,
       "norm_label": "controlcombustible()"
     },
     {
@@ -16650,7 +16758,7 @@
       "source_file": "src/pages/ControlVacios.jsx",
       "source_location": "L1",
       "id": "src_pages_controlvacios_jsx",
-      "community": 17,
+      "community": 135,
       "norm_label": "controlvacios.jsx"
     },
     {
@@ -16659,7 +16767,7 @@
       "source_file": "src/pages/ControlVacios.jsx",
       "source_location": "L65",
       "id": "pages_controlvacios_estatus_vacios",
-      "community": 17,
+      "community": 135,
       "norm_label": "estatus_vacios"
     },
     {
@@ -16668,7 +16776,7 @@
       "source_file": "src/pages/ControlVacios.jsx",
       "source_location": "L71",
       "id": "pages_controlvacios_getestatus",
-      "community": 17,
+      "community": 135,
       "norm_label": "getestatus()"
     },
     {
@@ -16677,7 +16785,7 @@
       "source_file": "src/pages/ControlVacios.jsx",
       "source_location": "L73",
       "id": "pages_controlvacios_dias_semana",
-      "community": 17,
+      "community": 135,
       "norm_label": "dias_semana"
     },
     {
@@ -16686,7 +16794,7 @@
       "source_file": "src/pages/ControlVacios.jsx",
       "source_location": "L76",
       "id": "pages_controlvacios_pathfotostorage",
-      "community": 17,
+      "community": 135,
       "norm_label": "pathfotostorage()"
     },
     {
@@ -16695,7 +16803,7 @@
       "source_file": "src/pages/ControlVacios.jsx",
       "source_location": "L83",
       "id": "pages_controlvacios_selectcatalogo",
-      "community": 17,
+      "community": 135,
       "norm_label": "selectcatalogo()"
     },
     {
@@ -16704,7 +16812,7 @@
       "source_file": "src/pages/ControlVacios.jsx",
       "source_location": "L104",
       "id": "pages_controlvacios_selectcatalogolibre",
-      "community": 17,
+      "community": 135,
       "norm_label": "selectcatalogolibre()"
     },
     {
@@ -16713,7 +16821,7 @@
       "source_file": "src/pages/ControlVacios.jsx",
       "source_location": "L154",
       "id": "pages_controlvacios_form_vacio",
-      "community": 17,
+      "community": 135,
       "norm_label": "form_vacio"
     },
     {
@@ -16722,7 +16830,7 @@
       "source_file": "src/pages/ControlVacios.jsx",
       "source_location": "L190",
       "id": "pages_controlvacios_quickaddvacio",
-      "community": 17,
+      "community": 135,
       "norm_label": "quickaddvacio()"
     },
     {
@@ -16731,7 +16839,7 @@
       "source_file": "src/pages/ControlVacios.jsx",
       "source_location": "L334",
       "id": "pages_controlvacios_tarjetavacio",
-      "community": 17,
+      "community": 135,
       "norm_label": "tarjetavacio()"
     },
     {
@@ -16740,7 +16848,7 @@
       "source_file": "src/pages/ControlVacios.jsx",
       "source_location": "L467",
       "id": "pages_controlvacios_controlvacios",
-      "community": 17,
+      "community": 135,
       "norm_label": "controlvacios()"
     },
     {
@@ -16983,7 +17091,7 @@
       "source_file": "src/pages/FuelCamiones.jsx",
       "source_location": "L1",
       "id": "src_pages_fuelcamiones_jsx",
-      "community": 145,
+      "community": 147,
       "norm_label": "fuelcamiones.jsx"
     },
     {
@@ -16992,7 +17100,7 @@
       "source_file": "src/pages/FuelCamiones.jsx",
       "source_location": "L37",
       "id": "pages_fuelcamiones_fuelcamiones",
-      "community": 145,
+      "community": 147,
       "norm_label": "fuelcamiones()"
     },
     {
@@ -17001,7 +17109,7 @@
       "source_file": "src/pages/FuelConductores.jsx",
       "source_location": "L1",
       "id": "src_pages_fuelconductores_jsx",
-      "community": 146,
+      "community": 148,
       "norm_label": "fuelconductores.jsx"
     },
     {
@@ -17010,7 +17118,7 @@
       "source_file": "src/pages/FuelConductores.jsx",
       "source_location": "L44",
       "id": "pages_fuelconductores_fuelconductores",
-      "community": 146,
+      "community": 148,
       "norm_label": "fuelconductores()"
     },
     {
@@ -17073,7 +17181,7 @@
       "source_file": "src/pages/FuelProgramaCargas.jsx",
       "source_location": "L215",
       "id": "pages_fuelprogramacargas_fuelprogramacargas",
-      "community": 53,
+      "community": 135,
       "norm_label": "fuelprogramacargas()"
     },
     {
@@ -17631,7 +17739,7 @@
       "source_file": "src/pages/Liquidaciones.jsx",
       "source_location": "L1",
       "id": "src_pages_liquidaciones_jsx",
-      "community": 16,
+      "community": 135,
       "norm_label": "liquidaciones.jsx"
     },
     {
@@ -17640,7 +17748,7 @@
       "source_file": "src/pages/Liquidaciones.jsx",
       "source_location": "L49",
       "id": "pages_liquidaciones_empty_array",
-      "community": 16,
+      "community": 135,
       "norm_label": "empty_array"
     },
     {
@@ -17649,7 +17757,7 @@
       "source_file": "src/pages/Liquidaciones.jsx",
       "source_location": "L55",
       "id": "pages_liquidaciones_sabadodecorte",
-      "community": 17,
+      "community": 135,
       "norm_label": "sabadodecorte()"
     },
     {
@@ -17658,7 +17766,7 @@
       "source_file": "src/pages/Liquidaciones.jsx",
       "source_location": "L64",
       "id": "pages_liquidaciones_anticiposvacios",
-      "community": 16,
+      "community": 135,
       "norm_label": "anticiposvacios()"
     },
     {
@@ -17667,7 +17775,7 @@
       "source_file": "src/pages/Liquidaciones.jsx",
       "source_location": "L68",
       "id": "pages_liquidaciones_liquidaciones",
-      "community": 16,
+      "community": 135,
       "norm_label": "liquidaciones()"
     },
     {
@@ -17676,7 +17784,7 @@
       "source_file": "src/pages/Login.jsx",
       "source_location": "L1",
       "id": "src_pages_login_jsx",
-      "community": 147,
+      "community": 149,
       "norm_label": "login.jsx"
     },
     {
@@ -17685,7 +17793,7 @@
       "source_file": "src/pages/Login.jsx",
       "source_location": "L18",
       "id": "pages_login_login",
-      "community": 147,
+      "community": 149,
       "norm_label": "login()"
     },
     {
@@ -17694,7 +17802,7 @@
       "source_file": "src/pages/Mantenimiento.jsx",
       "source_location": "L1",
       "id": "src_pages_mantenimiento_jsx",
-      "community": 148,
+      "community": 150,
       "norm_label": "mantenimiento.jsx"
     },
     {
@@ -17703,7 +17811,7 @@
       "source_file": "src/pages/Mantenimiento.jsx",
       "source_location": "L8",
       "id": "pages_mantenimiento_mantenimiento",
-      "community": 148,
+      "community": 150,
       "norm_label": "mantenimiento()"
     },
     {
@@ -17712,7 +17820,7 @@
       "source_file": "src/pages/PortalCliente.jsx",
       "source_location": "L1",
       "id": "src_pages_portalcliente_jsx",
-      "community": 32,
+      "community": 7,
       "norm_label": "portalcliente.jsx"
     },
     {
@@ -17721,7 +17829,7 @@
       "source_file": "src/pages/PortalCliente.jsx",
       "source_location": "L15",
       "id": "pages_portalcliente_haversinekm",
-      "community": 32,
+      "community": 7,
       "norm_label": "haversinekm()"
     },
     {
@@ -17730,7 +17838,7 @@
       "source_file": "src/pages/PortalCliente.jsx",
       "source_location": "L21",
       "id": "pages_portalcliente_enfocarunidad",
-      "community": 32,
+      "community": 7,
       "norm_label": "enfocarunidad()"
     },
     {
@@ -17739,7 +17847,7 @@
       "source_file": "src/pages/PortalCliente.jsx",
       "source_location": "L32",
       "id": "pages_portalcliente_seguirpunto",
-      "community": 32,
+      "community": 7,
       "norm_label": "seguirpunto()"
     },
     {
@@ -17748,7 +17856,7 @@
       "source_file": "src/pages/PortalCliente.jsx",
       "source_location": "L37",
       "id": "pages_portalcliente_fitruta",
-      "community": 32,
+      "community": 7,
       "norm_label": "fitruta()"
     },
     {
@@ -17757,7 +17865,7 @@
       "source_file": "src/pages/PortalCliente.jsx",
       "source_location": "L48",
       "id": "pages_portalcliente_portalcliente",
-      "community": 32,
+      "community": 7,
       "norm_label": "portalcliente()"
     },
     {
@@ -17766,7 +17874,7 @@
       "source_file": "src/pages/PortalRoute.jsx",
       "source_location": "L1",
       "id": "src_pages_portalroute_jsx",
-      "community": 149,
+      "community": 151,
       "norm_label": "portalroute.jsx"
     },
     {
@@ -17775,7 +17883,7 @@
       "source_file": "src/pages/PortalRoute.jsx",
       "source_location": "L9",
       "id": "pages_portalroute_portalroute",
-      "community": 149,
+      "community": 151,
       "norm_label": "portalroute()"
     },
     {
@@ -17784,7 +17892,7 @@
       "source_file": "src/pages/ProtectedRoute.jsx",
       "source_location": "L1",
       "id": "src_pages_protectedroute_jsx",
-      "community": 150,
+      "community": 152,
       "norm_label": "protectedroute.jsx"
     },
     {
@@ -17793,7 +17901,7 @@
       "source_file": "src/pages/ProtectedRoute.jsx",
       "source_location": "L7",
       "id": "pages_protectedroute_protectedroute",
-      "community": 150,
+      "community": 152,
       "norm_label": "protectedroute()"
     },
     {
@@ -17845,7 +17953,7 @@
       "label": "DefaultIcon",
       "file_type": "code",
       "source_file": "src/pages/RastreoPublico.jsx",
-      "source_location": "L12",
+      "source_location": "L14",
       "id": "pages_rastreopublico_defaulticon",
       "community": 7,
       "norm_label": "defaulticon"
@@ -17854,7 +17962,7 @@
       "label": "formatExpiry()",
       "file_type": "code",
       "source_file": "src/pages/RastreoPublico.jsx",
-      "source_location": "L18",
+      "source_location": "L19",
       "id": "pages_rastreopublico_formatexpiry",
       "community": 7,
       "norm_label": "formatexpiry()"
@@ -17863,7 +17971,7 @@
       "label": "RastreoPublico()",
       "file_type": "code",
       "source_file": "src/pages/RastreoPublico.jsx",
-      "source_location": "L27",
+      "source_location": "L28",
       "id": "pages_rastreopublico_rastreopublico",
       "community": 7,
       "norm_label": "rastreopublico()"
@@ -19201,11 +19309,47 @@
       "norm_label": "best practices (conditional)"
     },
     {
+      "label": "wialonParadoDesde()",
+      "file_type": "code",
+      "source_file": "cloudflare-workers/wialon-proxy/src/index.ts",
+      "source_location": "L234",
+      "community": 3,
+      "norm_label": "wialonparadodesde()",
+      "id": "src_index_wialonparadodesde"
+    },
+    {
+      "label": "TiempoParada()",
+      "file_type": "code",
+      "source_file": "src/components/gps/TooltipUnidad.jsx",
+      "source_location": "L224",
+      "community": 7,
+      "norm_label": "tiempoparada()",
+      "id": "gps_tooltipunidad_tiempoparada"
+    },
+    {
+      "label": "EstadoMotor()",
+      "file_type": "code",
+      "source_file": "src/components/gps/TooltipUnidad.jsx",
+      "source_location": "L242",
+      "community": 7,
+      "norm_label": "estadomotor()",
+      "id": "gps_tooltipunidad_estadomotor"
+    },
+    {
+      "label": "tiempoDesde()",
+      "file_type": "code",
+      "source_file": "src/components/gps/TooltipUnidad.jsx",
+      "source_location": "L11",
+      "community": 7,
+      "norm_label": "tiempodesde()",
+      "id": "gps_tooltipunidad_tiempodesde"
+    },
+    {
       "label": "getLunes()",
       "file_type": "code",
       "source_file": "src/pages/ControlVacios.jsx",
       "source_location": "L74",
-      "community": 17,
+      "community": 135,
       "norm_label": "getlunes()",
       "id": "pages_controlvacios_getlunes"
     },
@@ -19214,7 +19358,7 @@
       "file_type": "code",
       "source_file": "src/pages/ControlVacios.jsx",
       "source_location": "L81",
-      "community": 17,
+      "community": 135,
       "norm_label": "adddays()",
       "id": "pages_controlvacios_adddays"
     },
@@ -19376,7 +19520,7 @@
       "file_type": "code",
       "source_file": "src/pages/ControlVacios.jsx",
       "source_location": "L73",
-      "community": 17,
+      "community": 135,
       "norm_label": "localdatestr()",
       "id": "pages_controlvacios_localdatestr"
     },
@@ -19385,7 +19529,7 @@
       "file_type": "code",
       "source_file": "src/pages/PortalCliente.jsx",
       "source_location": "L14",
-      "community": 32,
+      "community": 7,
       "norm_label": "localdatestr()",
       "id": "pages_portalcliente_localdatestr"
     }
@@ -31876,6 +32020,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "cloudflare-workers/wialon-proxy/src/index.ts",
+      "source_location": "L234",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "cloudflare_workers_wialon_proxy_src_index_ts",
+      "target": "src_index_wialonparadodesde"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "cloudflare-workers/wialon-proxy/src/index.ts",
       "source_location": "L63",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -31979,6 +32133,17 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "src_index_wialonlogout",
+      "target": "src_index_wialonpost"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "cloudflare-workers/wialon-proxy/src/index.ts",
+      "source_location": "L238",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_index_wialonparadodesde",
       "target": "src_index_wialonpost"
     },
     {
@@ -32314,6 +32479,17 @@
     {
       "relation": "calls",
       "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "cloudflare-workers/wialon-proxy/src/index.ts",
+      "source_location": "L690",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_index_fetch",
+      "target": "src_index_wialonparadodesde"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "supabase/functions/wialon-proxy/index.ts",
@@ -32442,9 +32618,9 @@
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
       "source_location": "L27",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_regenerar_pdfs_liquidaciones_mjs",
-      "target": "liquidaciones_pdfliquidacion_construirpdfliquidacion",
-      "confidence_score": 1.0
+      "target": "liquidaciones_pdfliquidacion_construirpdfliquidacion"
     },
     {
       "relation": "contains",
@@ -32452,9 +32628,9 @@
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
       "source_location": "L35",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_regenerar_pdfs_liquidaciones_mjs",
-      "target": "scripts_regenerar_pdfs_liquidaciones_aplicar",
-      "confidence_score": 1.0
+      "target": "scripts_regenerar_pdfs_liquidaciones_aplicar"
     },
     {
       "relation": "contains",
@@ -32462,19 +32638,9 @@
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
       "source_location": "L34",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_regenerar_pdfs_liquidaciones_mjs",
-      "target": "scripts_regenerar_pdfs_liquidaciones_args",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
-      "source_location": "L47",
-      "weight": 1.0,
-      "source": "scripts_regenerar_pdfs_liquidaciones_mjs",
-      "target": "scripts_regenerar_pdfs_liquidaciones_dir",
-      "confidence_score": 1.0
+      "target": "scripts_regenerar_pdfs_liquidaciones_args"
     },
     {
       "relation": "contains",
@@ -32482,9 +32648,29 @@
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
       "source_location": "L49",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_regenerar_pdfs_liquidaciones_mjs",
-      "target": "scripts_regenerar_pdfs_liquidaciones_dir_nuevos",
-      "confidence_score": 1.0
+      "target": "scripts_regenerar_pdfs_liquidaciones_base_respaldo"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
+      "source_location": "L47",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripts_regenerar_pdfs_liquidaciones_mjs",
+      "target": "scripts_regenerar_pdfs_liquidaciones_dir"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
+      "source_location": "L49",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripts_regenerar_pdfs_liquidaciones_mjs",
+      "target": "scripts_regenerar_pdfs_liquidaciones_dir_nuevos"
     },
     {
       "relation": "contains",
@@ -32492,9 +32678,19 @@
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
       "source_location": "L48",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_regenerar_pdfs_liquidaciones_mjs",
-      "target": "scripts_regenerar_pdfs_liquidaciones_dir_orig",
-      "confidence_score": 1.0
+      "target": "scripts_regenerar_pdfs_liquidaciones_dir_orig"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
+      "source_location": "L78",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripts_regenerar_pdfs_liquidaciones_mjs",
+      "target": "scripts_regenerar_pdfs_liquidaciones_fechaemisiondelpdf"
     },
     {
       "relation": "contains",
@@ -32502,9 +32698,9 @@
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
       "source_location": "L112",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_regenerar_pdfs_liquidaciones_mjs",
-      "target": "scripts_regenerar_pdfs_liquidaciones_kb",
-      "confidence_score": 1.0
+      "target": "scripts_regenerar_pdfs_liquidaciones_kb"
     },
     {
       "relation": "contains",
@@ -32512,9 +32708,9 @@
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
       "source_location": "L94",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_regenerar_pdfs_liquidaciones_mjs",
-      "target": "scripts_regenerar_pdfs_liquidaciones_leerliquidaciones",
-      "confidence_score": 1.0
+      "target": "scripts_regenerar_pdfs_liquidaciones_leerliquidaciones"
     },
     {
       "relation": "contains",
@@ -32522,9 +32718,9 @@
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
       "source_location": "L51",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_regenerar_pdfs_liquidaciones_mjs",
-      "target": "scripts_regenerar_pdfs_liquidaciones_logo",
-      "confidence_score": 1.0
+      "target": "scripts_regenerar_pdfs_liquidaciones_logo"
     },
     {
       "relation": "contains",
@@ -32532,9 +32728,9 @@
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
       "source_location": "L114",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_regenerar_pdfs_liquidaciones_mjs",
-      "target": "scripts_regenerar_pdfs_liquidaciones_main",
-      "confidence_score": 1.0
+      "target": "scripts_regenerar_pdfs_liquidaciones_main"
     },
     {
       "relation": "contains",
@@ -32542,9 +32738,9 @@
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
       "source_location": "L31",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_regenerar_pdfs_liquidaciones_mjs",
-      "target": "scripts_regenerar_pdfs_liquidaciones_nombres_dia",
-      "confidence_score": 1.0
+      "target": "scripts_regenerar_pdfs_liquidaciones_nombres_dia"
     },
     {
       "relation": "contains",
@@ -32552,9 +32748,9 @@
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
       "source_location": "L63",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_regenerar_pdfs_liquidaciones_mjs",
-      "target": "scripts_regenerar_pdfs_liquidaciones_ordenaranticipos",
-      "confidence_score": 1.0
+      "target": "scripts_regenerar_pdfs_liquidaciones_ordenaranticipos"
     },
     {
       "relation": "contains",
@@ -32562,9 +32758,9 @@
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
       "source_location": "L72",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_regenerar_pdfs_liquidaciones_mjs",
-      "target": "scripts_regenerar_pdfs_liquidaciones_pdfdesdefila",
-      "confidence_score": 1.0
+      "target": "scripts_regenerar_pdfs_liquidaciones_pdfdesdefila"
     },
     {
       "relation": "contains",
@@ -32572,9 +32768,9 @@
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
       "source_location": "L33",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_regenerar_pdfs_liquidaciones_mjs",
-      "target": "scripts_regenerar_pdfs_liquidaciones_raiz",
-      "confidence_score": 1.0
+      "target": "scripts_regenerar_pdfs_liquidaciones_raiz"
     },
     {
       "relation": "contains",
@@ -32582,9 +32778,9 @@
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
       "source_location": "L53",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_regenerar_pdfs_liquidaciones_mjs",
-      "target": "scripts_regenerar_pdfs_liquidaciones_rutalocal",
-      "confidence_score": 1.0
+      "target": "scripts_regenerar_pdfs_liquidaciones_rutalocal"
     },
     {
       "relation": "contains",
@@ -32592,9 +32788,9 @@
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
       "source_location": "L46",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_regenerar_pdfs_liquidaciones_mjs",
-      "target": "scripts_regenerar_pdfs_liquidaciones_sello",
-      "confidence_score": 1.0
+      "target": "scripts_regenerar_pdfs_liquidaciones_sello"
     },
     {
       "relation": "contains",
@@ -32602,9 +32798,9 @@
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
       "source_location": "L36",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_regenerar_pdfs_liquidaciones_mjs",
-      "target": "scripts_regenerar_pdfs_liquidaciones_solo_id",
-      "confidence_score": 1.0
+      "target": "scripts_regenerar_pdfs_liquidaciones_solo_id"
     },
     {
       "relation": "contains",
@@ -32612,9 +32808,9 @@
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
       "source_location": "L44",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_regenerar_pdfs_liquidaciones_mjs",
-      "target": "scripts_regenerar_pdfs_liquidaciones_supabase",
-      "confidence_score": 1.0
+      "target": "scripts_regenerar_pdfs_liquidaciones_supabase"
     },
     {
       "relation": "imports_from",
@@ -32623,9 +32819,9 @@
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
       "source_location": "L27",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_regenerar_pdfs_liquidaciones_mjs",
-      "target": "src_components_liquidaciones_pdfliquidacion_js",
-      "confidence_score": 1.0
+      "target": "src_components_liquidaciones_pdfliquidacion_js"
     },
     {
       "relation": "calls",
@@ -32634,9 +32830,9 @@
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
       "source_location": "L143",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_regenerar_pdfs_liquidaciones_main",
-      "target": "scripts_regenerar_pdfs_liquidaciones_rutalocal",
-      "confidence_score": 1.0
+      "target": "scripts_regenerar_pdfs_liquidaciones_rutalocal"
     },
     {
       "relation": "calls",
@@ -32645,9 +32841,20 @@
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
       "source_location": "L82",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_regenerar_pdfs_liquidaciones_pdfdesdefila",
-      "target": "scripts_regenerar_pdfs_liquidaciones_ordenaranticipos",
-      "confidence_score": 1.0
+      "target": "scripts_regenerar_pdfs_liquidaciones_ordenaranticipos"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
+      "source_location": "L179",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "scripts_regenerar_pdfs_liquidaciones_main",
+      "target": "scripts_regenerar_pdfs_liquidaciones_fechaemisiondelpdf"
     },
     {
       "relation": "calls",
@@ -32656,9 +32863,9 @@
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
       "source_location": "L148",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_regenerar_pdfs_liquidaciones_main",
-      "target": "scripts_regenerar_pdfs_liquidaciones_pdfdesdefila",
-      "confidence_score": 1.0
+      "target": "scripts_regenerar_pdfs_liquidaciones_pdfdesdefila"
     },
     {
       "relation": "calls",
@@ -32667,9 +32874,9 @@
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
       "source_location": "L74",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_regenerar_pdfs_liquidaciones_pdfdesdefila",
-      "target": "liquidaciones_pdfliquidacion_construirpdfliquidacion",
-      "confidence_score": 1.0
+      "target": "liquidaciones_pdfliquidacion_construirpdfliquidacion"
     },
     {
       "relation": "calls",
@@ -32678,9 +32885,9 @@
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
       "source_location": "L116",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_regenerar_pdfs_liquidaciones_main",
-      "target": "scripts_regenerar_pdfs_liquidaciones_leerliquidaciones",
-      "confidence_score": 1.0
+      "target": "scripts_regenerar_pdfs_liquidaciones_leerliquidaciones"
     },
     {
       "relation": "calls",
@@ -32689,9 +32896,9 @@
       "source_file": "scripts/regenerar-pdfs-liquidaciones.mjs",
       "source_location": "L155",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_regenerar_pdfs_liquidaciones_main",
-      "target": "scripts_regenerar_pdfs_liquidaciones_kb",
-      "confidence_score": 1.0
+      "target": "scripts_regenerar_pdfs_liquidaciones_kb"
     },
     {
       "relation": "contains",
@@ -33127,9 +33334,9 @@
       "source_file": "src/components/costos/CapturaCostoDialog.jsx",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_costos_capturacostodialog_jsx",
-      "target": "costos_capturacostodialog_unidadkeyinicial",
-      "confidence_score": 1.0
+      "target": "costos_capturacostodialog_unidadkeyinicial"
     },
     {
       "relation": "imports",
@@ -33149,9 +33356,9 @@
       "source_file": "src/components/costos/CapturaCostoDialog.jsx",
       "source_location": "L19",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_costos_capturacostodialog_jsx",
-      "target": "costos_costosconfig_keydecosto",
-      "confidence_score": 1.0
+      "target": "costos_costosconfig_keydecosto"
     },
     {
       "relation": "imports",
@@ -33160,9 +33367,9 @@
       "source_file": "src/components/costos/CapturaCostoDialog.jsx",
       "source_location": "L19",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_costos_capturacostodialog_jsx",
-      "target": "costos_costosconfig_keyunidad",
-      "confidence_score": 1.0
+      "target": "costos_costosconfig_keyunidad"
     },
     {
       "relation": "imports",
@@ -33171,9 +33378,9 @@
       "source_file": "src/components/costos/CapturaCostoDialog.jsx",
       "source_location": "L19",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_costos_capturacostodialog_jsx",
-      "target": "costos_costosconfig_parsekeyunidad",
-      "confidence_score": 1.0
+      "target": "costos_costosconfig_parsekeyunidad"
     },
     {
       "relation": "imports",
@@ -33248,9 +33455,9 @@
       "source_file": "src/components/costos/CapturaCostoDialog.jsx",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "costos_capturacostodialog_unidadkeyinicial",
-      "target": "costos_costosconfig_keyunidad",
-      "confidence_score": 1.0
+      "target": "costos_costosconfig_keyunidad"
     },
     {
       "relation": "calls",
@@ -33259,9 +33466,9 @@
       "source_file": "src/components/costos/CapturaCostoDialog.jsx",
       "source_location": "L29",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "costos_capturacostodialog_formvacio",
-      "target": "costos_costosconfig_parsekeyunidad",
-      "confidence_score": 1.0
+      "target": "costos_costosconfig_parsekeyunidad"
     },
     {
       "relation": "calls",
@@ -33281,9 +33488,9 @@
       "source_file": "src/components/costos/CapturaCostoDialog.jsx",
       "source_location": "L41",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "costos_capturacostodialog_formdesdecosto",
-      "target": "costos_costosconfig_keydecosto",
-      "confidence_score": 1.0
+      "target": "costos_costosconfig_keydecosto"
     },
     {
       "relation": "calls",
@@ -33292,9 +33499,9 @@
       "source_file": "src/components/costos/CapturaCostoDialog.jsx",
       "source_location": "L43",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "costos_capturacostodialog_formdesdecosto",
-      "target": "costos_costosconfig_parsekeyunidad",
-      "confidence_score": 1.0
+      "target": "costos_costosconfig_parsekeyunidad"
     },
     {
       "relation": "calls",
@@ -33354,9 +33561,9 @@
       "source_file": "src/components/costos/costosConfig.js",
       "source_location": "L45",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_costos_costosconfig_js",
-      "target": "costos_costosconfig_keydecosto",
-      "confidence_score": 1.0
+      "target": "costos_costosconfig_keydecosto"
     },
     {
       "relation": "contains",
@@ -33364,9 +33571,9 @@
       "source_file": "src/components/costos/costosConfig.js",
       "source_location": "L44",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_costos_costosconfig_js",
-      "target": "costos_costosconfig_keyunidad",
-      "confidence_score": 1.0
+      "target": "costos_costosconfig_keyunidad"
     },
     {
       "relation": "contains",
@@ -33374,9 +33581,9 @@
       "source_file": "src/components/costos/costosConfig.js",
       "source_location": "L47",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_costos_costosconfig_js",
-      "target": "costos_costosconfig_parsekeyunidad",
-      "confidence_score": 1.0
+      "target": "costos_costosconfig_parsekeyunidad"
     },
     {
       "relation": "contains",
@@ -33384,9 +33591,9 @@
       "source_file": "src/components/costos/costosConfig.js",
       "source_location": "L40",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_costos_costosconfig_js",
-      "target": "costos_costosconfig_tipodecosto",
-      "confidence_score": 1.0
+      "target": "costos_costosconfig_tipodecosto"
     },
     {
       "relation": "contains",
@@ -33614,9 +33821,9 @@
       "source_file": "src/components/costos/costosConfig.js",
       "source_location": "L45",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "costos_costosconfig_keydecosto",
-      "target": "costos_costosconfig_tipodecosto",
-      "confidence_score": 1.0
+      "target": "costos_costosconfig_tipodecosto"
     },
     {
       "relation": "calls",
@@ -33625,9 +33832,9 @@
       "source_file": "src/components/costos/costosConfig.js",
       "source_location": "L45",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "costos_costosconfig_keydecosto",
-      "target": "costos_costosconfig_keyunidad",
-      "confidence_score": 1.0
+      "target": "costos_costosconfig_keyunidad"
     },
     {
       "relation": "imports",
@@ -33636,9 +33843,9 @@
       "source_file": "src/components/costos/useCostos.js",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_costos_usecostos_js",
-      "target": "costos_costosconfig_keyunidad",
-      "confidence_score": 1.0
+      "target": "costos_costosconfig_keyunidad"
     },
     {
       "relation": "imports",
@@ -33647,9 +33854,9 @@
       "source_file": "src/components/costos/DetalleUnidad.jsx",
       "source_location": "L26",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_costos_detalleunidad_jsx",
-      "target": "costos_costosconfig_keydecosto",
-      "confidence_score": 1.0
+      "target": "costos_costosconfig_keydecosto"
     },
     {
       "relation": "imports",
@@ -33658,9 +33865,9 @@
       "source_file": "src/components/costos/TablaSemanal.jsx",
       "source_location": "L27",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_costos_tablasemanal_jsx",
-      "target": "costos_costosconfig_keydecosto",
-      "confidence_score": 1.0
+      "target": "costos_costosconfig_keydecosto"
     },
     {
       "relation": "calls",
@@ -33713,9 +33920,9 @@
       "source_file": "src/components/costos/useCostos.js",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_costos_usecostos_js",
-      "target": "costos_costosconfig_etiquetaunidad",
-      "confidence_score": 1.0
+      "target": "costos_costosconfig_etiquetaunidad"
     },
     {
       "relation": "contains",
@@ -34226,9 +34433,9 @@
       "source_file": "src/components/costos/TablaSemanal.jsx",
       "source_location": "L55",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_costos_tablasemanal_jsx",
-      "target": "costos_tablasemanal_vacia",
-      "confidence_score": 1.0
+      "target": "costos_tablasemanal_vacia"
     },
     {
       "relation": "contains",
@@ -34708,10 +34915,31 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/gps/constants.js",
+      "source_location": "L22",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_gps_constants_js",
+      "target": "gps_constants_estadounidad"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/gps/constants.js",
       "source_location": "L19",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "src_components_gps_constants_js",
+      "target": "gps_constants_estaenralenti"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/gps/constants.js",
+      "source_location": "L23",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "gps_constants_estadounidad",
       "target": "gps_constants_estaenralenti"
     },
     {
@@ -34735,6 +34963,241 @@
       "weight": 1.0,
       "source": "pages_portalcliente_portalcliente",
       "target": "gps_constants_estaenralenti"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/gps/MapaGPS.jsx",
+      "source_location": "L228",
+      "weight": 1.0,
+      "source": "gps_mapagps_liveunitmarker",
+      "target": "gps_constants_estadounidad"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/pages/RastreoPublico.jsx",
+      "source_location": "L158",
+      "weight": 1.0,
+      "source": "pages_rastreopublico_rastreopublico",
+      "target": "gps_constants_estadounidad"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/gps/formatoGps.js",
+      "source_location": "L5",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_gps_formatogps_js",
+      "target": "gps_formatogps_ams"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/gps/formatoGps.js",
+      "source_location": "L15",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_gps_formatogps_js",
+      "target": "gps_formatogps_duracion"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/gps/formatoGps.js",
+      "source_location": "L33",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_gps_formatogps_js",
+      "target": "gps_formatogps_horareporte"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/gps/formatoGps.js",
+      "source_location": "L40",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_gps_formatogps_js",
+      "target": "gps_formatogps_puntos_cardinales"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/gps/formatoGps.js",
+      "source_location": "L41",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_gps_formatogps_js",
+      "target": "gps_formatogps_rumbocardinal"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/gps/formatoGps.js",
+      "source_location": "L24",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_gps_formatogps_js",
+      "target": "gps_formatogps_tiempodesde"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/gps/formatoGps.js",
+      "source_location": "L9",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_gps_formatogps_js",
+      "target": "gps_formatogps_ultimoreportems"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/gps/formatoGps.js",
+      "source_location": "L12",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "gps_formatogps_ultimoreportems",
+      "target": "gps_formatogps_ams"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/gps/TooltipUnidad.jsx",
+      "source_location": "L50",
+      "weight": 1.0,
+      "source": "gps_tooltipunidad_tooltipunidad",
+      "target": "gps_formatogps_ultimoreportems"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/pages/RastreoPublico.jsx",
+      "source_location": "L147",
+      "weight": 1.0,
+      "source": "pages_rastreopublico_rastreopublico",
+      "target": "gps_formatogps_ultimoreportems"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/gps/formatoGps.js",
+      "source_location": "L29",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "gps_formatogps_tiempodesde",
+      "target": "gps_formatogps_duracion"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/gps/TooltipUnidad.jsx",
+      "source_location": "L263",
+      "weight": 1.0,
+      "source": "gps_tooltipunidad_tiempoenlugar",
+      "target": "gps_formatogps_duracion"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/gps/TooltipUnidad.jsx",
+      "source_location": "L235",
+      "weight": 1.0,
+      "source": "gps_tooltipunidad_tiempoparada",
+      "target": "gps_formatogps_duracion"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/gps/TooltipUnidad.jsx",
+      "source_location": "L80",
+      "weight": 1.0,
+      "source": "gps_tooltipunidad_tooltipunidad",
+      "target": "gps_formatogps_tiempodesde"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/pages/RastreoPublico.jsx",
+      "source_location": "L184",
+      "weight": 1.0,
+      "source": "pages_rastreopublico_rastreopublico",
+      "target": "gps_formatogps_tiempodesde"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/gps/TooltipUnidad.jsx",
+      "source_location": "L264",
+      "weight": 1.0,
+      "source": "gps_tooltipunidad_tiempoenlugar",
+      "target": "gps_formatogps_horareporte"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/gps/TooltipUnidad.jsx",
+      "source_location": "L235",
+      "weight": 1.0,
+      "source": "gps_tooltipunidad_tiempoparada",
+      "target": "gps_formatogps_horareporte"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/gps/TooltipUnidad.jsx",
+      "source_location": "L80",
+      "weight": 1.0,
+      "source": "gps_tooltipunidad_tooltipunidad",
+      "target": "gps_formatogps_horareporte"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/pages/RastreoPublico.jsx",
+      "source_location": "L184",
+      "weight": 1.0,
+      "source": "pages_rastreopublico_rastreopublico",
+      "target": "gps_formatogps_horareporte"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/components/gps/TooltipUnidad.jsx",
+      "source_location": "L148",
+      "weight": 1.0,
+      "source": "gps_tooltipunidad_tooltipunidad",
+      "target": "gps_formatogps_rumbocardinal"
     },
     {
       "relation": "contains",
@@ -35290,6 +35753,26 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/gps/TooltipUnidad.jsx",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "src_components_gps_tooltipunidad_jsx",
+      "target": "gps_tooltipunidad_llegadaallugar",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/gps/TooltipUnidad.jsx",
+      "source_location": "L31",
+      "weight": 1.0,
+      "source": "src_components_gps_tooltipunidad_jsx",
+      "target": "gps_tooltipunidad_subtitulocamion",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/gps/TooltipUnidad.jsx",
       "source_location": "L11",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -35300,11 +35783,42 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/gps/TooltipUnidad.jsx",
+      "source_location": "L251",
+      "weight": 1.0,
+      "source": "src_components_gps_tooltipunidad_jsx",
+      "target": "gps_tooltipunidad_tiempoenlugar",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/gps/TooltipUnidad.jsx",
+      "source_location": "L224",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_components_gps_tooltipunidad_jsx",
+      "target": "gps_tooltipunidad_tiempoparada"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/gps/TooltipUnidad.jsx",
       "source_location": "L23",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "src_components_gps_tooltipunidad_jsx",
       "target": "gps_tooltipunidad_tooltipunidad"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/gps/TooltipUnidad.jsx",
+      "source_location": "L79",
+      "weight": 1.0,
+      "source": "gps_tooltipunidad_tooltipunidad",
+      "target": "gps_tooltipunidad_subtitulocamion",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -36303,9 +36817,9 @@
       "source_file": "src/components/liquidaciones/pdfLiquidacion.js",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_liquidaciones_pdfliquidacion_js",
-      "target": "lib_formato_formatcurrency",
-      "confidence_score": 1.0
+      "target": "lib_formato_formatcurrency"
     },
     {
       "relation": "contains",
@@ -36313,9 +36827,9 @@
       "source_file": "src/components/liquidaciones/pdfLiquidacion.js",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_liquidaciones_pdfliquidacion_js",
-      "target": "liquidaciones_pdfliquidacion_cargarlogopdf",
-      "confidence_score": 1.0
+      "target": "liquidaciones_pdfliquidacion_cargarlogopdf"
     },
     {
       "relation": "contains",
@@ -36323,9 +36837,9 @@
       "source_file": "src/components/liquidaciones/pdfLiquidacion.js",
       "source_location": "L24",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_liquidaciones_pdfliquidacion_js",
-      "target": "liquidaciones_pdfliquidacion_construirpdfliquidacion",
-      "confidence_score": 1.0
+      "target": "liquidaciones_pdfliquidacion_construirpdfliquidacion"
     },
     {
       "relation": "imports_from",
@@ -36334,9 +36848,9 @@
       "source_file": "src/components/liquidaciones/pdfLiquidacion.js",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_components_liquidaciones_pdfliquidacion_js",
-      "target": "src_lib_formato_js",
-      "confidence_score": 1.0
+      "target": "src_lib_formato_js"
     },
     {
       "relation": "calls",
@@ -43320,5 +43834,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "a852dfab6ed17335cf8c6b03610447f40ec1373f"
+  "built_at_commit": "ae5835d05ac2d95caa849f5d988901d5bf8aa887"
 }

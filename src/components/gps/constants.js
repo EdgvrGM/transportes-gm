@@ -9,14 +9,22 @@ export const PATIO_RADIO_M = 70;
 
 // Umbrales
 export const RALENTI_UMBRAL_MS  = 15 * 60 * 1000;
-export const VELOCIDAD_ALERTA   = 80;
-export const VELOCIDAD_EXCESO   = 105; // exceso marcado en la ruta del historial
+export const VELOCIDAD_EXCESO   = 110; // km/h — único umbral de exceso: panel, historial, reproductor y portal
 export const RASTRO_MAX         = 10;
 export const RALENTI_VEL_MAX    = 2;   // km/h — por debajo de esto se considera "parado" (tolera ruido GPS)
+export const SIN_SENAL_MS       = 30 * 60 * 1000;
+export const PARADA_RADIO_M     = 150; // "mismo lugar": holgura para la deriva del GPS estacionado
+export const PARADA_VENTANA_H   = 48;  // historial que se revisa para saber desde cuándo está ahí
 
 // Estado de ralentí instantáneo para la vista en vivo (tooltip y panel "En vivo").
 // Usa un umbral en vez de === 0 para no parpadear cuando el GPS reporta 1-2 km/h estando parado.
 export const estaEnRalenti = (u) => !!u?.motor && (u?.velocidad ?? 0) <= RALENTI_VEL_MAX;
+
+// `motor` es la ignición, no el movimiento: un camión parado con motor encendido está en ralentí.
+export const estadoUnidad = (u) =>
+  estaEnRalenti(u) ? { emoji: "🟡", texto: "Ralentí · motor encendido" }
+  : u?.motor       ? { emoji: "🟢", texto: "En movimiento" }
+  :                  { emoji: "⚪", texto: "Motor apagado" };
 
 // Polling
 export const POLL_POSITIONS_MS  = 15000;

@@ -2,25 +2,39 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   X, Gauge, Clock, Navigation, Satellite, MapPin,
-  Loader2, Copy, Check, Share2,
+  Loader2, Copy, Check, Share2, Timer,
 } from "lucide-react";
 import PanelCompartir from "@/components/gps/PanelCompartir";
-import { WIALON_PROXY_URL, WIALON_IMG_BASE, estaEnRalenti } from "@/components/gps/constants";
+import {
+  WIALON_PROXY_URL, WIALON_IMG_BASE, RALENTI_VEL_MAX, PARADA_RADIO_M, PARADA_VENTANA_H, estaEnRalenti,
+} from "@/components/gps/constants";
+import { ultimoReporteMs, tiempoDesde, horaReporte, duracion, rumboCardinal } from "@/components/gps/formatoGps";
+import { distanciaMetros } from "@/components/panel/panelGeo";
 import { wialonFetch } from "@/lib/wialonFetch";
 
-function tiempoDesde(ts) {
-  if (!ts) return "Sin datos";
-  const ms = typeof ts === "number" ? ts * 1000 : new Date(ts).getTime();
-  const diff = Math.floor((Date.now() - ms) / 1000);
-  if (diff < 0 || diff > 86400 * 30) return "Sin señal reciente";
-  if (diff < 60)    return `hace ${diff}s`;
-  if (diff < 3600)  return `hace ${Math.floor(diff / 60)} min`;
-  if (diff < 86400) return `hace ${Math.floor(diff / 3600)}h ${Math.floor((diff % 3600) / 60)}min`;
-  return `hace ${Math.floor(diff / 86400)} días`;
+// Recorre el historial hacia atrás hasta el último punto fuera del radio del lugar actual:
+// el punto siguiente es la llegada. Un punto suelto fuera del radio con el anterior dentro
+// es un salto del GPS estacionado, no una salida.
+function llegadaAlLugar(points, lat, lng) {
+  const fuera = (p) => p && !(p.lat === 0 && p.lng === 0) && distanciaMetros(p.lat, p.lng, lat, lng) > PARADA_RADIO_M;
+  let llegadaMs = null;
+  for (let i = points.length - 1; i >= 0; i--) {
+    const p = points[i];
+    if (p.lat === 0 && p.lng === 0) continue;
+    if (fuera(p) && (i === 0 || fuera(points[i - 1]))) return { llegadaMs, completo: true };
+    if (!fuera(p)) llegadaMs = new Date(p.timestamp).getTime();
+  }
+  return { llegadaMs, completo: false };
 }
 
+// Quita del subtítulo lo que ya dice el nombre de Wialon (suele ser "MODELO PLACAS").
+function subtituloCamion(camion, nombreUnidad) {
+  if (!camion) return [];
+  const nombre = (nombreUnidad ?? "").toUpperCase();
+  return [camion.nombre, camion.placas].filter((t) => t && !nombre.includes(String(t).toUpperCase()));
+}
 
-export default function TooltipUnidad({ unidad, onClose, onMouseEnter, onMouseLeave, style, centered = false }) {
+export default function TooltipUnidad({ unidad, camion, onClose, onMouseEnter, onMouseLeave, style, centered = false }) {
   const [copied,    setCopied]    = useState(false);
   const [showShare, setShowShare] = useState(false);
 
@@ -44,6 +58,28 @@ export default function TooltipUnidad({ unidad, onClose, onMouseEnter, onMouseLe
     staleTime: 5 * 60 * 1000, // 5 min — odómetro y horas motor cambian poco
   });
 
+  const detenida = (unidad.velocidad ?? 0) <= RALENTI_VEL_MAX;
+
+  // La llegada no cambia mientras siga ahí; la llave incluye el lugar (~100 m) para que
+  // al estacionarse en otro sitio no se reutilice la llegada de la parada anterior.
+  const { data: parada, isLoading: cargandoParada } = useQuery({
+    queryKey: ["gps-parada", unidad.id, unidad.lat?.toFixed(3), unidad.lng?.toFixed(3)],
+    queryFn: async () => {
+      const to   = Math.floor(Date.now() / 1000);
+      const from = to - PARADA_VENTANA_H * 3600;
+      const res = await wialonFetch(`${WIALON_PROXY_URL}?action=history&unit=${unidad.id}&from=${from}&to=${to}`);
+      if (!res.ok) throw new Error("Error al obtener historial");
+      const { points = [] } = await res.json();
+      return llegadaAlLugar(points, unidad.lat, unidad.lng);
+    },
+    enabled: detenida && !!unidad.lat && !!unidad.lng,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const subtitulo = subtituloCamion(camion, unidad.nombre);
+
+  const reporteMs = ultimoReporteMs(unidad);
+
   const handleMouseLeave = () => {
     if (!showShare) onMouseLeave?.();
   };
@@ -65,12 +101,11 @@ export default function TooltipUnidad({ unidad, onClose, onMouseEnter, onMouseLe
           <p className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate uppercase">
             {unidad.nombre}
           </p>
+          {subtitulo.length > 0 && (
+            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{subtitulo.join(" · ")}</p>
+          )}
           <p className="text-xs text-slate-400">
-            {tiempoDesde(unidad.ultima_actualizacion)} · {new Date(
-            typeof unidad.ultima_actualizacion === "number"
-              ? unidad.ultima_actualizacion * 1000
-              : unidad.ultima_actualizacion
-          ).toLocaleTimeString("es-MX")}
+            Último reporte {tiempoDesde(reporteMs)} · {horaReporte(reporteMs)}
           </p>
         </div>
 
@@ -100,6 +135,8 @@ export default function TooltipUnidad({ unidad, onClose, onMouseEnter, onMouseLe
           <PanelCompartir unidad={unidad} onClose={() => setShowShare(false)} />
         </div>
       )}
+
+      {detenida && <TiempoEnLugar parada={parada} cargando={cargandoParada} />}
 
       {/* Dirección */}
       {isLoading ? (
@@ -137,6 +174,9 @@ export default function TooltipUnidad({ unidad, onClose, onMouseEnter, onMouseLe
                 ? <span className="text-yellow-500">Ralentí</span>
                 : `${unidad.velocidad} km/h`
               }
+              {!detenida && (
+                <span className="ml-1 text-xs font-medium text-slate-400">{rumboCardinal(unidad.rumbo)}</span>
+              )}
             </p>
           </div>
         </div>
@@ -207,6 +247,28 @@ export default function TooltipUnidad({ unidad, onClose, onMouseEnter, onMouseLe
   );
 }
 
+// La duración se calcula en cada render para que avance con el polling sin volver a pedirla.
+function TiempoEnLugar({ parada, cargando }) {
+  if (!cargando && !parada?.llegadaMs) return null;
+  return (
+    <div className="flex items-center gap-2 px-3 py-2.5 border-b border-amber-200/60 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/10">
+      <Timer className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+      {cargando ? (
+        <span className="text-xs text-slate-500 dark:text-slate-400">Calculando tiempo en este lugar...</span>
+      ) : (
+        <div className="min-w-0">
+          <p className="text-xs text-slate-500 dark:text-slate-400">En este lugar</p>
+          <p className="text-sm font-bold text-slate-800 dark:text-slate-100">
+            {!parada.completo && "Al menos "}
+            {duracion(Math.max(0, Date.now() - parada.llegadaMs))}{" "}
+            <span className="text-xs font-normal text-slate-500 dark:text-slate-400">· desde {horaReporte(parada.llegadaMs)}</span>
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function EstadoMotor({ enRalenti, unidad }) {
   return (
     <div className="flex items-center gap-2 px-3 py-2">
@@ -225,4 +287,3 @@ function EstadoMotor({ enRalenti, unidad }) {
     </div>
   );
 }
-

@@ -5,14 +5,15 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { supabase } from "@/supabaseClient";
 import { createUnitIcon } from "@/components/gps/unitIconHelper";
-import { differenceInMinutes, differenceInSeconds } from "date-fns";
+import { WIALON_PROXY_URL, CENTRO_MX, SIN_SENAL_MS, estadoUnidad } from "@/components/gps/constants";
+import { ultimoReporteMs, tiempoDesde, horaReporte } from "@/components/gps/formatoGps";
+import { differenceInMinutes } from "date-fns";
 
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 const DefaultIcon = L.icon({ iconUrl: icon, shadowUrl: iconShadow, iconSize: [25, 41], iconAnchor: [12, 41] });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-const WIALON_PROXY_URL = "https://wialon-proxy.transportesgm.workers.dev";
 const REFRESH_MS = 15000;
 
 function formatExpiry(expiraEn) {
@@ -99,6 +100,14 @@ export default function RastreoPublico() {
     return () => clearInterval(intervalRef.current);
   }, [estado, fetchPosicion]);
 
+  // Si el proxy deja de responder no llega un setPosicion que re-renderice; este tick
+  // mantiene vivos el "hace X" y el aviso de señal perdida.
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setTick((n) => n + 1), 30000);
+    return () => clearInterval(t);
+  }, []);
+
   if (estado === "cargando") {
     return (
       <div className="h-screen flex items-center justify-center bg-slate-950">
@@ -134,7 +143,9 @@ export default function RastreoPublico() {
     );
   }
 
-  const center = posicion ? [posicion.lat, posicion.lng] : [23.6345, -102.5528];
+  const center    = posicion ? [posicion.lat, posicion.lng] : CENTRO_MX;
+  const reporteMs = posicion ? ultimoReporteMs(posicion) : null;
+  const sinSenal  = !!reporteMs && Date.now() - reporteMs > SIN_SENAL_MS;
 
   return (
     <div className="h-screen flex flex-col bg-slate-950">
@@ -155,12 +166,12 @@ export default function RastreoPublico() {
             <div className="text-right hidden sm:block">
               <p className="text-xs text-slate-300 font-bold">{posicion.velocidad} km/h</p>
               <p className="text-[10px] text-slate-500">
-                {posicion.motor ? "En movimiento" : "Detenido"}
+                {estadoUnidad(posicion).texto}
               </p>
             </div>
           )}
           <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shrink-0" />
+            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${sinSenal ? "bg-amber-500" : "bg-green-500 animate-pulse"}`} />
             <span className="text-[10px] text-slate-400">15s · expira en {expiryLabel}</span>
           </div>
         </div>
@@ -168,6 +179,11 @@ export default function RastreoPublico() {
 
       {/* Mapa */}
       <div className="flex-1 relative" style={{ zIndex: 0 }}>
+        {sinSenal && (
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[1000] pointer-events-none bg-amber-500/95 text-slate-950 rounded-lg px-3 py-2 shadow-lg text-xs font-medium text-center max-w-[calc(100%-2rem)]">
+            Sin señal desde {horaReporte(reporteMs)} ({tiempoDesde(reporteMs)}). Se muestra la última ubicación conocida.
+          </div>
+        )}
         {!posicion && (
           <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
             <div className="bg-slate-900/80 rounded-xl px-4 py-3 text-center">
@@ -219,9 +235,9 @@ export default function RastreoPublico() {
               <Popup>
                 <div style={{ fontSize: "13px", lineHeight: 1.6 }}>
                   <strong>{posicion.nombre}</strong><br />
-                  {posicion.velocidad} km/h · {posicion.motor ? "🟢 En movimiento" : "⚪ Detenido"}<br />
-                  <span style={{ color: "#888", fontSize: "11px" }}>
-                    {new Date(posicion.ultima_actualizacion).toLocaleTimeString("es-MX")}
+                  {posicion.velocidad} km/h · {estadoUnidad(posicion).emoji} {estadoUnidad(posicion).texto}<br />
+                  <span className="text-slate-500 dark:text-slate-400" style={{ fontSize: "11px" }}>
+                    Último reporte {tiempoDesde(reporteMs)} · {horaReporte(reporteMs)}
                   </span>
                 </div>
               </Popup>
