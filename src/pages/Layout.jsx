@@ -295,22 +295,6 @@ export default function Layout({ children, currentPageName }) {
               <span className="font-medium">Documentación Legal</span>
             </Link>
 
-            {/* BOTÓN: SOLICITUDES DE ELIMINACIÓN (contador solo para el admin) */}
-            <Link
-              to={createPageUrl("SolicitudesEliminacion")}
-              className={navItemClass(
-                location.pathname === createPageUrl("SolicitudesEliminacion"),
-              )}
-            >
-              <Inbox className="w-5 h-5" />
-              <span className="font-medium flex-1">Solicitudes</span>
-              {esAdmin && solicitudesPendientes > 0 && (
-                <span className="min-w-5 h-5 px-1.5 rounded-full bg-red-600 text-white text-[10px] font-black flex items-center justify-center">
-                  {solicitudesPendientes > 9 ? "9+" : solicitudesPendientes}
-                </span>
-              )}
-            </Link>
-
             {/* SECCIÓN: CATÁLOGOS (Desplegable) */}
             <div className="space-y-1">
               <button
@@ -378,6 +362,22 @@ export default function Layout({ children, currentPageName }) {
                 </div>
               )}
             </div>
+
+            {/* BOTÓN: SOLICITUDES DE ELIMINACIÓN (contador solo para el admin) */}
+            <Link
+              to={createPageUrl("SolicitudesEliminacion")}
+              className={navItemClass(
+                location.pathname === createPageUrl("SolicitudesEliminacion"),
+              )}
+            >
+              <Inbox className="w-5 h-5" />
+              <span className="font-medium flex-1">Solicitudes</span>
+              {esAdmin && solicitudesPendientes > 0 && (
+                <span className="min-w-5 h-5 px-1.5 rounded-full bg-red-600 text-white text-[10px] font-black flex items-center justify-center">
+                  {solicitudesPendientes > 9 ? "9+" : solicitudesPendientes}
+                </span>
+              )}
+            </Link>
           </nav>
 
           {/* EXPERTO EN LOGÍSTICA IA — PAUSADO (oculto del menú).
