@@ -80,6 +80,9 @@ import autoTable from "jspdf-autotable";
 import { useToast } from "@/components/ui/use-toast";
 
 import { FECHA_LIMITE_ARCHIVO } from "@/lib/archivo";
+import { useRol } from "@/hooks/useRol";
+import { eliminarRegistro, invalidarEliminacion, mensajeEliminacion } from "@/lib/eliminaciones";
+import { useSolicitarEliminacion, EtiquetaSolicitada } from "@/components/solicitudes/useSolicitarEliminacion";
 
 function FitBounds({ points }) {
   const map = useMap();
@@ -325,6 +328,8 @@ export default function FuelViajes() {
   const [soloSinVincular, setSoloSinVincular] = useState(!!stateData.soloSinVincular);
   const [soloSinCombustible, setSoloSinCombustible] = useState(!!stateData.soloSinCombustible);
   const [viajeAEliminar, setViajeAEliminar] = useState(null);
+  const { esAdmin } = useRol();
+  const solicitudes = useSolicitarEliminacion("Viaje");
 
   // --- Estado para modal PDF de rendimientos ---
   const [modalPdfAbierto, setModalPdfAbierto] = useState(false);
@@ -712,13 +717,15 @@ export default function FuelViajes() {
   };
 
   const eliminarMutation = useMutation({
-    mutationFn: async (id) => {
-      const { error } = await supabase.from("Viaje").delete().eq("id", id);
-      if (error) throw new Error(error.message);
-    },
+    mutationFn: (id) => eliminarRegistro("Viaje", id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["viajes"] });
+      invalidarEliminacion(queryClient, "Viaje");
       setViajeAEliminar(null);
+      toast({ title: "Viaje eliminado" });
+    },
+    onError: (err) => {
+      setViajeAEliminar(null);
+      toast({ variant: "destructive", title: "No se pudo eliminar", description: mensajeEliminacion(err) });
     },
   });
 
@@ -895,7 +902,14 @@ export default function FuelViajes() {
     setPeriodoFiltro("todos");
   };
 
-  const confirmarEliminar = (viaje) => setViajeAEliminar(viaje);
+  const confirmarEliminar = (viaje) => {
+    if (esAdmin) return setViajeAEliminar(viaje);
+    const fecha = viaje.fecha ? format(new Date(String(viaje.fecha).slice(0, 10) + "T12:00:00"), "d MMM yyyy", { locale: es }) : "sin fecha";
+    solicitudes.solicitar(
+      viaje.id,
+      [`Viaje ${fecha}`, viaje.camion_nombre, viaje.conductor_nombre, viaje.ruta_ida].filter(Boolean).join(" · "),
+    );
+  };
   const handleEliminar = () => {
     if (viajeAEliminar) eliminarMutation.mutate(viajeAEliminar.id);
   };
@@ -2572,6 +2586,9 @@ export default function FuelViajes() {
                                     {viaje.notas}
                                   </p>
                                 )}
+                                {solicitudes.estaPendiente(viaje.id) && (
+                                  <EtiquetaSolicitada className="mt-2" />
+                                )}
                               </div>
                             </div>
                           </div>
@@ -3331,6 +3348,8 @@ export default function FuelViajes() {
           viaje={viajeRutaSeleccionado}
           onClose={() => setViajeRutaSeleccionado(null)}
         />
+
+        {solicitudes.dialogo}
       </div>
     </div>
   );

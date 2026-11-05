@@ -33,6 +33,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
+import { useRol } from "@/hooks/useRol";
+import { eliminarRegistro, invalidarEliminacion } from "@/lib/eliminaciones";
+import { useSolicitarEliminacion, EtiquetaSolicitada } from "@/components/solicitudes/useSolicitarEliminacion";
 import { formatearFecha } from "@/lib/fechas";
 import VisorDocumento from "./VisorDocumento";
 import { descargarDocumento, urlFirmada, urlsFirmadas } from "./storageDocs";
@@ -78,6 +81,12 @@ export default function DocumentosDialog({
   const [arrastrandoEn, setArrastrandoEn] = useState(null); // key del apartado
   const [verDoc, setVerDoc] = useState(null); // { doc, url }
   const [borrarDoc, setBorrarDoc] = useState(null);
+  const { esAdmin } = useRol();
+  const solicitudes = useSolicitarEliminacion("documentos_legales");
+  const pedirBorrar = (doc) => {
+    if (esAdmin) return setBorrarDoc(doc);
+    solicitudes.solicitar(doc.id, [tituloDoc(entidadTipo, doc), titulo].filter(Boolean).join(" · "));
+  };
   const [abriendo, setAbriendo] = useState(null);
   const [bajando, setBajando] = useState(null);
 
@@ -212,14 +221,9 @@ export default function DocumentosDialog({
   });
 
   const borrarMutation = useMutation({
-    mutationFn: async (doc) => {
-      const { error } = await supabase.from("documentos_legales").delete().eq("id", doc.id);
-      if (error) throw error;
-      // La fila es la fuente de verdad; el objeto se borra después para que un
-      // fallo de Storage no deje el documento visible pero ya inaccesible.
-      await supabase.storage.from(BUCKET_DOCS).remove([doc.storage_path]);
-    },
+    mutationFn: (doc) => eliminarRegistro("documentos_legales", doc.id),
     onSuccess: () => {
+      invalidarEliminacion(queryClient, "documentos_legales");
       queryClient.invalidateQueries({ queryKey: QK_DOCS });
       setBorrarDoc(null);
       toast({ title: "Documento eliminado" });
@@ -323,7 +327,8 @@ export default function DocumentosDialog({
                   onSubir={() => subirMutation.mutate(pendiente)}
                   onVer={handleVer}
                   onDescargar={handleDescargar}
-                  onBorrar={setBorrarDoc}
+                  onBorrar={pedirBorrar}
+                  estaPendiente={solicitudes.estaPendiente}
                 />
               ))
             )}
@@ -358,6 +363,8 @@ export default function DocumentosDialog({
         titulo={titulo}
         onClose={() => setVerDoc(null)}
       />
+
+      {solicitudes.dialogo}
 
       <AlertDialog open={!!borrarDoc} onOpenChange={(v) => !v && setBorrarDoc(null)}>
         <AlertDialogContent>
@@ -418,6 +425,7 @@ function ApartadoDocumento({
   onVer,
   onDescargar,
   onBorrar,
+  estaPendiente,
 }) {
   const Icono = tipo.icon;
   const lleno = docs.length > 0;
@@ -489,6 +497,7 @@ function ApartadoDocumento({
             onVer={() => onVer(doc)}
             onDescargar={() => onDescargar(doc)}
             onBorrar={() => onBorrar(doc)}
+            pendiente={estaPendiente(doc.id)}
           />
         ))}
 
@@ -615,6 +624,7 @@ function FilaDocumento({
   onVer,
   onDescargar,
   onBorrar,
+  pendiente,
 }) {
   const meta = tipoDoc(entidadTipo, doc.tipo_doc);
   const Icono = meta.icon;
@@ -641,6 +651,7 @@ function FilaDocumento({
           {mostrarVenc && doc.fecha_vencimiento && (
             <StatusBadge fechaStr={doc.fecha_vencimiento} />
           )}
+          {pendiente && <EtiquetaSolicitada />}
         </div>
         <p className="text-[11px] text-muted-foreground truncate mt-0.5">
           {formatoTamano(doc.tamano_bytes)}

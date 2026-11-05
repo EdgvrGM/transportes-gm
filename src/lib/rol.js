@@ -10,3 +10,17 @@ export async function getCuentaCliente() {
   if (error) return null;
   return data ?? null;
 }
+
+// Rol del usuario interno: "admin" | "operativo". Sin fila en perfil_usuario
+// (o si falla la consulta) es operativo: menor privilegio por defecto.
+export async function getRolInterno() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return null;
+  const { data, error } = await supabase
+    .from("perfil_usuario")
+    .select("rol")
+    .eq("user_id", session.user.id)
+    .maybeSingle();
+  if (error) return "operativo";
+  return data?.rol ?? "operativo";
+}

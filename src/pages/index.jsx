@@ -36,6 +36,7 @@ const Mantenimiento = lazy(() => import("./Mantenimiento"));
 const CostosUnidad = lazy(() => import("./CostosUnidad"));
 const ControlVacios = lazy(() => import("./ControlVacios"));
 const CuentasCliente = lazy(() => import("./CuentasCliente.jsx"));
+const SolicitudesEliminacion = lazy(() => import("./SolicitudesEliminacion.jsx"));
 const PortalCliente = lazy(() => import("./PortalCliente.jsx"));
 
 // Solo se usan los nombres (para decidir si la ruta lleva sidebar en Layout).
@@ -60,6 +61,7 @@ const PAGE_NAMES = [
   "CostosUnidad",
   "ControlVacios",
   "CuentasCliente",
+  "SolicitudesEliminacion",
   "PortalCliente",
 ];
 
@@ -152,6 +154,7 @@ function PagesContent() {
             <Route path="/costosunidad" element={<CostosUnidad />} />
             <Route path="/controlvacios" element={<ControlVacios />} />
             <Route path="/cuentascliente" element={<CuentasCliente />} />
+            <Route path="/solicitudeseliminacion" element={<SolicitudesEliminacion />} />
             <Route path="/iaauditorchat" element={<IAAuditorChat />} />
             <Route path="/expertologistica" element={<ExpertoLogistica />} />
           </Route>

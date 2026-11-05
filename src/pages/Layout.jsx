@@ -24,8 +24,11 @@ import {
   Receipt,
   Container,
   KeyRound,
+  Inbox,
 } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
+import { useRol } from "@/hooks/useRol";
+import { useContadorSolicitudes } from "@/components/solicitudes/useSolicitudes";
 
 // Páginas que pertenecen al sistema interno (muestran el sidebar/layout completo).
 // Definido a nivel de módulo para no recrear el array en cada render.
@@ -47,6 +50,7 @@ const SYSTEM_PAGES = [
   "CostosUnidad",
   "ControlVacios",
   "CuentasCliente",
+  "SolicitudesEliminacion",
 ];
 
 export const TrailerIcon = ({ className, ...props }) => (
@@ -76,6 +80,13 @@ export default function Layout({ children, currentPageName }) {
   // Estados para controlar qué secciones desplegables están abiertas
   const [openCatalogos, setOpenCatalogos] = useState(false);
 
+  const isFuelSystem = useMemo(() => {
+    return currentPageName && SYSTEM_PAGES.includes(currentPageName);
+  }, [currentPageName]);
+
+  const { rol, esAdmin } = useRol();
+  const solicitudesPendientes = useContadorSolicitudes(Boolean(isFuelSystem && esAdmin));
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/login");
@@ -101,10 +112,6 @@ export default function Layout({ children, currentPageName }) {
   const isPublicRoute = ["/", "/home", "/login"].includes(
     location.pathname.toLowerCase(),
   );
-
-  const isFuelSystem = useMemo(() => {
-    return currentPageName && SYSTEM_PAGES.includes(currentPageName);
-  }, [currentPageName]);
 
   if (isPublicRoute || !isFuelSystem) {
     return <>{children}</>;
@@ -176,6 +183,11 @@ export default function Layout({ children, currentPageName }) {
             <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground opacity-70">
               Gestión Integral
             </p>
+            {rol === "operativo" && (
+              <span className="mt-2 rounded-md border border-border bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Cuenta operativa
+              </span>
+            )}
           </div>
         </div>
 
@@ -281,6 +293,22 @@ export default function Layout({ children, currentPageName }) {
             >
               <ShieldCheck className="w-5 h-5" />
               <span className="font-medium">Documentación Legal</span>
+            </Link>
+
+            {/* BOTÓN: SOLICITUDES DE ELIMINACIÓN (contador solo para el admin) */}
+            <Link
+              to={createPageUrl("SolicitudesEliminacion")}
+              className={navItemClass(
+                location.pathname === createPageUrl("SolicitudesEliminacion"),
+              )}
+            >
+              <Inbox className="w-5 h-5" />
+              <span className="font-medium flex-1">Solicitudes</span>
+              {esAdmin && solicitudesPendientes > 0 && (
+                <span className="min-w-5 h-5 px-1.5 rounded-full bg-red-600 text-white text-[10px] font-black flex items-center justify-center">
+                  {solicitudesPendientes > 9 ? "9+" : solicitudesPendientes}
+                </span>
+              )}
             </Link>
 
             {/* SECCIÓN: CATÁLOGOS (Desplegable) */}

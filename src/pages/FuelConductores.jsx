@@ -37,6 +37,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+import { useRol } from "@/hooks/useRol";
+import { eliminarRegistro, invalidarEliminacion } from "@/lib/eliminaciones";
+import { useSolicitarEliminacion, EtiquetaSolicitada } from "@/components/solicitudes/useSolicitarEliminacion";
 import { Plus, Edit, Phone, CreditCard, Loader2, Trash2, User } from "lucide-react";
 
 import { FECHA_LIMITE_ARCHIVO } from "@/lib/archivo";
@@ -44,6 +47,8 @@ import { FECHA_LIMITE_ARCHIVO } from "@/lib/archivo";
 export default function FuelConductores() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { esAdmin } = useRol();
+  const solicitudes = useSolicitarEliminacion("Conductor");
   const [dialogAbierto, setDialogAbierto] = useState(false);
   const [conductorEditando, setConductorEditando] = useState(null);
   const [conductorAEliminar, setConductorAEliminar] = useState(null);
@@ -122,28 +127,9 @@ export default function FuelConductores() {
   });
 
   const eliminarMutation = useMutation({
-    mutationFn: async (id) => {
-      // Verificar si tiene viajes activos (post-archivo)
-      const { data: viajesActivos } = await supabase
-        .from("Viaje")
-        .select("id")
-        .eq("conductor_id", id)
-        .gte("fecha", FECHA_LIMITE_ARCHIVO)
-        .limit(1);
-
-      if (viajesActivos?.length > 0) {
-        throw new Error("TIENE_VIAJES_ACTIVOS");
-      }
-
-      // Sin viajes activos — desligar registros históricos para poder eliminar
-      await supabase.from("viajes_registrados").update({ conductor_id: null }).eq("conductor_id", id);
-      await supabase.from("Viaje").update({ conductor_id: null }).eq("conductor_id", id);
-
-      const { error } = await supabase.from("Conductor").delete().eq("id", id);
-      if (error) throw new Error(error.message);
-    },
+    mutationFn: (id) => eliminarRegistro("Conductor", id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["conductores"] });
+      invalidarEliminacion(queryClient, "Conductor");
       setConductorAEliminar(null);
       setDeleteError(null);
       toast({ title: "Conductor eliminado", description: "El registro se eliminó correctamente." });
@@ -212,6 +198,7 @@ export default function FuelConductores() {
   };
 
   const confirmarEliminar = (conductor) => {
+    if (!esAdmin) return solicitudes.solicitar(conductor.id, `Conductor ${conductor.nombre}`);
     setDeleteError(null);
     setConductorAEliminar(conductor);
   };
@@ -302,7 +289,7 @@ export default function FuelConductores() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="font-semibold text-foreground truncate">{conductor.nombre}</p>
+                        <p className="font-semibold text-foreground truncate">{conductor.nombre}</p>{solicitudes.estaPendiente(conductor.id) && <EtiquetaSolicitada className="mt-1" />}
                         <Badge
                           variant="outline"
                           className={`shrink-0 text-[10px] px-1.5 py-0 ${
@@ -379,7 +366,7 @@ export default function FuelConductores() {
                               <div className="w-10 h-10 bg-indigo-100/80 dark:bg-indigo-900/40 rounded-xl flex items-center justify-center text-indigo-600 transition-all group-hover:bg-indigo-600 group-hover:text-white group-hover:scale-110 shadow-sm border border-indigo-200/50 dark:border-indigo-800/50">
                                 <User className="w-5 h-5" />
                               </div>
-                              <span className="font-black text-slate-900 dark:text-slate-100 tracking-tight">{conductor.nombre}</span>
+                              <span className="font-black text-slate-900 dark:text-slate-100 tracking-tight">{conductor.nombre}</span>{solicitudes.estaPendiente(conductor.id) && <EtiquetaSolicitada className="mt-1" />}
                             </div>
                           </TableCell>
                           <TableCell className="text-center">
@@ -450,7 +437,7 @@ export default function FuelConductores() {
                               <div className="w-10 h-10 bg-slate-100/80 dark:bg-zinc-800/80 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-red-600 group-hover:text-white transition-all shadow-sm">
                                 <User className="w-5 h-5" />
                               </div>
-                              <span className="font-black text-slate-500 dark:text-slate-400 tracking-tight">{conductor.nombre}</span>
+                              <span className="font-black text-slate-500 dark:text-slate-400 tracking-tight">{conductor.nombre}</span>{solicitudes.estaPendiente(conductor.id) && <EtiquetaSolicitada className="mt-1" />}
                             </div>
                           </TableCell>
                           <TableCell className="text-center">
@@ -636,6 +623,8 @@ export default function FuelConductores() {
             </form>
           </DialogContent>
         </Dialog>
+
+        {solicitudes.dialogo}
 
         <AlertDialog
           open={!!conductorAEliminar}

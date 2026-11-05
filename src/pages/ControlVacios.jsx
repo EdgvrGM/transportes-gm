@@ -61,6 +61,9 @@ import { es } from "date-fns/locale";
 import { localDateStr, formatearFecha } from "@/lib/fechas";
 import { lunesDeSemana, sumarDias } from "@/lib/semana";
 import VisorImagen from "@/components/fuel/VisorImagen";
+import { useRol } from "@/hooks/useRol";
+import { eliminarRegistro, invalidarEliminacion, mensajeEliminacion } from "@/lib/eliminaciones";
+import { useSolicitarEliminacion, EtiquetaSolicitada } from "@/components/solicitudes/useSolicitarEliminacion";
 
 const ESTATUS_VACIOS = [
   { value: "pendiente_vacio", label: "Pendiente entrega de vacío", corto: "Pendiente", badge: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300 border border-orange-200 dark:border-orange-800", stripe: "bg-orange-400" },
@@ -359,6 +362,7 @@ function TarjetaVacio({ c, ctx, mostrarFecha = false }) {
                 Cargado {ctx.formatearFecha(c.fecha_carga)}
               </p>
             )}
+            {ctx.estaPendiente(c.id) && <EtiquetaSolicitada className="mt-1" />}
           </div>
           <div className="flex items-center shrink-0 -mr-1 -mt-1">
             {c.fotos_urls?.length > 0 && (
@@ -377,7 +381,7 @@ function TarjetaVacio({ c, ctx, mostrarFecha = false }) {
             <Button variant="ghost" size="sm" aria-label="Editar" className="rounded-lg h-7 w-7 p-0 cursor-pointer text-muted-foreground hover:text-foreground" onClick={() => ctx.onEditar(c)}>
               <Edit className="w-3.5 h-3.5" />
             </Button>
-            <Button variant="ghost" size="sm" aria-label="Eliminar" className="rounded-lg h-7 w-7 p-0 text-red-500/70 hover:text-red-500 hover:bg-red-500/10 cursor-pointer" onClick={() => ctx.onEliminar(c.id)}>
+            <Button variant="ghost" size="sm" aria-label="Eliminar" className="rounded-lg h-7 w-7 p-0 text-red-500/70 hover:text-red-500 hover:bg-red-500/10 cursor-pointer" onClick={() => ctx.onEliminar(c)}>
               <Trash2 className="w-3.5 h-3.5" />
             </Button>
           </div>
@@ -476,6 +480,8 @@ export default function ControlVacios() {
   const [esEdicion, setEsEdicion] = useState(false);
   const [formData, setFormData] = useState(FORM_VACIO);
   const [contenedorAEliminar, setContenedorAEliminar] = useState(null);
+  const { esAdmin } = useRol();
+  const solicitudes = useSolicitarEliminacion("contenedores_vacios");
   const [popoverEstatus, setPopoverEstatus] = useState(null);
   const [fotoVisor, setFotoVisor] = useState(null);
   const [galeriaFotos, setGaleriaFotos] = useState(null);
@@ -813,23 +819,9 @@ export default function ControlVacios() {
   });
 
   const eliminarMutation = useMutation({
-    mutationFn: async (id) => {
-      // Borrado best-effort de las fotos del contenedor (carpeta vacios/{id}).
-      // Si falla el Storage, no bloqueamos la eliminación del registro.
-      try {
-        const { data: archivos } = await supabase.storage.from("vacios").list(`vacios/${id}`);
-        if (archivos?.length) {
-          await supabase.storage.from("vacios").remove(archivos.map((f) => `vacios/${id}/${f.name}`));
-        }
-      } catch (_e) {
-        // ignorar errores de limpieza de Storage
-      }
-      const { error } = await supabase.from("contenedores_vacios").delete().eq("id", id);
-      if (error) throw error;
-    },
+    mutationFn: (id) => eliminarRegistro("contenedores_vacios", id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["controlVacios"] });
-      queryClient.invalidateQueries({ queryKey: ["panel-vacios-pendientes"] });
+      invalidarEliminacion(queryClient, "contenedores_vacios");
       setContenedorAEliminar(null);
       toast({ title: "Contenedor eliminado", description: "El registro se eliminó correctamente." });
     },
@@ -838,7 +830,7 @@ export default function ControlVacios() {
       toast({
         variant: "destructive",
         title: "Error al eliminar",
-        description: err?.message || "No se pudo eliminar el contenedor.",
+        description: mensajeEliminacion(err),
       });
     },
   });
@@ -1035,7 +1027,18 @@ export default function ControlVacios() {
     popoverEstatus,
     setPopoverEstatus,
     onEditar: abrirEditar,
-    onEliminar: setContenedorAEliminar,
+    onEliminar: (c) => {
+      if (esAdmin) return setContenedorAEliminar(c.id);
+      solicitudes.solicitar(
+        c.id,
+        [
+          `Contenedor ${c.numero_contenedor}${c.numero_contenedor_2 ? ` + ${c.numero_contenedor_2}` : ""}`,
+          c.fecha_carga && `cargado ${formatearFecha(c.fecha_carga)}`,
+          c.destino,
+        ].filter(Boolean).join(" · "),
+      );
+    },
+    estaPendiente: solicitudes.estaPendiente,
     onFotos: setGaleriaFotos,
     onEntregar: abrirEntregaRapida,
     onCambiarEstatus: (id, estatus) => actualizarEstatusMutation.mutate({ id, estatus }),
@@ -1669,12 +1672,15 @@ export default function ControlVacios() {
                         className="w-full h-full object-cover cursor-zoom-in"
                         onClick={() => setFotoVisor(url)}
                       />
-                      <button
-                        onClick={() => setFotoAEliminar(url)}
-                        className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
+                      {/* El operativo solo quita fotos subidas en esta sesión; las ya guardadas requieren al admin. */}
+                      {(esAdmin || fotosSubidasSesion.current.has(url)) && (
+                        <button
+                          onClick={() => setFotoAEliminar(url)}
+                          className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1837,6 +1843,8 @@ export default function ControlVacios() {
 
       {/* Visor de fotos */}
       <VisorImagen url={fotoVisor} onClose={() => setFotoVisor(null)} />
+
+      {solicitudes.dialogo}
 
       {/* Confirmar eliminar contenedor */}
       <AlertDialog open={!!contenedorAEliminar} onOpenChange={(open) => !open && setContenedorAEliminar(null)}>

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/supabaseClient";
 import { useToast } from "@/components/ui/use-toast";
 import { TIPOS_UNIDAD, etiquetaUnidad, keyUnidad } from "./costosConfig";
+import { eliminarRegistro, invalidarEliminacion, mensajeEliminacion } from "@/lib/eliminaciones";
 
 // Todas las queries del módulo cuelgan de "costos": invalidar ["costos"]
 // refresca tabla semanal, detalle por unidad y el widget del panel a la vez.
@@ -82,16 +83,13 @@ export function useEliminarCosto() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   return useMutation({
-    mutationFn: async (costo) => {
-      const { error } = await supabase.from("CostoUnidad").delete().eq("id", costo.id);
-      if (error) throw error;
-    },
+    mutationFn: (costo) => eliminarRegistro("CostoUnidad", costo.id),
     onSuccess: () => {
-      invalidarCostos(queryClient);
+      invalidarEliminacion(queryClient, "CostoUnidad");
       toast({ title: "Gasto eliminado" });
     },
     onError: (e) => {
-      toast({ variant: "destructive", title: "No se pudo eliminar", description: e.message });
+      toast({ variant: "destructive", title: "No se pudo eliminar", description: mensajeEliminacion(e) });
     },
   });
 }

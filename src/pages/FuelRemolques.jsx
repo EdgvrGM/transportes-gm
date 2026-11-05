@@ -37,14 +37,18 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/components/ui/use-toast";
+import { useRol } from "@/hooks/useRol";
+import { eliminarRegistro, invalidarEliminacion } from "@/lib/eliminaciones";
+import { useSolicitarEliminacion, EtiquetaSolicitada } from "@/components/solicitudes/useSolicitarEliminacion";
 import { Loader2, Plus, Edit, Trash2, Package } from "lucide-react";
 import { TrailerIcon } from "./Layout";
 
-import { FECHA_LIMITE_ARCHIVO } from "@/lib/archivo";
 
 export default function FuelRemolques() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { esAdmin } = useRol();
+  const solicitudes = useSolicitarEliminacion("Remolque");
   const [dialogAbierto, setDialogAbierto] = useState(false);
   const [remolqueAEliminar, setRemolqueAEliminar] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -95,27 +99,9 @@ export default function FuelRemolques() {
   });
 
   const eliminarMutation = useMutation({
-    mutationFn: async (id) => {
-      // Verificar si tiene viajes activos (post-archivo)
-      const { data: viajesActivos } = await supabase
-        .from("Viaje")
-        .select("id")
-        .eq("remolque_id", id)
-        .gte("fecha", FECHA_LIMITE_ARCHIVO)
-        .limit(1);
-
-      if (viajesActivos?.length > 0) {
-        throw new Error("TIENE_VIAJES_ACTIVOS");
-      }
-
-      // Sin viajes activos — desligar registros históricos para poder eliminar
-      await supabase.from("Viaje").update({ remolque_id: null }).eq("remolque_id", id);
-
-      const { error } = await supabase.from("Remolque").delete().eq("id", id);
-      if (error) throw error;
-    },
+    mutationFn: (id) => eliminarRegistro("Remolque", id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["remolques"] });
+      invalidarEliminacion(queryClient, "Remolque");
       setRemolqueAEliminar(null);
       setDeleteError(null);
       toast({ title: "Remolque eliminado", description: "El registro se eliminó correctamente." });
@@ -128,6 +114,12 @@ export default function FuelRemolques() {
       }
     },
   });
+
+  const pedirEliminar = (remolque) => {
+    if (esAdmin) return setRemolqueAEliminar(remolque.id);
+    solicitudes.solicitar(remolque.id, `Remolque ${remolque.placas} · ${remolque.tipo || "Caja Seca"}`);
+  };
+
 
   const abrirDialog = (remolque = null) => {
     setErrorMsg(null); // Limpiamos errores pasados
@@ -195,7 +187,7 @@ export default function FuelRemolques() {
                         <TrailerIcon className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="font-black text-slate-900 dark:text-slate-100 tracking-tight leading-none">{remolque.placas}</p>
+                        <p className="font-black text-slate-900 dark:text-slate-100 tracking-tight leading-none">{remolque.placas}</p>{solicitudes.estaPendiente(remolque.id) && <EtiquetaSolicitada className="mt-1" />}
                         <p className="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-tighter">{remolque.tipo || "Caja Seca"}</p>
                       </div>
                     </div>
@@ -204,7 +196,7 @@ export default function FuelRemolques() {
                         className="h-9 w-9 text-blue-600 bg-blue-50/50 hover:bg-blue-600 hover:text-white rounded-xl transition-all shadow-sm">
                         <Edit className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => setRemolqueAEliminar(remolque.id)}
+                      <Button variant="ghost" size="icon" onClick={() => pedirEliminar(remolque)}
                         className="h-9 w-9 text-red-600 bg-red-50/50 hover:bg-red-600 hover:text-white rounded-xl transition-all shadow-sm">
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -240,7 +232,7 @@ export default function FuelRemolques() {
                             <div className="w-10 h-10 bg-blue-100/50 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-blue-600 transition-all group-hover:bg-blue-600 group-hover:text-white group-hover:scale-110 shadow-sm border border-blue-200/50 dark:border-blue-800/50">
                               <TrailerIcon className="w-5 h-5" />
                             </div>
-                            <span className="font-black text-slate-900 dark:text-slate-100 tracking-tight">{remolque.placas}</span>
+                            <span className="font-black text-slate-900 dark:text-slate-100 tracking-tight">{remolque.placas}</span>{solicitudes.estaPendiente(remolque.id) && <EtiquetaSolicitada className="mt-1" />}
                           </div>
                         </TableCell>
                         <TableCell className="text-center">
@@ -254,7 +246,7 @@ export default function FuelRemolques() {
                               className="h-9 w-9 text-blue-600 bg-blue-50/50 hover:bg-blue-600 hover:text-white rounded-xl transition-all shadow-sm">
                               <Edit className="w-4 h-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => setRemolqueAEliminar(remolque.id)}
+                            <Button variant="ghost" size="icon" onClick={() => pedirEliminar(remolque)}
                               className="h-9 w-9 text-red-600 bg-red-50/50 hover:bg-red-600 hover:text-white rounded-xl transition-all shadow-sm">
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -346,6 +338,8 @@ export default function FuelRemolques() {
         </Dialog>
 
         {/* MODAL ELIMINAR */}
+        {solicitudes.dialogo}
+
         <AlertDialog
           open={!!remolqueAEliminar}
           onOpenChange={() => { setRemolqueAEliminar(null); setDeleteError(null); }}

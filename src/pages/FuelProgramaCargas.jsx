@@ -69,6 +69,14 @@ import VisorImagen from "@/components/fuel/VisorImagen";
 import { useToast } from "@/components/ui/use-toast";
 
 import { FECHA_LIMITE_ARCHIVO } from "@/lib/archivo";
+import { useRol } from "@/hooks/useRol";
+import {
+  eliminarRegistro,
+  invalidarEliminacion,
+  limpiarFotosDeViajes,
+  mensajeEliminacion,
+} from "@/lib/eliminaciones";
+import { useSolicitarEliminacion, EtiquetaSolicitada } from "@/components/solicitudes/useSolicitarEliminacion";
 import {
   DIAS_POR_SEMANA,
   diasDeSemana,
@@ -197,21 +205,6 @@ function esPDFEvidencia(url) {
   return /\.pdf($|\?)/i.test(url || "");
 }
 
-// Borra todas las fotos de uno o varios viajes (carpeta evidencias/{viajeId},
-// exclusiva de ese viaje). Best-effort: no bloquea si el Storage falla.
-async function limpiarFotosDeViajes(viajeIds) {
-  for (const vid of viajeIds) {
-    try {
-      const { data: files } = await supabase.storage.from("evidencias").list(`evidencias/${vid}`);
-      if (files?.length) {
-        await supabase.storage.from("evidencias").remove(files.map((f) => `evidencias/${vid}/${f.name}`));
-      }
-    } catch (_e) {
-      // ignorar errores de limpieza de Storage
-    }
-  }
-}
-
 export default function FuelProgramaCargas() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -220,6 +213,12 @@ export default function FuelProgramaCargas() {
   const [dialogVerAbierto, setDialogVerAbierto] = useState(false);
   const [semanaAEliminar, setSemanaAEliminar] = useState(null);
   const [viajeAEliminar, setViajeAEliminar] = useState(null); // { index, dia }
+  const { esAdmin } = useRol();
+  const solicitudesSemana = useSolicitarEliminacion("ProgramaCargas");
+  const solicitudesViaje = useSolicitarEliminacion("viajes_registrados");
+  // Viajes de la semana en edición que ya existen en BD. Quitar uno guardado es
+  // un DELETE al guardar la semana → el operativo lo solicita en vez de quitarlo.
+  const [idsGuardados, setIdsGuardados] = useState(() => new Set());
   const [confirmarNuevaSemana, setConfirmarNuevaSemana] = useState(false);
   const [programaSeleccionado, setProgramaSeleccionado] = useState(null);
   const [diaActivo, setDiaActivo] = useState(DIAS_NUEVA_SEMANA[0]);
@@ -524,28 +523,15 @@ export default function FuelProgramaCargas() {
   });
 
   const eliminarMutation = useMutation({
-    mutationFn: async (id) => {
-      // Reunir los viajes de la semana antes de borrarla (la cascada los elimina)
-      // para poder limpiar sus fotos del Storage.
-      const { data: viajesDeSemana } = await supabase
-        .from("viajes_registrados")
-        .select("id")
-        .eq("programa_id", id);
-
-      const { error } = await supabase
-        .from("ProgramaCargas")
-        .delete()
-        .eq("id", id);
-      if (error) throw error;
-
-      if (viajesDeSemana?.length) {
-        await limpiarFotosDeViajes(viajesDeSemana.map((v) => v.id));
-      }
-    },
+    mutationFn: (id) => eliminarRegistro("ProgramaCargas", id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["programaCargas"] });
+      invalidarEliminacion(queryClient, "ProgramaCargas");
       setSemanaAEliminar(null);
       setDialogVerAbierto(false);
+    },
+    onError: (err) => {
+      setSemanaAEliminar(null);
+      toast({ variant: "destructive", title: "No se pudo eliminar la semana", description: mensajeEliminacion(err) });
     },
   });
 
@@ -692,6 +678,7 @@ export default function FuelProgramaCargas() {
       fecha_fin: "",
       programacion: plantillaVacia(),
     });
+    setIdsGuardados(new Set());
     setDiaActivo(DIAS_NUEVA_SEMANA[0]);
     setDialogAbierto(true);
   };
@@ -705,6 +692,7 @@ export default function FuelProgramaCargas() {
       .from("viajes_registrados")
       .select("*")
       .eq("programa_id", programa.id);
+    setIdsGuardados(new Set((realTrips || []).map((t) => String(t.id))));
 
     const dias = diasDeSemana(programa.fecha_inicio);
     let programacionUI = plantillaVacia(programa.fecha_inicio);
@@ -837,6 +825,32 @@ export default function FuelProgramaCargas() {
     const c = camiones.find((c) => String(c.id) === String(id));
     return c ? `${c.nombre} (${c.placas})` : "N/A";
   };
+  const pedirEliminarSemana = (programa) => {
+    if (!programa) return;
+    if (esAdmin) return setSemanaAEliminar(programa.id);
+    solicitudesSemana.solicitar(
+      programa.id,
+      `Semana ${programa.titulo || ""} (${formatearFechaDisplay(programa.fecha_inicio)} al ${formatearFechaDisplay(programa.fecha_fin)})`.trim(),
+    );
+  };
+
+  const pedirQuitarViaje = (viaje, index) => {
+    if (!esAdmin && idsGuardados.has(String(viaje.id))) {
+      solicitudesViaje.solicitar(
+        viaje.id,
+        [
+          formData.titulo,
+          diaActivo,
+          viaje.camion && getCamionName(viaje.camion),
+          viaje.conductor && getConductorName(viaje.conductor),
+          viaje.destino && `→ ${viaje.destino}`,
+        ].filter(Boolean).join(" · "),
+      );
+      return;
+    }
+    setViajeAEliminar({ index, dia: diaActivo });
+  };
+
   const getAbreviacionTipo = (tipo) => {
     if (!tipo) return "";
     const t = tipo.toLowerCase();
@@ -1020,8 +1034,11 @@ export default function FuelProgramaCargas() {
             <DialogHeader className="px-4 md:px-8 py-4 md:py-6 bg-card border-b border-border shrink-0">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                  <DialogTitle className="text-2xl md:text-3xl font-black">
+                  <DialogTitle className="text-2xl md:text-3xl font-black flex flex-wrap items-center gap-2">
                     {programaSeleccionado?.titulo}
+                    {programaSeleccionado && solicitudesSemana.estaPendiente(programaSeleccionado.id) && (
+                      <EtiquetaSolicitada />
+                    )}
                   </DialogTitle>
                   <DialogDescription className="text-sm font-bold text-slate-500 uppercase tracking-widest mt-1">
                     {formatearFechaDisplay(programaSeleccionado?.fecha_inicio)} al{" "}
@@ -1041,7 +1058,7 @@ export default function FuelProgramaCargas() {
                     variant="ghost"
                     size="sm"
                     className="rounded-xl font-bold text-red-500 hover:bg-red-500/10 gap-2"
-                    onClick={() => setSemanaAEliminar(programaSeleccionado?.id)}
+                    onClick={() => pedirEliminarSemana(programaSeleccionado)}
                   >
                     <Trash2 className="w-4 h-4" /> <span className="hidden sm:inline">Eliminar</span>
                   </Button>
@@ -1398,11 +1415,17 @@ export default function FuelProgramaCargas() {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full"
-                          onClick={() => setViajeAEliminar({ index, dia: diaActivo })}
+                          onClick={() => pedirQuitarViaje(viaje, index)}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
+
+                      {solicitudesViaje.estaPendiente(viaje.id) && (
+                        <div className="w-full md:col-span-full">
+                          <EtiquetaSolicitada />
+                        </div>
+                      )}
 
                       <div className="space-y-1.5 w-full">
                         <Label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider">
@@ -1564,7 +1587,7 @@ export default function FuelProgramaCargas() {
                           variant="ghost"
                           size="icon"
                           className="h-10 w-10 text-slate-400 hover:text-red-600 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-900/10 dark:hover:bg-red-900/30"
-                          onClick={() => setViajeAEliminar({ index, dia: diaActivo })}
+                          onClick={() => pedirQuitarViaje(viaje, index)}
                         >
                           <Trash2 className="w-5 h-5" />
                         </Button>
@@ -1609,6 +1632,9 @@ export default function FuelProgramaCargas() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {solicitudesSemana.dialogo}
+        {solicitudesViaje.dialogo}
 
         {/* --- ALERT ELIMINAR --- */}
         <AlertDialog

@@ -15,12 +15,26 @@ import { formatearFecha } from "@/lib/fechas";
 import { formatCurrency } from "@/lib/formato";
 import { getCategoria } from "./costosConfig";
 import { useEliminarCosto } from "./useCostos";
+import { useRol } from "@/hooks/useRol";
+import { useSolicitarEliminacion, EtiquetaSolicitada } from "@/components/solicitudes/useSolicitarEliminacion";
 
 // `nombreUnidad(costo)` opcional: muestra la unidad en cada fila (útil cuando
 // la lista mezcla varias unidades).
 export default function ListaGastos({ gastos, onEditar, nombreUnidad, vacio = "Sin gastos registrados." }) {
   const eliminar = useEliminarCosto();
   const [porBorrar, setPorBorrar] = useState(null);
+  const { esAdmin } = useRol();
+  const solicitudes = useSolicitarEliminacion("CostoUnidad");
+
+  const pedirEliminar = (g) => {
+    if (esAdmin) return setPorBorrar(g);
+    solicitudes.solicitar(
+      g.id,
+      [`Gasto ${formatearFecha(g.fecha)}`, g.concepto, nombreUnidad?.(g), `$${formatCurrency(g.monto)}`]
+        .filter(Boolean)
+        .join(" · "),
+    );
+  };
 
   if (!gastos.length) {
     return <div className="text-sm text-muted-foreground text-center py-6">{vacio}</div>;
@@ -45,13 +59,14 @@ export default function ListaGastos({ gastos, onEditar, nombreUnidad, vacio = "S
                   {g.proveedor ? ` · ${g.proveedor}` : ""}
                 </div>
                 {g.notas && <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{g.notas}</div>}
+                {solicitudes.estaPendiente(g.id) && <EtiquetaSolicitada className="mt-1" />}
               </div>
               <div className="text-sm font-bold text-foreground tabular-nums shrink-0">${formatCurrency(g.monto)}</div>
               <div className="flex items-center shrink-0 -mr-2">
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEditar(g)} aria-label="Editar gasto" title="Editar">
                   <Pencil className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setPorBorrar(g)} aria-label="Eliminar gasto" title="Eliminar">
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => pedirEliminar(g)} aria-label="Eliminar gasto" title="Eliminar">
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
@@ -59,6 +74,8 @@ export default function ListaGastos({ gastos, onEditar, nombreUnidad, vacio = "S
           );
         })}
       </ul>
+
+      {solicitudes.dialogo}
 
       <AlertDialog open={Boolean(porBorrar)} onOpenChange={(o) => !o && setPorBorrar(null)}>
         <AlertDialogContent>

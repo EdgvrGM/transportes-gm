@@ -31,6 +31,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/components/ui/use-toast";
+import { useRol } from "@/hooks/useRol";
+import { eliminarRegistro, invalidarEliminacion } from "@/lib/eliminaciones";
+import { useSolicitarEliminacion, EtiquetaSolicitada } from "@/components/solicitudes/useSolicitarEliminacion";
 import {
   Plus,
   Trash2,
@@ -44,6 +47,8 @@ import {
 export default function Clientes() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { esAdmin } = useRol();
+  const solicitudes = useSolicitarEliminacion("Cliente");
   const [dialogAbierto, setDialogAbierto] = useState(false);
   const [clienteAEliminar, setClienteAEliminar] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -94,17 +99,9 @@ export default function Clientes() {
 
   // Eliminar Cliente
   const eliminarMutation = useMutation({
-    mutationFn: async (id) => {
-      const { data, error } = await supabase
-        .from("Cliente")
-        .delete()
-        .eq("id", id)
-        .select("id");
-      if (error) throw error;
-      if (!data || data.length === 0) throw new Error("No se pudo eliminar el cliente. Es posible que tenga viajes asociados.");
-    },
+    mutationFn: (id) => eliminarRegistro("Cliente", id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["clientes"] });
+      invalidarEliminacion(queryClient, "Cliente");
       setClienteAEliminar(null);
       setDeleteError(null);
       toast({ title: "Cliente eliminado", description: "El cliente se eliminó correctamente." });
@@ -118,6 +115,12 @@ export default function Clientes() {
       }
     },
   });
+
+  const pedirEliminar = (cliente) => {
+    if (esAdmin) return setClienteAEliminar(cliente.id);
+    solicitudes.solicitar(cliente.id, `Cliente ${cliente.nombre}${cliente.rfc ? ` · RFC ${cliente.rfc}` : ""}`);
+  };
+
 
   const abrirDialogNuevo = () => {
     setErrorMsg(null);
@@ -188,7 +191,7 @@ export default function Clientes() {
                         <Briefcase className="w-4 h-4" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-foreground truncate">{cliente.nombre}</p>
+                        <p className="font-semibold text-foreground truncate">{cliente.nombre}</p>{solicitudes.estaPendiente(cliente.id) && <EtiquetaSolicitada className="mt-1" />}
                         <p className="text-xs text-muted-foreground mt-0.5">{cliente.rfc || "Sin RFC"}</p>
                       </div>
                       <div className="flex gap-1 shrink-0">
@@ -199,7 +202,7 @@ export default function Clientes() {
                         </Button>
                         <Button variant="ghost" size="icon"
                           className="h-9 w-9 text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
-                          onClick={() => setClienteAEliminar(cliente.id)}>
+                          onClick={() => pedirEliminar(cliente)}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -225,7 +228,7 @@ export default function Clientes() {
                               <div className="w-10 h-10 bg-blue-100/50 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-blue-600 transition-all group-hover:bg-blue-600 group-hover:text-white group-hover:scale-110 shadow-sm border border-blue-200/50 dark:border-blue-800/50">
                                 <Briefcase className="w-5 h-5" />
                               </div>
-                              <span className="font-black text-slate-900 dark:text-slate-100 tracking-tight">{cliente.nombre}</span>
+                              <span className="font-black text-slate-900 dark:text-slate-100 tracking-tight">{cliente.nombre}</span>{solicitudes.estaPendiente(cliente.id) && <EtiquetaSolicitada className="mt-1" />}
                             </div>
                           </TableCell>
                           <TableCell className="text-center py-3 font-bold text-slate-500 dark:text-slate-400 text-xs uppercase tracking-tighter">
@@ -240,7 +243,7 @@ export default function Clientes() {
                               </Button>
                               <Button variant="ghost" size="icon"
                                 className="h-9 w-9 text-red-600 bg-red-50/50 hover:bg-red-600 hover:text-white rounded-xl transition-all shadow-sm"
-                                onClick={() => setClienteAEliminar(cliente.id)}>
+                                onClick={() => pedirEliminar(cliente)}>
                                 <Trash2 className="w-4 h-4" />
                               </Button>
                             </div>
@@ -328,6 +331,8 @@ export default function Clientes() {
         </Dialog>
 
         {/* MODAL ELIMINAR */}
+        {solicitudes.dialogo}
+
         <AlertDialog
           open={!!clienteAEliminar}
           onOpenChange={() => { setClienteAEliminar(null); setDeleteError(null); }}

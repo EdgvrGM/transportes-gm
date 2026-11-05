@@ -30,6 +30,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/components/ui/use-toast";
+import { useRol } from "@/hooks/useRol";
+import { eliminarRegistro, invalidarEliminacion } from "@/lib/eliminaciones";
+import { useSolicitarEliminacion, EtiquetaSolicitada } from "@/components/solicitudes/useSolicitarEliminacion";
 import { Plus, Edit, Truck, FileText, Loader2, Trash2 } from "lucide-react";
 
 import { FECHA_LIMITE_ARCHIVO } from "@/lib/archivo";
@@ -37,6 +40,8 @@ import { FECHA_LIMITE_ARCHIVO } from "@/lib/archivo";
 export default function FuelCamiones() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { esAdmin } = useRol();
+  const solicitudes = useSolicitarEliminacion("Camion");
   const [dialogAbierto, setDialogAbierto] = useState(false);
   const [camionEditando, setCamionEditando] = useState(null);
   const [camionAEliminar, setCamionAEliminar] = useState(null);
@@ -111,27 +116,9 @@ export default function FuelCamiones() {
   });
 
   const eliminarMutation = useMutation({
-    mutationFn: async (id) => {
-      // Verificar si tiene viajes activos (post-archivo)
-      const { data: viajesActivos } = await supabase
-        .from("Viaje")
-        .select("id")
-        .eq("camion_id", id)
-        .gte("fecha", FECHA_LIMITE_ARCHIVO)
-        .limit(1);
-
-      if (viajesActivos?.length > 0) {
-        throw new Error("TIENE_VIAJES_ACTIVOS");
-      }
-
-      // Sin viajes activos — desligar registros históricos para poder eliminar
-      await supabase.from("Viaje").update({ camion_id: null }).eq("camion_id", id);
-
-      const { error } = await supabase.from("Camion").delete().eq("id", id);
-      if (error) throw new Error(error.message);
-    },
+    mutationFn: (id) => eliminarRegistro("Camion", id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["camiones"] });
+      invalidarEliminacion(queryClient, "Camion");
       setCamionAEliminar(null);
       setDeleteError(null);
       toast({ title: "Camión eliminado", description: "El registro se eliminó correctamente." });
@@ -192,6 +179,7 @@ export default function FuelCamiones() {
   };
 
   const confirmarEliminar = (camion) => {
+    if (!esAdmin) return solicitudes.solicitar(camion.id, `Camión ${camion.nombre}${camion.placas ? ` (${camion.placas})` : ""}`);
     setDeleteError(null);
     setCamionAEliminar(camion);
   };
@@ -306,7 +294,7 @@ export default function FuelCamiones() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="font-semibold text-foreground truncate">{camion.nombre}</p>
+                        <p className="font-semibold text-foreground truncate">{camion.nombre}</p>{solicitudes.estaPendiente(camion.id) && <EtiquetaSolicitada className="mt-1" />}
                         <Badge variant="outline" className={`shrink-0 text-[10px] px-1.5 py-0 border ${getEstadoColor(camion.estado)}`}>
                           {getEstadoTexto(camion.estado)}
                         </Badge>
@@ -374,7 +362,7 @@ export default function FuelCamiones() {
                                 <Truck className="w-5 h-5" />
                               </div>
                               <div className="flex flex-col">
-                                <span className="font-black text-slate-900 dark:text-slate-100 tracking-tight leading-none">{camion.nombre}</span>
+                                <span className="font-black text-slate-900 dark:text-slate-100 tracking-tight leading-none">{camion.nombre}</span>{solicitudes.estaPendiente(camion.id) && <EtiquetaSolicitada className="mt-1" />}
                                 <span className="text-xs text-slate-600 dark:text-slate-400 font-bold uppercase mt-1.5">{camion.placas}</span>
                               </div>
                             </div>
@@ -489,6 +477,8 @@ export default function FuelCamiones() {
             </form>
           </DialogContent>
         </Dialog>
+
+        {solicitudes.dialogo}
 
         <AlertDialog
           open={!!camionAEliminar}
