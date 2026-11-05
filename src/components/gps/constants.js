@@ -37,3 +37,10 @@ export const VISITA_ACTIVA_MS   = 45000;
 
 // Mapa
 export const CENTRO_MX = [23.6345, -102.5528];
+
+// Mapa oscuro: Esri Dark Gray Canvas (sin API key). CARTO dark_all dejó de servir
+// sin key en 2026-11 (devuelve un tile "API KEY REQUIRED"). Usar <CapaOscura />.
+const ESRI_CANVAS = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas";
+export const TILE_OSCURO_BASE      = `${ESRI_CANVAS}/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}`;
+export const TILE_OSCURO_ETIQUETAS = `${ESRI_CANVAS}/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}`;
+export const TILE_OSCURO_MAX_NATIVO = 16; // Esri Canvas no tiene tiles más allá de z16; Leaflet los escala

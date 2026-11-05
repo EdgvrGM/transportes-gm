@@ -1212,7 +1212,8 @@ export default function FuelProgramaCargas() {
 
                           return (
                             <div className="relative flex flex-col md:flex-row justify-center items-center pt-4 md:pt-2 border-t border-border/40 mt-2 gap-3 min-h-[3rem]">
-                              {/* LEFT: evidencias */}
+                              {/* EVIDENCIAS — ARCHIVADO (2026-11): botón oculto, el gestor sigue en el código. Ver CLAUDE.md */}
+                              {false && (
                               <div className="md:absolute md:left-0 flex items-center justify-center w-full md:w-auto gap-2">
                                 <button
                                   onClick={() => handleAbrirGestorEvidencias(viaje)}
@@ -1226,6 +1227,7 @@ export default function FuelProgramaCargas() {
                                   {todasEntregadas ? "Evidencia entregada" : "Evidencia sin entregar"}
                                 </button>
                               </div>
+                              )}
 
                               {/* CENTER: main action */}
                               <div className="flex items-center justify-center w-full md:w-auto gap-2 z-10">
@@ -1789,7 +1791,7 @@ export default function FuelProgramaCargas() {
           </DialogContent>
         </Dialog>
 
-        {/* Dialog Gestión de Evidencias Rediseñado */}
+        {/* Dialog Gestión de Evidencias — ARCHIVADO (2026-11): ya no hay botón que lo abra. Ver CLAUDE.md */}
         <Dialog open={dialogEvidenciaAbierto} onOpenChange={(open) => {
           setDialogEvidenciaAbierto(open);
           if(!open) { setGaleriaAbierta({}); setFotoVisor(null); }

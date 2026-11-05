@@ -4,6 +4,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { createUnitIcon } from "@/components/gps/unitIconHelper";
 import { CENTRO_MX } from "@/components/gps/constants";
+import CapaOscura from "@/components/gps/CapaOscura";
 
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
@@ -92,14 +93,15 @@ export default function MiniMapaFlota({ positions = [], isLoading = false, heigh
         attributionControl={false}
         style={{ width: "100%", height: "100%" }}
       >
-        <TileLayer
-          attribution={isDark ? "&copy; CARTO" : "&copy; OpenStreetMap"}
-          url={
-            isDark
-              ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-              : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          }
-        />
+        {isDark ? (
+          <CapaOscura key="oscuro" />
+        ) : (
+          <TileLayer
+            key="claro"
+            attribution="&copy; OpenStreetMap"
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+        )}
 
         <InvalidateSize />
 

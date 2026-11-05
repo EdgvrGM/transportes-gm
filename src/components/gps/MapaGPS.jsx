@@ -6,6 +6,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { createUnitIcon } from "@/components/gps/unitIconHelper";
 import { PATIO_LAT, PATIO_LNG, PATIO_RADIO_M, CENTRO_MX, VELOCIDAD_EXCESO } from "@/components/gps/constants";
+import CapaOscura from "@/components/gps/CapaOscura";
 
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
@@ -283,7 +284,7 @@ export default function MapaGPS({
             <TileLayer attribution='&copy; Esri' url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" />
           </LayersControl.BaseLayer>
           <LayersControl.BaseLayer name="Oscuro">
-            <TileLayer attribution='&copy; CARTO' url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+            <CapaOscura />
           </LayersControl.BaseLayer>
         </LayersControl>
 

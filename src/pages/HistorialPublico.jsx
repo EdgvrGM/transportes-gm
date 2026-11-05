@@ -6,6 +6,7 @@ import "leaflet/dist/leaflet.css";
 import { supabase } from "@/supabaseClient";
 import { createUnitIcon } from "@/components/gps/unitIconHelper";
 import { WIALON_PROXY_URL, VELOCIDAD_EXCESO, CENTRO_MX, PING_HISTORIAL_MS } from "@/components/gps/constants";
+import CapaOscura from "@/components/gps/CapaOscura";
 import { Play, Pause, ChevronsLeft, ChevronsRight, ChevronLeft, ChevronRight } from "lucide-react";
 
 import icon from "leaflet/dist/images/marker-icon.png";
@@ -220,7 +221,7 @@ export default function HistorialPublico() {
                 <TileLayer attribution="&copy; Esri" url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" />
               </LayersControl.BaseLayer>
               <LayersControl.BaseLayer name="Oscuro">
-                <TileLayer attribution="&copy; CARTO" url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+                <CapaOscura />
               </LayersControl.BaseLayer>
             </LayersControl>
 

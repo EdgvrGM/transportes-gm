@@ -6,6 +6,7 @@ import "leaflet/dist/leaflet.css";
 import { supabase } from "@/supabaseClient";
 import { createUnitIcon } from "@/components/gps/unitIconHelper";
 import { WIALON_PROXY_URL, CENTRO_MX, SIN_SENAL_MS, estadoUnidad } from "@/components/gps/constants";
+import CapaOscura from "@/components/gps/CapaOscura";
 import { ultimoReporteMs, tiempoDesde, horaReporte } from "@/components/gps/formatoGps";
 import { differenceInMinutes } from "date-fns";
 
@@ -207,7 +208,7 @@ export default function RastreoPublico() {
               <TileLayer attribution="&copy; Esri" url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" />
             </LayersControl.BaseLayer>
             <LayersControl.BaseLayer name="Oscuro">
-              <TileLayer attribution="&copy; CARTO" url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+              <CapaOscura />
             </LayersControl.BaseLayer>
           </LayersControl>
 
