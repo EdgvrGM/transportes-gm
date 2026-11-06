@@ -25,8 +25,8 @@ function PendingRow({ icon: Icon, iconBg, iconColor, title, subtitle, count, onC
           {empty ? <Check className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="font-bold text-sm text-foreground truncate">{title}</div>
-          <div className="text-xs text-muted-foreground mt-0.5 truncate">{subtitle}</div>
+          <div className="font-bold text-sm text-foreground leading-snug">{title}</div>
+          <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2 sm:truncate">{subtitle}</div>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <div className={`text-2xl font-black ${empty ? "text-muted-foreground" : accentColor}`}>{count}</div>
@@ -214,7 +214,7 @@ export default function Pendientes() {
           icon={Container}
           iconBg="bg-amber-500/10"
           iconColor="text-amber-500"
-          accentColor="text-amber-500"
+          accentColor="text-amber-600 dark:text-amber-500"
           title="Contenedores pendientes de entrega"
           subtitle={stats.vaciosSubtitle}
           count={stats.vaciosCount}
@@ -224,7 +224,7 @@ export default function Pendientes() {
           icon={Fuel}
           iconBg="bg-orange-500/10"
           iconColor="text-orange-500"
-          accentColor="text-orange-500"
+          accentColor="text-orange-600 dark:text-orange-500"
           title="Viajes sin combustible registrado"
           subtitle={stats.sinCombustibleSubtitle}
           count={stats.sinCombustible}

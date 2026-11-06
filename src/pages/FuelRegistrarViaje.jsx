@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import { getAbreviacionTipo, ordenarRemolques } from "@/lib/remolques";
 import { MapContainer, TileLayer, Polyline, CircleMarker, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -108,20 +109,6 @@ export default function FuelRegistrarViaje() {
     sinDiesel: false,
     notas: "",
   });
-
-  const getAbreviacionTipo = (tipo) => {
-    if (!tipo) return "";
-    const t = tipo.toLowerCase();
-    if (t.includes("seca") || t.includes("caja")) return "CS";
-    if (
-      t.includes("chasis") ||
-      t.includes("contenedor") ||
-      t.includes("portacontenedor")
-    )
-      return "CH";
-    if (t.includes("plataforma")) return "PT";
-    return "";
-  };
 
   const [nuevoConductor, setNuevoConductor] = useState({
     nombre: "",
@@ -748,7 +735,7 @@ export default function FuelRegistrarViaje() {
                       <SelectValue placeholder="Seleccionar" />
                     </SelectTrigger>
                     <SelectContent>
-                      {remolques.map((r) => {
+                      {ordenarRemolques(remolques).map((r) => {
                         const abv = getAbreviacionTipo(r.tipo);
                         return (
                           <SelectItem key={r.id} value={String(r.id)}>
@@ -774,7 +761,7 @@ export default function FuelRegistrarViaje() {
                         <SelectValue placeholder="Seleccionar" />
                       </SelectTrigger>
                       <SelectContent>
-                        {remolques.map((r) => {
+                        {ordenarRemolques(remolques).map((r) => {
                           const abv = getAbreviacionTipo(r.tipo);
                           return (
                             <SelectItem key={r.id} value={String(r.id)}>

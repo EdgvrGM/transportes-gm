@@ -228,7 +228,7 @@ function SummaryCards({ allDocs, totalArchivos }) {
       label: "Documentos archivados",
       value: totalArchivos,
       icon: Paperclip,
-      color: "text-primary",
+      color: "text-yellow-700 dark:text-primary",
       bg: "bg-primary/5",
       border: "border-primary/20",
       wide: true,
@@ -342,7 +342,7 @@ function ConductoresTab() {
                   />
                 </TableCell>
                 <TableCell>
-                  <Button
+                  <Button aria-label="Editar" title="Editar"
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8"
@@ -467,7 +467,7 @@ function CamionesTab() {
                   />
                 </TableCell>
                 <TableCell>
-                  <Button
+                  <Button aria-label="Editar" title="Editar"
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8"
@@ -588,7 +588,7 @@ function RemolquesTab() {
                   />
                 </TableCell>
                 <TableCell>
-                  <Button
+                  <Button aria-label="Editar" title="Editar"
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8"

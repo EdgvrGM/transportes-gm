@@ -191,16 +191,16 @@ export default function Clientes() {
                         <Briefcase className="w-4 h-4" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-foreground truncate">{cliente.nombre}</p>{solicitudes.estaPendiente(cliente.id) && <EtiquetaSolicitada className="mt-1" />}
+                        <p className="font-semibold text-foreground leading-snug">{cliente.nombre}</p>{solicitudes.estaPendiente(cliente.id) && <EtiquetaSolicitada className="mt-1" />}
                         <p className="text-xs text-muted-foreground mt-0.5">{cliente.rfc || "Sin RFC"}</p>
                       </div>
                       <div className="flex gap-1 shrink-0">
-                        <Button variant="ghost" size="icon"
+                        <Button aria-label="Editar" title="Editar" variant="ghost" size="icon"
                           className="h-9 w-9 text-slate-500 hover:text-primary hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg"
                           onClick={() => abrirDialogEditar(cliente)}>
                           <Edit className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon"
+                        <Button aria-label="Eliminar" title="Eliminar" variant="ghost" size="icon"
                           className="h-9 w-9 text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
                           onClick={() => pedirEliminar(cliente)}>
                           <Trash2 className="w-4 h-4" />
@@ -236,12 +236,12 @@ export default function Clientes() {
                           </TableCell>
                           <TableCell className="text-right pr-6">
                             <div className="flex justify-end gap-1.5">
-                              <Button variant="ghost" size="icon"
+                              <Button aria-label="Editar" title="Editar" variant="ghost" size="icon"
                                 className="h-9 w-9 text-blue-600 bg-blue-50/50 hover:bg-blue-600 hover:text-white rounded-xl transition-all shadow-sm"
                                 onClick={() => abrirDialogEditar(cliente)}>
                                 <Edit className="w-4 h-4" />
                               </Button>
-                              <Button variant="ghost" size="icon"
+                              <Button aria-label="Eliminar" title="Eliminar" variant="ghost" size="icon"
                                 className="h-9 w-9 text-red-600 bg-red-50/50 hover:bg-red-600 hover:text-white rounded-xl transition-all shadow-sm"
                                 onClick={() => pedirEliminar(cliente)}>
                                 <Trash2 className="w-4 h-4" />

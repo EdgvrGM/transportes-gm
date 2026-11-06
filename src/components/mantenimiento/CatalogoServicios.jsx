@@ -308,7 +308,7 @@ export default function CatalogoServicios() {
                     </TableCell>
                     <TableCell className="pr-6 text-right">
                       <div className="flex justify-end gap-1.5">
-                        <Button
+                        <Button aria-label="Editar" title="Editar"
                           variant="ghost"
                           size="icon"
                           onClick={() => abrirEditar(s)}
@@ -316,7 +316,7 @@ export default function CatalogoServicios() {
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
-                        <Button
+                        <Button aria-label="Eliminar" title="Eliminar"
                           variant="ghost"
                           size="icon"
                           onClick={() => confirmarEliminar(s)}

@@ -218,7 +218,7 @@ export default function PulsoDia() {
         </div>
         <button
           onClick={() => navigate(createPageUrl("FuelProgramaCargas"))}
-          className="text-xs font-bold uppercase tracking-wider text-yellow-600 hover:text-yellow-700 dark:text-yellow-500 dark:hover:text-yellow-400 flex items-center gap-1 transition"
+          className="text-xs font-bold uppercase tracking-wider text-yellow-700 hover:text-yellow-800 dark:text-yellow-500 dark:hover:text-yellow-400 flex items-center gap-1 transition py-2 -my-2"
         >
           Ver semana <ArrowRight className="w-3.5 h-3.5" />
         </button>

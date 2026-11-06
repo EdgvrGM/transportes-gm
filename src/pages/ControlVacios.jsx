@@ -1110,6 +1110,7 @@ export default function ControlVacios() {
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             placeholder="Buscar contenedor, chofer, destino... (todo el historial)"
+            aria-label="Buscar contenedores en todo el historial"
             className="pl-9 rounded-xl"
           />
           {busqueda && (

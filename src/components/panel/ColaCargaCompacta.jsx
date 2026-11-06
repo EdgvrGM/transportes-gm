@@ -213,16 +213,20 @@ export default function ColaCargaCompacta() {
                   <div className="text-sm font-black text-foreground">{numDia}</div>
                 </div>
 
-                <div className="flex-1 min-w-0 grid grid-cols-3 gap-3">
+                {/* Celular: sólo cabe el destino a lo ancho; conductor y unidad van en una línea debajo. */}
+                <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                   <div className="min-w-0">
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Destino</div>
-                    <div className="text-sm font-bold truncate text-foreground flex items-center gap-1.5">
-                      {viaje.destino || "Sin destino"}
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                      Destino
                       {viaje.isPartial && (
-                        <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 uppercase tracking-wider shrink-0">
+                        <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-700 dark:text-orange-400 tracking-wider">
                           Incompleto
                         </span>
                       )}
+                    </div>
+                    <div className="text-sm font-bold text-foreground truncate">{viaje.destino || "Sin destino"}</div>
+                    <div className="sm:hidden text-xs text-muted-foreground truncate mt-0.5">
+                      {[conductor?.nombre, camion?.placas || camion?.nombre].filter(Boolean).join(" · ") || "Sin conductor"}
                     </div>
                   </div>
                   <div className="min-w-0 hidden sm:block">
@@ -239,19 +243,20 @@ export default function ColaCargaCompacta() {
 
                 <button
                   onClick={() => handleRegistrar(viaje)}
-                  className={`shrink-0 px-3 py-1.5 rounded-lg font-bold text-xs uppercase tracking-wider transition flex items-center gap-1.5 shadow-sm ${
+                  aria-label={viaje.isPartial ? "Completar registro de combustible" : "Registrar combustible"}
+                  className={`shrink-0 px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-lg font-bold text-xs uppercase tracking-wider transition flex items-center gap-1.5 shadow-sm ${
                     viaje.isPartial
-                      ? "bg-orange-500 text-white hover:bg-orange-600"
+                      ? "bg-orange-600 text-white hover:bg-orange-700"
                       : "bg-gm-primary text-zinc-900 hover:brightness-110"
                   }`}
                 >
                   {viaje.isPartial ? (
                     <>
-                      <Edit3 className="w-3.5 h-3.5" /> Completar
+                      <Edit3 className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Completar</span>
                     </>
                   ) : (
                     <>
-                      <Fuel className="w-3.5 h-3.5" /> Registrar
+                      <Fuel className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Registrar</span>
                     </>
                   )}
                 </button>
@@ -265,7 +270,7 @@ export default function ColaCargaCompacta() {
         {restantes > 0 ? (
           <button
             onClick={() => setExpandido(true)}
-            className="text-xs font-bold uppercase tracking-wider text-yellow-600 hover:text-yellow-700 dark:text-yellow-500 dark:hover:text-yellow-400 transition"
+            className="text-xs font-bold uppercase tracking-wider text-yellow-700 hover:text-yellow-800 dark:text-yellow-500 dark:hover:text-yellow-400 transition py-2 -my-2"
           >
             Ver {restantes} más
           </button>

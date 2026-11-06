@@ -77,6 +77,7 @@ import {
   mensajeEliminacion,
 } from "@/lib/eliminaciones";
 import { useSolicitarEliminacion, EtiquetaSolicitada } from "@/components/solicitudes/useSolicitarEliminacion";
+import { getAbreviacionTipo, ordenarRemolques } from "@/lib/remolques";
 import {
   DIAS_POR_SEMANA,
   diasDeSemana,
@@ -851,30 +852,6 @@ export default function FuelProgramaCargas() {
     setViajeAEliminar({ index, dia: diaActivo });
   };
 
-  const getAbreviacionTipo = (tipo) => {
-    if (!tipo) return "";
-    const t = tipo.toLowerCase();
-    if (t.includes("seca") || t.includes("caja")) return "CS";
-    if (
-      t.includes("chasis") ||
-      t.includes("contenedor") ||
-      t.includes("portacontenedor")
-    )
-      return "CH";
-    if (t.includes("plataforma")) return "PT";
-    return "";
-  };
-
-  const ORDEN_TIPO_REMOLQUE = { CH: 0, CS: 1, PT: 2 };
-  const remolquesOrdenados = [...remolques].sort((a, b) => {
-    const ta = ORDEN_TIPO_REMOLQUE[getAbreviacionTipo(a.tipo)] ?? 3;
-    const tb = ORDEN_TIPO_REMOLQUE[getAbreviacionTipo(b.tipo)] ?? 3;
-    if (ta !== tb) return ta - tb;
-    return (a.placas || "").localeCompare(b.placas || "", "es", {
-      numeric: true,
-      sensitivity: "base",
-    });
-  });
 
   const getRemolquePlacas = (id) => {
     const r = remolques.find((r) => String(r.id) === String(id));
@@ -1422,7 +1399,7 @@ export default function FuelProgramaCargas() {
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary bg-primary/10 px-3 py-1 rounded-full">
                           Viaje #{index + 1}
                         </span>
-                        <Button
+                        <Button aria-label="Eliminar" title="Eliminar"
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full"
@@ -1551,7 +1528,7 @@ export default function FuelProgramaCargas() {
                             <SelectValue placeholder="Elegir" />
                           </SelectTrigger>
                           <SelectContent>
-                            {remolquesOrdenados.map((r) => {
+                            {ordenarRemolques(remolques).map((r) => {
                               const abv = getAbreviacionTipo(r.tipo);
                               const label = abv
                                 ? `[${abv}] ${r.placas}`
@@ -1580,7 +1557,7 @@ export default function FuelProgramaCargas() {
                               <SelectValue placeholder="Elegir" />
                             </SelectTrigger>
                             <SelectContent>
-                              {remolquesOrdenados.map((r) => {
+                              {ordenarRemolques(remolques).map((r) => {
                                 const abv = getAbreviacionTipo(r.tipo);
                                 const label = abv ? `[${abv}] ${r.placas}` : r.placas;
                                 return (
@@ -1594,7 +1571,7 @@ export default function FuelProgramaCargas() {
                         </div>
                       )}
                       <div className="hidden md:flex justify-end pb-1 md:col-span-full lg:col-span-1">
-                        <Button
+                        <Button aria-label="Eliminar" title="Eliminar"
                           variant="ghost"
                           size="icon"
                           className="h-10 w-10 text-slate-400 hover:text-red-600 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-900/10 dark:hover:bg-red-900/30"

@@ -34,7 +34,7 @@ function Kpi({ label, children, sub }) {
     <div className="p-4 rounded-xl bg-card border border-border">
       <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{label}</div>
       <div className="text-xl md:text-2xl font-black mt-1 text-foreground tabular-nums truncate">{children}</div>
-      {sub && <div className="text-xs text-muted-foreground mt-0.5 truncate">{sub}</div>}
+      {sub && <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2 sm:truncate">{sub}</div>}
     </div>
   );
 }

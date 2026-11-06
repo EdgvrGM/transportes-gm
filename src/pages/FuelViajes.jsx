@@ -81,6 +81,7 @@ import { useToast } from "@/components/ui/use-toast";
 
 import { FECHA_LIMITE_ARCHIVO } from "@/lib/archivo";
 import { useRol } from "@/hooks/useRol";
+import { getAbreviacionTipo, ordenarRemolques } from "@/lib/remolques";
 import { eliminarRegistro, invalidarEliminacion, mensajeEliminacion } from "@/lib/eliminaciones";
 import { useSolicitarEliminacion, EtiquetaSolicitada } from "@/components/solicitudes/useSolicitarEliminacion";
 
@@ -616,12 +617,18 @@ export default function FuelViajes() {
   }, [pdfCamionId, viajes, conductores]);
 
   // Al elegir un camión específico, preseleccionar todos sus choferes (= camión completo)
+  // Sólo se actualiza si los ids cambian: mientras cargan las queries,
+  // `viajes`/`conductores` son un `[]` nuevo en cada render, choferesDelCamion
+  // también, y fijar siempre un arreglo nuevo provocaba un bucle de renders
+  // ("Maximum update depth exceeded").
   useEffect(() => {
-    if (pdfModo === "camion" && pdfCamionId && pdfCamionId !== "todos") {
-      setPdfChoferesIds(choferesDelCamion.map((c) => c.id));
-    } else {
-      setPdfChoferesIds([]);
-    }
+    const ids =
+      pdfModo === "camion" && pdfCamionId && pdfCamionId !== "todos"
+        ? choferesDelCamion.map((c) => c.id)
+        : [];
+    setPdfChoferesIds((prev) =>
+      prev.length === ids.length && prev.every((id, i) => id === ids[i]) ? prev : ids,
+    );
   }, [pdfCamionId, pdfModo, choferesDelCamion]);
 
   const { data: clientes = [] } = useQuery({
@@ -700,20 +707,6 @@ export default function FuelViajes() {
   const getRemolquePlacas = (id) => {
     const r = remolques.find((r) => String(r.id) === String(id));
     return r ? r.placas : "";
-  };
-
-  const getAbreviacionTipo = (tipo) => {
-    if (!tipo) return "";
-    const t = tipo.toLowerCase();
-    if (t.includes("seca") || t.includes("caja")) return "CS";
-    if (
-      t.includes("chasis") ||
-      t.includes("contenedor") ||
-      t.includes("portacontenedor")
-    )
-      return "CH";
-    if (t.includes("plataforma")) return "PT";
-    return "";
   };
 
   const eliminarMutation = useMutation({
@@ -2191,18 +2184,18 @@ export default function FuelViajes() {
         </div>
 
         {/* TARJETAS RESUMEN */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
           <Card className="border-none shadow-lg bg-card">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-blue-500 dark:bg-blue-600 rounded-xl flex items-center justify-center">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 dark:bg-blue-600 rounded-xl flex items-center justify-center shrink-0">
                   <FileText className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground font-medium">
                     Total Viajes
                   </p>
-                  <p className="text-2xl font-bold text-foreground">
+                  <p className="text-xl sm:text-2xl font-bold text-foreground tabular-nums">
                     {formatNumber(viajesFiltrados.length, 0)}
                   </p>
                 </div>
@@ -2210,16 +2203,16 @@ export default function FuelViajes() {
             </CardContent>
           </Card>
           <Card className="border-none shadow-lg bg-card">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-purple-500 dark:bg-purple-600 rounded-xl flex items-center justify-center">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-500 dark:bg-purple-600 rounded-xl flex items-center justify-center shrink-0">
                   <MapPin className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground font-medium">
                     Kilómetros
                   </p>
-                  <p className="text-2xl font-bold text-foreground">
+                  <p className="text-xl sm:text-2xl font-bold text-foreground tabular-nums">
                     {formatNumber(
                       viajesFiltrados.reduce(
                         (sum, v) => sum + (v.kilometros_total || 0),
@@ -2233,16 +2226,16 @@ export default function FuelViajes() {
             </CardContent>
           </Card>
           <Card className="border-none shadow-lg bg-card">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-orange-500 dark:bg-orange-600 rounded-xl flex items-center justify-center">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-500 dark:bg-orange-600 rounded-xl flex items-center justify-center shrink-0">
                   <Gauge className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground font-medium">
                     Litros
                   </p>
-                  <p className="text-2xl font-bold text-foreground">
+                  <p className="text-xl sm:text-2xl font-bold text-foreground tabular-nums">
                     {formatNumber(
                       viajesFiltrados.reduce(
                         (sum, v) => sum + (v.litros_combustible || 0),
@@ -2256,16 +2249,16 @@ export default function FuelViajes() {
             </CardContent>
           </Card>
           <Card className="border-none shadow-lg bg-card">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-green-500 dark:bg-green-600 rounded-xl flex items-center justify-center">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-500 dark:bg-green-600 rounded-xl flex items-center justify-center shrink-0">
                   <Gauge className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground font-medium">
                     Promedio
                   </p>
-                  <p className="text-2xl font-bold text-foreground">
+                  <p className="text-xl sm:text-2xl font-bold text-foreground tabular-nums">
                     {(() => {
                       const totalKm = viajesFiltrados.reduce(
                         (sum, v) => sum + (v.kilometros_total || 0),
@@ -2346,7 +2339,8 @@ export default function FuelViajes() {
                     >
                       <CardContent className="p-4 md:p-6">
                         <div className="flex items-center justify-between gap-2">
-                          <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 items-center">
+                          {/* 4 columnas sólo desde xl: con el sidebar abierto, en md/lg la tarjeta mide ~360-750 px y las columnas se enciman. */}
+                          <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6 items-center">
                             {/* COL 1: FECHAS */}
                             <div className="space-y-4">
                               <div className="flex flex-wrap items-start gap-3 lg:gap-5">
@@ -2599,6 +2593,8 @@ export default function FuelViajes() {
                               variant="ghost"
                               size="icon"
                               onClick={() => abrirDialogEditar(viaje)}
+                              aria-label="Editar viaje"
+                              title="Editar viaje"
                               className="h-8 w-8 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400"
                             >
                               <Edit className="w-4 h-4" />
@@ -2607,6 +2603,8 @@ export default function FuelViajes() {
                               variant="ghost"
                               size="icon"
                               onClick={() => confirmarEliminar(viaje)}
+                              aria-label="Eliminar viaje"
+                              title="Eliminar viaje"
                               className="h-8 w-8 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-400"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -2789,7 +2787,7 @@ export default function FuelViajes() {
                       <SelectValue placeholder="Seleccionar" />
                     </SelectTrigger>
                     <SelectContent>
-                      {remolques.map((r) => {
+                      {ordenarRemolques(remolques).map((r) => {
                         const abv = getAbreviacionTipo(r.tipo);
                         return (
                           <SelectItem key={r.id} value={String(r.id)}>
@@ -2817,7 +2815,7 @@ export default function FuelViajes() {
                         <SelectValue placeholder="Seleccionar" />
                       </SelectTrigger>
                       <SelectContent>
-                        {remolques.map((r) => {
+                        {ordenarRemolques(remolques).map((r) => {
                           const abv = getAbreviacionTipo(r.tipo);
                           return (
                             <SelectItem key={r.id} value={String(r.id)}>

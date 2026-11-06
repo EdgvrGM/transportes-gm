@@ -313,11 +313,11 @@ export default function FuelCamiones() {
                           )}
                         </div>
                         <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => abrirDialog(camion)}
+                          <Button aria-label="Editar" title="Editar" variant="ghost" size="icon" onClick={() => abrirDialog(camion)}
                             className="h-8 w-8 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-700">
                             <Edit className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => confirmarEliminar(camion)}
+                          <Button aria-label="Eliminar" title="Eliminar" variant="ghost" size="icon" onClick={() => confirmarEliminar(camion)}
                             className="h-8 w-8 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700">
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -379,11 +379,11 @@ export default function FuelCamiones() {
                           </TableCell>
                           <TableCell className="text-right pr-6">
                             <div className="flex justify-end gap-1.5">
-                              <Button variant="ghost" size="icon" onClick={() => abrirDialog(camion)}
+                              <Button aria-label="Editar" title="Editar" variant="ghost" size="icon" onClick={() => abrirDialog(camion)}
                                 className="h-9 w-9 text-blue-600 bg-blue-50/50 hover:bg-blue-600 hover:text-white rounded-xl transition-all shadow-sm">
                                 <Edit className="w-4 h-4" />
                               </Button>
-                              <Button variant="ghost" size="icon" onClick={() => confirmarEliminar(camion)}
+                              <Button aria-label="Eliminar" title="Eliminar" variant="ghost" size="icon" onClick={() => confirmarEliminar(camion)}
                                 className="h-9 w-9 text-red-600 bg-red-50/50 hover:bg-red-600 hover:text-white rounded-xl transition-all shadow-sm">
                                 <Trash2 className="w-4 h-4" />
                               </Button>

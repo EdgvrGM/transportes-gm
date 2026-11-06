@@ -56,7 +56,7 @@ import {
   textoReferencia,
 } from "@/components/cartaporte/parsearCartaPorte";
 import { generarPDFCartaPorte, nombreArchivoCartaPorte } from "@/components/cartaporte/pdfCartaPorte";
-import { razonSocial } from "@/components/cartaporte/razonesSociales";
+import { razonSocial, RAZONES_SOCIALES } from "@/components/cartaporte/razonesSociales";
 
 const QK = ["cartas-porte"];
 const COLUMNAS_BASE =
@@ -168,28 +168,32 @@ function TarjetaCarta({ c, generando, pendiente, onPDF, onXML, onEditar, onElimi
   const rs = razonSocial(c.emisor_rfc, c.emisor_nombre);
   const km = c.distancia_total != null ? `${Number(c.distancia_total).toLocaleString("es-MX")} km` : null;
 
+  // Móvil/tablet: tarjeta apilada (referencia + acciones, ruta, datos).
+  // lg+: una sola fila a todo lo ancho — referencia │ ruta │ datos │ acciones —
+  // para no dejar media pantalla vacía cuando un día tiene una sola carta.
   return (
     <div className="flex bg-card border border-border rounded-2xl overflow-hidden hover:shadow-md hover:border-gm-primary/40 transition-all duration-200">
       <div className={`w-1.5 shrink-0 ${c.emisor_rfc ? rs.franja : "bg-border"}`} />
-      <div className="flex-1 min-w-0 p-4 space-y-3">
-        {/* Referencia + acciones */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <ChipReferencia c={c} />
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5">
-              {c.referencia && <span className="text-xs text-muted-foreground">Factura {factura(c)}</span>}
-              {c.emisor_rfc && (
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${rs.chip}`}>{rs.corto}</span>
-              )}
-              {c.receptor_nombre && (
-                <span className="text-xs text-muted-foreground truncate max-w-[220px]" title="Cliente">
-                  · {c.receptor_nombre}
-                </span>
-              )}
-            </div>
-            {pendiente && <EtiquetaSolicitada className="mt-1.5" />}
+      <div className="flex-1 min-w-0 p-4 lg:py-3 grid gap-3 grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[minmax(0,210px)_minmax(0,1fr)_minmax(0,230px)_auto] lg:items-center lg:gap-5">
+        {/* Referencia */}
+        <div className="min-w-0 col-start-1 row-start-1">
+          <ChipReferencia c={c} />
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5">
+            {c.referencia && <span className="text-xs text-muted-foreground">Factura {factura(c)}</span>}
+            {c.emisor_rfc && (
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${rs.chip}`}>{rs.corto}</span>
+            )}
           </div>
-          <div className="flex items-center gap-1 shrink-0">
+          {c.receptor_nombre && (
+            <p className="text-xs text-muted-foreground truncate mt-1" title={`Cliente: ${c.receptor_nombre}`}>
+              {c.receptor_nombre}
+            </p>
+          )}
+          {pendiente && <EtiquetaSolicitada className="mt-1.5" />}
+        </div>
+
+        {/* Acciones */}
+        <div className="flex items-center gap-1 shrink-0 col-start-2 row-start-1 self-start lg:self-center lg:col-start-4">
             <Button
               size="sm"
               onClick={() => onPDF(c)}
@@ -219,22 +223,41 @@ function TarjetaCarta({ c, generando, pendiente, onPDF, onXML, onEditar, onElimi
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+        </div>
+
+        {/* Ruta — celular: vertical (lado a lado no caben los nombres) */}
+        <div className="sm:hidden col-span-2 row-start-2 rounded-xl bg-muted/40 px-3 py-2.5 flex gap-3">
+          <div className="flex flex-col items-center pt-1.5 pb-1 text-muted-foreground/60">
+            <span className="w-2 h-2 rounded-full bg-current shrink-0" />
+            <span className="flex-1 border-l border-dashed border-current my-1" />
+            <ArrowRight className="w-3.5 h-3.5 rotate-90 shrink-0" />
+          </div>
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground truncate">{c.origen || "—"}</p>
+              <p className="text-[11px] text-muted-foreground">Sale {fechaCorta(c.fecha_salida)}</p>
+            </div>
+            {km && <p className="text-[10px] font-bold text-muted-foreground">{km}</p>}
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground truncate">{c.destino || "—"}</p>
+              <p className="text-[11px] text-muted-foreground">Llega {fechaCorta(c.fecha_llegada)}</p>
+            </div>
           </div>
         </div>
 
-        {/* Ruta */}
-        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 rounded-xl bg-muted/40 px-3 py-2.5">
+        {/* Ruta — sm+: horizontal */}
+        <div className="hidden sm:grid col-span-2 row-start-2 lg:col-span-1 lg:col-start-2 lg:row-start-1 min-w-0 grid-cols-[minmax(0,max-content)_minmax(56px,1fr)_minmax(0,max-content)] items-center gap-3 rounded-xl bg-muted/40 px-3 py-2.5">
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Origen</p>
             <p className="text-sm font-semibold text-foreground truncate" title={c.origen || ""}>{c.origen || "—"}</p>
             <p className="text-[11px] text-muted-foreground">Sale {fechaCorta(c.fecha_salida)}</p>
           </div>
-          <div className="flex flex-col items-center gap-0.5 px-1">
+          <div className="flex flex-col items-center gap-0.5 min-w-0">
             {km && <span className="text-[10px] font-bold text-muted-foreground whitespace-nowrap">{km}</span>}
-            <div className="flex items-center text-muted-foreground/60">
-              <span className="w-1.5 h-1.5 rounded-full bg-current" />
-              <span className="w-8 sm:w-16 border-t border-dashed border-current" />
-              <ArrowRight className="w-3.5 h-3.5 -ml-0.5" />
+            <div className="flex items-center w-full text-muted-foreground/60">
+              <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" />
+              <span className="flex-1 border-t border-dashed border-current" />
+              <ArrowRight className="w-3.5 h-3.5 -ml-0.5 shrink-0" />
             </div>
           </div>
           <div className="min-w-0 text-right">
@@ -245,7 +268,7 @@ function TarjetaCarta({ c, generando, pendiente, onPDF, onXML, onEditar, onElimi
         </div>
 
         {/* Unidad, operador, contenedores */}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+        <div className="col-span-2 row-start-3 lg:col-span-1 lg:col-start-3 lg:row-start-1 min-w-0 flex flex-wrap items-center gap-x-4 gap-y-1.5 lg:flex-col lg:flex-nowrap lg:items-start lg:gap-1">
           <Dato icon={Truck}>{c.placas}</Dato>
           <Dato icon={UserRound}>{c.operador_nombre}</Dato>
           <Dato icon={Container} mono>{c.contenedores}</Dato>
@@ -255,7 +278,15 @@ function TarjetaCarta({ c, generando, pendiente, onPDF, onXML, onEditar, onElimi
   );
 }
 
-function ZonaSubida({ compacta, procesando, arrastrando, onElegir, onArchivos, setArrastrando }) {
+const PASOS = [
+  { icon: Upload, titulo: "Sube el XML", texto: "El de la factura de flete, tal como sale de CONTPAQi." },
+  { icon: ScrollText, titulo: "Se lee la carta porte", texto: "Ubicaciones, mercancía, unidad, remolques y operador." },
+  { icon: ShieldCheck, titulo: "Descarga el PDF", texto: "Listo para el operador, sin importes del flete." },
+];
+
+// `compacta`: con cartas ya cargadas basta una barra; los pasos sólo se
+// explican mientras la lista está vacía (probado: con pasos se veía saturado).
+function ZonaSubida({ compacta = false, procesando, arrastrando, onElegir, onArchivos, setArrastrando }) {
   const handlers = {
     onDragOver: (e) => {
       e.preventDefault();
@@ -271,6 +302,7 @@ function ZonaSubida({ compacta, procesando, arrastrando, onElegir, onArchivos, s
   const borde = arrastrando
     ? "border-gm-primary bg-gm-primary/10 scale-[1.01]"
     : "border-border bg-card hover:border-gm-primary/50 hover:bg-gm-primary/5";
+  const titulo = procesando ? "Leyendo la factura…" : arrastrando ? "Suelta el XML aquí" : "Arrastra aquí el XML de la factura";
 
   if (compacta) {
     return (
@@ -290,18 +322,12 @@ function ZonaSubida({ compacta, procesando, arrastrando, onElegir, onArchivos, s
           </p>
           <p className="text-sm text-muted-foreground mt-0.5">Se guarda el XML y se descarga la carta porte al instante. Puedes subir varios.</p>
         </div>
-        <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground border border-border rounded-full px-2 py-1 shrink-0">
+        <span className="hidden lg:inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground border border-border rounded-full px-2 py-1 shrink-0">
           CFDI 4.0 · Carta Porte 3.x
         </span>
       </button>
     );
   }
-
-  const pasos = [
-    { icon: Upload, titulo: "Sube el XML", texto: "El de la factura de flete, tal como sale de CONTPAQi." },
-    { icon: ScrollText, titulo: "Se lee la carta porte", texto: "Ubicaciones, mercancía, unidad, remolques y operador." },
-    { icon: ShieldCheck, titulo: "Descarga el PDF", texto: "Listo para el operador, sin importes del flete." },
-  ];
 
   return (
     <button
@@ -314,12 +340,10 @@ function ZonaSubida({ compacta, procesando, arrastrando, onElegir, onArchivos, s
       <div className="w-16 h-16 rounded-2xl bg-gm-primary/15 flex items-center justify-center mx-auto mb-4">
         {procesando ? <Loader2 className="w-8 h-8 animate-spin text-yellow-600" /> : <Upload className="w-8 h-8 text-yellow-600" />}
       </div>
-      <p className="text-lg font-black text-foreground">
-        {procesando ? "Leyendo la factura…" : arrastrando ? "Suelta el XML aquí" : "Arrastra aquí el XML de la factura"}
-      </p>
+      <p className="text-lg font-black text-foreground">{titulo}</p>
       <p className="text-sm text-muted-foreground mt-1">o haz clic para elegirlo de tu computadora</p>
       <div className="grid sm:grid-cols-3 gap-3 max-w-3xl mx-auto mt-8 text-left">
-        {pasos.map((p, i) => (
+        {PASOS.map((p, i) => (
           <div key={p.titulo} className="rounded-2xl bg-muted/40 border border-border p-4">
             <div className="flex items-center gap-2 mb-1.5">
               <span className="w-6 h-6 rounded-full bg-gm-primary text-black text-xs font-black flex items-center justify-center">{i + 1}</span>
@@ -476,16 +500,19 @@ export default function CartaPorte() {
     return d && d >= lunes && d < domingoSig;
   };
 
+  // Las razones sociales de la empresa siempre aparecen (aunque tengan 0) para
+  // que la fila de contadores no cambie de forma; un RFC ajeno se agrega al final.
   const emisores = useMemo(() => {
-    const mapa = new Map();
+    if (!conEmisor) return [];
+    const mapa = new Map(Object.keys(RAZONES_SOCIALES).map((rfc) => [rfc, { rfc, nombre: null, total: 0 }]));
     for (const c of cartas) {
       if (!c.emisor_rfc) continue;
       const e = mapa.get(c.emisor_rfc) || { rfc: c.emisor_rfc, nombre: c.emisor_nombre, total: 0 };
       e.total += 1;
       mapa.set(c.emisor_rfc, e);
     }
-    return [...mapa.values()].sort((a, b) => b.total - a.total);
-  }, [cartas]);
+    return [...mapa.values()];
+  }, [cartas, conEmisor]);
 
   const totalSemana = cartas.filter(enSemana).length;
 
@@ -656,7 +683,7 @@ export default function CartaPorte() {
 
         {isLoading ? (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
               {[0, 1, 2, 3].map((i) => (
                 <Skeleton key={i} className="h-[74px] rounded-2xl" />
               ))}
@@ -678,10 +705,10 @@ export default function CartaPorte() {
         ) : (
           <>
             {/* Contadores (también son filtros) */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
               <Contador valor={cartas.length} etiqueta="Todas" activo={!hayFiltros} onClick={limpiarFiltros} />
               <Contador valor={totalSemana} etiqueta="Salen esta semana" activo={soloSemana} onClick={() => setSoloSemana((v) => !v)} />
-              {emisores.slice(0, 2).map((e) => {
+              {emisores.map((e) => {
                 const rs = razonSocial(e.rfc, e.nombre);
                 return (
                   <Contador
@@ -702,7 +729,8 @@ export default function CartaPorte() {
               </p>
             )}
 
-            <div className="mb-4">
+            {/* En celular no se arrastran archivos y ya está el botón "Subir XML". */}
+            <div className="mb-4 hidden sm:block">
               <ZonaSubida
                 compacta
                 procesando={subirMutation.isPending}
@@ -721,6 +749,7 @@ export default function CartaPorte() {
                   value={busqueda}
                   onChange={(e) => setBusqueda(e.target.value)}
                   placeholder="Buscar remisión, servicio, factura, contenedor, placas, operador…"
+                  aria-label="Buscar cartas porte"
                   className="pl-9 h-11 rounded-xl bg-card"
                 />
               </div>
@@ -747,7 +776,7 @@ export default function CartaPorte() {
                       <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] tabular-nums">{g.items.length}</span>
                       <span className="flex-1 h-px bg-border" />
                     </h2>
-                    <div className="grid gap-3 lg:grid-cols-2">
+                    <div className="grid gap-2.5">
                       {g.items.map((c) => (
                         <TarjetaCarta
                           key={c.id}

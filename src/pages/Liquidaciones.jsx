@@ -761,7 +761,7 @@ export default function Liquidaciones() {
                               className="pl-7 text-right rounded-lg bg-background h-9"
                             />
                           </div>
-                          <Button variant="ghost" size="icon" onClick={() => eliminarConceptoExtraViaje(i)} className="text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0 h-9 w-9">
+                          <Button aria-label="Eliminar" title="Eliminar" variant="ghost" size="icon" onClick={() => eliminarConceptoExtraViaje(i)} className="text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0 h-9 w-9">
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
@@ -805,7 +805,7 @@ export default function Liquidaciones() {
                             className="pl-7 text-right rounded-lg bg-background"
                           />
                         </div>
-                        <Button variant="ghost" size="icon" onClick={() => eliminarGasto(i)} className="text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0">
+                        <Button aria-label="Eliminar" title="Eliminar" variant="ghost" size="icon" onClick={() => eliminarGasto(i)} className="text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0">
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -864,7 +864,7 @@ export default function Liquidaciones() {
                               className="pl-7 text-right rounded-lg bg-background h-9"
                             />
                           </div>
-                          <Button variant="ghost" size="icon" onClick={() => eliminarAnticipoExtra(i)} className="text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0 h-9 w-9">
+                          <Button aria-label="Eliminar" title="Eliminar" variant="ghost" size="icon" onClick={() => eliminarAnticipoExtra(i)} className="text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0 h-9 w-9">
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>

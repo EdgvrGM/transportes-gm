@@ -78,19 +78,28 @@ function PanelContent({
                 : p.motor
                   ? `${p.velocidad} km/h · En movimiento`
                   : "Motor apagado";
+              const nombreUnidad = camion ? camion.nombre : p.nombre.split(" ")[0];
+              const seleccionada = selectedUnit?.id === p.id;
+              // La fila es un contenedor y no un <button>: copiar/compartir son
+              // botones propios y un botón no puede ir dentro de otro (HTML
+              // inválido; lectores de pantalla y teclado los confunden).
               return (
-                <button
+                <div
                   key={p.id}
-                  onClick={() => {
-                    setSelectedUnit(p);
-                    setUnidadEnfocada(p);
-                    if (window.innerWidth < 768) setBottomSheetState("medium");
-                  }}
-                  className={`group w-full text-left p-3 border-b border-border/50 hover:bg-accent transition-colors shrink-0 flex items-center ${
-                    selectedUnit?.id === p.id ? "bg-gm-primary/10" : ""
+                  className={`group w-full border-b border-border/50 hover:bg-accent transition-colors shrink-0 flex items-center pr-2 ${
+                    seleccionada ? "bg-gm-primary/10" : ""
                   }`}
                 >
-                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedUnit(p);
+                      setUnidadEnfocada(p);
+                      if (window.innerWidth < 768) setBottomSheetState("medium");
+                    }}
+                    aria-pressed={seleccionada}
+                    className="flex items-center gap-2.5 flex-1 min-w-0 p-3 text-left rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gm-primary focus-visible:ring-inset"
+                  >
                     <div className="w-8 h-8 shrink-0 flex items-center justify-center">
                       {p.uri
                         ? <img
@@ -108,7 +117,7 @@ function PanelContent({
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-foreground uppercase truncate leading-tight">
-                        {camion ? camion.nombre : p.nombre.split(" ")[0]}
+                        {nombreUnidad}
                       </p>
                       {camion?.placas && (
                         <p className="text-xs font-bold text-muted-foreground leading-tight">
@@ -119,13 +128,16 @@ function PanelContent({
                         {textoEstado}
                       </p>
                     </div>
-                  </div>
+                  </button>
 
-                  <div className="flex flex-col items-center gap-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  {/* Sólo se ocultan donde hay mouse: en táctil no existe hover y nunca aparecerían. */}
+                  <div className="flex flex-col items-center gap-1 ml-1 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity shrink-0">
                     <button
+                      type="button"
                       onClick={(e) => copiarCoordenadas(e, p)}
                       title="Copiar coordenadas"
-                      className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                      aria-label={`Copiar coordenadas de ${nombreUnidad}`}
+                      className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-background/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gm-primary"
                     >
                       {copiedId === p.id
                         ? <Check className="w-3.5 h-3.5 text-green-500" />
@@ -133,14 +145,16 @@ function PanelContent({
                       }
                     </button>
                     <button
-                      onClick={(e) => { e.stopPropagation(); setPanelCompartirUnidad(p); }}
+                      type="button"
+                      onClick={() => setPanelCompartirUnidad(p)}
                       title="Compartir rastreo"
-                      className="p-1.5 rounded-md text-muted-foreground hover:text-yellow-600 hover:bg-gm-primary/10 transition-colors"
+                      aria-label={`Compartir rastreo de ${nombreUnidad}`}
+                      className="p-1.5 rounded-md text-muted-foreground hover:text-yellow-600 hover:bg-gm-primary/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gm-primary"
                     >
                       <Share2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
-                </button>
+                </div>
               );
             })}
             </div>
@@ -465,13 +479,13 @@ export default function RastreoGPS() {
             <div className="flex gap-2">
               <button
                 onClick={() => setBottomSheetState(bottomSheetState === "medium" ? "expanded" : "medium")}
-                className="text-[10px] text-yellow-600 bg-yellow-500/10 px-2.5 py-1 rounded-lg font-bold hover:bg-yellow-500/20 transition-all"
+                className="text-xs text-yellow-700 dark:text-yellow-500 bg-yellow-500/10 px-3 py-1.5 rounded-lg font-bold hover:bg-yellow-500/20 transition-all"
               >
                 {bottomSheetState === "medium" ? "Expandir" : "Contraer"}
               </button>
               <button
                 onClick={() => setBottomSheetState("closed")}
-                className="text-[10px] text-muted-foreground hover:text-foreground px-2.5 py-1 rounded-lg hover:bg-muted transition-all"
+                className="text-xs text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-lg hover:bg-muted transition-all"
               >
                 Cerrar
               </button>

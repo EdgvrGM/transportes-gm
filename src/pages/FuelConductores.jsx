@@ -277,7 +277,7 @@ export default function FuelConductores() {
           </CardHeader>
           <CardContent className="p-0">
             {/* ── VISTA MOBILE: Cards ── */}
-            <div className="md:hidden divide-y divide-border">
+            <div className="lg:hidden divide-y divide-border">
               {conductores.map((conductor) => {
                 const stats = obtenerEstadisticasConductor(conductor.id);
                 return (
@@ -289,7 +289,7 @@ export default function FuelConductores() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="font-semibold text-foreground truncate">{conductor.nombre}</p>{solicitudes.estaPendiente(conductor.id) && <EtiquetaSolicitada className="mt-1" />}
+                        <p className="font-semibold text-foreground leading-snug">{conductor.nombre}</p>{solicitudes.estaPendiente(conductor.id) && <EtiquetaSolicitada className="mt-1" />}
                         <Badge
                           variant="outline"
                           className={`shrink-0 text-[10px] px-1.5 py-0 ${
@@ -309,22 +309,22 @@ export default function FuelConductores() {
                           <Phone className="w-3 h-3" /> {conductor.telefono || "-"}
                         </p>
                       </div>
-                      <div className="mt-2 flex items-center justify-between">
-                        <div className="flex gap-3 text-xs text-muted-foreground">
+                      <div className="mt-2 flex items-center justify-between gap-2">
+                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground [&>span]:whitespace-nowrap">
                           <span><span className="font-bold text-foreground">{stats.totalViajes}</span> viajes</span>
                           {stats.totalViajes > 0 && (
-                            <span className="font-semibold text-green-600 dark:text-green-400">{stats.promedio.toFixed(2)} km/L</span>
+                            <span className="font-semibold text-green-700 dark:text-green-400">{stats.promedio.toFixed(2)} km/L</span>
                           )}
                           <span className="font-semibold text-indigo-600 dark:text-indigo-400">
                             {conductor.porcentaje_base != null ? conductor.porcentaje_base : 16}% pago
                           </span>
                         </div>
                         <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => abrirDialog(conductor)}
+                          <Button aria-label="Editar" title="Editar" variant="ghost" size="icon" onClick={() => abrirDialog(conductor)}
                             className="h-8 w-8 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700">
                             <Edit className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => confirmarEliminar(conductor)}
+                          <Button aria-label="Eliminar" title="Eliminar" variant="ghost" size="icon" onClick={() => confirmarEliminar(conductor)}
                             className="h-8 w-8 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700">
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -340,7 +340,7 @@ export default function FuelConductores() {
             </div>
 
             {/* ── VISTA DESKTOP: Tabla ── */}
-            <div className="hidden md:block overflow-x-auto">
+            <div className="hidden lg:block overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50/80 dark:bg-zinc-900/80 hover:bg-transparent border-b border-border/60">
@@ -397,11 +397,11 @@ export default function FuelConductores() {
                           </TableCell>
                           <TableCell className="text-right pr-6">
                             <div className="flex justify-end gap-1.5">
-                              <Button variant="ghost" size="icon" onClick={() => abrirDialog(conductor)}
+                              <Button aria-label="Editar" title="Editar" variant="ghost" size="icon" onClick={() => abrirDialog(conductor)}
                                 className="h-9 w-9 text-blue-600 bg-blue-50/50 hover:bg-blue-600 hover:text-white rounded-xl transition-all shadow-sm">
                                 <Edit className="w-4 h-4" />
                               </Button>
-                              <Button variant="ghost" size="icon" onClick={() => confirmarEliminar(conductor)}
+                              <Button aria-label="Eliminar" title="Eliminar" variant="ghost" size="icon" onClick={() => confirmarEliminar(conductor)}
                                 className="h-9 w-9 text-red-600 bg-red-50/50 hover:bg-red-600 hover:text-white rounded-xl transition-all shadow-sm">
                                 <Trash2 className="w-4 h-4" />
                               </Button>
@@ -462,11 +462,11 @@ export default function FuelConductores() {
                           </TableCell>
                           <TableCell className="text-right pr-6">
                             <div className="flex justify-end gap-1.5">
-                              <Button variant="ghost" size="icon" onClick={() => abrirDialog(conductor)}
+                              <Button aria-label="Editar" title="Editar" variant="ghost" size="icon" onClick={() => abrirDialog(conductor)}
                                 className="h-9 w-9 text-blue-600 bg-blue-50/50 hover:bg-blue-600 hover:text-white rounded-xl transition-all shadow-sm">
                                 <Edit className="w-4 h-4" />
                               </Button>
-                              <Button variant="ghost" size="icon" onClick={() => confirmarEliminar(conductor)}
+                              <Button aria-label="Eliminar" title="Eliminar" variant="ghost" size="icon" onClick={() => confirmarEliminar(conductor)}
                                 className="h-9 w-9 text-red-600 bg-red-50/50 hover:bg-red-600 hover:text-white rounded-xl transition-all shadow-sm">
                                 <Trash2 className="w-4 h-4" />
                               </Button>

@@ -105,7 +105,7 @@ export default function CuentasCliente() {
                     )}
                   </div>
                   <div className="flex gap-1 shrink-0">
-                    <Button size="icon" variant="outline" title="Editar unidades" onClick={() => setEditandoUnidades(c)}><Pencil className="w-3.5 h-3.5" /></Button>
+                    <Button aria-label="Editar" size="icon" variant="outline" title="Editar unidades" onClick={() => setEditandoUnidades(c)}><Pencil className="w-3.5 h-3.5" /></Button>
                     <Button size="icon" variant="outline" title="Resetear contraseña" onClick={() => setResetCuenta(c)}><KeyRound className="w-3.5 h-3.5" /></Button>
                     <Button size="icon" variant="outline" title={c.activo ? "Desactivar" : "Activar"}
                       onClick={() => setActivo.mutate({ cuenta_id: c.id, activo: !c.activo })}

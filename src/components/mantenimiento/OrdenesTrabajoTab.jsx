@@ -556,7 +556,7 @@ export default function OrdenesTrabajoTab() {
                             <CheckCheck className="w-4 h-4" />
                           </Button>
                         )}
-                        <Button
+                        <Button aria-label="Editar" title="Editar"
                           variant="ghost"
                           size="icon"
                           onClick={() => abrirEditar(ot)}
@@ -564,7 +564,7 @@ export default function OrdenesTrabajoTab() {
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
-                        <Button
+                        <Button aria-label="Eliminar" title="Eliminar"
                           variant="ghost"
                           size="icon"
                           onClick={() => confirmarEliminar(ot)}
