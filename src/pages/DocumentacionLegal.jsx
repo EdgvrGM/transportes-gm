@@ -48,6 +48,7 @@ import {
 } from "@/components/legal/useDocumentosLegales";
 import StatusBadge from "@/components/legal/StatusBadge";
 import { getEstadoVencimiento } from "@/components/legal/vencimientos";
+import { licenciaValida } from "@/components/legal/documentosConfig";
 
 // ─── Botón de expediente ─────────────────────────────────────────────────────
 
@@ -259,6 +260,19 @@ function SummaryCards({ allDocs, totalArchivos }) {
 
 // ─── Conductores Tab ──────────────────────────────────────────────────────────
 
+// El número de licencia lo usan la bitácora y el cruce con la carta porte; se
+// completa al subir la licencia al expediente.
+function NumeroLicencia({ licencia }) {
+  if (licenciaValida(licencia)) {
+    return <span className="text-xs text-muted-foreground font-mono">Lic. {licencia}</span>;
+  }
+  return (
+    <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+      Sin número de licencia · súbelo con la licencia
+    </span>
+  );
+}
+
 const CONDUCTOR_FIELDS = [
   { key: "venc_licencia", label: "Vencimiento Licencia" },
   { key: "venc_apto_medico", label: "Vencimiento Apto Médico" },
@@ -277,12 +291,16 @@ function ConductoresTab() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("Conductor")
-        .select("id, nombre, estado, venc_licencia, venc_apto_medico")
+        .select("id, nombre, estado, licencia, venc_licencia, venc_apto_medico")
         .order("nombre");
       if (error) throw error;
       return data;
     },
   });
+
+  // El expediente recibe la ficha vigente, no la copia de cuando se abrió: tras
+  // subir la licencia, el apto médico ya ve el número y la vigencia nuevos.
+  const docsEntidad = docsRecord ? conductores.find((c) => c.id === docsRecord.id) || docsRecord : null;
 
   const filtered = useMemo(
     () => (showInactivos ? conductores : conductores.filter((c) => c.estado === "activo")),
@@ -332,6 +350,7 @@ function ConductoresTab() {
                   {c.estado !== "activo" && (
                     <span className="ml-2 text-[10px] font-bold uppercase text-slate-400">inactivo</span>
                   )}
+                  <div><NumeroLicencia licencia={c.licencia} /></div>
                 </TableCell>
                 <TableCell><StatusBadge fechaStr={c.venc_licencia} /></TableCell>
                 <TableCell><StatusBadge fechaStr={c.venc_apto_medico} /></TableCell>
@@ -363,6 +382,7 @@ function ConductoresTab() {
           <MobileDocCard
             key={c.id}
             title={c.nombre}
+            subtitle={<NumeroLicencia licencia={c.licencia} />}
             inactive={c.estado !== "activo"}
             fields={[
               { label: "Licencia", value: c.venc_licencia },
@@ -389,8 +409,8 @@ function ConductoresTab() {
         open={!!docsRecord}
         onClose={() => setDocsRecord(null)}
         entidadTipo="conductor"
-        entidad={docsRecord}
-        titulo={docsRecord?.nombre}
+        entidad={docsEntidad}
+        titulo={docsEntidad?.nombre}
         subtitulo="Conductor"
       />
     </>
@@ -656,7 +676,7 @@ function MobileDocCard({ title, subtitle, inactive, fields, docsCount, onDocs, o
                 <span className="ml-2 text-[10px] font-bold uppercase text-slate-400">inactivo</span>
               )}
             </p>
-            {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+            {subtitle && <div className="text-xs text-muted-foreground mt-0.5">{subtitle}</div>}
           </div>
           <Button variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={onEdit}>
             <Pencil className="w-3 h-3" />

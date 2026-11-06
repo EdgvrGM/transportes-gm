@@ -10,6 +10,8 @@ import {
   ESTADOS, PAISES, CONFIG_VEHICULAR, SUBTIPO_REMOLQUE, TIPO_PERMISO,
   TIPO_FIGURA, PARTE_TRANSPORTE, UNIDADES, conDescripcion,
 } from "./catalogosSat.js";
+import { datosBitacora } from "./datosBitacora.js";
+import { construirPDFBitacora } from "./pdfBitacora.js";
 
 // Representación impresa de la Carta Porte SIN importes. Sólo recibe lo que
 // devuelve parsearCartaPorte(), que ya excluye todo campo de dinero.
@@ -325,24 +327,47 @@ export function construirPDFCartaPorte({ datos, logo, qr, municipios }) {
   return doc;
 }
 
-export function nombreArchivoCartaPorte(datos) {
+// "Rem 13404", "Serv 99156MX" o el folio de la factura; apto para nombre de archivo.
+export function refArchivo(datos) {
   const { tipo, valor } = datos.referencia;
   const ref =
     textoReferencia(tipo, valor).replace(".", "") ||
     [datos.serie, datos.folio].filter(Boolean).join("-") ||
     datos.timbre.uuid.slice(0, 8);
-  return `Carta Porte ${ref.replace(/[\\/:*?"<>|]+/g, "-")}.pdf`;
+  return ref.replace(/[\\/:*?"<>|]+/g, "-");
 }
 
-// Del XML guardado al PDF listo para descargar (sólo navegador).
+export function nombreArchivoCartaPorte(datos) {
+  return `Carta Porte ${refArchivo(datos)}.pdf`;
+}
+
+// Del XML guardado a los documentos del viaje (sólo navegador): la carta
+// porte, la bitácora o ambas en un solo PDF (carta porte primero).
 // `referencia` ({ tipo, valor }) reemplaza la del XML cuando se corrigió a mano.
-export async function generarPDFCartaPorte(xml, referencia) {
+// `catalogos` ({ camiones, conductores }) completa la bitácora (marca y vigencia).
+// `faltantes`: casillas de la bitácora que salieron en blanco.
+export async function generarDocumentosViaje(xml, referencia, { cartaPorte = true, bitacora = false, catalogos = {} } = {}) {
   const datos = parsearCartaPorte(xml);
   if (referencia) datos.referencia = { tipo: referencia.tipo || null, valor: referencia.valor || "" };
   const [logo, qr, { default: municipios }] = await Promise.all([
-    cargarLogoPDF().catch(() => null),
-    QRCode.toDataURL(urlVerificacionCCP(datos), { errorCorrectionLevel: "M", margin: 0, width: 320 }),
+    cartaPorte ? cargarLogoPDF().catch(() => null) : null,
+    cartaPorte ? QRCode.toDataURL(urlVerificacionCCP(datos), { errorCorrectionLevel: "M", margin: 0, width: 320 }) : null,
     import("./municipiosSat.json"),
   ]);
-  return { doc: construirPDFCartaPorte({ datos, logo, qr, municipios }), datos };
+
+  let doc = cartaPorte ? construirPDFCartaPorte({ datos, logo, qr, municipios }) : null;
+  let faltantes = [];
+  if (bitacora) {
+    const bit = datosBitacora(datos, { ...catalogos, municipios });
+    faltantes = bit.faltantes;
+    doc = construirPDFBitacora({ campos: bit.campos, doc: doc || undefined });
+  }
+
+  const ref = refArchivo(datos);
+  const nombre = cartaPorte && bitacora
+    ? `Carta Porte y Bitácora ${ref}.pdf`
+    : bitacora
+      ? `Bitácora ${ref}.pdf`
+      : `Carta Porte ${ref}.pdf`;
+  return { doc, datos, nombre, faltantes };
 }

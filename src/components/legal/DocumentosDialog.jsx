@@ -10,6 +10,9 @@ import {
   Plus,
   CalendarDays,
   X,
+  CheckCircle2,
+  AlertTriangle,
+  FileSearch,
 } from "lucide-react";
 import { supabase } from "@/supabaseClient";
 import { Button } from "@/components/ui/button";
@@ -36,7 +39,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { useRol } from "@/hooks/useRol";
 import { eliminarRegistro, invalidarEliminacion } from "@/lib/eliminaciones";
 import { useSolicitarEliminacion, EtiquetaSolicitada } from "@/components/solicitudes/useSolicitarEliminacion";
-import { formatearFecha } from "@/lib/fechas";
+import { formatearFecha, localDateStr } from "@/lib/fechas";
+import { nombresCoinciden } from "./lectorDocumentos";
 import VisorDocumento from "./VisorDocumento";
 import { descargarDocumento, urlFirmada, urlsFirmadas } from "./storageDocs";
 import StatusBadge from "./StatusBadge";
@@ -135,7 +139,9 @@ export default function DocumentosDialog({
         toast({ variant: "destructive", title: "Archivo no válido", description: problema });
         return;
       }
-      const campoVenc = tipoDoc(entidadTipo, tipoKey).venc;
+      const { venc: campoVenc, dato, lector } = tipoDoc(entidadTipo, tipoKey);
+      const datoActual = dato ? entidad?.[dato.columna] : null;
+      const esPDF = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
       setPendiente({
         file,
         tipo: tipoKey,
@@ -143,10 +149,55 @@ export default function DocumentosDialog({
         // usuario la corrige aquí, se sincroniza de vuelta al guardar.
         fecha: (campoVenc && entidad?.[campoVenc]) || "",
         descripcion: "",
+        // Un valor inválido en el catálogo ("N/A", "COL000") no se prellena:
+        // obliga a copiarlo del documento.
+        dato: dato && datoActual && !dato.validar(datoActual) ? datoActual : "",
+        lectura: lector ? { estado: esPDF ? "leyendo" : "imagen" } : null,
       });
+      if (lector && esPDF) leerYPrellenar(file, lector, dato);
     },
+    // leerYPrellenar sólo usa setters y `entidad`, ya en la lista.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [entidadTipo, entidad, toast],
   );
+
+  // Lee el PDF digital (licencia SICT / apto DGPMPT) y llena número y vigencia.
+  // Si el usuario canceló o eligió otro archivo mientras se leía, se descarta.
+  const leerYPrellenar = async (file, lector, dato) => {
+    let leido = null;
+    try {
+      const { leerDocumento } = await import("./textoPDF");
+      leido = await leerDocumento(file, lector);
+    } catch {
+      leido = null;
+    }
+    setPendiente((p) => {
+      if (!p || p.file !== file) return p;
+      if (!leido || (!leido.vence && !leido.numero)) return { ...p, lectura: { estado: "sin-datos" } };
+
+      const campos = [];
+      const avisos = [];
+      let datoNuevo = p.dato;
+      if (dato && leido.numero) {
+        datoNuevo = dato.normalizar(leido.numero);
+        campos.push(dato.label.toLowerCase());
+      }
+      if (leido.vence) campos.push("vigencia");
+      if (leido.nombre && entidad?.nombre && !nombresCoinciden(leido.nombre, entidad.nombre)) {
+        avisos.push(`El documento es de ${leido.nombre}, no de ${entidad.nombre.trim()}. Revisa que sea el expediente correcto.`);
+      }
+      if (leido.dictamen === "NO APTO") avisos.push("El dictamen dice NO APTO.");
+      if (leido.vence && leido.vence < localDateStr()) avisos.push(`El documento venció el ${formatearFecha(leido.vence)}.`);
+      if (leido.calculada) avisos.push("No se encontró la vigencia impresa: se calculó como fecha del examen + 2 años.");
+
+      return {
+        ...p,
+        dato: datoNuevo,
+        fecha: leido.vence || p.fecha,
+        lectura: { estado: "leido", campos, avisos, nombre: leido.nombre },
+      };
+    });
+  };
 
   const abrirSelector = (tipoKey) => {
     tipoDestinoRef.current = tipoKey;
@@ -161,7 +212,28 @@ export default function DocumentosDialog({
   };
 
   const subirMutation = useMutation({
-    mutationFn: async ({ file, tipo, fecha, descripcion }) => {
+    mutationFn: async ({ file, tipo, fecha, descripcion, dato: valorDato }) => {
+      const { venc: campoVenc, dato } = tipoDoc(entidadTipo, tipo);
+      const tabla = TABLA_ENTIDAD[entidadTipo];
+
+      // Se valida antes de subir el archivo para no dejar nada a medias.
+      if (campoVenc && !fecha) throw new Error("Falta la fecha de vencimiento.");
+      let valor = null;
+      if (dato) {
+        valor = dato.normalizar(valorDato);
+        const problema = dato.validar(valor);
+        if (problema) throw new Error(problema);
+        const { data: otros, error: dupErr } = await supabase
+          .from(tabla)
+          .select(`id, nombre, ${dato.columna}`)
+          .neq("id", entidad.id);
+        if (dupErr) throw dupErr;
+        const repetido = (otros || []).find((o) => dato.clave(o[dato.columna]) === dato.clave(valor));
+        if (repetido) {
+          throw new Error(`${dato.label} ${valor} ya está registrado para ${repetido.nombre.trim()}. Revisa que sea el documento correcto.`);
+        }
+      }
+
       const ruta = `${entidadTipo}/${entidad.id}/${Date.now()}_${nombreSeguro(file.name)}`;
 
       const { error: upErr } = await supabase.storage
@@ -190,24 +262,48 @@ export default function DocumentosDialog({
         throw insErr;
       }
 
-      // El tipo enlazado a una columna venc_* mantiene los semáforos al día.
-      const campoVenc = tipoDoc(entidadTipo, tipo).venc;
+      // El tipo enlazado a una columna venc_* mantiene los semáforos al día, y
+      // `dato` completa la ficha de la entidad con lo que viene en el documento.
+      const cambios = {};
+      const actualizados = [];
       if (campoVenc && fecha) {
-        await supabase
-          .from(TABLA_ENTIDAD[entidadTipo])
-          .update({ [campoVenc]: fecha })
-          .eq("id", entidad.id);
+        cambios[campoVenc] = fecha;
+        actualizados.push("vencimiento");
       }
-      return { sincronizoFecha: Boolean(campoVenc && fecha) };
+      if (dato) {
+        cambios[dato.columna] = valor;
+        actualizados.push(dato.label.toLowerCase());
+      }
+      if (!actualizados.length) return { actualizados };
+
+      // El archivo ya quedó guardado: si esto falla se avisa, no se revierte.
+      const { data: filas, error: updErr } = await supabase
+        .from(tabla)
+        .update(cambios)
+        .eq("id", entidad.id)
+        .select("id");
+      if (updErr || !filas?.length) {
+        return { actualizados: [], avisoFicha: updErr?.message || "No se pudo actualizar la ficha (sin permiso)." };
+      }
+      return { actualizados };
     },
-    onSuccess: ({ sincronizoFecha }) => {
+    onSuccess: ({ actualizados, avisoFicha }) => {
       queryClient.invalidateQueries({ queryKey: QK_DOCS });
       queryClient.invalidateQueries({ queryKey: [TABLA_ENTIDAD[entidadTipo]] });
+      if (entidadTipo === "conductor") queryClient.invalidateQueries({ queryKey: ["conductores"] });
       setPendiente(null);
+      if (avisoFicha) {
+        toast({
+          variant: "destructive",
+          title: "Documento subido, pero la ficha no se actualizó",
+          description: avisoFicha,
+        });
+        return;
+      }
       toast({
         title: "Documento subido",
-        description: sincronizoFecha
-          ? "Se guardó el archivo y se actualizó la fecha de vencimiento."
+        description: actualizados.length
+          ? `Se guardó el archivo y se actualizó: ${actualizados.join(" y ")}.`
           : "El archivo quedó guardado en el expediente.",
       });
     },
@@ -323,6 +419,7 @@ export default function DocumentosDialog({
                   onSoltar={(e) => soltarEn(e, t.key)}
                   onFecha={(fecha) => setPendiente((p) => ({ ...p, fecha }))}
                   onDescripcion={(descripcion) => setPendiente((p) => ({ ...p, descripcion }))}
+                  onDato={(dato) => setPendiente((p) => ({ ...p, dato }))}
                   onCancelar={() => setPendiente(null)}
                   onSubir={() => subirMutation.mutate(pendiente)}
                   onVer={handleVer}
@@ -420,6 +517,7 @@ function ApartadoDocumento({
   onSoltar,
   onFecha,
   onDescripcion,
+  onDato,
   onCancelar,
   onSubir,
   onVer,
@@ -508,6 +606,7 @@ function ApartadoDocumento({
             subiendo={subiendo}
             onFecha={onFecha}
             onDescripcion={onDescripcion}
+            onDato={onDato}
             onCancelar={onCancelar}
             onSubir={onSubir}
           />
@@ -529,12 +628,57 @@ function ApartadoDocumento({
   );
 }
 
+// ─── Resultado de leer el PDF (licencia / apto) ───────────────────────────────
+
+function AvisoLectura({ lectura }) {
+  const { estado, campos = [], avisos = [] } = lectura;
+  if (estado === "leyendo") {
+    return (
+      <div role="status" className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        Leyendo el documento…
+      </div>
+    );
+  }
+  if (estado === "leido") {
+    return (
+      <div role="status" className="space-y-1.5">
+        <p className="flex items-start gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+          <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-px" />
+          Se leyó del documento: {campos.join(" y ")}. Revísalo antes de guardar.
+        </p>
+        {avisos.map((a) => (
+          <p key={a} className="flex items-start gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-400">
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-px" />
+            {a}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return (
+    <p role="status" className="flex items-start gap-1.5 text-xs text-muted-foreground">
+      <FileSearch className="w-3.5 h-3.5 shrink-0 mt-px" />
+      {estado === "imagen"
+        ? "Es una imagen: no se pueden leer los datos, captúralos a mano."
+        : "No se encontraron datos en el PDF (¿es un escaneo?): captúralos a mano."}
+    </p>
+  );
+}
+
 // ─── Confirmación previa a subir (dentro del apartado) ────────────────────────
 
-function PanelSubida({ pendiente, tipo, subiendo, onFecha, onDescripcion, onCancelar, onSubir }) {
-  const { file, fecha, descripcion } = pendiente;
+function PanelSubida({ pendiente, tipo, subiendo, onFecha, onDescripcion, onDato, onCancelar, onSubir }) {
+  const { file, fecha, descripcion, dato: valorDato, lectura } = pendiente;
+  const leyendo = lectura?.estado === "leyendo";
   const idFecha = `venc-${tipo.key}`;
   const idDesc = `desc-${tipo.key}`;
+  const idDato = `dato-${tipo.key}`;
+  // El error del dato sólo se muestra cuando ya escribió algo; vacío basta con
+  // deshabilitar Guardar.
+  const problemaDato = tipo.dato ? tipo.dato.validar(valorDato) : null;
+  const faltaFecha = Boolean(tipo.venc) && !fecha;
+  const puedeGuardar = !subiendo && !leyendo && !faltaFecha && !problemaDato;
 
   return (
     <div className="rounded-xl border border-primary/40 bg-primary/5 p-3 space-y-3">
@@ -556,7 +700,34 @@ function PanelSubida({ pendiente, tipo, subiendo, onFecha, onDescripcion, onCanc
         </Button>
       </div>
 
-      <div className={`grid gap-3 ${tipo.libre ? "sm:grid-cols-2" : "grid-cols-1"}`}>
+      {lectura && <AvisoLectura lectura={lectura} />}
+
+      <div className={`grid gap-3 ${tipo.libre || tipo.dato ? "sm:grid-cols-2" : "grid-cols-1"}`}>
+        {tipo.dato && (
+          <div className="space-y-1.5">
+            <Label htmlFor={idDato} className="text-xs font-medium">
+              {tipo.dato.label}
+            </Label>
+            <Input
+              id={idDato}
+              value={valorDato || ""}
+              onChange={(e) => onDato(tipo.dato.normalizar(e.target.value))}
+              placeholder={tipo.dato.placeholder}
+              disabled={subiendo}
+              autoFocus
+              autoComplete="off"
+              aria-invalid={Boolean(valorDato && problemaDato)}
+              aria-describedby={`${idDato}-ayuda`}
+              className="font-mono uppercase"
+            />
+            <p
+              id={`${idDato}-ayuda`}
+              className={`text-[11px] ${valorDato && problemaDato ? "text-destructive" : "text-muted-foreground"}`}
+            >
+              {valorDato && problemaDato ? problemaDato : "Cópialo tal como viene en el documento."}
+            </p>
+          </div>
+        )}
         {tipo.libre && (
           <div className="space-y-1.5">
             <Label htmlFor={idDesc} className="text-xs font-medium">
@@ -586,10 +757,12 @@ function PanelSubida({ pendiente, tipo, subiendo, onFecha, onDescripcion, onCanc
         </div>
       </div>
 
-      {tipo.venc && (
+      {(tipo.venc || tipo.dato) && (
         <p className="text-[11px] text-muted-foreground flex items-start gap-1.5">
           <CalendarDays className="w-3.5 h-3.5 shrink-0 mt-px" />
-          Esta fecha también actualiza el semáforo de vencimientos de la tabla.
+          {tipo.dato
+            ? `Al guardar se actualizan el ${tipo.dato.label.toLowerCase()} y la vigencia del operador (los usa la bitácora).`
+            : "Esta fecha también actualiza el semáforo de vencimientos de la tabla."}
         </p>
       )}
 
@@ -597,7 +770,7 @@ function PanelSubida({ pendiente, tipo, subiendo, onFecha, onDescripcion, onCanc
         <Button variant="outline" size="sm" onClick={onCancelar} disabled={subiendo}>
           Cancelar
         </Button>
-        <Button size="sm" onClick={onSubir} disabled={subiendo} className="gap-2">
+        <Button size="sm" onClick={onSubir} disabled={!puedeGuardar} className="gap-2">
           {subiendo ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />

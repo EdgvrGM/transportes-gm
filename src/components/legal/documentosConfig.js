@@ -25,14 +25,49 @@ export const MIME_ACEPTADOS = [
 
 export const ACCEPT_ATTR = ".pdf,.jpg,.jpeg,.png,.webp,.heic";
 
+// ── Número de licencia ────────────────────────────────────────────────────────
+// Se escribe tal como viene en la licencia, sin espacios. La bitácora y el
+// cruce con la carta porte lo comparan sin guiones (claveLicencia).
+export const normalizarLicencia = (s) => (s || "").toUpperCase().replace(/\s+/g, "");
+export const claveLicencia = (s) => normalizarLicencia(s).replace(/[^A-Z0-9]/g, "");
+
+// Mensaje de error o null. "N/A", "COL000" o similares no son licencias.
+export function problemaLicencia(s) {
+  const c = claveLicencia(s);
+  if (!c) return "Escribe el número de licencia.";
+  if (/^(NA|NOAPLICA|SIN|NINGUNA)/.test(c) || /^[A-Z]*0+$/.test(c)) return "Ese no es un número de licencia válido.";
+  if (c.length < 6 || !/\d/.test(c)) return "Parece incompleto: revisa el número en la licencia.";
+  return null;
+}
+
+export const licenciaValida = (s) => problemaLicencia(s) === null;
+
 // Catálogo de tipos de documento por entidad.
 // `venc` enlaza el tipo con la columna de vencimiento de la tabla dueña: al
 // subir un documento con fecha, esa columna se actualiza sola y los semáforos
-// del encabezado siguen cuadrando sin capturar la fecha dos veces.
+// del encabezado siguen cuadrando sin capturar la fecha dos veces. En los tipos
+// con `venc` la fecha es obligatoria al subir.
+// `dato` es otro campo de la entidad que se captura junto con el documento
+// (p. ej. el número de licencia al subir la licencia) y se guarda en su columna.
 export const TIPOS_DOC = {
   conductor: [
-    { key: "licencia", label: "Licencia de conducir", icon: IdCard, venc: "venc_licencia" },
-    { key: "apto_medico", label: "Apto médico", icon: Stethoscope, venc: "venc_apto_medico" },
+    {
+      key: "licencia",
+      label: "Licencia de conducir",
+      icon: IdCard,
+      venc: "venc_licencia",
+      // Lee número y vigencia del PDF digital de la SICT (lectorDocumentos.js).
+      lector: "licencia",
+      dato: {
+        columna: "licencia",
+        label: "Número de licencia",
+        placeholder: "Ej. LFD00029224",
+        normalizar: normalizarLicencia,
+        validar: problemaLicencia,
+        clave: claveLicencia,
+      },
+    },
+    { key: "apto_medico", label: "Apto médico", icon: Stethoscope, venc: "venc_apto_medico", lector: "apto" },
     { key: "otro", label: "Otro documento", labelSeccion: "Otros documentos", icon: FileText, libre: true },
   ],
   camion: [

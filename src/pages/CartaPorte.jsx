@@ -29,9 +29,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 import {
   ArrowRight,
+  ClipboardList,
   Container,
   FileCode2,
   FileDown,
+  Files,
   Loader2,
   MoreVertical,
   Pencil,
@@ -55,7 +57,7 @@ import {
   TIPOS_REFERENCIA,
   textoReferencia,
 } from "@/components/cartaporte/parsearCartaPorte";
-import { generarPDFCartaPorte, nombreArchivoCartaPorte } from "@/components/cartaporte/pdfCartaPorte";
+import { generarDocumentosViaje } from "@/components/cartaporte/pdfCartaPorte";
 import { razonSocial, RAZONES_SOCIALES } from "@/components/cartaporte/razonesSociales";
 
 const QK = ["cartas-porte"];
@@ -107,6 +109,25 @@ function descargarBlob(contenido, nombre, tipo) {
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+const TIPOS_DOCUMENTO = {
+  carta: { cartaPorte: true, bitacora: false },
+  bitacora: { cartaPorte: false, bitacora: true },
+  ambos: { cartaPorte: true, bitacora: true },
+};
+
+// Marca (Camion) y vigencia de licencia (Conductor): lo único de la bitácora que
+// no trae el XML. Se lee al momento para que una vigencia recién capturada en
+// Documentación Legal salga en la siguiente bitácora.
+async function leerCatalogosBitacora() {
+  const [cam, con] = await Promise.all([
+    supabase.from("Camion").select("nombre, placas"),
+    supabase.from("Conductor").select("nombre, licencia, venc_licencia"),
+  ]);
+  if (cam.error) throw cam.error;
+  if (con.error) throw con.error;
+  return { camiones: cam.data || [], conductores: con.data || [] };
 }
 
 async function leerXml(id) {
@@ -196,13 +217,26 @@ function TarjetaCarta({ c, generando, pendiente, onPDF, onXML, onEditar, onElimi
         <div className="flex items-center gap-1 shrink-0 col-start-2 row-start-1 self-start lg:self-center lg:col-start-4">
             <Button
               size="sm"
-              onClick={() => onPDF(c)}
-              disabled={generando}
+              onClick={() => onPDF(c, "carta")}
+              disabled={Boolean(generando)}
               className="h-9 rounded-xl gap-1.5 font-bold bg-gm-primary text-black hover:bg-gm-primary/90"
               title="Descargar carta porte (PDF)"
+              aria-label="Descargar carta porte"
             >
-              {generando ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
-              PDF
+              {generando === "carta" ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+              <span className="hidden sm:inline">Carta porte</span>
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onPDF(c, "bitacora")}
+              disabled={Boolean(generando)}
+              className="h-9 rounded-xl gap-1.5 font-bold"
+              title="Descargar bitácora de horas de servicio (PDF)"
+              aria-label="Descargar bitácora"
+            >
+              {generando === "bitacora" ? <Loader2 className="w-4 h-4 animate-spin" /> : <ClipboardList className="w-4 h-4" />}
+              <span className="hidden sm:inline">Bitácora</span>
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -210,7 +244,11 @@ function TarjetaCarta({ c, generando, pendiente, onPDF, onXML, onEditar, onElimi
                   <MoreVertical className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuContent align="end" className="w-60">
+                <DropdownMenuItem onClick={() => onPDF(c, "ambos")} disabled={Boolean(generando)} className="gap-2 cursor-pointer font-semibold">
+                  <Files className="w-4 h-4" /> Carta porte + bitácora (1 PDF)
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => onEditar(c)} className="gap-2 cursor-pointer">
                   <Pencil className="w-4 h-4" /> Corregir referencia
                 </DropdownMenuItem>
@@ -465,7 +503,7 @@ export default function CartaPorte() {
   const [busqueda, setBusqueda] = useState("");
   const [soloSemana, setSoloSemana] = useState(false);
   const [emisorFiltro, setEmisorFiltro] = useState(null);
-  const [generandoId, setGenerandoId] = useState(null);
+  const [generando, setGenerando] = useState(null); // { id, tipo }
   const [porBorrar, setPorBorrar] = useState(null);
   const [editando, setEditando] = useState(null);
 
@@ -542,9 +580,18 @@ export default function CartaPorte() {
     return out;
   }, [filtradas]);
 
-  const descargarPDF = async (xml, ref) => {
-    const { doc, datos } = await generarPDFCartaPorte(xml, ref);
-    doc.save(nombreArchivoCartaPorte(datos));
+  // tipo: "carta" | "bitacora" | "ambos" (un solo PDF, carta porte primero).
+  const descargarDocumentos = async (xml, ref, tipo = "carta") => {
+    const opciones = TIPOS_DOCUMENTO[tipo];
+    const catalogos = opciones.bitacora ? await leerCatalogosBitacora() : {};
+    const { doc, nombre, faltantes } = await generarDocumentosViaje(xml, ref, { ...opciones, catalogos });
+    doc.save(nombre);
+    if (faltantes.length) {
+      toast({
+        title: "La bitácora salió con casillas en blanco",
+        description: `Falta: ${faltantes.join("; ")}. Llénalas a mano o complétalas en el catálogo.`,
+      });
+    }
   };
 
   // Una factura ya cargada no es error: se genera su PDF igual (con la
@@ -592,7 +639,7 @@ export default function CartaPorte() {
       });
       if (resultados.length === 1) {
         try {
-          await descargarPDF(resultados[0].xml, resultados[0].ref);
+          await descargarDocumentos(resultados[0].xml, resultados[0].ref);
         } catch (e) {
           toast({ variant: "destructive", title: "No se pudo generar el PDF", description: e.message });
         }
@@ -616,14 +663,14 @@ export default function CartaPorte() {
   };
   const elegirArchivos = () => inputRef.current?.click();
 
-  const onPDF = async (c) => {
-    setGenerandoId(c.id);
+  const onPDF = async (c, tipo = "carta") => {
+    setGenerando({ id: c.id, tipo });
     try {
-      await descargarPDF(await leerXml(c.id), refDeFila(c));
+      await descargarDocumentos(await leerXml(c.id), refDeFila(c), tipo);
     } catch (e) {
       toast({ variant: "destructive", title: "No se pudo generar el PDF", description: e.message });
     } finally {
-      setGenerandoId(null);
+      setGenerando(null);
     }
   };
 
@@ -781,7 +828,7 @@ export default function CartaPorte() {
                         <TarjetaCarta
                           key={c.id}
                           c={c}
-                          generando={generandoId === c.id}
+                          generando={generando?.id === c.id ? generando.tipo : null}
                           pendiente={solicitudes.estaPendiente(c.id)}
                           onPDF={onPDF}
                           onXML={onXML}
