@@ -178,9 +178,12 @@ function ChipReferencia({ c }) {
 function Dato({ icon: Icon, children, mono = false }) {
   if (!children) return null;
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground min-w-0">
-      <Icon className="w-3.5 h-3.5 shrink-0" />
-      <span className={`truncate ${mono ? "font-mono" : ""}`}>{children}</span>
+    // max-w-full: en lg la columna es flex-col items-start y cada renglón mide lo
+    // que su texto; sin tope, el nombre se encima en los botones de la tarjeta.
+    // Lo que no cabe pasa al siguiente renglón (nunca "…": el nombre se lee completo).
+    <span className="inline-flex items-start gap-1.5 text-xs text-muted-foreground min-w-0 max-w-full">
+      <Icon className="w-3.5 h-3.5 shrink-0 mt-px" />
+      <span className={`min-w-0 break-words leading-snug ${mono ? "font-mono" : ""}`}>{children}</span>
     </span>
   );
 }
@@ -190,12 +193,12 @@ function TarjetaCarta({ c, generando, pendiente, onPDF, onXML, onEditar, onElimi
   const km = c.distancia_total != null ? `${Number(c.distancia_total).toLocaleString("es-MX")} km` : null;
 
   // Móvil/tablet: tarjeta apilada (referencia + acciones, ruta, datos).
-  // lg+: una sola fila a todo lo ancho — referencia │ ruta │ datos │ acciones —
+  // xl+: una sola fila a todo lo ancho — referencia │ ruta │ datos │ acciones —
   // para no dejar media pantalla vacía cuando un día tiene una sola carta.
   return (
     <div className="flex bg-card border border-border rounded-2xl overflow-hidden hover:shadow-md hover:border-gm-primary/40 transition-all duration-200">
       <div className={`w-1.5 shrink-0 ${c.emisor_rfc ? rs.franja : "bg-border"}`} />
-      <div className="flex-1 min-w-0 p-4 lg:py-3 grid gap-3 grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[minmax(0,210px)_minmax(0,1fr)_minmax(0,230px)_auto] lg:items-center lg:gap-5">
+      <div className="flex-1 min-w-0 p-4 xl:py-3 grid gap-3 grid-cols-[minmax(0,1fr)_auto] xl:grid-cols-[minmax(0,190px)_minmax(0,1fr)_minmax(0,210px)_auto] xl:items-center xl:gap-5">
         {/* Referencia */}
         <div className="min-w-0 col-start-1 row-start-1">
           <ChipReferencia c={c} />
@@ -206,7 +209,7 @@ function TarjetaCarta({ c, generando, pendiente, onPDF, onXML, onEditar, onElimi
             )}
           </div>
           {c.receptor_nombre && (
-            <p className="text-xs text-muted-foreground truncate mt-1" title={`Cliente: ${c.receptor_nombre}`}>
+            <p className="text-xs text-muted-foreground break-words leading-snug mt-1" title="Cliente">
               {c.receptor_nombre}
             </p>
           )}
@@ -214,12 +217,15 @@ function TarjetaCarta({ c, generando, pendiente, onPDF, onXML, onEditar, onElimi
         </div>
 
         {/* Acciones */}
-        <div className="flex items-center gap-1 shrink-0 col-start-2 row-start-1 self-start lg:self-center lg:col-start-4">
+        {/* xl+: Carta porte y Bitácora apilados (columna angosta → más espacio
+            para la ruta y el chofer); el menú ⋮ queda a un lado. */}
+        <div className="flex items-center gap-1 shrink-0 col-start-2 row-start-1 self-start xl:self-center xl:col-start-4">
+          <div className="flex items-center gap-1 xl:flex-col xl:items-stretch xl:gap-1.5">
             <Button
               size="sm"
               onClick={() => onPDF(c, "carta")}
               disabled={Boolean(generando)}
-              className="h-9 rounded-xl gap-1.5 font-bold bg-gm-primary text-black hover:bg-gm-primary/90"
+              className="h-9 xl:h-8 rounded-xl gap-1.5 font-bold bg-gm-primary text-black hover:bg-gm-primary/90 xl:justify-start"
               title="Descargar carta porte (PDF)"
               aria-label="Descargar carta porte"
             >
@@ -231,13 +237,14 @@ function TarjetaCarta({ c, generando, pendiente, onPDF, onXML, onEditar, onElimi
               variant="outline"
               onClick={() => onPDF(c, "bitacora")}
               disabled={Boolean(generando)}
-              className="h-9 rounded-xl gap-1.5 font-bold"
+              className="h-9 xl:h-8 rounded-xl gap-1.5 font-bold xl:justify-start"
               title="Descargar bitácora de horas de servicio (PDF)"
               aria-label="Descargar bitácora"
             >
               {generando === "bitacora" ? <Loader2 className="w-4 h-4 animate-spin" /> : <ClipboardList className="w-4 h-4" />}
               <span className="hidden sm:inline">Bitácora</span>
             </Button>
+          </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" aria-label="Más acciones">
@@ -272,22 +279,22 @@ function TarjetaCarta({ c, generando, pendiente, onPDF, onXML, onEditar, onElimi
           </div>
           <div className="min-w-0 flex-1 space-y-1.5">
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-foreground truncate">{c.origen || "—"}</p>
+              <p className="text-sm font-semibold text-foreground break-words leading-snug line-clamp-2" title={c.origen || ""}>{c.origen || "—"}</p>
               <p className="text-[11px] text-muted-foreground">Sale {fechaCorta(c.fecha_salida)}</p>
             </div>
             {km && <p className="text-[10px] font-bold text-muted-foreground">{km}</p>}
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-foreground truncate">{c.destino || "—"}</p>
+              <p className="text-sm font-semibold text-foreground break-words leading-snug line-clamp-2" title={c.destino || ""}>{c.destino || "—"}</p>
               <p className="text-[11px] text-muted-foreground">Llega {fechaCorta(c.fecha_llegada)}</p>
             </div>
           </div>
         </div>
 
         {/* Ruta — sm+: horizontal */}
-        <div className="hidden sm:grid col-span-2 row-start-2 lg:col-span-1 lg:col-start-2 lg:row-start-1 min-w-0 grid-cols-[minmax(0,max-content)_minmax(56px,1fr)_minmax(0,max-content)] items-center gap-3 rounded-xl bg-muted/40 px-3 py-2.5">
+        <div className="hidden sm:grid col-span-2 row-start-2 xl:col-span-1 xl:col-start-2 xl:row-start-1 min-w-0 grid-cols-[minmax(110px,max-content)_minmax(48px,1fr)_minmax(110px,max-content)] items-center gap-3 rounded-xl bg-muted/40 px-3 py-2.5">
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Origen</p>
-            <p className="text-sm font-semibold text-foreground truncate" title={c.origen || ""}>{c.origen || "—"}</p>
+            <p className="text-sm font-semibold text-foreground break-words leading-snug line-clamp-2" title={c.origen || ""}>{c.origen || "—"}</p>
             <p className="text-[11px] text-muted-foreground">Sale {fechaCorta(c.fecha_salida)}</p>
           </div>
           <div className="flex flex-col items-center gap-0.5 min-w-0">
@@ -300,13 +307,13 @@ function TarjetaCarta({ c, generando, pendiente, onPDF, onXML, onEditar, onElimi
           </div>
           <div className="min-w-0 text-right">
             <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Destino</p>
-            <p className="text-sm font-semibold text-foreground truncate" title={c.destino || ""}>{c.destino || "—"}</p>
+            <p className="text-sm font-semibold text-foreground break-words leading-snug line-clamp-2" title={c.destino || ""}>{c.destino || "—"}</p>
             <p className="text-[11px] text-muted-foreground">Llega {fechaCorta(c.fecha_llegada)}</p>
           </div>
         </div>
 
         {/* Unidad, operador, contenedores */}
-        <div className="col-span-2 row-start-3 lg:col-span-1 lg:col-start-3 lg:row-start-1 min-w-0 flex flex-wrap items-center gap-x-4 gap-y-1.5 lg:flex-col lg:flex-nowrap lg:items-start lg:gap-1">
+        <div className="col-span-2 row-start-3 xl:col-span-1 xl:col-start-3 xl:row-start-1 min-w-0 flex flex-wrap items-center gap-x-4 gap-y-1.5 xl:flex-col xl:flex-nowrap xl:items-start xl:gap-1">
           <Dato icon={Truck}>{c.placas}</Dato>
           <Dato icon={UserRound}>{c.operador_nombre}</Dato>
           <Dato icon={Container} mono>{c.contenedores}</Dato>
