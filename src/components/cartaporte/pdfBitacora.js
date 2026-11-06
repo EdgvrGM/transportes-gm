@@ -1,145 +1,231 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { MARGEN, NEGRO, GRIS, FONDO_SECCION, AMARILLO, AMARILLO_SUAVE, BORDE, LOGO_ANCHO } from "./estiloPDF.js";
 
-// Bitácora de horas de servicio del conductor. Replica el formato que se
-// llenaba a mano (mismo orden de casillas); la cuadrícula de 24 horas y las
-// horas de salida/llegada salen en blanco para llenarse a mano en el viaje.
+// Bitácora de horas de servicio del conductor, con la identidad de Transportes
+// GM (logo, amarillo de marca, secciones como la carta porte). Conserva las
+// casillas y el orden de la hoja que se llenaba a mano; la cuadrícula de 24 h,
+// las horas y las firmas salen en blanco para llenarse en el viaje.
 // Recibe `campos` de datosBitacora(). Con `doc` agrega la bitácora como página
 // nueva de ese documento (carta porte + bitácora en un solo PDF).
 
-const MARGEN = 18;
-const NEGRO = [0, 0, 0];
-const GRIS = [217, 217, 217];
-const LINEA = [90, 90, 90];
-const ACTIVIDADES = ["CARGA", "CONDUCIENDO", "DESCANSO", "CONDUCIENDO", "DESCARGA"];
+const ACTIVIDADES = ["Carga", "Conduciendo", "Descanso", "Conduciendo", "Descarga"];
+// Líneas de la cuadrícula más oscuras que las del resto: se marcan a pluma.
+const LINEA_CUADRICULA = [148, 163, 184];
 
-export function construirPDFBitacora({ campos, doc: docExistente } = {}) {
+export function construirPDFBitacora({ campos, logo, doc: docExistente } = {}) {
   const doc = docExistente || new jsPDF({ compress: true, format: "letter" });
   if (docExistente) doc.addPage("letter", "portrait");
   const ancho = doc.internal.pageSize.getWidth();
+  const alto = doc.internal.pageSize.getHeight();
   const util = ancho - MARGEN * 2;
-  const centro = ancho / 2;
-  let y = 20;
+  let y = MARGEN;
 
-  // ── Encabezado ──────────────────────────────────────────────────────────────
-  doc.setTextColor(...NEGRO);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(22);
-  doc.text(campos.empresa, centro, y, { align: "center" });
-  doc.setFontSize(8);
-  doc.text(campos.giro, centro, (y += 5), { align: "center" });
-  doc.text(campos.razonSocial, centro, (y += 3.6), { align: "center" });
-  if (campos.domicilioEncabezado) {
-    doc.setFontSize(8.5);
-    doc.text(campos.domicilioEncabezado, centro, (y += 5), { align: "center" });
-  }
-  if (campos.telefonos) {
-    doc.setFontSize(8);
-    doc.text(campos.telefonos, centro, (y += 3.8), { align: "center" });
-  }
-  doc.setDrawColor(...NEGRO);
-  doc.setLineWidth(0.4);
-  doc.line(MARGEN, (y += 2), ancho - MARGEN, y);
-
-  doc.setFontSize(11.5);
-  const titulo = "BITÁCORA DE HORAS DE SERVICIO DEL CONDUCTOR";
-  y += 12;
-  doc.text(titulo, centro, y, { align: "center" });
-  const tw = doc.getTextWidth(titulo);
-  doc.setLineWidth(0.3);
-  doc.line(centro - tw / 2, y + 1, centro + tw / 2, y + 1);
-  y += 10;
+  const seccion = (titulo, nota) => {
+    doc.setFillColor(...FONDO_SECCION);
+    doc.rect(MARGEN, y, util, 6.5, "F");
+    doc.setFillColor(...AMARILLO);
+    doc.rect(MARGEN, y, 1.4, 6.5, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(...NEGRO);
+    doc.text(titulo.toUpperCase(), MARGEN + 4, y + 4.5);
+    if (nota) {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7);
+      doc.setTextColor(...GRIS);
+      doc.text(nota, ancho - MARGEN - 2, y + 4.4, { align: "right" });
+    }
+    y += 8;
+  };
 
   const base = {
     theme: "grid",
     margin: { left: MARGEN, right: MARGEN },
-    styles: { font: "helvetica", fontSize: 8, textColor: NEGRO, lineColor: LINEA, lineWidth: 0.2, cellPadding: 1.4, valign: "middle" },
+    showHead: "never",
+    styles: { font: "helvetica", fontSize: 8.5, textColor: NEGRO, lineColor: BORDE, lineWidth: 0.2, cellPadding: 1.8, valign: "middle" },
   };
   // autoTable deduce el número de columnas de las celdas del primer renglón y
-  // no cuenta los colSpan: sin declararlas, una tabla de 5 columnas cuyo primer
-  // renglón tiene 2 celdas combinadas se dibuja con 2 y todo se aprieta.
-  const columnas = (n) => ({ columns: Array.from({ length: n }, (_, i) => ({ header: "", dataKey: i })), showHead: "never" });
-  // colSpan/rowSpan van en la celda, no en styles (ahí autoTable los ignora).
-  const gris = (content, { colSpan, rowSpan, ...extra } = {}) => ({ content, colSpan, rowSpan, styles: { fillColor: GRIS, fontSize: 7.5, halign: "center", ...extra } });
-  const valor = (content, { colSpan, rowSpan, ...extra } = {}) => ({ content: content || "", colSpan, rowSpan, styles: { fontStyle: "bold", fontSize: 9, ...extra } });
+  // no cuenta los colSpan: hay que declararlas.
+  const columnas = (n) => ({ columns: Array.from({ length: n }, (_, i) => ({ header: "", dataKey: i })) });
+  const etiqueta = (content, extra = {}) => ({
+    content,
+    styles: { textColor: GRIS, fontStyle: "bold", fontSize: 6.8, ...extra },
+  });
+  const valor = (content, { colSpan, ...extra } = {}) => ({
+    content: content || "",
+    colSpan,
+    styles: { fontStyle: "bold", ...extra },
+  });
 
-  // ── Datos del viaje ─────────────────────────────────────────────────────────
-  // 5 columnas: tipo de servicio | modalidad | marca | modelo | placas.
+  // Pares etiqueta/valor en N columnas, como en la carta porte. `pesos` reparte
+  // el ancho entre pares (p. ej. más espacio para el nombre del conductor).
+  const datosClave = (pares, n = 3, { separacion = 4, pesos } = {}) => {
+    const fracciones = pesos || Array.from({ length: n }, () => 1 / n);
+    const estilos = {};
+    for (let j = 0; j < n; j++) {
+      const anchoPar = util * fracciones[j];
+      const anchoEtiqueta = Math.min(anchoPar * 0.36, 22);
+      estilos[j * 2] = { cellWidth: anchoEtiqueta };
+      estilos[j * 2 + 1] = { cellWidth: anchoPar - anchoEtiqueta };
+    }
+    const filas = [];
+    for (let i = 0; i < pares.length; i += n) {
+      const fila = [];
+      for (let j = 0; j < n; j++) {
+        const p = pares[i + j];
+        fila.push(p ? etiqueta(p[0]) : "", p ? valor(p[1], p[2]) : "");
+      }
+      filas.push(fila);
+    }
+    autoTable(doc, { ...base, ...columnas(n * 2), startY: y, columnStyles: estilos, body: filas });
+    y = doc.lastAutoTable.finalY + separacion;
+  };
+
+  // ── Encabezado ──────────────────────────────────────────────────────────────
+  let logoAlto = 0;
+  if (logo) {
+    const { width, height } = doc.getImageProperties(logo);
+    logoAlto = LOGO_ANCHO * (height / width);
+    doc.addImage(logo, "JPEG", MARGEN, y, LOGO_ANCHO, logoAlto, "logo");
+  }
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(17);
+  doc.setTextColor(...NEGRO);
+  doc.text("BITÁCORA DE HORAS DE SERVICIO", ancho - MARGEN, y + 7, { align: "right" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(...GRIS);
+  doc.text("del conductor · Autotransporte federal de carga", ancho - MARGEN, y + 12, { align: "right" });
+
+  const infoX = ancho / 2 + 4;
   autoTable(doc, {
-    ...base,
-    ...columnas(5),
-    startY: y,
-    columnStyles: { 0: { cellWidth: util * 0.19 }, 1: { cellWidth: util * 0.16 }, 2: { cellWidth: util * 0.31 }, 3: { cellWidth: util * 0.14 }, 4: { cellWidth: util * 0.2 } },
+    startY: y + 16,
+    margin: { left: infoX, right: MARGEN },
+    theme: "plain",
+    styles: { font: "helvetica", fontSize: 8, textColor: NEGRO, cellPadding: { top: 0.7, bottom: 0.7, left: 1.5, right: 1.5 } },
+    columnStyles: { 0: { fontStyle: "bold", textColor: GRIS, cellWidth: 24 }, 1: { fontStyle: "bold" } },
     body: [
-      [gris("FECHA:", { colSpan: 3, halign: "right", minCellHeight: 10 }), valor(campos.fecha, { colSpan: 2 })],
-      [gris("NOMBRE DEL PERMISIONARIO", { colSpan: 2 }), gris("DOMICILIO", { colSpan: 3 })],
-      [valor(campos.permisionario, { colSpan: 2, minCellHeight: 11 }), valor(campos.domicilioPermisionario, { colSpan: 3, halign: "center" })],
-      [gris("TIPO DE SERVICIO"), gris("MODALIDAD"), gris("MARCA"), gris("MODELO"), gris("PLACAS No.")],
-      [
-        valor(campos.tipoServicio, { halign: "center" }),
-        valor(campos.modalidad, { halign: "center" }),
-        valor(campos.marca),
-        valor(campos.modelo, { halign: "center" }),
-        valor(campos.placas, { halign: "center" }),
-      ],
-      [gris("NOMBRE DEL CONDUCTOR", { minCellHeight: 12 }), valor(campos.conductor, { colSpan: 4, halign: "center", fontSize: 10 })],
-      [gris("LICENCIA", { colSpan: 2, halign: "left" }), gris("VIGENCIA"), gris("ORIGEN-DESTINO (ESPECIFICAR LA RUTA A SEGUIR)", { colSpan: 2, fontSize: 6.5 })],
-      [
-        { content: campos.licencia, colSpan: 2 },
-        { content: campos.vigencia, styles: { halign: "center" } },
-        valor(campos.ruta, { colSpan: 2, fontSize: 7.5 }),
-      ],
-      [{ content: "", colSpan: 2, styles: { minCellHeight: 5 } }, "", { content: "", colSpan: 2 }],
+      ["Fecha", campos.fecha || "—"],
+      ...(campos.referencia ? [["Referencia", campos.referencia]] : []),
+      ...(campos.factura ? [["Factura", campos.factura]] : []),
+      ["Unidad", [campos.marca, campos.placas].filter(Boolean).join(" · ") || "—"],
     ],
   });
-  y = doc.lastAutoTable.finalY + 10;
+  y = Math.max(doc.lastAutoTable.finalY, y + logoAlto) + 3;
+  doc.setDrawColor(...AMARILLO);
+  doc.setLineWidth(0.8);
+  doc.line(MARGEN, y, ancho - MARGEN, y);
+  y += 5;
 
-  // ── Bitácora del operador (24 horas, se llena a mano) ───────────────────────
-  const anchoEtiqueta = 19;
-  const anchoTotal = 12;
+  // ── Datos (mismas casillas que la hoja a mano) ─────────────────────────────
+  seccion("Permisionario");
+  datosClave(
+    [
+      ["Nombre", campos.permisionario],
+      ["Domicilio", campos.domicilioEncabezado || campos.domicilioPermisionario],
+      ["Teléfonos", (campos.telefonos || "").replace(/^TELEFONOS\s*/i, "").replace(/\s{2,}/g, " ")],
+      ["Tipo de servicio", `${campos.tipoServicio} · ${campos.modalidad}`],
+    ],
+    2,
+  );
+
+  seccion("Vehículo");
+  datosClave([["Marca", campos.marca], ["Modelo", campos.modelo], ["Placas", campos.placas]]);
+
+  seccion("Conductor");
+  datosClave([["Nombre", campos.conductor], ["Licencia", campos.licencia], ["Vigencia", campos.vigencia]], 3, {
+    pesos: [0.48, 0.28, 0.24],
+  });
+
+  // La ruta va resaltada: es lo primero que se revisa contra la carta porte.
+  seccion("Origen – destino", "Ruta a seguir");
+  autoTable(doc, {
+    ...base,
+    ...columnas(1),
+    startY: y,
+    body: [[valor(campos.ruta || " ", { fontSize: 10.5, fillColor: AMARILLO_SUAVE, halign: "center", cellPadding: 2.6 })]],
+  });
+  y = doc.lastAutoTable.finalY + 4;
+
+  // ── Registro de actividades: 24 h, se llena a mano ──────────────────────────
+  seccion("Bitácora del operador", "Marque con una línea las horas de cada actividad");
+  const anchoEtiqueta = 24;
+  const anchoTotal = 13;
   const anchoHora = (util - anchoEtiqueta - anchoTotal) / 24;
-  const estilosHoras = { 0: { cellWidth: anchoEtiqueta, fontSize: 5.5, halign: "left" } };
-  for (let h = 1; h <= 24; h++) estilosHoras[h] = { cellWidth: anchoHora, halign: "right" };
-  estilosHoras[25] = { cellWidth: anchoTotal, fontSize: 6.5, halign: "center" };
+  const estilosHoras = { 0: { cellWidth: anchoEtiqueta, halign: "left" } };
+  for (let h = 1; h <= 24; h++) estilosHoras[h] = { cellWidth: anchoHora, halign: "center" };
+  estilosHoras[25] = { cellWidth: anchoTotal, halign: "center" };
+  const encabezado = { fillColor: NEGRO, textColor: [255, 255, 255], fontStyle: "bold", fontSize: 6.8, cellPadding: 1 };
 
   autoTable(doc, {
     ...base,
     ...columnas(26),
     startY: y,
-    styles: { ...base.styles, cellPadding: 0.8, fontSize: 7.5, minCellHeight: 5.5 },
+    styles: { ...base.styles, lineColor: LINEA_CUADRICULA, lineWidth: 0.25, cellPadding: 0.8, minCellHeight: 6.8, fontSize: 7 },
     columnStyles: estilosHoras,
     body: [
-      [{ content: "BITACORA DEL OPERADOR:", colSpan: 26, styles: { fontSize: 9, halign: "left", lineWidth: 0 } }],
-      [{ content: "", styles: { minCellHeight: 4 } }, ...Array.from({ length: 24 }, () => ""), ""],
-      ["", ...Array.from({ length: 24 }, (_, i) => String(i + 1)), { content: "TOTAL", styles: { fontSize: 6.5 } }],
-      ...ACTIVIDADES.map((a) => [a, ...Array.from({ length: 24 }, () => ""), ""]),
+      [
+        { content: "Actividad", styles: { ...encabezado, halign: "left" } },
+        ...Array.from({ length: 24 }, (_, i) => ({ content: String(i + 1), styles: encabezado })),
+        { content: "Total", styles: encabezado },
+      ],
+      ...ACTIVIDADES.map((a, i) => [
+        { content: a, styles: { fontStyle: "bold", textColor: GRIS, fillColor: FONDO_SECCION } },
+        ...Array.from({ length: 24 }, () => ({ content: "", styles: { fillColor: i % 2 ? [250, 250, 250] : [255, 255, 255] } })),
+        { content: "", styles: { fillColor: AMARILLO_SUAVE } },
+      ]),
     ],
   });
-  y = doc.lastAutoTable.finalY + 14;
+  y = doc.lastAutoTable.finalY + 4;
 
-  // ── Horas y firmas ──────────────────────────────────────────────────────────
+  // ── Horas ───────────────────────────────────────────────────────────────────
+  seccion("Horas");
+  const tercio = util / 3;
   autoTable(doc, {
     ...base,
-    ...columnas(5),
+    ...columnas(3),
     startY: y,
-    columnStyles: { 0: { cellWidth: util * 0.09 }, 1: { cellWidth: util * 0.11 }, 2: { cellWidth: util * 0.11 }, 3: { cellWidth: util * 0.19 }, 4: { cellWidth: util * 0.5 } },
+    columnStyles: { 0: { cellWidth: tercio }, 1: { cellWidth: tercio }, 2: { cellWidth: tercio } },
     body: [
-      [
-        { content: "HORAS", rowSpan: 2, styles: { fillColor: GRIS, fontSize: 6, valign: "bottom", halign: "center" } },
-        gris("DE SALIDA", { fontSize: 6 }),
-        gris("DE LLEGADA", { fontSize: 6 }),
-        gris("DE SERVICIO CONDUCIENDO", { colSpan: 2, fontSize: 6, halign: "left" }),
-      ],
-      [{ content: "", styles: { minCellHeight: 7 } }, "", { content: "", colSpan: 2 }],
-      [{ content: "", colSpan: 5, styles: { minCellHeight: 5 } }],
-      [gris("FIRMA DEL RESPONSABLE", { colSpan: 4 }), gris("FIRMA DEL CONDUCTOR")],
-      [
-        valor(campos.firmaResponsable, { colSpan: 4, halign: "center", fontSize: 10.5, minCellHeight: 12 }),
-        valor(campos.firmaConductor, { halign: "center", fontSize: 10.5 }),
-      ],
-      [{ content: "", colSpan: 4, styles: { minCellHeight: 12 } }, ""],
+      [etiqueta("DE SALIDA"), etiqueta("DE LLEGADA"), etiqueta("DE SERVICIO CONDUCIENDO")],
+      [{ content: "", styles: { minCellHeight: 9 } }, "", ""],
     ],
   });
+  y = doc.lastAutoTable.finalY + 4;
+
+  // ── Firmas ──────────────────────────────────────────────────────────────────
+  seccion("Firmas");
+  const anchoFirma = (util - 12) / 2;
+  // Ocupa lo que queda de la hoja sin pisar el pie (mín. 20 mm para firmar).
+  const altoFirma = Math.max(20, Math.min(30, alto - 14 - y));
+  [
+    { x: MARGEN, titulo: "Firma del responsable", nombre: campos.firmaResponsable },
+    { x: MARGEN + anchoFirma + 12, titulo: "Firma del conductor", nombre: campos.firmaConductor },
+  ].forEach(({ x, titulo, nombre }) => {
+    doc.setDrawColor(...BORDE);
+    doc.setLineWidth(0.2);
+    doc.roundedRect(x, y, anchoFirma, altoFirma, 1.5, 1.5, "S");
+    doc.setDrawColor(...NEGRO);
+    doc.setLineWidth(0.3);
+    doc.line(x + 10, y + altoFirma - 9, x + anchoFirma - 10, y + altoFirma - 9);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9.5);
+    doc.setTextColor(...NEGRO);
+    doc.text(nombre || "", x + anchoFirma / 2, y + altoFirma - 4.5, { align: "center" });
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(...GRIS);
+    doc.text(titulo.toUpperCase(), x + anchoFirma / 2, y + altoFirma - 1.5, { align: "center" });
+  });
+
+  // ── Pie ─────────────────────────────────────────────────────────────────────
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6.5);
+  doc.setTextColor(...GRIS);
+  const pie = [campos.empresa, campos.razonSocial, campos.uuid && `CFDI ${campos.uuid}`].filter(Boolean).join(" · ");
+  doc.text(pie, MARGEN, alto - 7);
+  doc.text("Bitácora de horas de servicio del conductor", ancho - MARGEN, alto - 7, { align: "right" });
 
   return doc;
 }

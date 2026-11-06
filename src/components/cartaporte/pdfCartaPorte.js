@@ -12,16 +12,10 @@ import {
 } from "./catalogosSat.js";
 import { datosBitacora } from "./datosBitacora.js";
 import { construirPDFBitacora } from "./pdfBitacora.js";
+import { MARGEN, NEGRO, GRIS, FONDO_SECCION, AMARILLO, BORDE, LOGO_ANCHO } from "./estiloPDF.js";
 
 // Representación impresa de la Carta Porte SIN importes. Sólo recibe lo que
 // devuelve parsearCartaPorte(), que ya excluye todo campo de dinero.
-
-const MARGEN = 12;
-const NEGRO = [20, 20, 20];
-const GRIS = [100, 116, 139];
-const FONDO_SECCION = [241, 245, 249];
-const AMARILLO = [234, 179, 8];
-const BORDE = [203, 213, 225];
 
 function fmtFecha(s) {
   if (!s) return "—";
@@ -118,8 +112,8 @@ export function construirPDFCartaPorte({ datos, logo, qr, municipios }) {
   let logoAlto = 0;
   if (logo) {
     const { width, height } = doc.getImageProperties(logo);
-    logoAlto = 38 * (height / width);
-    doc.addImage(logo, "JPEG", MARGEN, y, 38, logoAlto, "logo");
+    logoAlto = LOGO_ANCHO * (height / width);
+    doc.addImage(logo, "JPEG", MARGEN, y, LOGO_ANCHO, logoAlto, "logo");
   }
   doc.setFont("helvetica", "bold");
   doc.setFontSize(20);
@@ -350,7 +344,7 @@ export async function generarDocumentosViaje(xml, referencia, { cartaPorte = tru
   const datos = parsearCartaPorte(xml);
   if (referencia) datos.referencia = { tipo: referencia.tipo || null, valor: referencia.valor || "" };
   const [logo, qr, { default: municipios }] = await Promise.all([
-    cartaPorte ? cargarLogoPDF().catch(() => null) : null,
+    cargarLogoPDF().catch(() => null),
     cartaPorte ? QRCode.toDataURL(urlVerificacionCCP(datos), { errorCorrectionLevel: "M", margin: 0, width: 320 }) : null,
     import("./municipiosSat.json"),
   ]);
@@ -360,7 +354,7 @@ export async function generarDocumentosViaje(xml, referencia, { cartaPorte = tru
   if (bitacora) {
     const bit = datosBitacora(datos, { ...catalogos, municipios });
     faltantes = bit.faltantes;
-    doc = construirPDFBitacora({ campos: bit.campos, doc: doc || undefined });
+    doc = construirPDFBitacora({ campos: bit.campos, logo, doc: doc || undefined });
   }
 
   const ref = refArchivo(datos);

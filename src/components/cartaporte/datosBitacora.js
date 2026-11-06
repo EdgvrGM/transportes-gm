@@ -7,6 +7,7 @@
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { razonSocial } from "./razonesSociales.js";
+import { textoReferencia } from "./parsearCartaPorte.js";
 
 // Abreviaturas de uso común en México (como se escriben a mano en la bitácora).
 const ESTADO_ABREV = {
@@ -116,6 +117,10 @@ export function datosBitacora(datos, { camiones = [], conductores = [], municipi
     ruta: rutaBitacora(cp.ubicaciones, municipios),
     firmaResponsable: nombreFirma(datos.emisor.nombre),
     firmaConductor: nombreFirma(operador?.nombre),
+    // Para ligar la hoja impresa con su viaje y su factura.
+    referencia: textoReferencia(datos.referencia?.tipo, datos.referencia?.valor),
+    factura: [datos.serie, datos.folio].filter(Boolean).join("-"),
+    uuid: datos.timbre?.uuid || "",
   };
 
   const faltantes = [];
