@@ -33,14 +33,22 @@ serve(async (req) => {
   if (userErr || !userData?.user) return json({ error: "Sesión inválida" }, 401);
   const caller = userData.user;
 
-  // 2) Exigir que sea interno (no cliente)
-  const { data: esCliente } = await admin
-    .from("cuenta_cliente").select("id").eq("user_id", caller.id).maybeSingle();
-  if (esCliente) return json({ error: "Sin permiso" }, 403);
+  // 2) Exigir que sea interno (lista blanca: fila en perfil_usuario, sin cuenta_cliente)
+  const [{ data: perfil }, { data: esCliente }] = await Promise.all([
+    admin.from("perfil_usuario").select("rol").eq("user_id", caller.id).maybeSingle(),
+    admin.from("cuenta_cliente").select("id").eq("user_id", caller.id).maybeSingle(),
+  ]);
+  if (!perfil || esCliente) return json({ error: "Sin permiso" }, 403);
 
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return json({ error: "Body inválido" }, 400); }
   const action = body.action as string;
+
+  // 3) Todo lo que no sea consultar es solo para el admin
+  if (action !== "list" && perfil.rol !== "admin") {
+    return json({ error: "Solo un administrador puede modificar cuentas de cliente" }, 403);
+  }
+  const MIN_PASSWORD = 8;
 
   try {
     if (action === "list") {
@@ -73,6 +81,9 @@ serve(async (req) => {
         cliente_id?: string | null; unidades?: { wialon_unit_id: number; wialon_nombre?: string }[];
       };
       if (!email || !password || !nombre) return json({ error: "Faltan datos" }, 400);
+      if (password.length < MIN_PASSWORD) {
+        return json({ error: `La contraseña debe tener al menos ${MIN_PASSWORD} caracteres` }, 400);
+      }
 
       const { data: created, error: createErr } = await admin.auth.admin.createUser({
         email, password, email_confirm: true,
@@ -131,6 +142,9 @@ serve(async (req) => {
     if (action === "reset-password") {
       const { cuenta_id, password } = body as { cuenta_id: string; password: string };
       if (!cuenta_id || !password) return json({ error: "Faltan datos" }, 400);
+      if (password.length < MIN_PASSWORD) {
+        return json({ error: `La contraseña debe tener al menos ${MIN_PASSWORD} caracteres` }, 400);
+      }
       const { data: cuenta } = await admin
         .from("cuenta_cliente").select("user_id").eq("id", cuenta_id).single();
       if (!cuenta) return json({ error: "Cuenta no encontrada" }, 404);

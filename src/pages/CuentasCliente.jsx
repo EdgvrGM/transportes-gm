@@ -8,7 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
+import { useRol } from "@/hooks/useRol";
 import { Users, Plus, Loader2, KeyRound, Power, Truck, Pencil } from "lucide-react";
+
+// Debe coincidir con MIN_PASSWORD de la Edge Function admin-cuentas-cliente.
+const MIN_PASSWORD = 8;
 
 async function invocar(action, payload = {}) {
   const { data, error } = await supabase.functions.invoke("admin-cuentas-cliente", { body: { action, ...payload } });
@@ -24,6 +28,7 @@ async function invocar(action, payload = {}) {
 export default function CuentasCliente() {
   const { toast } = useToast();
   const qc = useQueryClient();
+  const { esAdmin } = useRol();
 
   const { data: cuentas = [], isLoading } = useQuery({
     queryKey: ["cuentas-cliente"],
@@ -74,9 +79,11 @@ export default function CuentasCliente() {
             <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-2">
               <Users className="w-7 h-7 text-primary" /> Cuentas de Cliente
             </h1>
-            <p className="text-muted-foreground text-sm mt-1">Accesos de solo rastreo para tus clientes</p>
+            <p className="text-muted-foreground text-sm mt-1">
+              Accesos de solo rastreo para tus clientes{!esAdmin && " · solo un administrador puede crearlas o modificarlas"}
+            </p>
           </div>
-          <Button onClick={() => setOpenNueva(true)} className="gap-2"><Plus className="w-4 h-4" /> Nueva cuenta</Button>
+          {esAdmin && <Button onClick={() => setOpenNueva(true)} className="gap-2"><Plus className="w-4 h-4" /> Nueva cuenta</Button>}
         </div>
 
         {isLoading ? (
@@ -104,13 +111,13 @@ export default function CuentasCliente() {
                       </p>
                     )}
                   </div>
-                  <div className="flex gap-1 shrink-0">
+                  {esAdmin && <div className="flex gap-1 shrink-0">
                     <Button aria-label="Editar" size="icon" variant="outline" title="Editar unidades" onClick={() => setEditandoUnidades(c)}><Pencil className="w-3.5 h-3.5" /></Button>
                     <Button size="icon" variant="outline" title="Resetear contraseña" onClick={() => setResetCuenta(c)}><KeyRound className="w-3.5 h-3.5" /></Button>
                     <Button size="icon" variant="outline" title={c.activo ? "Desactivar" : "Activar"}
                       onClick={() => setActivo.mutate({ cuenta_id: c.id, activo: !c.activo })}
                       className={c.activo ? "text-red-500" : "text-green-500"}><Power className="w-3.5 h-3.5" /></Button>
-                  </div>
+                  </div>}
                 </div>
               </div>
             ))}
@@ -159,9 +166,9 @@ function DialogNueva({ unidades, onClose, onSubmit, loading }) {
         <div className="space-y-3">
           <div><Label>Nombre / Razón social</Label><Input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Cliente S.A." /></div>
           <div><Label>Correo (usuario)</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="cliente@correo.com" /></div>
-          <div><Label>Contraseña</Label><Input type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="mínimo 6 caracteres" /></div>
+          <div><Label>Contraseña</Label><Input type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={`mínimo ${MIN_PASSWORD} caracteres`} /></div>
           <div><Label>Unidades visibles ({seleccion.length})</Label><SelectorUnidades unidades={unidades} seleccion={seleccion} setSeleccion={setSeleccion} /></div>
-          <Button className="w-full gap-2" disabled={loading || !email || !password || !nombre} onClick={() => onSubmit({ email, password, nombre, unidades: seleccion })}>
+          <Button className="w-full gap-2" disabled={loading || !email || password.length < MIN_PASSWORD || !nombre} onClick={() => onSubmit({ email, password, nombre, unidades: seleccion })}>
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} Crear cuenta
           </Button>
         </div>
@@ -198,8 +205,8 @@ function DialogReset({ cuenta, onClose, onSubmit, loading }) {
         <DialogHeader><DialogTitle>Nueva contraseña</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">Para <strong>{cuenta.nombre}</strong> ({cuenta.email})</p>
-          <Input type="text" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="nueva contraseña" />
-          <Button className="w-full" disabled={loading || pw.length < 6} onClick={() => onSubmit(pw)}>
+          <Input type="text" value={pw} onChange={(e) => setPw(e.target.value)} placeholder={`nueva contraseña (mínimo ${MIN_PASSWORD})`} />
+          <Button className="w-full" disabled={loading || pw.length < MIN_PASSWORD} onClick={() => onSubmit(pw)}>
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Actualizar contraseña"}
           </Button>
         </div>

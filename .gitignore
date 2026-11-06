@@ -32,8 +32,10 @@ dist-ssr
 # Archivos locales
 *.local
 
-# Base de datos (migraciones locales)
+# Base de datos: scripts sueltos de la raíz ignorados; las migraciones SÍ se
+# versionan (definen el RLS — sin ellas el repo no refleja qué está protegido).
 *.sql
+!supabase/migrations/*.sql
 
 # Documentación interna
 /CLAUDE.md

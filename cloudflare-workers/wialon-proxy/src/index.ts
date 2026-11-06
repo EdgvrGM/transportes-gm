@@ -447,28 +447,56 @@ async function ejecutarRalenti(env: Env): Promise<void> {
 // El proxy ya NO es público. Acepta una de tres credenciales:
 //   1. X-Proxy-Secret  → backend de confianza (Edge Function rastreo-cliente).      → "interno"
 //   2. ?token=<hex>     → enlace de rastreo compartido vigente.                      → "token" (1 unidad)
-//   3. Bearer <jwt>     → usuario interno autenticado (NO cuenta de cliente).        → "interno"
+//   3. Bearer <jwt>     → usuario interno: con fila en perfil_usuario y sin cuenta_cliente. → "interno"
+interface EnlaceCompartido {
+  unitId: number;
+  historial: boolean;              // tipo = 'historial' → solo el rango guardado, sin posición en vivo
+  desde: number | null;            // epoch s
+  hasta: number | null;            // epoch s
+}
+
 type Autorizacion =
   | { ok: false }
   | { ok: true; mode: "interno" }
-  | { ok: true; mode: "token"; unitId: number };
+  | ({ ok: true; mode: "token" } & EnlaceCompartido);
 
 function sbHeaders(env: Env) {
   return { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}` };
 }
 
-async function unitIdDeToken(token: string, env: Env): Promise<number | null> {
+// Comparación en tiempo constante (el secreto no se filtra por tiempos de respuesta).
+function mismoSecreto(a: string, b: string): boolean {
+  const ea = new TextEncoder().encode(a);
+  const eb = new TextEncoder().encode(b);
+  let diff = ea.length ^ eb.length;
+  for (let i = 0; i < Math.max(ea.length, eb.length); i++) {
+    diff |= (ea[i] ?? 0) ^ (eb[i] ?? 0);
+  }
+  return diff === 0;
+}
+
+const aEpoch = (iso: string | null) => (iso ? Math.floor(new Date(iso).getTime() / 1000) : null);
+
+async function enlaceDeToken(token: string, env: Env): Promise<EnlaceCompartido | null> {
   if (!/^[a-fA-F0-9]{16,64}$/.test(token)) return null;
   try {
     const res = await fetch(
-      `${env.SUPABASE_URL}/rest/v1/RastreoCompartido?select=wialon_unit_id,expires_at&token=eq.${encodeURIComponent(token)}&limit=1`,
+      `${env.SUPABASE_URL}/rest/v1/RastreoCompartido?select=wialon_unit_id,expires_at,tipo,historial_desde,historial_hasta&token=eq.${encodeURIComponent(token)}&limit=1`,
       { headers: sbHeaders(env) }
     );
     if (!res.ok) return null;
-    const rows = (await res.json()) as { wialon_unit_id: number; expires_at: string }[];
+    const rows = (await res.json()) as {
+      wialon_unit_id: number; expires_at: string; tipo: string | null;
+      historial_desde: string | null; historial_hasta: string | null;
+    }[];
     const row = rows?.[0];
     if (!row || new Date(row.expires_at).getTime() <= Date.now()) return null;
-    return Number(row.wialon_unit_id);
+    return {
+      unitId:    Number(row.wialon_unit_id),
+      historial: row.tipo === "historial",
+      desde:     aEpoch(row.historial_desde),
+      hasta:     aEpoch(row.historial_hasta),
+    };
   } catch {
     return null;
   }
@@ -487,39 +515,48 @@ async function validarJwt(jwt: string, env: Env): Promise<string | null> {
   }
 }
 
-async function esCuentaCliente(userId: string, env: Env): Promise<boolean> {
+async function hayFila(tabla: string, userId: string, env: Env): Promise<boolean | null> {
   try {
     const res = await fetch(
-      `${env.SUPABASE_URL}/rest/v1/cuenta_cliente?select=id&user_id=eq.${encodeURIComponent(userId)}&limit=1`,
+      `${env.SUPABASE_URL}/rest/v1/${tabla}?select=user_id&user_id=eq.${encodeURIComponent(userId)}&limit=1`,
       { headers: sbHeaders(env) }
     );
-    if (!res.ok) return false;
+    if (!res.ok) return null;
     const rows = (await res.json()) as unknown[];
     return Array.isArray(rows) && rows.length > 0;
   } catch {
-    return false;
+    return null;
   }
+}
+
+// Lista blanca, igual que es_interno() en SQL. Ante cualquier error, NO es interno.
+async function esInterno(userId: string, env: Env): Promise<boolean> {
+  const [perfil, cliente] = await Promise.all([
+    hayFila("perfil_usuario", userId, env),
+    hayFila("cuenta_cliente", userId, env),
+  ]);
+  return perfil === true && cliente === false;
 }
 
 async function autorizar(request: Request, url: URL, env: Env): Promise<Autorizacion> {
   // 1) Backend de confianza
   const secret = request.headers.get("X-Proxy-Secret");
-  if (env.PROXY_SHARED_SECRET && secret && secret === env.PROXY_SHARED_SECRET) {
+  if (env.PROXY_SHARED_SECRET && secret && mismoSecreto(secret, env.PROXY_SHARED_SECRET)) {
     return { ok: true, mode: "interno" };
   }
   // 2) Token de rastreo compartido (páginas públicas)
   const token = url.searchParams.get("token");
   if (token) {
-    const unitId = await unitIdDeToken(token, env);
-    if (unitId == null) return { ok: false };
-    return { ok: true, mode: "token", unitId };
+    const enlace = await enlaceDeToken(token, env);
+    if (!enlace) return { ok: false };
+    return { ok: true, mode: "token", ...enlace };
   }
   // 3) JWT de usuario interno
   const authz = request.headers.get("Authorization") || "";
   const jwt = authz.startsWith("Bearer ") ? authz.slice(7).trim() : "";
   if (jwt) {
     const userId = await validarJwt(jwt, env);
-    if (userId && !(await esCuentaCliente(userId, env))) {
+    if (userId && (await esInterno(userId, env))) {
       return { ok: true, mode: "interno" };
     }
   }
@@ -578,19 +615,27 @@ export default {
       );
     }
 
-    // Un enlace de rastreo compartido solo puede ver SU unidad.
+    // Un enlace de rastreo compartido solo puede ver SU unidad, y solo lo que
+    // su tipo permite: en vivo → posición/detalle; historial → el rango guardado.
     const unitParam = url.searchParams.get("unit");
     if (auth.mode === "token") {
-      if (action === "units") {
-        return new Response(JSON.stringify({ error: "No autorizado" }), {
-          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      const prohibido = (msg: string) => new Response(JSON.stringify({ error: msg }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+      const permitidas = auth.historial
+        ? ["history", "details", "ping"]
+        : ["positions", "details", "ping"];
+      if (!permitidas.includes(action)) return prohibido("No autorizado");
       if ((action === "history" || action === "details") &&
           parseInt(unitParam || "0", 10) !== auth.unitId) {
-        return new Response(JSON.stringify({ error: "Unidad no autorizada" }), {
-          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return prohibido("Unidad no autorizada");
+      }
+      if (action === "history") {
+        if (auth.desde == null || auth.hasta == null) return prohibido("Enlace sin rango de historial");
+        const from = parseInt(url.searchParams.get("from") || "0", 10) || auth.desde;
+        const to   = parseInt(url.searchParams.get("to") || "0", 10) || auth.hasta;
+        url.searchParams.set("from", String(Math.max(from, auth.desde)));
+        url.searchParams.set("to",   String(Math.min(to, auth.hasta)));
       }
       ctx.waitUntil(registrarVisita(request, url.searchParams.get("token")!, env));
     }

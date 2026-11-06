@@ -1,13 +1,40 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// El gateway solo exige *un* JWT, y la anon key pública lo es: sin esta
+// verificación cualquiera podría usar la cuota de Gemini. Solo internos.
+async function esUsuarioInterno(req: Request): Promise<boolean> {
+  const token = req.headers.get("Authorization")?.replace("Bearer ", "");
+  if (!token) return false;
+  const admin = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    { auth: { persistSession: false } },
+  );
+  const { data: userData, error } = await admin.auth.getUser(token);
+  if (error || !userData?.user) return false;
+  const [{ data: perfil }, { data: cliente }] = await Promise.all([
+    admin.from("perfil_usuario").select("user_id").eq("user_id", userData.user.id).maybeSingle(),
+    admin.from("cuenta_cliente").select("id").eq("user_id", userData.user.id).maybeSingle(),
+  ]);
+  return !!perfil && !cliente;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
+  }
+
+  if (!(await esUsuarioInterno(req))) {
+    return new Response(JSON.stringify({ error: "No autorizado" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 401,
+    });
   }
 
   let body;
@@ -73,7 +100,8 @@ serve(async (req) => {
   const result = await geminiRes.json();
 
   if (!geminiRes.ok) {
-    return new Response(JSON.stringify({ error: "Gemini error", details: result }), {
+    console.error("Gemini error:", JSON.stringify(result));
+    return new Response(JSON.stringify({ error: "Gemini error" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

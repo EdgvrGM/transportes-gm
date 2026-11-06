@@ -2,8 +2,19 @@ import L from "leaflet";
 
 export const WIALON_IMG_BASE = "https://hst-api.wialon.com";
 
-export function createUnitIcon(uri, rumbo, motor, nombre, velocidad = 0) {
-  const imgUrl = uri ? `${WIALON_IMG_BASE}${uri}` : null;
+// El HTML de L.divIcon se inserta tal cual: todo texto externo (nombre de la
+// unidad en Wialon, ruta del ícono) se escapa. Se usa también en páginas públicas.
+const escapeHtml = (str) =>
+  String(str ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+export function createUnitIcon(uri, rumbo, motor, rawNombre, velocidad = 0) {
+  const imgUrl = uri ? escapeHtml(`${WIALON_IMG_BASE}${uri}`) : null;
+  const nombre = escapeHtml(rawNombre);
   const rad = (rumbo * Math.PI) / 180;
   const dist = 20;
   const arrowX = 22 + Math.sin(rad) * dist;
