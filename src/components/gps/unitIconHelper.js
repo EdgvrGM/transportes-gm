@@ -12,6 +12,19 @@ const escapeHtml = (str) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
+// Ícono de Wialon que no carga → se oculta y aparece el 🚚 de respaldo. Se hace
+// con un listener global (fase de captura: "error" no burbujea) y no con
+// onerror="..." en el HTML, que la CSP (script-src 'self') bloquea.
+if (typeof document !== "undefined" && !window.__gmUnitImgFallback) {
+  window.__gmUnitImgFallback = true;
+  document.addEventListener("error", (e) => {
+    const img = e.target;
+    if (!(img instanceof HTMLImageElement) || !img.classList.contains("gm-unit-img")) return;
+    img.style.display = "none";
+    if (img.nextElementSibling) img.nextElementSibling.style.display = "block";
+  }, true);
+}
+
 export function createUnitIcon(uri, rumbo, motor, rawNombre, velocidad = 0) {
   const imgUrl = uri ? escapeHtml(`${WIALON_IMG_BASE}${uri}`) : null;
   const nombre = escapeHtml(rawNombre);
@@ -27,7 +40,7 @@ export function createUnitIcon(uri, rumbo, motor, rawNombre, velocidad = 0) {
         <div style="position:relative;width:44px;height:44px;">
           <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:32px;height:32px;display:flex;align-items:center;justify-content:center;">
             ${imgUrl
-              ? `<img src="${imgUrl}" style="width:32px;height:32px;object-fit:contain;" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"/>
+              ? `<img class="gm-unit-img" src="${imgUrl}" style="width:32px;height:32px;object-fit:contain;"/>
                  <span style="display:none;font-size:20px;">🚚</span>`
               : `<span style="font-size:20px;">🚚</span>`
             }
