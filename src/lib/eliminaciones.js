@@ -169,6 +169,10 @@ async function eliminarDocumento(id) {
   await supabase.storage.from(BUCKET_DOCS).remove([doc.storage_path]);
 }
 
+async function eliminarCartaPorte(id) {
+  await borrarFila("carta_porte", "id", id);
+}
+
 export const ELIMINACIONES = {
   Viaje:               { etiqueta: "Viaje registrado",    pagina: "FuelViajes",         eliminar: eliminarViaje,           invalidar: [["viajes"]] },
   viajes_registrados:  { etiqueta: "Viaje del programa",  pagina: "FuelProgramaCargas", eliminar: eliminarViajeProgramado, invalidar: [["programaCargas"], ["viajesRegistrados"]] },
@@ -180,6 +184,7 @@ export const ELIMINACIONES = {
   CostoUnidad:         { etiqueta: "Gasto de unidad",     pagina: "CostosUnidad",       eliminar: eliminarCosto,           invalidar: [["costos"], ["panel-costos-semana"]] },
   contenedores_vacios: { etiqueta: "Contenedor (vacíos)", pagina: "ControlVacios",      eliminar: eliminarContenedor,      invalidar: [["controlVacios"], ["panel-vacios-pendientes"]] },
   documentos_legales:  { etiqueta: "Documento legal",     pagina: "DocumentacionLegal", eliminar: eliminarDocumento,       invalidar: [["documentos_legales"]] },
+  carta_porte:         { etiqueta: "Carta porte",         pagina: "CartaPorte",         eliminar: eliminarCartaPorte,      invalidar: [["cartas-porte"]] },
 };
 
 // Elimina un registro y marca como aprobada la solicitud pendiente que tenga

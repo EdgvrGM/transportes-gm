@@ -25,6 +25,7 @@ import {
   Container,
   KeyRound,
   Inbox,
+  ScrollText,
 } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
 import { useRol } from "@/hooks/useRol";
@@ -51,6 +52,7 @@ const SYSTEM_PAGES = [
   "ControlVacios",
   "CuentasCliente",
   "SolicitudesEliminacion",
+  "CartaPorte",
 ];
 
 export const TrailerIcon = ({ className, ...props }) => (
@@ -235,6 +237,17 @@ export default function Layout({ children, currentPageName }) {
             >
               <FileText className="w-5 h-5" />
               <span className="font-medium">Registro de Viajes</span>
+            </Link>
+
+            {/* BOTÓN: CARTA PORTE (Directo) */}
+            <Link
+              to={createPageUrl("CartaPorte")}
+              className={navItemClass(
+                location.pathname === createPageUrl("CartaPorte"),
+              )}
+            >
+              <ScrollText className="w-5 h-5" />
+              <span className="font-medium">Carta Porte</span>
             </Link>
 
             {/* BOTÓN: RASTREO GPS (Directo) */}

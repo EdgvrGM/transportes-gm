@@ -37,6 +37,7 @@ const CostosUnidad = lazy(() => import("./CostosUnidad"));
 const ControlVacios = lazy(() => import("./ControlVacios"));
 const CuentasCliente = lazy(() => import("./CuentasCliente.jsx"));
 const SolicitudesEliminacion = lazy(() => import("./SolicitudesEliminacion.jsx"));
+const CartaPorte = lazy(() => import("./CartaPorte.jsx"));
 const PortalCliente = lazy(() => import("./PortalCliente.jsx"));
 
 // Solo se usan los nombres (para decidir si la ruta lleva sidebar en Layout).
@@ -63,6 +64,7 @@ const PAGE_NAMES = [
   "CuentasCliente",
   "SolicitudesEliminacion",
   "PortalCliente",
+  "CartaPorte",
 ];
 
 function _getCurrentPage(url) {
@@ -155,6 +157,7 @@ function PagesContent() {
             <Route path="/controlvacios" element={<ControlVacios />} />
             <Route path="/cuentascliente" element={<CuentasCliente />} />
             <Route path="/solicitudeseliminacion" element={<SolicitudesEliminacion />} />
+            <Route path="/cartaporte" element={<CartaPorte />} />
             <Route path="/iaauditorchat" element={<IAAuditorChat />} />
             <Route path="/expertologistica" element={<ExpertoLogistica />} />
           </Route>

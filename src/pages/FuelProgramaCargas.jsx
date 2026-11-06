@@ -865,6 +865,17 @@ export default function FuelProgramaCargas() {
     return "";
   };
 
+  const ORDEN_TIPO_REMOLQUE = { CH: 0, CS: 1, PT: 2 };
+  const remolquesOrdenados = [...remolques].sort((a, b) => {
+    const ta = ORDEN_TIPO_REMOLQUE[getAbreviacionTipo(a.tipo)] ?? 3;
+    const tb = ORDEN_TIPO_REMOLQUE[getAbreviacionTipo(b.tipo)] ?? 3;
+    if (ta !== tb) return ta - tb;
+    return (a.placas || "").localeCompare(b.placas || "", "es", {
+      numeric: true,
+      sensitivity: "base",
+    });
+  });
+
   const getRemolquePlacas = (id) => {
     const r = remolques.find((r) => String(r.id) === String(id));
     if (!r) return "N/A";
@@ -1540,7 +1551,7 @@ export default function FuelProgramaCargas() {
                             <SelectValue placeholder="Elegir" />
                           </SelectTrigger>
                           <SelectContent>
-                            {remolques.map((r) => {
+                            {remolquesOrdenados.map((r) => {
                               const abv = getAbreviacionTipo(r.tipo);
                               const label = abv
                                 ? `[${abv}] ${r.placas}`
@@ -1569,7 +1580,7 @@ export default function FuelProgramaCargas() {
                               <SelectValue placeholder="Elegir" />
                             </SelectTrigger>
                             <SelectContent>
-                              {remolques.map((r) => {
+                              {remolquesOrdenados.map((r) => {
                                 const abv = getAbreviacionTipo(r.tipo);
                                 const label = abv ? `[${abv}] ${r.placas}` : r.placas;
                                 return (
